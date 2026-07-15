@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { StatusDot } from '@/components/ui/status-dot'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,11 +32,6 @@ interface AutomationRule {
   is_active: boolean
 }
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  active: 'default',
-  inactive: 'secondary',
-  expired: 'destructive',
-}
 const STATUS_LABEL: Record<string, string> = { active: 'Actif', inactive: 'Inactif', expired: 'Expiré' }
 
 export default async function AdminClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -87,14 +82,17 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
             </div>
           )}
           <div>
-            <h1 className="mb-1 text-2xl font-extrabold tracking-tight text-foreground">{profile.full_name ?? 'Client sans nom'}</h1>
+            <h1 className="mb-1 text-lg font-semibold tracking-tight text-foreground">{profile.full_name ?? 'Client sans nom'}</h1>
             <p className="text-xs text-muted-foreground">
               {igAccount?.instagram_username ? `@${igAccount.instagram_username} · ` : ''}
               Inscrit le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
             </p>
           </div>
         </div>
-        <Badge variant={STATUS_VARIANT[currentStatus] ?? 'secondary'}>{STATUS_LABEL[currentStatus] ?? currentStatus}</Badge>
+        <StatusDot
+          tone={currentStatus === 'active' ? 'success' : currentStatus === 'expired' ? 'destructive' : 'neutral'}
+          label={STATUS_LABEL[currentStatus] ?? currentStatus}
+        />
       </div>
 
       <div className="space-y-5">
@@ -353,14 +351,12 @@ function SectionTitle({
   sub?: React.ReactNode
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Icon className="size-4" />
+    <div>
+      <div className="flex items-center gap-1.5">
+        <Icon className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
+        <CardTitle>{title}</CardTitle>
       </div>
-      <div>
-        <CardTitle className="text-sm">{title}</CardTitle>
-        {sub && <CardDescription>{sub}</CardDescription>}
-      </div>
+      {sub && <CardDescription className="mt-1">{sub}</CardDescription>}
     </div>
   )
 }

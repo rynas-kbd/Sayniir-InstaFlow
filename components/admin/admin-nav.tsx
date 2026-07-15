@@ -22,11 +22,16 @@ export function AdminNav() {
             key={href}
             href={href}
             className={cn(
-              'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors',
-              isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              'flex h-7 items-center gap-2 rounded-md px-2 text-[13px] transition-colors',
+              isActive
+                ? 'bg-sidebar-accent font-medium text-sidebar-foreground'
+                : 'text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
             )}
           >
-            <Icon className="size-4 shrink-0" />
+            <Icon
+              className={cn('size-3.5 shrink-0', isActive ? 'text-sidebar-foreground' : 'text-sidebar-foreground/45')}
+              strokeWidth={1.75}
+            />
             {label}
           </Link>
         )

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Sparkles } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function AuthCard({
@@ -11,12 +10,9 @@ export function AuthCard({
 }) {
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3.5 flex size-11 items-center justify-center rounded-xl bg-primary shadow-sm">
-            <Sparkles className="size-5 text-primary-foreground" />
-          </div>
-          <p className="text-lg font-extrabold tracking-tight text-foreground">Sayniir</p>
+      <CardContent className="pt-3">
+        <div className="mb-8 text-center">
+          <p className="text-[15px] font-semibold tracking-tight text-foreground">Sayniir</p>
           <p className="mt-1 text-[13px] text-muted-foreground">{tagline}</p>
         </div>
         {children}

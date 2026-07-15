@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/app-shell/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { StatusDot } from '@/components/ui/status-dot'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -34,11 +35,6 @@ interface ClientRow {
   channel_accounts: ClientChannelAccount[] | ClientChannelAccount | null
 }
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  active: 'default',
-  inactive: 'secondary',
-  expired: 'destructive',
-}
 const STATUS_LABEL: Record<string, string> = { active: 'Actif', inactive: 'Inactif', expired: 'Expiré' }
 
 export default async function AdminClientsPage({
@@ -144,10 +140,10 @@ export default async function AdminClientsPage({
 
                     <div className="flex items-center gap-2">
                       {ig?.page_picture_url ? (
-                        <Image src={ig.page_picture_url} alt="" width={28} height={28} unoptimized className="size-7 rounded-full border border-border object-cover" />
+                        <Image src={ig.page_picture_url} alt="" width={24} height={24} unoptimized className="size-6 rounded-full object-cover" />
                       ) : (
-                        <div className="flex size-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-success">
-                          <Camera className="size-3 text-white" />
+                        <div className="flex size-6 items-center justify-center rounded-full bg-muted">
+                          <Camera className="size-3 text-muted-foreground" strokeWidth={1.75} />
                         </div>
                       )}
                       <span className="truncate text-[13px] text-muted-foreground">
@@ -157,23 +153,20 @@ export default async function AdminClientsPage({
 
                     <div>
                       <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role === 'admin' ? <ShieldCheck className="size-3" /> : <Users className="size-3" />}
                         {user.role === 'admin' ? 'Admin' : 'Client'}
                       </Badge>
                     </div>
 
                     <div>
-                      <Badge variant={STATUS_VARIANT[displayStatus] ?? 'secondary'}>
-                        {STATUS_LABEL[displayStatus] ?? displayStatus}
-                      </Badge>
+                      <StatusDot
+                        tone={displayStatus === 'active' ? 'success' : displayStatus === 'expired' ? 'destructive' : 'neutral'}
+                        label={STATUS_LABEL[displayStatus] ?? displayStatus}
+                      />
                     </div>
 
-                    <Link
-                      href={`/admin/clients/${user.id}`}
-                      className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/15"
-                    >
+                    <Button size="sm" variant="outline" render={<Link href={`/admin/clients/${user.id}`} />}>
                       Gérer
-                    </Link>
+                    </Button>
                   </div>
                 )
               })}

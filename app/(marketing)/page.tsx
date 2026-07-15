@@ -1,98 +1,110 @@
 import Link from 'next/link'
-import {
-  Sparkles,
-  ArrowRight,
-  MessageSquare,
-  Workflow,
-  Users,
-  BarChart3,
-  ShieldCheck,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 
 const FEATURES = [
   {
-    icon: MessageSquare,
     title: 'Multi-canal',
-    description: 'Instagram, Messenger et WhatsApp réunis dans une seule inbox.',
+    description:
+      'Instagram, Messenger et WhatsApp réunis dans une seule inbox. Un seul endroit pour toutes vos conversations clients.',
   },
   {
-    icon: Workflow,
     title: 'Flows visuels',
-    description: 'Construisez vos automatisations par glisser-déposer, sans code.',
+    description:
+      'Construisez vos automatisations par glisser-déposer : déclencheurs, conditions, délais, tags — sans écrire une ligne de code.',
   },
   {
-    icon: Users,
     title: 'CRM intégré',
-    description: 'Contacts, tags et segments pour cibler chaque audience.',
+    description:
+      'Chaque personne qui vous écrit devient un contact. Tags, segments et historique complet pour cibler juste.',
   },
   {
-    icon: BarChart3,
-    title: 'Analytics réelles',
-    description: 'Suivez la performance de vos automatisations en continu.',
+    title: 'Agents IA',
+    description:
+      'Réponses aux questions, prise de commande, qualification de leads — l’IA travaille pendant que vous dormez.',
+  },
+  {
+    title: 'Campagnes',
+    description:
+      'Diffusez un message à un segment entier, en respectant automatiquement la fenêtre de messagerie de Meta.',
+  },
+  {
+    title: 'Analytics',
+    description:
+      'Messages, taux de réponse, nouveaux contacts : la performance de vos automatisations, mesurée en continu.',
   },
 ]
 
 export default function MarketingHome() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-            <Sparkles className="size-4 text-primary-foreground" strokeWidth={2.4} />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight">Sayniir</span>
-        </div>
-        <nav className="flex items-center gap-2">
-          <Button variant="ghost" render={<Link href="/login" />}>
-            Se connecter
-          </Button>
-          <Button render={<Link href="/register" />}>Essayer gratuitement</Button>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-6">
-        <section className="flex flex-col items-center gap-6 py-24 text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            <ShieldCheck className="size-3.5" />
-            Automatisation conversationnelle pilotée par l&apos;IA
-          </div>
-          <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
-            Automatisez vos conversations,{' '}
-            <span className="text-primary">gardez le contrôle</span>
-          </h1>
-          <p className="max-w-xl text-balance text-muted-foreground">
-            Sayniir connecte Instagram, Messenger et WhatsApp à des flows IA capables de répondre,
-            qualifier et vendre — pendant que vous gardez la main sur chaque règle.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" render={<Link href="/register" />}>
-              Commencer <ArrowRight className="size-4" />
-            </Button>
-            <Button size="lg" variant="outline" render={<Link href="/login" />}>
+      <header className="border-b border-border">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
+          <span className="text-[13px] font-semibold tracking-tight">Sayniir</span>
+          <nav className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" render={<Link href="/login" />}>
               Se connecter
             </Button>
+            <Button size="sm" render={<Link href="/register" />}>
+              Commencer
+            </Button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-6">
+        <section className="py-24 md:py-32">
+          <div className="max-w-2xl">
+            <p className="mb-4 text-[13px] font-medium text-primary">Automatisation conversationnelle</p>
+            <h1 className="text-4xl font-semibold tracking-tighter text-balance md:text-5xl">
+              Vos conversations clients, en pilote automatique.
+            </h1>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Sayniir connecte Instagram, Messenger et WhatsApp à des flows pilotés par l’IA — capables de
+              répondre, qualifier et vendre pendant que vous gardez la main sur chaque règle.
+            </p>
+            <div className="mt-8 flex items-center gap-3">
+              <Button render={<Link href="/register" />}>
+                Commencer gratuitement <ArrowRight className="size-3.5" />
+              </Button>
+              <Button variant="ghost" render={<Link href="/login" />}>
+                Se connecter
+              </Button>
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-4 pb-24 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: Icon, title, description }) => (
-            <Card key={title}>
-              <CardContent className="flex flex-col gap-3 pt-6">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-accent">
-                  <Icon className="size-4 text-accent-foreground" />
-                </div>
-                <h3 className="text-sm font-semibold">{title}</h3>
-                <p className="text-sm text-muted-foreground">{description}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <section className="border-t border-border py-20">
+          <div className="grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map(({ title, description }) => (
+              <div key={title}>
+                <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t border-border py-20">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">Prêt à automatiser ?</h2>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Connectez votre premier compte en moins de deux minutes.
+              </p>
+            </div>
+            <Button render={<Link href="/register" />}>
+              Créer un compte <ArrowRight className="size-3.5" />
+            </Button>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-border px-6 py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Sayniir. Tous droits réservés.
+      <footer className="border-t border-border">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6 text-xs text-muted-foreground">
+          <span>© {new Date().getFullYear()} Sayniir</span>
+          <span>Instagram · Messenger · WhatsApp</span>
+        </div>
       </footer>
     </div>
   )

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { AdminNav } from '@/components/admin/admin-nav'
 
@@ -22,30 +22,26 @@ export default async function AdminLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card px-4 py-6">
-        <Link href="/admin" className="mb-8 flex items-center gap-3 px-1">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary">
-            <ShieldCheck className="size-4 text-primary-foreground" strokeWidth={2.4} />
-          </div>
-          <div className="flex min-w-0 flex-col gap-1">
-            <span className="text-[15px] font-extrabold leading-none tracking-tight text-foreground">Sayniir</span>
-            <span className="w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-              Admin
-            </span>
-          </div>
+      <aside className="flex w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-4 pb-3">
+        <Link
+          href="/admin"
+          className="mb-5 flex h-8 items-center gap-2 rounded-md px-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground hover:bg-sidebar-accent/60"
+        >
+          Sayniir
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Admin</span>
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav className="flex flex-1 flex-col gap-px">
           <AdminNav />
         </nav>
 
-        <div className="my-3 h-px bg-border" />
+        <div className="my-2 h-px bg-sidebar-border" />
 
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
         >
-          <ArrowLeft className="size-4 shrink-0" />
+          <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
           Mon dashboard
         </Link>
       </aside>

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,12 +52,9 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-[400px]">
         <Card>
           <CardContent className="pt-6">
-            <div className="mb-8 flex flex-col items-center text-center">
-              <div className="mb-3.5 flex size-11 items-center justify-center rounded-xl bg-primary shadow-sm">
-                <ShieldAlert className="size-5 text-primary-foreground" />
-              </div>
-              <p className="text-lg font-extrabold tracking-tight text-foreground">Espace Admin</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">Sayniir — accès restreint</p>
+            <div className="mb-8 text-center">
+              <p className="text-[15px] font-semibold tracking-tight text-foreground">Sayniir</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">Espace admin — accès restreint</p>
             </div>
 
             {error && (
