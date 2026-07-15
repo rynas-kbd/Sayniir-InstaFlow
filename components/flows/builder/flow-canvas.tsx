@@ -172,8 +172,8 @@ export function FlowCanvas({
   return (
     <ReactFlowProvider>
       <div className="flex h-full">
-        <div className="flex w-52 shrink-0 flex-col gap-1.5 overflow-y-auto border-r border-border bg-card p-3">
-          <p className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Ajouter un nœud</p>
+        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3">
+          <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
           {ADDABLE.map(({ type, icon: Icon, label }) => (
             <Button key={type} variant="outline" size="sm" className="justify-start" onClick={() => addNode(type)}>
               <Icon className="size-3.5" /> {label}
@@ -202,7 +202,7 @@ export function FlowCanvas({
           </ReactFlow>
         </div>
 
-        <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-card p-4">
+        <div className="w-64 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4">
           {nodeData ? (
             <Card className="border-none shadow-none">
               <CardHeader className="px-0 pt-0">

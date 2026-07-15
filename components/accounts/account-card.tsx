@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { Camera, ExternalLink, Trash2, Power } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusDot } from '@/components/ui/status-dot'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,9 +32,9 @@ export interface ChannelAccount {
 }
 
 const PLATFORM_LABEL: Record<string, string> = {
-  instagram: 'Compte Instagram',
-  messenger: 'Page Messenger',
-  whatsapp: 'Compte WhatsApp',
+  instagram: 'Instagram',
+  messenger: 'Messenger',
+  whatsapp: 'WhatsApp',
 }
 
 export function AccountCard({ account }: { account: ChannelAccount }) {
@@ -47,7 +47,7 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
   const isExpired = daysLeft !== null && daysLeft <= 0
   const isExpiringSoon = daysLeft !== null && daysLeft <= 7 && !isExpired
 
-  const tokenVariant = !account.is_active || isExpired ? 'destructive' : isExpiringSoon ? 'secondary' : 'default'
+  const tone = !account.is_active || isExpired ? 'destructive' : isExpiringSoon ? 'warning' : 'success'
   const tokenLabel = !account.is_active
     ? 'Inactif'
     : isExpired
@@ -95,77 +95,66 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center ${account.is_active ? '' : 'opacity-60'}`}
+      className={`group flex items-center gap-3 border-b border-border px-4 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-muted/40 ${account.is_active ? '' : 'opacity-55'}`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-4">
-        <div className="relative shrink-0">
-          {account.page_picture_url ? (
-            <Image
-              src={account.page_picture_url}
-              alt={account.page_name ?? ''}
-              className="block size-12 rounded-full border border-border object-cover"
-              width={48}
-              height={48}
-              unoptimized
-            />
-          ) : (
-            <div className="flex size-12 items-center justify-center rounded-full bg-primary">
-              <Camera className="size-5 text-primary-foreground" />
-            </div>
-          )}
-          <span
-            className={`absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-card ${
-              account.is_active && !isExpired ? 'bg-success' : 'bg-destructive'
-            }`}
-          />
+      {account.page_picture_url ? (
+        <Image
+          src={account.page_picture_url}
+          alt={account.page_name ?? ''}
+          className="block size-8 shrink-0 rounded-full border border-border object-cover"
+          width={32}
+          height={32}
+          unoptimized
+        />
+      ) : (
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+          <Camera className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
         </div>
+      )}
 
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="truncate text-[15px] font-bold text-foreground">
-              {account.page_name ?? PLATFORM_LABEL[account.platform]}
-            </span>
-            {account.platform === 'instagram' && account.instagram_username && (
-              <a
-                href={`https://www.instagram.com/${account.instagram_username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-muted-foreground transition-colors hover:text-primary"
-              >
-                <ExternalLink className="size-3.5" />
-              </a>
-            )}
-          </div>
-          <p className="mb-2 truncate text-[13px] text-muted-foreground">
-            {account.platform === 'whatsapp'
-              ? (account.phone_number ?? 'Numéro non disponible')
-              : account.instagram_username
-                ? `@${account.instagram_username}`
-                : `ID: ${account.page_id}`}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={tokenVariant}>{tokenLabel}</Badge>
-            <span className="text-[11px] text-muted-foreground">
-              Connecté le {new Date(account.connected_at).toLocaleDateString('fr-FR')}
-            </span>
-          </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-[13px] font-medium text-foreground">
+            {account.page_name ?? PLATFORM_LABEL[account.platform]}
+          </span>
+          {account.platform === 'instagram' && account.instagram_username && (
+            <a
+              href={`https://www.instagram.com/${account.instagram_username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Ouvrir sur Instagram"
+            >
+              <ExternalLink className="size-3" />
+            </a>
+          )}
+          <StatusDot tone={tone} label={tokenLabel} />
         </div>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          {PLATFORM_LABEL[account.platform]} ·{' '}
+          {account.platform === 'whatsapp'
+            ? (account.phone_number ?? 'Numéro non disponible')
+            : account.instagram_username
+              ? `@${account.instagram_username}`
+              : `ID: ${account.page_id}`}{' '}
+          · connecté le {new Date(account.connected_at).toLocaleDateString('fr-FR')}
+        </p>
       </div>
 
-      <div className="flex shrink-0 gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleToggle}
-          disabled={loading !== null}
-          className={account.is_active ? 'text-primary' : ''}
-        >
+      <div className="flex shrink-0 items-center gap-1 md:opacity-0 md:transition-opacity md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+        <Button variant="outline" size="sm" onClick={handleToggle} disabled={loading !== null}>
           <Power className="size-3.5" />
-          {account.is_active ? 'Actif' : 'Inactif'}
+          {account.is_active ? 'Désactiver' : 'Activer'}
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => setConfirmOpen(true)} disabled={loading !== null}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setConfirmOpen(true)}
+          disabled={loading !== null}
+          aria-label="Déconnecter"
+          className="text-muted-foreground hover:text-destructive"
+        >
           <Trash2 className="size-3.5" />
-          Déconnecter
         </Button>
       </div>
 

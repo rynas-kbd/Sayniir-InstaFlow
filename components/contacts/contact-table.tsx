@@ -6,6 +6,7 @@ import { Users, Plus, X, Trash2 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   AlertDialog,
@@ -69,11 +70,11 @@ export function ContactTable({
 
   if (contacts.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-        <Users className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-        <p className="mb-1 text-sm font-medium text-foreground">Aucun contact</p>
-        <p className="text-sm text-muted-foreground">Les contacts apparaissent dès leur premier message.</p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Aucun contact"
+        description="Les contacts apparaissent dès leur premier message."
+      />
     )
   }
 

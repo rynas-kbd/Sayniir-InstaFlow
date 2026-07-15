@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { MessageSquare, Zap, Camera, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { StatusDot } from '@/components/ui/status-dot'
 import { Button } from '@/components/ui/button'
 
 export default async function DashboardPage() {
@@ -57,28 +57,28 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Bienvenue — gérez vos automatisations."
         actions={
-          <Badge variant={subOk ? 'default' : isExpired ? 'destructive' : 'secondary'}>
-            {subOk ? 'Abonnement actif' : isExpired ? 'Abonnement expiré' : 'Abonnement inactif'}
-          </Badge>
+          <StatusDot
+            tone={subOk ? 'success' : isExpired ? 'destructive' : 'neutral'}
+            label={subOk ? 'Abonnement actif' : isExpired ? 'Abonnement expiré' : 'Abonnement inactif'}
+          />
         }
       />
 
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="space-y-6 p-4 md:p-6">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard title="Messages reçus" value={totalMessages ?? 0} icon={MessageSquare} />
-          <StatCard title="Réponses auto." value={totalReplied} icon={Zap} />
-          <StatCard title="Comptes actifs" value={`${activeAccounts}/${safeAccounts.length}`} icon={Camera} />
+          <StatCard title="Messages reçus" value={totalMessages ?? 0} />
+          <StatCard title="Réponses auto." value={totalReplied} />
+          <StatCard title="Comptes actifs" value={`${activeAccounts}/${safeAccounts.length}`} />
           <StatCard
             title="Taux de réponse"
             value={totalMessages ? `${Math.round((totalReplied / totalMessages) * 100)}%` : '0%'}
-            icon={CheckCircle2}
           />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Activité récente</CardTitle>
+              <CardTitle>Activité récente</CardTitle>
               <CardDescription>Derniers messages reçus</CardDescription>
               <CardAction>
                 <Button variant="link" size="sm" render={<Link href="/inbox" />}>
@@ -88,20 +88,16 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               {safeMessages.length === 0 ? (
-                <p className="py-10 text-center text-sm text-muted-foreground">Aucun message reçu.</p>
+                <p className="py-10 text-center text-xs text-muted-foreground">Aucun message reçu.</p>
               ) : (
                 <ul className="divide-y divide-border">
                   {safeMessages.map((m) => (
-                    <li key={m.id} className="flex items-center justify-between gap-3 py-3">
+                    <li key={m.id} className="flex items-center justify-between gap-3 py-2.5">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">{m.sender_id}</p>
+                        <p className="truncate text-[13px] font-medium text-foreground">{m.sender_id}</p>
                         <p className="truncate text-xs text-muted-foreground">{m.message_text}</p>
                       </div>
-                      {m.auto_reply_sent && (
-                        <Badge variant="outline" className="shrink-0 text-[10px]">
-                          Auto-répondu
-                        </Badge>
-                      )}
+                      {m.auto_reply_sent && <StatusDot tone="success" label="Auto-répondu" className="shrink-0" />}
                     </li>
                   ))}
                 </ul>
@@ -112,7 +108,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Comptes liés</CardTitle>
+                <CardTitle>Comptes liés</CardTitle>
                 <CardDescription>
                   {safeAccounts.length} compte{safeAccounts.length !== 1 ? 's' : ''}
                 </CardDescription>
@@ -124,17 +120,15 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent>
                 {safeAccounts.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">Aucun compte connecté.</p>
+                  <p className="py-6 text-center text-xs text-muted-foreground">Aucun compte connecté.</p>
                 ) : (
                   <ul className="space-y-2">
                     {safeAccounts.slice(0, 3).map((a) => (
-                      <li key={a.id} className="flex items-center justify-between text-sm">
+                      <li key={a.id} className="flex items-center justify-between text-[13px]">
                         <span className="truncate text-foreground">
                           {a.instagram_username ?? a.page_name ?? a.platform}
                         </span>
-                        <Badge variant={a.is_active ? 'default' : 'secondary'} className="text-[10px]">
-                          {a.is_active ? 'Actif' : 'Inactif'}
-                        </Badge>
+                        <StatusDot tone={a.is_active ? 'success' : 'neutral'} label={a.is_active ? 'Actif' : 'Inactif'} />
                       </li>
                     ))}
                   </ul>
@@ -144,7 +138,7 @@ export default async function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Règles actives</CardTitle>
+                <CardTitle>Règles actives</CardTitle>
                 <CardDescription>
                   {safeRules.length} règle{safeRules.length !== 1 ? 's' : ''}
                 </CardDescription>
@@ -156,15 +150,17 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent>
                 {safeRules.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">Aucune règle active.</p>
+                  <p className="py-6 text-center text-xs text-muted-foreground">Aucune règle active.</p>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="divide-y divide-border">
                     {safeRules.map((r) => (
-                      <li key={r.id} className="rounded-md border border-border bg-muted/40 p-2.5">
-                        <Badge variant="outline" className="mb-1 max-w-full truncate text-[10px]">
-                          {r.trigger_type === 'any_message' ? 'Tout message' : r.trigger_keywords?.join(', ')}
-                        </Badge>
-                        <p className="truncate text-xs text-muted-foreground">{r.response_text}</p>
+                      <li key={r.id} className="py-2 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="max-w-full truncate">
+                            {r.trigger_type === 'any_message' ? 'Tout message' : r.trigger_keywords?.join(', ')}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{r.response_text}</p>
                       </li>
                     ))}
                   </ul>

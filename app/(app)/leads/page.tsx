@@ -1,5 +1,6 @@
 import { Target } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { LeadRow, type Lead } from '@/components/workspace/lead-row'
 
@@ -24,15 +25,15 @@ export default async function LeadsPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Leads" description="Qualification automatique des prospects par l'IA." />
-      <div className="p-4 sm:p-6">
+      <div className="p-4 md:p-6">
         {safeLeads.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <Target className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-            <p className="mb-1 text-sm font-medium text-foreground">Aucun lead</p>
-            <p className="text-sm text-muted-foreground">Les prospects qualifiés par l&apos;IA apparaîtront ici.</p>
-          </div>
+          <EmptyState
+            icon={Target}
+            title="Aucun lead"
+            description="Les prospects qualifiés par l'IA apparaîtront ici."
+          />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg border border-border bg-card">
             {safeLeads.map((l) => (
               <LeadRow key={l.id} lead={l} />
             ))}

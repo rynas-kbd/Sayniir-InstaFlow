@@ -1,5 +1,6 @@
 import { CalendarClock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { AppointmentRow, type Appointment } from '@/components/workspace/appointment-row'
 
@@ -24,15 +25,15 @@ export default async function RdvPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Rendez-vous" description="Prises de rendez-vous automatisées par l'IA." />
-      <div className="p-4 sm:p-6">
+      <div className="p-4 md:p-6">
         {safeAppointments.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <CalendarClock className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-            <p className="mb-1 text-sm font-medium text-foreground">Aucun rendez-vous</p>
-            <p className="text-sm text-muted-foreground">Les rendez-vous pris par l&apos;IA apparaîtront ici.</p>
-          </div>
+          <EmptyState
+            icon={CalendarClock}
+            title="Aucun rendez-vous"
+            description="Les rendez-vous pris par l'IA apparaîtront ici."
+          />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg border border-border bg-card">
             {safeAppointments.map((a) => (
               <AppointmentRow key={a.id} appointment={a} />
             ))}

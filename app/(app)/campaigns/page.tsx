@@ -1,5 +1,6 @@
 import { Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dialog'
 import { CampaignRow } from '@/components/campaigns/campaign-row'
@@ -23,9 +24,12 @@ export default async function CampaignsPage() {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Campagnes" description="Diffusions ciblées vers vos contacts et segments." />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <Megaphone className="size-8 text-muted-foreground/50" strokeWidth={1} />
-          <p className="text-sm font-medium text-foreground">Aucun compte connecté</p>
+        <div className="p-4 md:p-6">
+          <EmptyState
+            icon={Megaphone}
+            title="Aucun compte connecté"
+            description="Connectez un compte pour lancer des campagnes."
+          />
         </div>
       </div>
     )
@@ -65,13 +69,9 @@ export default async function CampaignsPage() {
       />
       <div className="p-4 sm:p-6">
         {safeCampaigns.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <Megaphone className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-            <p className="mb-1 text-sm font-medium text-foreground">Aucune campagne</p>
-            <p className="text-sm text-muted-foreground">Créez votre première diffusion ciblée.</p>
-          </div>
+          <EmptyState icon={Megaphone} title="Aucune campagne" description="Créez votre première diffusion ciblée." />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg border border-border bg-card">
             {safeCampaigns.map((campaign) => (
               <CampaignRow
                 key={campaign.id}

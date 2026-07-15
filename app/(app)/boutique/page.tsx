@@ -1,6 +1,7 @@
 import { Store } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { decryptApiKey, isEncrypted } from '@/lib/crypto'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { BoutiqueClient } from '@/components/boutique/boutique-client'
 import type { AgentSettings } from '@/components/boutique/types'
@@ -23,12 +24,12 @@ export default async function BoutiquePage() {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Boutique" description="Catalogue produits et commandes." />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <Store className="size-8 text-muted-foreground/50" strokeWidth={1} />
-          <p className="text-sm font-medium text-foreground">Aucun compte connecté</p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Connectez un compte pour commencer à gérer votre boutique.
-          </p>
+        <div className="p-4 md:p-6">
+          <EmptyState
+            icon={Store}
+            title="Aucun compte connecté"
+            description="Connectez un compte pour commencer à gérer votre boutique."
+          />
         </div>
       </div>
     )

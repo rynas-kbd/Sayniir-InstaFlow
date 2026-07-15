@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Package, Plus, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   AlertDialog,
@@ -84,11 +85,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       </div>
 
       {products.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-          <Package className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-          <p className="mb-1 text-sm font-medium text-foreground">Aucun produit</p>
-          <p className="text-sm text-muted-foreground">Ajoutez votre premier produit pour démarrer.</p>
-        </div>
+        <EmptyState icon={Package} title="Aucun produit" description="Ajoutez votre premier produit pour démarrer." />
       ) : (
         <div className="overflow-hidden rounded-lg border border-border">
           <Table>

@@ -14,11 +14,11 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
 
   const maxValue = Math.max(1, ...points.map((p) => Math.max(p.messages, p.replies)))
   const groupWidth = chartWidth / points.length
-  const barWidth = Math.min(14, groupWidth / 3.2)
+  const barWidth = Math.min(8, groupWidth / 3.5)
 
   if (points.every((p) => p.messages === 0 && p.replies === 0)) {
     return (
-      <div className="flex h-55 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+      <div className="flex h-55 items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
         Aucune donnée sur cette période.
       </div>
     )
@@ -54,19 +54,19 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
           return (
             <g key={p.date}>
               <rect
-                x={groupX + groupWidth / 2 - barWidth - 2}
+                x={groupX + groupWidth / 2 - barWidth - 1}
                 y={height - padding.bottom - messagesHeight}
                 width={barWidth}
                 height={messagesHeight}
-                rx={3}
+                rx={2}
                 fill={COLORS.messages}
               />
               <rect
-                x={groupX + groupWidth / 2 + 2}
+                x={groupX + groupWidth / 2 + 1}
                 y={height - padding.bottom - repliesHeight}
                 width={barWidth}
                 height={repliesHeight}
-                rx={3}
+                rx={2}
                 fill={COLORS.replies}
               />
               {showLabel && (

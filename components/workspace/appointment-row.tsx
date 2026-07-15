@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, X, CalendarClock } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 
 export interface Appointment {
   id: string
@@ -17,12 +17,19 @@ export interface Appointment {
   notes: string | null
 }
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  confirmed: 'default',
-  completed: 'outline',
+const STATUS_TONE: Record<string, StatusTone> = {
+  pending: 'warning',
+  confirmed: 'success',
+  completed: 'neutral',
   cancelled: 'destructive',
   no_show: 'destructive',
+}
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'En attente',
+  confirmed: 'Confirmé',
+  completed: 'Terminé',
+  cancelled: 'Annulé',
+  no_show: 'Absent',
 }
 
 export function AppointmentRow({ appointment }: { appointment: Appointment }) {
@@ -48,30 +55,33 @@ export function AppointmentRow({ appointment }: { appointment: Appointment }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <CalendarClock className="size-4" />
-      </div>
+    <div className="group flex items-center gap-3 border-b border-border px-4 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-muted/40">
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{appointment.client_name}</span>
-          <Badge variant={STATUS_VARIANT[status] ?? 'outline'}>{status}</Badge>
-          {appointment.service_name && <span className="text-xs text-muted-foreground">{appointment.service_name}</span>}
+        <div className="flex items-center gap-2.5">
+          <span className="truncate text-[13px] font-medium text-foreground">{appointment.client_name}</span>
+          <StatusDot tone={STATUS_TONE[status] ?? 'neutral'} label={STATUS_LABEL[status] ?? status} />
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
           {appointment.scheduled_at
             ? new Date(appointment.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
             : 'Créneau non confirmé'}{' '}
           · {appointment.duration_minutes} min
+          {appointment.service_name && ` · ${appointment.service_name}`}
           {appointment.client_phone && ` · ${appointment.client_phone}`}
         </p>
       </div>
       {status === 'pending' && (
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 gap-1">
           <Button size="sm" variant="outline" onClick={() => updateStatus('confirmed')} disabled={loading}>
             <Check className="size-3.5" /> Confirmer
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => updateStatus('cancelled')} disabled={loading}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => updateStatus('cancelled')}
+            disabled={loading}
+            className="text-muted-foreground hover:text-destructive"
+          >
             <X className="size-3.5" /> Annuler
           </Button>
         </div>

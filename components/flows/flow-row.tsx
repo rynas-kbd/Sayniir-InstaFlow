@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Workflow, Trash2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { StatusDot } from '@/components/ui/status-dot'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,27 +50,39 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
   }
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Workflow className="size-4" />
-      </div>
+    <div className="group flex items-center gap-3 border-b border-border px-4 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-muted/40">
       <div className="min-w-0 flex-1">
-        <Link href={`/flows/${flow.id}`} className="text-sm font-semibold text-foreground hover:underline">
-          {flow.name}
-        </Link>
-        <div className="mt-1 flex items-center gap-2">
-          <Badge variant={flow.status === 'active' ? 'default' : flow.status === 'paused' ? 'secondary' : 'outline'}>
-            {flow.status === 'active' ? 'Actif' : flow.status === 'paused' ? 'En pause' : 'Brouillon'}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
-            {flow.trigger_type === 'any_message' ? 'Tout message' : flow.trigger_keywords?.join(', ')}
-          </span>
+        <div className="flex items-center gap-2.5">
+          <Link href={`/flows/${flow.id}`} className="truncate text-[13px] font-medium text-foreground hover:underline">
+            {flow.name}
+          </Link>
+          <StatusDot
+            tone={flow.status === 'active' ? 'success' : flow.status === 'paused' ? 'warning' : 'neutral'}
+            label={flow.status === 'active' ? 'Actif' : flow.status === 'paused' ? 'En pause' : 'Brouillon'}
+          />
         </div>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          {flow.trigger_type === 'any_message' ? 'Tout message' : flow.trigger_keywords?.join(', ')}
+        </p>
       </div>
-      <Switch checked={flow.status === 'active'} onCheckedChange={toggleActive} disabled={flow.status === 'draft'} />
-      <Button variant="ghost" size="icon" onClick={() => setConfirmOpen(true)} className="text-destructive hover:text-destructive">
-        <Trash2 className="size-4" />
-      </Button>
+
+      <div className="flex shrink-0 items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setConfirmOpen(true)}
+          aria-label="Supprimer"
+          className="text-muted-foreground hover:text-destructive md:opacity-0 md:transition-opacity md:group-focus-within:opacity-100 md:group-hover:opacity-100"
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+        <Switch
+          checked={flow.status === 'active'}
+          onCheckedChange={toggleActive}
+          disabled={flow.status === 'draft'}
+          className="ml-1.5"
+        />
+      </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

@@ -1,5 +1,6 @@
 import { Workflow } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { CreateFlowDialog } from '@/components/flows/create-flow-dialog'
 import { FlowRow } from '@/components/flows/flow-row'
@@ -24,9 +25,12 @@ export default async function FlowsPage() {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Flows" description="Automatisations visuelles par flux de conversation." />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <Workflow className="size-8 text-muted-foreground/50" strokeWidth={1} />
-          <p className="text-sm font-medium text-foreground">Aucun compte connecté</p>
+        <div className="p-4 md:p-6">
+          <EmptyState
+            icon={Workflow}
+            title="Aucun compte connecté"
+            description="Connectez un compte pour créer des flows."
+          />
         </div>
       </div>
     )
@@ -50,13 +54,13 @@ export default async function FlowsPage() {
         <FlowsEnabledToggle channelAccountId={account.id} initialEnabled={settings?.flows_enabled ?? false} />
 
         {safeFlows.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <Workflow className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-            <p className="mb-1 text-sm font-medium text-foreground">Aucun flow</p>
-            <p className="text-sm text-muted-foreground">Créez votre premier flow pour automatiser une conversation.</p>
-          </div>
+          <EmptyState
+            icon={Workflow}
+            title="Aucun flow"
+            description="Créez votre premier flow pour automatiser une conversation."
+          />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg border border-border bg-card">
             {safeFlows.map((flow) => (
               <FlowRow key={flow.id} flow={flow} />
             ))}

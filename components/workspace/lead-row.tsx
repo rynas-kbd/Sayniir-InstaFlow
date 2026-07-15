@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Target, Check, X } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 
 export interface Lead {
   id: string
@@ -17,13 +17,21 @@ export interface Lead {
   score: number | null
 }
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  new: 'secondary',
-  qualifying: 'outline',
-  qualified: 'default',
+const STATUS_TONE: Record<string, StatusTone> = {
+  new: 'neutral',
+  qualifying: 'warning',
+  qualified: 'success',
   disqualified: 'destructive',
-  booked: 'default',
+  booked: 'primary',
   lost: 'destructive',
+}
+const STATUS_LABEL: Record<string, string> = {
+  new: 'Nouveau',
+  qualifying: 'En qualification',
+  qualified: 'Qualifié',
+  disqualified: 'Disqualifié',
+  booked: 'RDV pris',
+  lost: 'Perdu',
 }
 
 export function LeadRow({ lead }: { lead: Lead }) {
@@ -49,28 +57,31 @@ export function LeadRow({ lead }: { lead: Lead }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Target className="size-4" />
-      </div>
+    <div className="group flex items-center gap-3 border-b border-border px-4 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-muted/40">
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{lead.full_name ?? 'Contact sans nom'}</span>
-          <Badge variant={STATUS_VARIANT[status] ?? 'outline'}>{status}</Badge>
-          {lead.score !== null && <span className="text-xs text-muted-foreground">Score {lead.score}</span>}
+        <div className="flex items-center gap-2.5">
+          <span className="truncate text-[13px] font-medium text-foreground">{lead.full_name ?? 'Contact sans nom'}</span>
+          <StatusDot tone={STATUS_TONE[status] ?? 'neutral'} label={STATUS_LABEL[status] ?? status} />
+          {lead.score !== null && <span className="text-xs text-muted-foreground tabular-nums">Score {lead.score}</span>}
         </div>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
           {lead.need_summary ?? 'Aucun résumé'}
           {lead.budget_range && ` · Budget ${lead.budget_range}`}
           {lead.phone && ` · ${lead.phone}`}
         </p>
       </div>
       {status === 'qualifying' && (
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 gap-1">
           <Button size="sm" variant="outline" onClick={() => updateStatus('qualified')} disabled={loading}>
             <Check className="size-3.5" /> Qualifier
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => updateStatus('disqualified')} disabled={loading}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => updateStatus('disqualified')}
+            disabled={loading}
+            className="text-muted-foreground hover:text-destructive"
+          >
             <X className="size-3.5" /> Rejeter
           </Button>
         </div>

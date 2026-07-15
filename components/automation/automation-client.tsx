@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Zap, Plus, MessageSquare, Hash, CheckCircle2 } from 'lucide-react'
+import { Zap, Plus, MessageSquare, Hash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { EmptyState } from '@/components/ui/empty-state'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RuleFormDialog } from './rule-form-dialog'
 import { RuleRow } from './rule-row'
@@ -106,61 +107,46 @@ export function AutomationClient({
         />
       )}
 
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div />
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard title="Règles totales" value={rules.length} />
+        <StatCard title="Actives" value={activeCount} />
+        <StatCard title="Règles DM" value={dmCount} />
+        <StatCard title="Commentaires" value={commentCount} />
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dm' | 'comment')}>
+          <TabsList>
+            <TabsTrigger value="dm">Messages privés ({dmCount})</TabsTrigger>
+            <TabsTrigger value="comment">Commentaires ({commentCount})</TabsTrigger>
+          </TabsList>
+        </Tabs>
         {accounts.length > 0 && (
-          <Button onClick={() => setShowModal(true)}>
-            <Plus className="size-4" /> Nouvelle règle
+          <Button size="sm" onClick={() => setShowModal(true)}>
+            <Plus className="size-3.5" /> Nouvelle règle
           </Button>
         )}
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard title="Règles totales" value={rules.length} icon={Zap} />
-        <StatCard title="Actives" value={activeCount} icon={CheckCircle2} />
-        <StatCard title="Règles DM" value={dmCount} icon={MessageSquare} />
-        <StatCard title="Commentaires" value={commentCount} icon={Hash} />
-      </div>
-
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dm' | 'comment')} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="dm">
-            <MessageSquare className="size-3.5" /> Messages privés ({dmCount})
-          </TabsTrigger>
-          <TabsTrigger value="comment">
-            <Hash className="size-3.5" /> Commentaires ({commentCount})
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {accounts.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Zap className="size-6" />
-          </div>
-          <p className="mb-1.5 text-lg font-bold text-foreground">Aucun compte connecté</p>
-          <p className="mx-auto max-w-sm text-sm text-muted-foreground">
-            Connectez d&apos;abord un compte pour créer des règles d&apos;automatisation.
-          </p>
-        </div>
+        <EmptyState
+          icon={Zap}
+          title="Aucun compte connecté"
+          description="Connectez d'abord un compte pour créer des règles d'automatisation."
+        />
       ) : filteredRules.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            {activeTab === 'dm' ? <MessageSquare className="size-6" /> : <Hash className="size-6" />}
-          </div>
-          <p className="mb-1.5 text-lg font-bold text-foreground">
-            Aucune règle {activeTab === 'dm' ? 'DM' : 'commentaire'} configurée
-          </p>
-          <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
-            Créez votre première règle pour automatiser les réponses{' '}
-            {activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.
-          </p>
-          <Button onClick={() => setShowModal(true)}>
-            <Plus className="size-4" /> Créer ma première règle
-          </Button>
-        </div>
+        <EmptyState
+          icon={activeTab === 'dm' ? MessageSquare : Hash}
+          title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
+          description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
+          action={
+            <Button size="sm" onClick={() => setShowModal(true)}>
+              <Plus className="size-3.5" /> Créer ma première règle
+            </Button>
+          }
+        />
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="rounded-lg border border-border bg-card">
           {filteredRules.map((rule) => (
             <RuleRow
               key={rule.id}

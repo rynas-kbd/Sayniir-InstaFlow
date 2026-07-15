@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { CheckCircle2, MessageSquare } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { MessageSquare } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Conversation } from './types'
 
 function formatRelative(dateStr: string): string {
@@ -40,11 +40,9 @@ export function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center px-5 py-10 text-center">
-        <div className="mb-3.5 flex size-12 items-center justify-center rounded-lg border border-border bg-muted">
-          <MessageSquare className="size-5 text-primary" strokeWidth={1.5} />
-        </div>
-        <p className="mb-1 text-sm font-bold text-foreground">Aucune conversation</p>
+      <div className="flex h-full flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+        <MessageSquare className="mb-1 size-4 text-muted-foreground" strokeWidth={1.5} />
+        <p className="text-[13px] font-medium text-foreground">Aucune conversation</p>
         <p className="text-xs text-muted-foreground">Les messages apparaîtront ici</p>
       </div>
     )
@@ -62,60 +60,46 @@ export function ConversationList({
           <li key={conv.senderId}>
             <button
               onClick={() => select(conv.senderId)}
-              className={`flex w-full items-center gap-3 border-0 border-l-[3px] px-3.5 py-3 text-left transition-colors ${
-                isActive ? 'border-l-primary bg-muted' : 'border-l-transparent hover:bg-muted/60'
-              }`}
+              className={cn(
+                'flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors',
+                isActive ? 'bg-muted' : 'hover:bg-muted/50'
+              )}
             >
               {conv.senderProfilePic ? (
                 <Image
                   src={conv.senderProfilePic}
                   alt={displayName}
-                  width={40}
-                  height={40}
+                  width={32}
+                  height={32}
                   unoptimized
-                  className={`size-10 shrink-0 rounded-full border-2 object-cover ${isActive ? 'border-primary' : 'border-border'}`}
+                  className="size-8 shrink-0 rounded-full object-cover"
                 />
               ) : (
-                <div
-                  className={`flex size-10 shrink-0 items-center justify-center rounded-full border-2 bg-primary text-sm font-extrabold text-primary-foreground ${
-                    isActive ? 'border-primary' : 'border-border'
-                  }`}
-                >
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
                   {initial}
                 </div>
               )}
 
               <div className="min-w-0 flex-1">
-                <div className="mb-0.5 flex items-center justify-between">
-                  <span className="max-w-[130px] truncate text-[13px] font-semibold text-foreground">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span
+                    className={cn(
+                      'truncate text-[13px] text-foreground',
+                      conv.hasUnreplied ? 'font-semibold' : 'font-medium'
+                    )}
+                  >
                     {displayName}
                   </span>
-                  <span className="ml-1.5 shrink-0 text-[10px] text-muted-foreground">
+                  <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
                     {formatRelative(conv.lastMessageAt)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  {conv.lastDirection === 'outgoing' && <span className="shrink-0 text-[10px]">🤖</span>}
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  {conv.hasUnreplied && <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-primary" />}
                   <span className="truncate text-xs text-muted-foreground">
-                    {preview.length > 45 ? `${preview.slice(0, 45)}…` : preview}
+                    {conv.lastDirection === 'outgoing' && 'Vous : '}
+                    {preview.length > 48 ? `${preview.slice(0, 48)}…` : preview}
                   </span>
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {conv.hasUnreplied && (
-                    <Badge variant="outline" className="h-4 px-1.5 text-[9px]">
-                      Sans réponse
-                    </Badge>
-                  )}
-                  {conv.hasAutoReplied && (
-                    <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">
-                      <CheckCircle2 className="size-2.5" /> Auto-répondu
-                    </Badge>
-                  )}
-                  {conv.accountUsername && (
-                    <Badge variant="outline" className="h-4 px-1.5 text-[9px]">
-                      @{conv.accountUsername}
-                    </Badge>
-                  )}
                 </div>
               </div>
             </button>

@@ -1,6 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
 
+/**
+ * Stripe-style stat: quiet label above a large tabular number.
+ * The icon is optional and rendered inline at label weight — never
+ * in a colored box.
+ */
 export function StatCard({
   title,
   value,
@@ -8,19 +12,15 @@ export function StatCard({
 }: {
   title: string
   value: string | number
-  icon: LucideIcon
+  icon?: LucideIcon
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-3 pt-6">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent">
-          <Icon className="size-4 text-accent-foreground" />
-        </div>
-        <div>
-          <p className="text-xl font-bold tracking-tight text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{title}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-lg border border-border bg-card px-4 py-3.5">
+      <div className="flex items-center gap-1.5">
+        {Icon && <Icon className="size-3 text-muted-foreground" strokeWidth={1.75} />}
+        <p className="text-xs text-muted-foreground">{title}</p>
+      </div>
+      <p className="mt-1.5 text-xl font-semibold tracking-tight text-foreground tabular-nums">{value}</p>
+    </div>
   )
 }

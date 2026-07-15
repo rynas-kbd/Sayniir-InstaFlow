@@ -108,12 +108,14 @@ export default async function InboxPage({
           activeConvId ? 'hidden md:flex' : 'flex'
         )}
       >
-        <div className="shrink-0 border-b border-border px-5 pt-6 pb-4">
-          <h1 className="mb-1 text-lg font-bold text-foreground">Inbox</h1>
-          <p className="mb-4 text-xs text-muted-foreground">
-            {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="shrink-0 border-b border-border px-3 pt-4 pb-3">
+          <div className="mb-3 flex items-baseline justify-between px-1">
+            <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Inbox</h1>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1">
             {FILTERS.map(({ key, label }) => {
               const params = new URLSearchParams()
               if (key !== 'all') params.set('filter', key)
@@ -125,10 +127,8 @@ export default async function InboxPage({
                   key={key}
                   href={href}
                   className={cn(
-                    'rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-colors',
-                    isActive
-                      ? 'border-transparent bg-primary text-primary-foreground shadow-sm'
-                      : 'border-border bg-background text-muted-foreground hover:border-primary hover:text-primary'
+                    'rounded-md px-2 py-1 text-xs font-medium transition-colors',
+                    isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                   )}
                 >
                   {label}
@@ -153,14 +153,10 @@ export default async function InboxPage({
             backHref={`/inbox${activeFilter !== 'all' ? `?filter=${activeFilter}` : ''}`}
           />
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
-            <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-              <MessageSquare className="size-6 text-muted-foreground" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="mb-1 text-sm font-semibold text-foreground">Sélectionnez une conversation</p>
-              <p className="text-xs text-muted-foreground">Cliquez sur un contact à gauche pour voir les messages</p>
-            </div>
+          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-10 text-center">
+            <MessageSquare className="mb-1 size-4 text-muted-foreground" strokeWidth={1.5} />
+            <p className="text-[13px] font-medium text-foreground">Sélectionnez une conversation</p>
+            <p className="text-xs text-muted-foreground">Cliquez sur un contact à gauche pour voir les messages</p>
           </div>
         )}
       </div>

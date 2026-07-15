@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Megaphone, Trash2, Rocket, Ban } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Trash2, Rocket, Ban } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,11 +17,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import type { Campaign } from './types'
 
-const STATUS_VARIANT: Record<Campaign['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  draft: 'outline',
-  scheduled: 'secondary',
-  sending: 'secondary',
-  sent: 'default',
+const STATUS_TONE: Record<Campaign['status'], StatusTone> = {
+  draft: 'neutral',
+  scheduled: 'warning',
+  sending: 'primary',
+  sent: 'success',
   cancelled: 'destructive',
   failed: 'destructive',
 }
@@ -91,28 +91,30 @@ export function CampaignRow({
     }
   }
 
+  const hasCounts = sendCounts.sent > 0 || sendCounts.pending > 0 || sendCounts.failed > 0
+
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Megaphone className="size-4" />
-      </div>
+    <div className="group flex items-center gap-3 border-b border-border px-4 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-muted/40">
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{campaign.name}</span>
-          <Badge variant={STATUS_VARIANT[campaign.status]}>{STATUS_LABEL[campaign.status]}</Badge>
+        <div className="flex items-center gap-2.5">
+          <span className="truncate text-[13px] font-medium text-foreground">{campaign.name}</span>
+          <StatusDot tone={STATUS_TONE[campaign.status]} label={STATUS_LABEL[campaign.status]} />
         </div>
-        <p className="truncate text-xs text-muted-foreground">{campaign.message_template}</p>
-        {(sendCounts.sent > 0 || sendCounts.pending > 0 || sendCounts.failed > 0) && (
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {sendCounts.sent} envoyé{sendCounts.sent !== 1 ? 's' : ''} · {sendCounts.pending} en attente · {sendCounts.failed} échec
-            {sendCounts.failed !== 1 ? 's' : ''}
-          </p>
-        )}
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          {campaign.message_template}
+          {hasCounts && (
+            <span className="text-muted-foreground/70">
+              {' '}
+              · {sendCounts.sent} envoyé{sendCounts.sent !== 1 ? 's' : ''} · {sendCounts.pending} en attente ·{' '}
+              {sendCounts.failed} échec{sendCounts.failed !== 1 ? 's' : ''}
+            </span>
+          )}
+        </p>
       </div>
 
-      <div className="flex shrink-0 gap-2">
+      <div className="flex shrink-0 items-center gap-1">
         {campaign.status === 'draft' && (
-          <Button size="sm" onClick={launchNow} disabled={busy}>
+          <Button size="sm" variant="outline" onClick={launchNow} disabled={busy}>
             <Rocket className="size-3.5" /> Lancer
           </Button>
         )}
@@ -121,8 +123,14 @@ export function CampaignRow({
             <Ban className="size-3.5" /> Annuler
           </Button>
         )}
-        <Button variant="ghost" size="icon" onClick={() => setConfirmOpen(true)} className="text-destructive hover:text-destructive">
-          <Trash2 className="size-4" />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setConfirmOpen(true)}
+          aria-label="Supprimer"
+          className="text-muted-foreground hover:text-destructive md:opacity-0 md:transition-opacity md:group-focus-within:opacity-100 md:group-hover:opacity-100"
+        >
+          <Trash2 className="size-3.5" />
         </Button>
       </div>
 

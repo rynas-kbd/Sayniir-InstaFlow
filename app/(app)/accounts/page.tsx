@@ -1,5 +1,6 @@
 import { Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { ConnectPanel } from '@/components/accounts/connect-panel'
 import { AccountCard, type ChannelAccount } from '@/components/accounts/account-card'
@@ -29,18 +30,15 @@ export default async function AccountsPage() {
         actions={<ConnectPanel />}
       />
 
-      <div className="p-4 sm:p-6">
+      <div className="p-4 md:p-6">
         {safeAccounts.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
-            <Camera className="size-8 text-muted-foreground/50" strokeWidth={1} />
-            <p className="text-sm font-medium text-foreground">Aucun compte connecté</p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Connectez un compte Instagram, Messenger ou WhatsApp pour commencer à automatiser vos
-              conversations.
-            </p>
-          </div>
+          <EmptyState
+            icon={Camera}
+            title="Aucun compte connecté"
+            description="Connectez un compte Instagram, Messenger ou WhatsApp pour commencer à automatiser vos conversations."
+          />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg border border-border bg-card">
             {safeAccounts.map((account) => (
               <AccountCard key={account.id} account={account} />
             ))}

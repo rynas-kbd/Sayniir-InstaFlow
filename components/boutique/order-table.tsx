@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { ShoppingCart } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import type { Order } from './types'
@@ -30,11 +31,11 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-        <ShoppingCart className="mx-auto mb-3 size-8 text-muted-foreground/50" strokeWidth={1} />
-        <p className="mb-1 text-sm font-medium text-foreground">Aucune commande</p>
-        <p className="text-sm text-muted-foreground">Les commandes générées par l&apos;IA apparaîtront ici.</p>
-      </div>
+      <EmptyState
+        icon={ShoppingCart}
+        title="Aucune commande"
+        description="Les commandes générées par l'IA apparaîtront ici."
+      />
     )
   }
 
