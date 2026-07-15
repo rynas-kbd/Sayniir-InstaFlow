@@ -17,7 +17,8 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
   const [color, setColor] = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
 
-  async function createTag() {
+  async function createTag(e: React.FormEvent) {
+    e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
     try {
@@ -59,24 +60,24 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
           <DialogTitle>Gérer les tags</DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-2">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du tag" />
-          <div className="flex gap-1">
+        <form onSubmit={createTag} className="flex gap-2">
+          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du tag" />
+          <div className="flex items-center gap-1">
             {COLORS.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                className="size-7 shrink-0 rounded-full border-2"
+                className="size-5 shrink-0 rounded-full border-2"
                 style={{ backgroundColor: c, borderColor: color === c ? 'var(--foreground)' : 'transparent' }}
                 aria-label={c}
               />
             ))}
           </div>
-          <Button onClick={createTag} disabled={saving || !name.trim()}>
+          <Button type="submit" size="icon" disabled={saving || !name.trim()} aria-label="Créer le tag">
             <Plus className="size-4" />
           </Button>
-        </div>
+        </form>
 
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (

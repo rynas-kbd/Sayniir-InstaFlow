@@ -15,7 +15,8 @@ export function CreateFlowDialog({ channelAccountId }: { channelAccountId: strin
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
 
-  async function handleCreate() {
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
     try {
@@ -44,18 +45,26 @@ export function CreateFlowDialog({ channelAccountId }: { channelAccountId: strin
         <DialogHeader>
           <DialogTitle>Nouveau flow</DialogTitle>
         </DialogHeader>
-        <div className="space-y-1.5">
-          <Label htmlFor="flow-name">Nom</Label>
-          <Input id="flow-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Accueil nouveaux contacts" />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
-            Annuler
-          </Button>
-          <Button onClick={handleCreate} disabled={saving || !name.trim()}>
-            {saving ? 'Création…' : 'Créer'}
-          </Button>
-        </DialogFooter>
+        <form onSubmit={handleCreate} className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="flow-name">Nom</Label>
+            <Input
+              id="flow-name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex : Accueil nouveaux contacts"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={saving || !name.trim()}>
+              {saving ? 'Création…' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

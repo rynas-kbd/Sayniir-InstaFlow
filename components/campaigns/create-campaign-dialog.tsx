@@ -25,7 +25,8 @@ export function CreateCampaignDialog({ channelAccountId, tags }: { channelAccoun
     setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]))
   }
 
-  async function handleCreate() {
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
     if (!name.trim() || !message.trim()) return
     setSaving(true)
     try {
@@ -64,10 +65,16 @@ export function CreateCampaignDialog({ channelAccountId, tags }: { channelAccoun
         <DialogHeader>
           <DialogTitle>Nouvelle campagne</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-3.5">
+        <form onSubmit={handleCreate} className="flex flex-col gap-3.5">
           <div className="space-y-1.5">
             <Label htmlFor="campaign-name">Nom</Label>
-            <Input id="campaign-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Promo Ramadan" />
+            <Input
+              id="campaign-name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex : Promo Ramadan"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="campaign-message">Message</Label>
@@ -98,15 +105,15 @@ export function CreateCampaignDialog({ channelAccountId, tags }: { channelAccoun
             <Label htmlFor="campaign-schedule">Planifier (optionnel)</Label>
             <Input id="campaign-schedule" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
-            Annuler
-          </Button>
-          <Button onClick={handleCreate} disabled={saving || !name.trim() || !message.trim()}>
-            {saving ? 'Création…' : scheduledAt ? 'Planifier' : 'Créer en brouillon'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={saving || !name.trim() || !message.trim()}>
+              {saving ? 'Création…' : scheduledAt ? 'Planifier' : 'Créer en brouillon'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
