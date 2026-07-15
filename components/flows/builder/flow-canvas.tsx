@@ -110,7 +110,7 @@ export function FlowCanvas({
   )
 
   function addNode(type: FlowNodeType) {
-    const nodeKey = `${type}-${Date.now()}`
+    const nodeKey = `${type}-${crypto.randomUUID()}`
     const newNode: Node = {
       id: nodeKey,
       type: 'flowNode',

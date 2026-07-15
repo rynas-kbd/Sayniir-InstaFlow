@@ -43,7 +43,7 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const expiresAt = account.token_expires_at ? new Date(account.token_expires_at) : null
-  const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86400000) : null
+  const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - new Date().getTime()) / 86400000) : null
   const isExpired = daysLeft !== null && daysLeft <= 0
   const isExpiringSoon = daysLeft !== null && daysLeft <= 7 && !isExpired
 
