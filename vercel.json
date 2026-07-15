@@ -11,6 +11,10 @@
     {
       "path": "/api/admin/flow-runs",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/admin/campaign-dispatch",
+      "schedule": "*/2 * * * *"
     }
   ]
 }
