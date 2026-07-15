@@ -1,0 +1,42 @@
+[
+  {
+    "nom": "T-shirt Basic",
+    "prix": 2500,
+    "tailles": "S|M|L|XL",
+    "couleurs": "Noir|Blanc|Gris",
+    "stock": 100,
+    "description": "T-shirt en coton 100% de qualité premium"
+  },
+  {
+    "nom": "Sweat à capuche",
+    "prix": 4500,
+    "tailles": "M|L|XL",
+    "couleurs": "Noir|Marine|Bordeaux",
+    "stock": 50,
+    "description": "Sweat confortable avec capuche et poche kangourou"
+  },
+  {
+    "nom": "Jean Slim",
+    "prix": 6500,
+    "tailles": "28|30|32|34|36",
+    "couleurs": "Bleu|Noir",
+    "stock": 75,
+    "description": "Jean slim fit en denim stretch"
+  },
+  {
+    "nom": "Robe d'été",
+    "prix": 3500,
+    "tailles": "S|M|L",
+    "couleurs": "Rouge|Vert|Jaune",
+    "stock": 40,
+    "description": "Robe légère parfaite pour l'été"
+  },
+  {
+    "nom": "Basket Sport",
+    "prix": 8500,
+    "tailles": "39|40|41|42|43|44",
+    "couleurs": "Blanc|Noir|Rouge",
+    "stock": 60,
+    "description": "Basket de sport avec semelle amortissante"
+  }
+]

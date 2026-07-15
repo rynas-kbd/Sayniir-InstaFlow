@@ -1,0 +1,47 @@
+[
+  {
+    "name": "T-shirt Premium",
+    "description": "Coton bio 100%, coupe classique, idéal pour toutes occasions",
+    "price": 2900,
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Noir", "Blanc", "Bleu", "Gris"],
+    "image_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab",
+    "stock_quantity": 50
+  },
+  {
+    "name": "Jeans Slim",
+    "description": "Denim stretch confortable, taille haute, coupe moderne",
+    "price": 5900,
+    "sizes": ["28", "30", "32", "34", "36"],
+    "colors": ["Bleu foncé", "Noir"],
+    "image_url": "https://images.unsplash.com/photo-1542272604-787c3835535d",
+    "stock_quantity": 30
+  },
+  {
+    "name": "Sweat à capuche",
+    "description": "Molleton doux, capuche réglable, poche kangourou",
+    "price": 4500,
+    "sizes": ["S", "M", "L", "XL", "XXL"],
+    "colors": ["Noir", "Gris", "Marine", "Bordeaux"],
+    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7",
+    "stock_quantity": 40
+  },
+  {
+    "name": "Basket urbaine",
+    "description": "Semelle coussin air, design minimaliste, ultra confortable",
+    "price": 8900,
+    "sizes": ["39", "40", "41", "42", "43", "44"],
+    "colors": ["Blanc", "Noir", "Gris"],
+    "image_url": "https://images.unsplash.com/photo-1549298916-b41d501d3772",
+    "stock_quantity": 25
+  },
+  {
+    "name": "Chemise Oxford",
+    "description": "Coton oxford premium, col boutonné, coupe ajustée",
+    "price": 3900,
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Blanc", "Bleu ciel", "Rose poudré"],
+    "image_url": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c",
+    "stock_quantity": 35
+  }
+]
