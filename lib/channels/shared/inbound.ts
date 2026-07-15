@@ -5,6 +5,7 @@ import { handleAgentMessage, type BusinessType } from '../../agent/router'
 import { TokenExpiredError } from '../../meta/messaging'
 import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
+import { upsertContact } from '../../contacts/service'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
 
 const GREETING_RE =
@@ -62,6 +63,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   const supabase = createAdminClient()
   const pageId = msg.channelExternalId
   const senderProfile = await adapter.fetchSenderProfile?.(msg.senderId, account.access_token)
+  const contactId = await upsertContact(account.id, msg.senderId, senderProfile)
 
   const { data: agentSettings } = await supabase.from('agent_settings').select('*').eq('channel_account_id', account.id).single()
   const { data: ownerProfile } = await supabase.from('profiles').select('business_type').eq('id', account.user_id).single()
@@ -114,6 +116,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
       await supabase.from('message_logs').upsert(
         {
           channel_account_id: account.id,
+          contact_id: contactId,
           sender_id: msg.senderId,
           sender_username: senderProfile?.username || null,
           sender_full_name: senderProfile?.name || null,
@@ -146,6 +149,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     await supabase.from('message_logs').upsert(
       {
         channel_account_id: account.id,
+        contact_id: contactId,
         sender_id: msg.senderId,
         sender_username: senderProfile?.username || null,
         sender_full_name: senderProfile?.name || null,
@@ -182,6 +186,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   await supabase.from('message_logs').upsert(
     {
       channel_account_id: account.id,
+      contact_id: contactId,
       sender_id: msg.senderId,
       sender_username: senderProfile?.username || null,
       sender_full_name: senderProfile?.name || null,
