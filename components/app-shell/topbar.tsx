@@ -11,10 +11,10 @@ export function Topbar({
   email: string | null
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur supports-backdrop-filter:bg-background/60 md:px-6">
+    <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-3 md:px-4">
       <MobileNav businessType={businessType} />
       <div className="flex-1" />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-0.5">
         <ThemeToggle />
         <UserMenu email={email} />
       </div>
