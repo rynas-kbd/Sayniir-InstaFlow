@@ -6,6 +6,7 @@ import { TokenExpiredError } from '../../meta/messaging'
 import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
 import { upsertContact } from '../../contacts/service'
+import { runFlowsForInbound, runFlowsForInboundComment } from '../../flows/engine'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
 
 const GREETING_RE =
@@ -303,6 +304,27 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     }
   }
 
+  // ── Scenario 0: visual flows (opt-in via agent_settings.flows_enabled) ──
+  // Gated behind a per-account flag so every existing account keeps its
+  // exact current behavior until it builds and enables a flow.
+  if (agentSettings?.flows_enabled) {
+    const handled = await runFlowsForInbound({
+      platform: msg.platform,
+      account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
+      contactId,
+      senderId: msg.senderId,
+      messageText,
+      agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
+    })
+    if (handled) {
+      await supabase
+        .from('message_logs')
+        .update({ auto_reply_sent: true, reply_text: '[Géré par Flow]', replied_at: new Date().toISOString() })
+        .eq('message_id', msg.messageId)
+      return
+    }
+  }
+
   // ── Scenario C: coaching/agency verticals (simpler — one LLM call per turn) ──
   if (businessType !== 'ecommerce' && businessType !== 'generic' && agentSettings?.is_active) {
     const handled = await handleAgentMessage(businessType, {
@@ -381,6 +403,7 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
   if (!(await isSubscriptionValid(account.user_id))) return
 
   const supabase = createAdminClient()
+  const contactId = await upsertContact(account.id, comment.commenterId, { username: comment.commenterUsername })
 
   await supabase.from('comment_logs').upsert(
     {
@@ -394,6 +417,36 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
     },
     { onConflict: 'comment_id' }
   )
+
+  const { data: agentSettings } = await supabase.from('agent_settings').select('flows_enabled, ai_provider, ai_api_key, ai_model').eq('channel_account_id', account.id).single()
+
+  if (agentSettings?.flows_enabled) {
+    const { isEncrypted, decryptApiKey } = await import('../../crypto')
+    let apiKey: string | null = agentSettings.ai_api_key || null
+    if (apiKey && isEncrypted(apiKey)) {
+      try {
+        apiKey = await decryptApiKey(apiKey)
+      } catch {
+        apiKey = null
+      }
+    }
+    const handled = await runFlowsForInboundComment({
+      platform: comment.platform,
+      account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
+      contactId,
+      senderId: comment.commenterId,
+      commentText: comment.text,
+      mediaId: comment.mediaId,
+      agentArgs: { aiProvider: agentSettings.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings.ai_model || null },
+    })
+    if (handled) {
+      await supabase
+        .from('comment_logs')
+        .update({ auto_reply_sent: true, reply_text: '[Géré par Flow]', replied_at: new Date().toISOString() })
+        .eq('comment_id', comment.commentId)
+      return
+    }
+  }
 
   const { data: rules } = await supabase
     .from('automation_rules')
