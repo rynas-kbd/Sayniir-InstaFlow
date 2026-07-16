@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { ArrowRight, MessageCircle, Zap, Users, BarChart3, Megaphone, Bot, CheckCircle } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight, MessageCircle, Zap, Users, BarChart3, Megaphone, Bot, CheckCircle, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Accordion, AccordionItem, AccordionTrigger, AccordionPanel } from '@/components/ui/accordion'
 
 const FEATURES = [
   {
@@ -46,6 +48,99 @@ const SOCIAL_PROOF = [
   { label: 'Temps de réponse moyen', value: '< 1s' },
   { label: 'Comptes connectés', value: '3 200+' },
   { label: 'Satisfaction client', value: '98%' },
+]
+
+const SCREENSHOTS = [
+  { src: '/screenshots/dashboard.png', alt: 'Tableau de bord Sayniir' },
+  { src: '/screenshots/flow-builder.png', alt: "Constructeur de flows Sayniir" },
+  { src: '/screenshots/inbox.png', alt: 'Inbox unifié Sayniir' },
+]
+
+const PRICING_TIERS = [
+  {
+    name: 'Starter',
+    price: '4 900',
+    period: 'DZD/mois',
+    description: 'Pour démarrer et automatiser votre premier compte.',
+    features: [
+      '1 compte connecté (Instagram, Messenger ou WhatsApp)',
+      'Inbox unifié',
+      'Flows illimités',
+      'CRM basique (contacts, tags)',
+    ],
+    highlighted: false,
+  },
+  {
+    name: 'Pro',
+    price: '12 900',
+    period: 'DZD/mois',
+    description: "Pour les boutiques et créateurs actifs qui veulent l'IA.",
+    features: [
+      '3 comptes connectés',
+      'Agents IA (Q&A, qualification, prise de commande)',
+      'Campagnes de diffusion',
+      'Analytics avancées',
+      'Tout Starter inclus',
+    ],
+    highlighted: true,
+  },
+  {
+    name: 'Business',
+    price: 'Sur devis',
+    period: '',
+    description: 'Pour les agences et comptes multiples.',
+    features: [
+      'Comptes illimités',
+      'Plusieurs utilisateurs',
+      'Support prioritaire',
+      'Intégrations sur mesure',
+      'Tout Pro inclus',
+    ],
+    highlighted: false,
+  },
+]
+
+const FAQ_ITEMS = [
+  {
+    question: "Est-ce autorisé par Instagram et Meta ? Je risque un ban ?",
+    answer:
+      "Sayniir utilise exclusivement les API officielles de Meta (Instagram Messaging API, Messenger Platform, WhatsApp Business API). Aucun scraping ni automatisation non-officielle : votre compte reste conforme aux règles de la plateforme.",
+  },
+  {
+    question: 'Dois-je savoir coder pour créer des automatisations ?',
+    answer:
+      "Non. Le constructeur de flows fonctionne en glisser-déposer : déclencheurs, conditions, délais et réponses se configurent visuellement, sans une ligne de code.",
+  },
+  {
+    question: 'Combien de temps pour être opérationnel ?',
+    answer:
+      'La connexion de votre premier compte prend environ 2 minutes. La plupart des utilisateurs ont leur premier flow actif le jour même.',
+  },
+  {
+    question: "Qu'est-ce que la fenêtre de messagerie de 24h et comment Sayniir la gère ?",
+    answer:
+      "Meta limite l'envoi de messages hors conversation à une fenêtre de 24h après le dernier message du contact. Sayniir respecte automatiquement cette règle pour vos flows et campagnes, sans action de votre part.",
+  },
+  {
+    question: 'Puis-je annuler à tout moment ?',
+    answer:
+      "Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre espace client, sans frais ni préavis.",
+  },
+  {
+    question: 'Quels moyens de paiement sont acceptés ?',
+    answer:
+      'Nous nous adaptons aux moyens de paiement disponibles en Algérie (CCP, Edahabia, virement). Contactez-nous pour organiser le règlement qui vous convient.',
+  },
+  {
+    question: "Comment obtenir de l'aide si je suis bloqué ?",
+    answer:
+      'Le support est disponible par message depuis votre espace client. Les clients Business bénéficient en plus d\'un support prioritaire avec un temps de réponse garanti.',
+  },
+  {
+    question: 'Puis-je connecter plusieurs comptes Instagram/WhatsApp ?',
+    answer:
+      "Oui, selon votre palier : 1 compte en Starter, 3 en Pro, illimité en Business. Chaque compte a ses propres flows, contacts et statistiques.",
+  },
 ]
 
 export default function MarketingHome() {
@@ -180,6 +275,111 @@ export default function MarketingHome() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ─── Screenshots ─── */}
+        <section className="border-t border-border bg-muted/20">
+          <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+            <div className="mb-14 text-center">
+              <p className="mb-3 text-sm font-medium text-primary">Aperçu produit</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Le produit, en vrai
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
+                Une interface claire pour piloter toutes vos conversations et automatisations.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              {SCREENSHOTS.map(({ src, alt }) => (
+                <div
+                  key={src}
+                  className="overflow-hidden rounded-xl border border-border bg-card shadow-xl shadow-primary/5"
+                >
+                  <Image src={src} alt={alt} width={640} height={420} className="h-auto w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Pricing ─── */}
+        <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="mb-14 text-center">
+            <p className="mb-3 text-sm font-medium text-primary">Tarifs</p>
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+              Un prix simple, sans surprise
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
+              Choisissez le palier adapté à votre activité. Sans engagement, annulable à tout moment.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {PRICING_TIERS.map((tier) => (
+              <div
+                key={tier.name}
+                className={`relative flex flex-col rounded-2xl border p-8 ${
+                  tier.highlighted
+                    ? 'border-primary/40 bg-gradient-to-b from-primary/8 via-card to-card shadow-lg shadow-primary/10'
+                    : 'border-border bg-card'
+                }`}
+              >
+                {tier.highlighted && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    Populaire
+                  </span>
+                )}
+
+                <h3 className="text-sm font-semibold text-foreground">{tier.name}</h3>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold tracking-tight text-foreground">{tier.price}</span>
+                  {tier.period && <span className="text-sm text-muted-foreground">{tier.period}</span>}
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{tier.description}</p>
+
+                <ul className="mt-6 flex flex-1 flex-col gap-2.5">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-foreground">
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-primary" strokeWidth={2.5} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  size="lg"
+                  variant={tier.highlighted ? 'default' : 'outline'}
+                  nativeButton={false}
+                  render={<Link href="/register" />}
+                  className="mt-8 cursor-pointer"
+                >
+                  {tier.price === 'Sur devis' ? 'Nous contacter' : 'Commencer'}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── FAQ ─── */}
+        <section className="border-t border-border bg-muted/20">
+          <div className="mx-auto max-w-3xl px-6 py-20 md:py-28">
+            <div className="mb-10 text-center">
+              <p className="mb-3 text-sm font-medium text-primary">FAQ</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Questions fréquentes
+              </h2>
+            </div>
+
+            <Accordion className="rounded-xl border border-border bg-card px-6">
+              {FAQ_ITEMS.map((item) => (
+                <AccordionItem key={item.question} value={item.question}>
+                  <AccordionTrigger>{item.question}</AccordionTrigger>
+                  <AccordionPanel>{item.answer}</AccordionPanel>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </section>
 
