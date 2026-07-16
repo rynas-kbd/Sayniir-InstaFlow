@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Trash2, Rocket, Ban, Megaphone, Users, Loader2, Play } from 'lucide-react'
+import { Trash2, Rocket, Ban, Users, Loader2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -59,6 +59,7 @@ export function CampaignCard({
 }) {
   const [campaign, setCampaign] = useState(initialCampaign)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [relaunchOpen, setRelaunchOpen] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const cfg = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.draft
@@ -74,12 +75,31 @@ export function CampaignCard({
       if (!res.ok) throw new Error()
       const updated = await res.json()
       setCampaign(updated)
-      toast.success('🚀 Campagne envoyée avec succès !')
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+      toast.success('🚀 Campagne lancée !')
+      setTimeout(() => window.location.reload(), 1000)
     } catch {
       toast.error('Impossible de lancer la campagne')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function relaunchNow() {
+    setBusy(true)
+    setRelaunchOpen(false)
+    try {
+      const res = await fetch(`/api/campaigns/${campaign.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relaunch: true }),
+      })
+      if (!res.ok) throw new Error()
+      const updated = await res.json()
+      setCampaign(updated)
+      toast.success('🔁 Campagne renvoyée à tous les contacts !')
+      setTimeout(() => window.location.reload(), 1000)
+    } catch {
+      toast.error('Impossible de renvoyer la campagne')
     } finally {
       setBusy(false)
     }
@@ -162,6 +182,12 @@ export function CampaignCard({
                 Annuler
               </Button>
             )}
+            {(campaign.status === 'sent' || campaign.status === 'failed' || campaign.status === 'cancelled') && (
+              <Button size="xs" variant="outline" onClick={() => setRelaunchOpen(true)} disabled={busy} className="h-7 gap-1">
+                {busy ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
+                Renvoyer
+              </Button>
+            )}
           </div>
 
           {/* Title */}
@@ -242,6 +268,23 @@ export function CampaignCard({
               className="bg-destructive text-white hover:bg-destructive/90"
             >
               Supprimer la campagne
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={relaunchOpen} onOpenChange={setRelaunchOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renvoyer « {campaign.name} » ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              L&apos;historique des envois précédents sera effacé et la campagne sera renvoyée à <strong>tous les contacts</strong> immédiatement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={relaunchNow}>
+              🔁 Renvoyer maintenant
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 import { enqueueRecipients, sendBatch } from '@/lib/campaigns/service'
 
-// PATCH /api/campaigns/[id] — schedule/cancel/update
+// PATCH /api/campaigns/[id] — schedule/cancel/update/relaunch
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
   const {
@@ -40,24 +40,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (key in body) updates[key] = body[key]
   }
 
-  // If launching the campaign
+  // Flag: launching OR re-launching
   const isLaunching = updates.status === 'scheduled'
+  const isRelaunching = body.relaunch === true
 
-  if (isLaunching) {
+  if (isLaunching || isRelaunching) {
     updates.status = 'sending'
     updates.started_at = new Date().toISOString()
+    updates.completed_at = null
   }
 
   const { data: campaign, error } = await supabase.from('campaigns').update(updates).eq('id', id).select().single()
   if (error || !campaign) return NextResponse.json({ error: error?.message || 'Campaign not found' }, { status: 500 })
 
-  if (isLaunching) {
+  if (isLaunching || isRelaunching) {
     try {
+      // If re-launching: wipe existing sends so they don't block re-enqueueing
+      if (isRelaunching) {
+        await supabase.from('campaign_sends').delete().eq('campaign_id', id)
+      }
+
       // 1. Enqueue all matching contacts
       await enqueueRecipients(id)
 
-      // 2. Immediately send the messages to the enqueued contacts
-      // Limit to 1000 sends to run safely in one request
+      // 2. Immediately send — limit to 1000 per request
       await sendBatch(id, 1000)
 
       // 3. Fetch final campaign status
@@ -65,7 +71,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json(finalCampaign || campaign)
     } catch (err) {
       console.error('[PATCH campaign:launch] Failed to process campaign dispatch:', err)
-      // Fallback update status to failed
       await supabase.from('campaigns').update({ status: 'failed' }).eq('id', id)
       return NextResponse.json({ ...campaign, status: 'failed' })
     }
