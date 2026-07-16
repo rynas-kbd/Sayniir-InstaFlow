@@ -7,14 +7,6 @@
     {
       "path": "/api/admin/refresh-tokens",
       "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/admin/flow-runs",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/admin/campaign-dispatch",
-      "schedule": "*/2 * * * *"
     }
   ]
 }
