@@ -4,7 +4,7 @@ import { resolveAudience } from '../contacts/service'
 import { TokenExpiredError } from '../meta/messaging'
 import type { ChannelAccountRef, Platform } from '../channels/types'
 
-const WINDOW_MS = 24 * 60 * 60 * 1000
+
 
 /** Materializes campaign_sends rows for the resolved audience. Idempotent via the (campaign_id, contact_id) unique key. */
 export async function enqueueRecipients(campaignId: string): Promise<number> {
@@ -35,10 +35,14 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
 
   const { data: account } = await supabase
     .from('channel_accounts')
-    .select('id, access_token, platform')
+    .select('id, access_token, platform, page_id, instagram_business_id, phone_number_id')
     .eq('id', campaign.channel_account_id)
     .single()
   if (!account) return { sent: 0, skipped: 0, failed: 0 }
+
+  const externalId = (account.platform === 'whatsapp'
+    ? account.phone_number_id
+    : account.instagram_business_id || account.page_id) || ''
 
   const { data: pending } = await supabase
     .from('campaign_sends')
@@ -48,7 +52,7 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
     .limit(limit)
 
   const adapter = getAdapter(account.platform as Platform)
-  const ref: ChannelAccountRef = { id: account.id, externalId: '', accessToken: account.access_token }
+  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
 
   let sent = 0
   let skipped = 0
