@@ -49,6 +49,14 @@ export interface ChannelAdapter {
     text: string,
     quickReplies?: Array<{ title: string; payload: string }>
   ): Promise<{ messageId: string } | null>
+  sendCard?(
+    ref: ChannelAccountRef,
+    recipientExternalId: string,
+    title: string,
+    subtitle?: string,
+    imageUrl?: string,
+    buttons?: Array<{ title: string; url: string }>
+  ): Promise<{ messageId: string } | null>
   refreshToken?(currentToken: string): Promise<{ accessToken: string; expiresIn: number }>
   fetchSenderProfile?(senderId: string, accessToken: string): Promise<{ name?: string; username?: string; profilePic?: string } | null>
 }

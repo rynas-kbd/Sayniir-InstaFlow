@@ -105,4 +105,21 @@ export const whatsappAdapter: ChannelAdapter = {
     }
     return { messageId: data.messages?.[0]?.id as string }
   },
+
+  async sendCard(
+    ref: ChannelAccountRef,
+    recipientExternalId: string,
+    title: string,
+    subtitle?: string,
+    imageUrl?: string,
+    buttons?: Array<{ title: string; url: string }>
+  ) {
+    let text = `*${title}*`
+    if (subtitle) text += `\n${subtitle}`
+    if (imageUrl) text += `\n${imageUrl}`
+    if (buttons && buttons.length > 0) {
+      text += '\n\n' + buttons.map((b) => `👉 ${b.title}: ${b.url}`).join('\n')
+    }
+    return this.sendMessage(ref, recipientExternalId, text)
+  },
 }

@@ -6,7 +6,7 @@ import {
   subscribeToWebhooks as igSubscribeToWebhooks,
 } from '../../meta/oauth'
 import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload } from '../../meta/webhook'
-import { sendReply, fetchSenderProfile } from '../../meta/messaging'
+import { sendReply, fetchSenderProfile, sendCardReply } from '../../meta/messaging'
 import { refreshLongLivedToken } from '../../meta/token-refresh'
 import { verifyWebhookSignature } from '../shared/signature'
 import type {
@@ -97,6 +97,19 @@ export const instagramAdapter: ChannelAdapter = {
     const result = await sendReply(ref.externalId, ref.accessToken, recipientExternalId, text, quickReplies)
     return result ? { messageId: result.message_id } : null
   },
+
+  async sendCard(
+    ref: ChannelAccountRef,
+    recipientExternalId: string,
+    title: string,
+    subtitle?: string,
+    imageUrl?: string,
+    buttons?: Array<{ title: string; url: string }>
+  ) {
+    const result = await sendCardReply(ref.externalId, ref.accessToken, recipientExternalId, title, subtitle, imageUrl, buttons)
+    return result ? { messageId: result.message_id } : null
+  },
+
 
   async refreshToken(currentToken: string) {
     return refreshLongLivedToken(currentToken)

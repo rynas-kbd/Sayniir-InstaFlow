@@ -28,8 +28,20 @@ async function evaluateCondition(node: FlowNode, ctx: NodeExecContext): Promise<
 export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise<NodeResult> {
   switch (node.type) {
     case 'send_message': {
-      const text = (node.config.text as string) || ''
-      if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
+      const messageType = node.config.message_type as string | undefined
+      if (messageType === 'card') {
+        const title = (node.config.card_title as string) || ''
+        const subtitle = (node.config.card_subtitle as string) || undefined
+        const imageUrl = (node.config.card_image_url as string) || undefined
+        const buttons = (node.config.card_buttons as Array<{ title: string; url: string }>) || []
+        
+        if (title && ctx.adapter.sendCard) {
+          await ctx.adapter.sendCard(ctx.ref, ctx.run.sender_id, title, subtitle, imageUrl, buttons)
+        }
+      } else {
+        const text = (node.config.text as string) || ''
+        if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
+      }
       return { type: 'continue', handle: 'default' }
     }
 

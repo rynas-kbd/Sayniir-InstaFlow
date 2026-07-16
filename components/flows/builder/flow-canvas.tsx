@@ -49,7 +49,9 @@ const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare; label: string }
 function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string {
   switch (type) {
     case 'send_message':
-      return (config.text as string) || 'Aucun message'
+      return config.message_type === 'card'
+        ? `[Carte] ${config.card_title || 'Sans titre'}`
+        : (config.text as string) || 'Aucun message'
     case 'ai_reply':
       return (config.instructions as string) || 'Aucune instruction'
     case 'condition':
