@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Workflow, MessageSquare, Hash } from 'lucide-react'
+import { Plus, Workflow, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,23 +15,9 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { FLOW_TEMPLATES, BLANK_TEMPLATE } from '@/lib/flows/templates'
 
-const TRIGGER_OPTIONS = [
-  {
-    value: 'any_message',
-    label: 'Tout message',
-    description: 'Se déclenche sur n\'importe quel message reçu',
-    icon: MessageSquare,
-  },
-  {
-    value: 'keyword',
-    label: 'Mot-clé',
-    description: 'Se déclenche si le message contient un mot-clé',
-    icon: Hash,
-  },
-] as const
-
-type TriggerType = (typeof TRIGGER_OPTIONS)[number]['value']
+const TEMPLATE_OPTIONS = [BLANK_TEMPLATE, ...FLOW_TEMPLATES]
 
 export function CreateFlowDialog({
   channelAccountId,
@@ -43,8 +29,10 @@ export function CreateFlowDialog({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [triggerType, setTriggerType] = useState<TriggerType>('any_message')
+  const [templateId, setTemplateId] = useState<string>('blank')
   const [saving, setSaving] = useState(false)
+
+  const selectedTemplate = FLOW_TEMPLATES.find((t) => t.id === templateId)
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -57,11 +45,28 @@ export function CreateFlowDialog({
         body: JSON.stringify({
           channel_account_id: channelAccountId,
           name: name.trim(),
-          trigger_type: triggerType,
+          trigger_type: selectedTemplate?.triggerType ?? 'any_message',
+          trigger_keywords: selectedTemplate?.triggerKeywords ?? null,
         }),
       })
       if (!res.ok) throw new Error()
       const flow = await res.json()
+
+      if (selectedTemplate) {
+        const graphRes = await fetch(`/api/flows/${flow.id}/graph`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nodes: [
+              { node_key: 'trigger', type: 'trigger', config: {}, position: { x: 0, y: 0 } },
+              ...selectedTemplate.nodes,
+            ],
+            edges: selectedTemplate.edges,
+          }),
+        })
+        if (!graphRes.ok) toast.error('Flow créé, mais le template n\'a pas pu être chargé')
+      }
+
       setOpen(false)
       router.push(`/flows/${flow.id}`)
     } catch {
@@ -75,7 +80,7 @@ export function CreateFlowDialog({
     setOpen(v)
     if (!v) {
       setName('')
-      setTriggerType('any_message')
+      setTemplateId('blank')
     }
   }
 
@@ -105,44 +110,31 @@ export function CreateFlowDialog({
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <div className="mb-1 flex size-10 items-center justify-center rounded-xl bg-primary/10">
             <Workflow className="size-5 text-primary" />
           </div>
           <DialogTitle className="text-lg">Créer un flow</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Donnez un nom à votre flow et choisissez son déclencheur.
+            Partez d&apos;un template ou d&apos;une toile vide.
           </p>
         </DialogHeader>
 
         <form onSubmit={handleCreate} className="mt-2 flex flex-col gap-5">
-          {/* Name */}
-          <div className="space-y-1.5">
-            <Label htmlFor="flow-name">Nom du flow</Label>
-            <Input
-              id="flow-name"
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex : Accueil nouveaux contacts"
-              maxLength={80}
-            />
-          </div>
-
-          {/* Trigger type */}
+          {/* Templates */}
           <div className="space-y-2">
-            <Label>Déclencheur</Label>
+            <Label>Modèle</Label>
             <div className="grid grid-cols-2 gap-2">
-              {TRIGGER_OPTIONS.map((opt) => {
-                const Icon = opt.icon
-                const selected = triggerType === opt.value
+              {TEMPLATE_OPTIONS.map((opt) => {
+                const Icon = opt.icon ?? FileText
+                const selected = templateId === opt.id
                 return (
                   <button
-                    key={opt.value}
+                    key={opt.id}
                     type="button"
-                    onClick={() => setTriggerType(opt.value)}
-                    className={`flex flex-col gap-1.5 rounded-lg border p-3 text-left transition-all ${
+                    onClick={() => setTemplateId(opt.id)}
+                    className={`flex cursor-pointer flex-col gap-1.5 rounded-lg border p-3 text-left transition-all ${
                       selected
                         ? 'border-primary bg-primary/6 text-primary'
                         : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted/50'
@@ -157,6 +149,19 @@ export function CreateFlowDialog({
                 )
               })}
             </div>
+          </div>
+
+          {/* Name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="flow-name">Nom du flow</Label>
+            <Input
+              id="flow-name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={selectedTemplate?.namePlaceholder ?? 'Ex : Accueil nouveaux contacts'}
+              maxLength={80}
+            />
           </div>
 
           <DialogFooter className="gap-2">
