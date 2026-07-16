@@ -31,7 +31,7 @@ export default async function AppLayout({
       <AppSidebar businessType={businessType} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar businessType={businessType} email={user.email ?? null} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-hidden">{children}</main>
       </div>
     </div>
   )

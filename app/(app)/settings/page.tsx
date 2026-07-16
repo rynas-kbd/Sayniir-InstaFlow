@@ -24,33 +24,35 @@ export default async function SettingsPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <PageHeader title="Paramètres" description="Gérez votre compte et vos préférences." />
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-2xl">
+        <PageHeader title="Paramètres" description="Gérez votre compte et vos préférences." />
 
-      <div className="space-y-4 p-4 sm:p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Informations du compte</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {fields.map(({ label, value, mono }) => (
-              <div key={label} className="space-y-1.5">
-                <Label>{label}</Label>
-                <Input readOnly defaultValue={value} className={mono ? 'font-mono text-xs text-muted-foreground' : ''} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-4 p-4 sm:p-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Informations du compte</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {fields.map(({ label, value, mono }) => (
+                <div key={label} className="space-y-1.5">
+                  <Label>{label}</Label>
+                  <Input readOnly defaultValue={value} className={mono ? 'font-mono text-xs text-muted-foreground' : ''} />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-destructive">Zone de danger</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">Déconnecter votre session sur cet appareil.</p>
-            <SignOutButton />
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-destructive">Zone de danger</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">Déconnecter votre session sur cet appareil.</p>
+              <SignOutButton />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

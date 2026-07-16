@@ -67,7 +67,7 @@ export default async function CampaignsPage() {
         description="Diffusions ciblées vers vos contacts et segments."
         actions={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} />}
       />
-      <div className="p-4 sm:p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {safeCampaigns.length === 0 ? (
           <EmptyState icon={Megaphone} title="Aucune campagne" description="Créez votre première diffusion ciblée." />
         ) : (

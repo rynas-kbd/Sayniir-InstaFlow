@@ -48,6 +48,20 @@ const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare; label: string }
 
 function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string {
   switch (type) {
+    case 'trigger': {
+      const triggerType = (config.trigger_type as string) ?? 'any_message'
+      const kws = (config.trigger_keywords as string[] | null) ?? []
+      if (triggerType === 'keyword') {
+        return `Mots-clés : ${kws.join(', ') || 'Aucun'}`
+      }
+      if (triggerType === 'comment_keyword') {
+        return `Commentaire mots-clés : ${kws.join(', ') || 'Aucun'}`
+      }
+      if (triggerType === 'any_comment') {
+        return 'Tout commentaire'
+      }
+      return 'Tout message DM'
+    }
     case 'send_message':
       return config.message_type === 'card'
         ? `[Carte] ${config.card_title || 'Sans titre'}`
@@ -108,7 +122,29 @@ export function FlowCanvas({
   tags: ContactTag[]
   otherFlows: FlowSummary[]
 }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(toReactFlowNode))
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    initialNodes.map((n) => {
+      if (n.node_key === 'trigger') {
+        const enrichedConfig = {
+          ...n.config,
+          trigger_type: flow.trigger_type,
+          trigger_keywords: flow.trigger_keywords,
+          target_post_ids: flow.target_post_ids,
+        }
+        return {
+          id: n.node_key,
+          type: 'flowNode',
+          position: n.position ?? { x: 0, y: 0 },
+          data: {
+            nodeType: n.type,
+            config: enrichedConfig,
+            summary: summaryFor(n.type, enrichedConfig),
+          },
+        }
+      }
+      return toReactFlowNode(n)
+    })
+  )
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -151,6 +187,32 @@ export function FlowCanvas({
   async function updateTrigger(patch: Partial<typeof triggerConfig>) {
     const next = { ...triggerConfig, ...patch }
     setTriggerConfig(next)
+    
+    // Sync to React Flow nodes state immediately
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === 'trigger'
+          ? {
+              ...n,
+              data: {
+                ...(n.data as unknown as FlowNodeData),
+                config: {
+                  ...((n.data as unknown as FlowNodeData).config || {}),
+                  trigger_type: next.trigger_type,
+                  trigger_keywords: next.trigger_keywords,
+                  target_post_ids: next.target_post_ids,
+                },
+                summary: summaryFor('trigger', {
+                  trigger_type: next.trigger_type,
+                  trigger_keywords: next.trigger_keywords,
+                  target_post_ids: next.target_post_ids,
+                }),
+              },
+            }
+          : n
+      )
+    )
+
     try {
       const res = await fetch(`/api/flows/${flow.id}`, {
         method: 'PATCH',
@@ -164,7 +226,31 @@ export function FlowCanvas({
       if (!res.ok) throw new Error('Erreur')
       toast.success('Déclencheur mis à jour')
     } catch {
-      setTriggerConfig(triggerConfig) // rollback
+      setTriggerConfig(triggerConfig) // rollback triggerConfig
+      // rollback nodes state
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === 'trigger'
+            ? {
+                ...n,
+                data: {
+                  ...(n.data as unknown as FlowNodeData),
+                  config: {
+                    ...((n.data as unknown as FlowNodeData).config || {}),
+                    trigger_type: triggerConfig.trigger_type,
+                    trigger_keywords: triggerConfig.trigger_keywords,
+                    target_post_ids: triggerConfig.target_post_ids,
+                  },
+                  summary: summaryFor('trigger', {
+                    trigger_type: triggerConfig.trigger_type,
+                    trigger_keywords: triggerConfig.trigger_keywords,
+                    target_post_ids: triggerConfig.target_post_ids,
+                  }),
+                },
+              }
+            : n
+        )
+      )
       toast.error('Impossible de mettre à jour le déclencheur')
     }
   }
@@ -214,9 +300,9 @@ export function FlowCanvas({
 
   return (
     <ReactFlowProvider>
-      <div className="flex h-full">
+      <div className="flex h-full w-full">
         {/* Left sidebar — add nodes */}
-        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3">
+        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3 h-full">
           <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
           {ADDABLE.map(({ type, icon: Icon, label }) => (
             <Button key={type} variant="outline" size="sm" className="justify-start" onClick={() => addNode(type)}>
@@ -229,7 +315,7 @@ export function FlowCanvas({
         </div>
 
         {/* Canvas */}
-        <div className="flex-1">
+        <div className="flex-1 h-full relative">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -248,7 +334,7 @@ export function FlowCanvas({
         </div>
 
         {/* Right sidebar — inspector */}
-        <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4">
+        <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4 h-full">
           {isTriggerSelected ? (
             <Card className="border-none shadow-none">
               <CardHeader className="px-0 pt-0">

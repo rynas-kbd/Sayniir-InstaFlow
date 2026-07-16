@@ -50,7 +50,7 @@ export default async function FlowsPage() {
         description="Automatisations visuelles par flux de conversation."
         actions={<CreateFlowDialog channelAccountId={account.id} />}
       />
-      <div className="space-y-4 p-4 sm:p-6">
+      <div className="flex-1 overflow-y-auto space-y-4 p-4 sm:p-6">
         <FlowsEnabledToggle channelAccountId={account.id} initialEnabled={settings?.flows_enabled ?? false} />
 
         {safeFlows.length === 0 ? (

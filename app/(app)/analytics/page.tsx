@@ -23,7 +23,7 @@ export default async function AnalyticsPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Analytics" description="Performance des 14 derniers jours." />
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex-1 overflow-y-auto space-y-6 p-4 sm:p-6">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard title="Messages reçus" value={summary.messagesReceived} icon={MessageSquare} />
           <StatCard title="Réponses auto." value={summary.autoReplies} icon={Zap} />

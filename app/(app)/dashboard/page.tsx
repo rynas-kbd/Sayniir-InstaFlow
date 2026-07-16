@@ -95,7 +95,7 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="space-y-6 p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto space-y-6 p-4 md:p-6">
         {/* ── Stat cards ── */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard

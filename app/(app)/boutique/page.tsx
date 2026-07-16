@@ -63,7 +63,7 @@ export default async function BoutiquePage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Boutique" description="Catalogue produits, commandes et configuration IA." />
-      <div className="p-4 sm:p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <BoutiqueClient
           channelAccountId={account.id}
           products={products ?? []}
