@@ -41,9 +41,13 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
         const subtitle = (node.config.card_subtitle as string) || undefined
         const imageUrl = (node.config.card_image_url as string) || undefined
         const buttons = (node.config.card_buttons as CardButtonConfig[]) || []
-        const hasPostback = buttons.some((b) => b.type === 'postback')
+        // Button Template (no image) attempts a real tappable button on
+        // Instagram; Generic Template (with image) is known to fail there
+        // and always falls back to text. Prefer the real-button path
+        // whenever there's no image to carry, for both link and action buttons.
+        const useButtonTemplate = buttons.length > 0 && !imageUrl
 
-        if (hasPostback && ctx.adapter.sendButtons) {
+        if (useButtonTemplate && ctx.adapter.sendButtons) {
           const channelButtons: ChannelButton[] = buttons.map((b, idx) =>
             b.type === 'postback'
               ? { type: 'postback', title: b.title, payload: `${node.flow_id}:${node.node_key}:${idx}` }

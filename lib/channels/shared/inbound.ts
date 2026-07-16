@@ -385,13 +385,15 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
 
   // ── Fallback: classic keyword/any_message rules + configurable default message ──
   let replyText: string | null = null
+  let matchedRule: (typeof rules extends (infer T)[] | null ? T : never) | null = null
   if (rules && rules.length > 0) {
     const lowerText = messageText.toLowerCase()
     const keywordRule = rules.find(
       (rule) => rule.trigger_type === 'keyword' && rule.trigger_keywords?.some((kw: string) => lowerText.includes(kw.toLowerCase()))
     )
     const anyMessageRule = rules.find((rule) => rule.trigger_type === 'any_message')
-    replyText = keywordRule?.response_text ?? anyMessageRule?.response_text ?? null
+    matchedRule = keywordRule ?? anyMessageRule ?? null
+    replyText = matchedRule?.response_text ?? null
   }
 
   if (!replyText) {
@@ -417,7 +419,30 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   if (!replyText) return
 
   try {
-    const result = await adapter.sendMessage(ref, msg.senderId, replyText)
+    const cardButtons = (matchedRule?.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []
+    const isCard = matchedRule?.response_type === 'card'
+    const hasImage = !!matchedRule?.card_image_url
+
+    let result: { messageId: string } | null
+    if (isCard && !hasImage && cardButtons.length > 0 && adapter.sendButtons) {
+      result = await adapter.sendButtons(
+        ref,
+        msg.senderId,
+        matchedRule?.card_title || replyText,
+        cardButtons.map((b) => ({ type: b.type ?? 'web_url', title: b.title, url: b.url }))
+      )
+    } else if (isCard && adapter.sendCard) {
+      result = await adapter.sendCard(
+        ref,
+        msg.senderId,
+        matchedRule?.card_title || replyText,
+        matchedRule?.card_subtitle ?? undefined,
+        matchedRule?.card_image_url ?? undefined,
+        cardButtons.map((b) => ({ title: b.title, url: b.url ?? '' }))
+      )
+    } else {
+      result = await adapter.sendMessage(ref, msg.senderId, replyText)
+    }
     if (result) {
       await supabase
         .from('message_logs')

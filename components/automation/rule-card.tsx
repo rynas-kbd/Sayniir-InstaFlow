@@ -131,12 +131,23 @@ export function RuleCard({
 
           {/* Response text preview */}
           <div className="flex flex-1 flex-col justify-end gap-1.5 pt-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
-              Réponse automatique
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
+                Réponse automatique
+              </span>
+              {rule.response_type === 'card' && (
+                <Badge variant="outline" className="border-primary/25 bg-primary/8 text-[10px] text-primary">
+                  🖼️ Carte
+                </Badge>
+              )}
+            </div>
             <div className="rounded-lg bg-muted/40 p-2.5 text-xs text-foreground/90 border border-border/40 min-h-[50px] flex flex-col justify-between">
-              <p className="line-clamp-2 italic leading-relaxed">&ldquo;{rule.response_text}&rdquo;</p>
-              
+              {rule.response_type === 'card' ? (
+                <p className="line-clamp-2 italic leading-relaxed">&ldquo;{rule.card_title || 'Sans titre'}&rdquo;</p>
+              ) : (
+                <p className="line-clamp-2 italic leading-relaxed">&ldquo;{rule.response_text}&rdquo;</p>
+              )}
+
               {/* Extra comment specific tags inside the card preview */}
               {isComment && (
                 <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">

@@ -31,15 +31,20 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { 
-    channel_account_id, 
-    name, 
-    trigger_type, 
-    trigger_keywords, 
+  const {
+    channel_account_id,
+    name,
+    trigger_type,
+    trigger_keywords,
     response_text,
     target_post_ids,
     reply_method,
-    response_text_dm 
+    response_text_dm,
+    response_type,
+    card_title,
+    card_subtitle,
+    card_image_url,
+    card_buttons,
   } = body
 
   if (!channel_account_id || !name || !response_text) {
@@ -67,6 +72,11 @@ export async function POST(request: NextRequest) {
       target_post_ids: target_post_ids ?? null,
       reply_method: reply_method ?? 'comment',
       response_text_dm: response_text_dm ?? null,
+      response_type: response_type ?? 'text',
+      card_title: card_title ?? null,
+      card_subtitle: card_subtitle ?? null,
+      card_image_url: card_image_url ?? null,
+      card_buttons: card_buttons ?? [],
       is_active: true,
     })
     .select()

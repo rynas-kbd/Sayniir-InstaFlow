@@ -5,6 +5,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import type { FlowNodeType, CardButton } from '../types'
 import type { Tag } from '@/components/contacts/types'
 import type { FlowSummary } from '../types'
+import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
 
 export function NodeInspector({
   nodeType,
@@ -121,120 +122,17 @@ export function NodeInspector({
               />
             </div>
           ) : (
-            <div className="space-y-3.5">
-              <div className="space-y-1.5">
-                <Label>Titre de la carte</Label>
-                <Input
-                  value={(config.card_title as string) ?? ''}
-                  onChange={(e) => set('card_title', e.target.value)}
-                  placeholder="ex: Super promotion !"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Description / Sous-titre</Label>
-                <Input
-                  value={(config.card_subtitle as string) ?? ''}
-                  onChange={(e) => set('card_subtitle', e.target.value)}
-                  placeholder="ex: Profitez de 20% aujourd'hui."
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>URL de l'image (optionnel)</Label>
-                <Input
-                  value={(config.card_image_url as string) ?? ''}
-                  onChange={(e) => set('card_image_url', e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div className="space-y-2 border-t border-border pt-3">
-                <div className="flex items-center justify-between mb-1.5">
-                  <Label className="text-xs font-semibold">Boutons (max 3)</Label>
-                  {buttons.length < 3 && (
-                    <button
-                      type="button"
-                      onClick={() => set('card_buttons', [...buttons, { type: 'web_url', title: 'Acheter', url: 'https://' }])}
-                      className="text-xs text-primary font-medium hover:underline cursor-pointer"
-                    >
-                      + Ajouter
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-2.5">
-                  {buttons.map((btn, idx) => {
-                    const btnType = btn.type ?? 'web_url'
-                    return (
-                      <div key={idx} className="flex flex-col gap-1.5 rounded-md border border-border p-2 bg-muted/20">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-medium text-muted-foreground">Bouton {idx + 1}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const copy = [...buttons]
-                              copy.splice(idx, 1)
-                              set('card_buttons', copy)
-                            }}
-                            className="text-[10px] text-destructive hover:underline cursor-pointer"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                        <Select
-                          value={btnType}
-                          onValueChange={(v) => {
-                            if (!v) return
-                            const copy = [...buttons]
-                            copy[idx] = v === 'postback' ? { type: 'postback', title: btn.title } : { type: 'web_url', title: btn.title, url: btn.url ?? 'https://' }
-                            set('card_buttons', copy)
-                          }}
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="web_url">Lien (URL)</SelectItem>
-                            <SelectItem value="postback">Bouton d&apos;action (continue le flow)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          value={btn.title}
-                          onChange={(e) => {
-                            const copy = [...buttons]
-                            copy[idx] = { ...copy[idx], title: e.target.value }
-                            set('card_buttons', copy)
-                          }}
-                          placeholder="Texte du bouton"
-                          className="h-7 text-xs"
-                        />
-                        {btnType === 'web_url' && (
-                          <Input
-                            value={btn.url ?? ''}
-                            onChange={(e) => {
-                              const copy = [...buttons]
-                              copy[idx] = { ...copy[idx], url: e.target.value }
-                              set('card_buttons', copy)
-                            }}
-                            placeholder="Lien URL (https://...)"
-                            className="h-7 text-xs"
-                          />
-                        )}
-                        {btnType === 'postback' && (
-                          <p className="text-[10px] text-muted-foreground">
-                            Reliez ce bouton à un nœud suivant sur le canvas pour définir ce qui se passe au clic.
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })}
-                  {buttons.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic text-center py-2">Aucun bouton. L'utilisateur cliquera sur la carte.</p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CardFieldsEditor
+              title={(config.card_title as string) ?? ''}
+              subtitle={(config.card_subtitle as string) ?? ''}
+              imageUrl={(config.card_image_url as string) ?? ''}
+              buttons={buttons}
+              onTitleChange={(v) => set('card_title', v)}
+              onSubtitleChange={(v) => set('card_subtitle', v)}
+              onImageUrlChange={(v) => set('card_image_url', v)}
+              onButtonsChange={(v) => set('card_buttons', v)}
+              allowPostbackButtons
+            />
           )}
         </div>
       )
