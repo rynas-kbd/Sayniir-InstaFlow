@@ -84,23 +84,4 @@ export async function removeTag(contactId: string, tagId: string): Promise<void>
   if (error) throw new Error(error.message)
 }
 
-/** Resolves the set of contact ids matching a tag filter (OR across tags), for campaign audiences. */
-export async function resolveAudience(channelAccountId: string, tagIds: string[]): Promise<string[]> {
-  const supabase = createAdminClient()
-  if (!tagIds.length) {
-    const { data } = await supabase
-      .from('contacts')
-      .select('id')
-      .eq('channel_account_id', channelAccountId)
-      .eq('is_subscribed', true)
-    return (data ?? []).map((c) => c.id)
-  }
-  const { data } = await supabase
-    .from('contact_tags')
-    .select('contact_id, contacts!inner(is_subscribed)')
-    .eq('channel_account_id', channelAccountId)
-    .in('tag_id', tagIds)
-    .eq('contacts.is_subscribed', true)
-  const ids = new Set((data ?? []).map((row) => row.contact_id as string))
-  return Array.from(ids)
-}
+

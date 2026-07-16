@@ -5,7 +5,6 @@ import {
   Users,
   Zap,
   Workflow,
-  Megaphone,
   Camera,
   BarChart3,
   Settings,
@@ -57,7 +56,6 @@ export function getNavSections(businessType: BusinessType): NavSection[] {
       items: [
         { href: '/flows', label: 'Flows', icon: Workflow },
         { href: '/automation', label: 'Règles', icon: Zap },
-        { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
       ],
     },
   ]
