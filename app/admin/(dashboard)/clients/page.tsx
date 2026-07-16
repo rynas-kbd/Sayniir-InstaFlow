@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { StatusDot } from '@/components/ui/status-dot'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -122,55 +124,83 @@ export default async function AdminClientsPage({
               <p className="text-sm text-muted-foreground">{q ? `Aucun résultat pour « ${q} »` : 'Aucun utilisateur trouvé.'}</p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {rows.map((user) => {
-                const ig = Array.isArray(user.channel_accounts) ? user.channel_accounts[0] : user.channel_accounts
-                const sub = Array.isArray(user.subscriptions) ? user.subscriptions[0] : user.subscriptions
-                const expDate = sub?.expires_at ? new Date(sub.expires_at) : null
-                const isExpired = expDate ? expDate < new Date() : false
-                const status = sub?.status ?? 'inactive'
-                const displayStatus = isExpired && status === 'active' ? 'expired' : status
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Compte Instagram</TableHead>
+                  <TableHead>Rôle</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((user) => {
+                  const ig = Array.isArray(user.channel_accounts) ? user.channel_accounts[0] : user.channel_accounts
+                  const sub = Array.isArray(user.subscriptions) ? user.subscriptions[0] : user.subscriptions
+                  const expDate = sub?.expires_at ? new Date(sub.expires_at) : null
+                  const isExpired = expDate ? expDate < new Date() : false
+                  const status = sub?.status ?? 'inactive'
+                  const displayStatus = isExpired && status === 'active' ? 'expired' : status
+                  const name = user.full_name ?? 'Sans nom'
 
-                return (
-                  <div key={user.id} className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] items-center gap-4 bg-card px-5 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-semibold text-foreground">{user.full_name ?? 'Sans nom'}</p>
-                      <p className="truncate text-xs text-muted-foreground">{user.email ?? '—'}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {ig?.page_picture_url ? (
-                        <Image src={ig.page_picture_url} alt="" width={24} height={24} unoptimized className="size-6 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex size-6 items-center justify-center rounded-full bg-muted">
-                          <Camera className="size-3 text-muted-foreground" strokeWidth={1.75} />
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="whitespace-normal">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={cn(
+                              'flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold',
+                              getAvatarColor(user.id)
+                            )}
+                          >
+                            {getInitials(name)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold text-foreground">{name}</p>
+                            <p className="truncate text-xs text-muted-foreground">{user.email ?? '—'}</p>
+                          </div>
                         </div>
-                      )}
-                      <span className="truncate text-[13px] text-muted-foreground">
-                        {ig?.instagram_username ? `@${ig.instagram_username}` : '—'}
-                      </span>
-                    </div>
+                      </TableCell>
 
-                    <div>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role === 'admin' ? 'Admin' : 'Client'}
-                      </Badge>
-                    </div>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {ig?.page_picture_url ? (
+                            <Image src={ig.page_picture_url} alt="" width={22} height={22} unoptimized className="size-[22px] rounded-full object-cover" />
+                          ) : (
+                            <div className="flex size-[22px] items-center justify-center rounded-full bg-muted">
+                              <Camera className="size-3 text-muted-foreground" strokeWidth={1.75} />
+                            </div>
+                          )}
+                          <span className="truncate text-[13px] text-muted-foreground">
+                            {ig?.instagram_username ? `@${ig.instagram_username}` : '—'}
+                          </span>
+                        </div>
+                      </TableCell>
 
-                    <div>
-                      <StatusDot
-                        tone={displayStatus === 'active' ? 'success' : displayStatus === 'expired' ? 'destructive' : 'neutral'}
-                        label={STATUS_LABEL[displayStatus] ?? displayStatus}
-                      />
-                    </div>
+                      <TableCell>
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role === 'admin' ? 'Admin' : 'Client'}
+                        </Badge>
+                      </TableCell>
 
-                    <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/admin/clients/${user.id}`} />}>
-                      Gérer
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
+                      <TableCell>
+                        <StatusDot
+                          tone={displayStatus === 'active' ? 'success' : displayStatus === 'expired' ? 'destructive' : 'neutral'}
+                          label={STATUS_LABEL[displayStatus] ?? displayStatus}
+                        />
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/admin/clients/${user.id}`} />}>
+                          Gérer
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
           )}
         </div>
       </div>

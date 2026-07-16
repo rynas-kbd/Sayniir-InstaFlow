@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { StatusDot } from '@/components/ui/status-dot'
 import { Button } from '@/components/ui/button'
@@ -77,8 +78,10 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
               className="size-16 rounded-full border-2 border-border object-cover"
             />
           ) : (
-            <div className="flex size-16 items-center justify-center rounded-full border-2 border-border bg-card">
-              <User className="size-6 text-muted-foreground" />
+            <div
+              className={`flex size-16 items-center justify-center rounded-full border-2 border-border text-base font-semibold ${getAvatarColor(userId)}`}
+            >
+              {profile.full_name ? getInitials(profile.full_name) : <User className="size-6" />}
             </div>
           )}
           <div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ShieldCheck } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -28,9 +28,23 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Vue d’ensemble" description="Gestion globale des clients Sayniir." />
+      <PageHeader title="Vue d'ensemble" description="Gestion globale des clients Sayniir." />
 
       <div className="space-y-6 p-4 md:p-6">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-6 sm:px-8">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <ShieldCheck className="size-3.5" />
+            Espace administrateur
+          </span>
+          <h2 className="mt-3 text-lg font-bold text-foreground sm:text-xl">Panel de gestion Sayniir</h2>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+            Suivez les abonnements clients et gérez les accès en un coup d'œil.
+          </p>
+          <div className="absolute right-0 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-10 lg:flex">
+            <ShieldCheck className="size-40 text-primary" strokeWidth={1} />
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard title="Total clients" value={totalClients ?? 0} />
           <StatCard title="Abonnements actifs" value={activeClients ?? 0} />

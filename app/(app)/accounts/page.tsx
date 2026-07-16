@@ -1,7 +1,8 @@
-import { Camera } from 'lucide-react'
+import { Camera, CheckCircle2, XCircle, Link2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
+import { StatCard } from '@/components/dashboard/stat-card'
 import { ConnectPanel } from '@/components/accounts/connect-panel'
 import { AccountCard, type ChannelAccount } from '@/components/accounts/account-card'
 
@@ -21,16 +22,29 @@ export default async function AccountsPage() {
 
   const safeAccounts = (accounts ?? []) as ChannelAccount[]
   const activeCount = safeAccounts.filter((a) => a.is_active).length
+  const expiredCount = safeAccounts.filter((a) => {
+    if (!a.token_expires_at) return false
+    return new Date(a.token_expires_at).getTime() <= Date.now()
+  }).length
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title="Comptes connectés"
-        description={`${activeCount} compte${activeCount !== 1 ? 's' : ''} actif${activeCount !== 1 ? 's' : ''} sur ${safeAccounts.length} connecté${safeAccounts.length !== 1 ? 's' : ''}`}
-        actions={<ConnectPanel />}
-      />
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          title="Comptes connectés"
+          description="Gérez vos comptes Instagram, Messenger et WhatsApp."
+          actions={<ConnectPanel />}
+        />
 
-      <div className="p-4 md:p-6">
+        <div className="space-y-5 p-4 md:p-6">
+        {safeAccounts.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            <StatCard title="Comptes connectés" value={safeAccounts.length} icon={Link2} />
+            <StatCard title="Actifs" value={activeCount} icon={CheckCircle2} />
+            <StatCard title="Expirés" value={expiredCount} icon={XCircle} />
+          </div>
+        )}
+
         {safeAccounts.length === 0 ? (
           <EmptyState
             icon={Camera}
@@ -38,12 +52,13 @@ export default async function AccountsPage() {
             description="Connectez un compte Instagram, Messenger ou WhatsApp pour commencer à automatiser vos conversations."
           />
         ) : (
-          <div className="rounded-lg border border-border bg-card">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {safeAccounts.map((account) => (
               <AccountCard key={account.id} account={account} />
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   )
