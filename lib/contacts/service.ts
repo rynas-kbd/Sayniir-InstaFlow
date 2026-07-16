@@ -92,15 +92,13 @@ export async function resolveAudience(channelAccountId: string, tagIds: string[]
       .from('contacts')
       .select('id')
       .eq('channel_account_id', channelAccountId)
-      .eq('is_subscribed', true)
     return (data ?? []).map((c) => c.id)
   }
   const { data } = await supabase
     .from('contact_tags')
-    .select('contact_id, contacts!inner(is_subscribed)')
+    .select('contact_id')
     .eq('channel_account_id', channelAccountId)
     .in('tag_id', tagIds)
-    .eq('contacts.is_subscribed', true)
   const ids = new Set((data ?? []).map((row) => row.contact_id as string))
   return Array.from(ids)
 }

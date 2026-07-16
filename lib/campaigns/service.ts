@@ -58,19 +58,6 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
     const contact = row.contacts as unknown as { sender_id: string; is_subscribed: boolean; last_inbound_at: string | null }
     if (!contact) continue
 
-    if (!contact.is_subscribed) {
-      await supabase.from('campaign_sends').update({ status: 'skipped_unsubscribed' }).eq('id', row.id)
-      skipped += 1
-      continue
-    }
-
-    const lastInbound = contact.last_inbound_at ? new Date(contact.last_inbound_at).getTime() : 0
-    if (Date.now() - lastInbound > WINDOW_MS) {
-      await supabase.from('campaign_sends').update({ status: 'skipped_window' }).eq('id', row.id)
-      skipped += 1
-      continue
-    }
-
     try {
       const result = await adapter.sendMessage(ref, contact.sender_id, campaign.message_template)
       await supabase
