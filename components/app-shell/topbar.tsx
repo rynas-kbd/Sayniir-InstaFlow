@@ -22,9 +22,9 @@ export function Topbar({
         <Breadcrumb businessType={businessType} />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0.5 sm:gap-2">
         <CommandMenu businessType={businessType} />
-        <div className="mx-0.5 h-5 w-px bg-border" />
+        <div className="mx-0.5 hidden h-5 w-px bg-border md:block" />
         <ThemeToggle />
         <NotificationsMenu counts={notificationCounts} />
         <UserMenu email={email} />

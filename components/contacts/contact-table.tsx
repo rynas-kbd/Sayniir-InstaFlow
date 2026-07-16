@@ -201,7 +201,7 @@ export function ContactTable({
                     variant="ghost"
                     size="icon"
                     onClick={() => setDeletingId(contact.id)}
-                    className="size-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                    className="size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     aria-label="Supprimer contact"
                   >
                     <Trash2 className="size-4" />

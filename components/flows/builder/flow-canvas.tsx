@@ -26,9 +26,12 @@ import {
   ArrowRightCircle,
   Save,
   Trash2,
+  Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from '@/components/ui/sheet'
+import { useMediaQuery } from '@/lib/use-media-query'
 import { FlowNodeVisual, type FlowNodeData } from './node-visual'
 import { NodeInspector } from './node-inspector'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowNodeType, FlowSummary } from '../types'
@@ -148,6 +151,8 @@ export function FlowCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const isMobile = useMediaQuery('(max-width: 767px)')
   // Local copy of trigger config (so changes are reflected immediately)
   const [triggerConfig, setTriggerConfig] = useState<{
     trigger_type: string
@@ -298,24 +303,78 @@ export function FlowCanvas({
   const nodeData = selectedNode ? (selectedNode.data as unknown as FlowNodeData) : null
   const isTriggerSelected = selectedId === 'trigger'
 
+  const paletteContent = (
+    <>
+      <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
+      {ADDABLE.map(({ type, icon: Icon, label }) => (
+        <Button
+          key={type}
+          variant="outline"
+          size="sm"
+          className="justify-start"
+          onClick={() => {
+            addNode(type)
+            setPaletteOpen(false)
+          }}
+        >
+          <Icon className="size-3.5" /> {label}
+        </Button>
+      ))}
+      <Button size="sm" className="mt-3" onClick={handleSave} disabled={saving}>
+        <Save className="size-3.5" /> {saving ? 'Sauvegarde…' : 'Sauvegarder'}
+      </Button>
+    </>
+  )
+
+  const inspectorContent = isTriggerSelected ? (
+    <Card className="border-none shadow-none">
+      <CardHeader className="px-0 pt-0">
+        <CardTitle className="text-sm">Déclencheur</CardTitle>
+      </CardHeader>
+      <CardContent className="px-0">
+        <NodeInspector
+          nodeType="trigger"
+          config={triggerConfig as Record<string, unknown>}
+          onChange={(cfg) =>
+            updateTrigger({
+              trigger_type: cfg.trigger_type as string,
+              trigger_keywords: cfg.trigger_keywords as string[] | null,
+              target_post_ids: cfg.target_post_ids as string[] | null,
+            })
+          }
+          tags={tags}
+          flows={otherFlows}
+        />
+      </CardContent>
+    </Card>
+  ) : nodeData ? (
+    <Card className="border-none shadow-none">
+      <CardHeader className="px-0 pt-0">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">Configuration</CardTitle>
+          <Button variant="ghost" size="icon" onClick={deleteSelected} className="text-destructive hover:text-destructive">
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-0">
+        <NodeInspector nodeType={nodeData.nodeType} config={nodeData.config} onChange={updateSelectedConfig} tags={tags} flows={otherFlows} />
+      </CardContent>
+    </Card>
+  ) : (
+    <p className="text-sm text-muted-foreground">Cliquez sur un nœud pour le configurer.</p>
+  )
+
   return (
     <ReactFlowProvider>
       <div className="flex h-full w-full">
-        {/* Left sidebar — add nodes */}
-        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3 h-full">
-          <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
-          {ADDABLE.map(({ type, icon: Icon, label }) => (
-            <Button key={type} variant="outline" size="sm" className="justify-start" onClick={() => addNode(type)}>
-              <Icon className="size-3.5" /> {label}
-            </Button>
-          ))}
-          <Button size="sm" className="mt-3" onClick={handleSave} disabled={saving}>
-            <Save className="size-3.5" /> {saving ? 'Sauvegarde…' : 'Sauvegarder'}
-          </Button>
+        {/* Left sidebar — add nodes (desktop only) */}
+        <div className="hidden h-full w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3 md:flex">
+          {paletteContent}
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 h-full relative">
+        <div className="relative h-full flex-1">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -331,56 +390,43 @@ export function FlowCanvas({
             <Controls />
             <MiniMap className="!bg-card" />
           </ReactFlow>
+
+          {/* Mobile FAB — opens node palette */}
+          <Button
+            size="icon"
+            onClick={() => setPaletteOpen(true)}
+            className="absolute bottom-4 right-4 z-10 size-12 rounded-full shadow-lg md:hidden"
+            aria-label="Ajouter un nœud"
+          >
+            <Plus className="size-5" />
+          </Button>
         </div>
 
-        {/* Right sidebar — inspector */}
-        <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4 h-full">
-          {isTriggerSelected ? (
-            <Card className="border-none shadow-none">
-              <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-sm">Déclencheur</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0">
-                <NodeInspector
-                  nodeType="trigger"
-                  config={triggerConfig as Record<string, unknown>}
-                  onChange={(cfg) =>
-                    updateTrigger({
-                      trigger_type: cfg.trigger_type as string,
-                      trigger_keywords: cfg.trigger_keywords as string[] | null,
-                      target_post_ids: cfg.target_post_ids as string[] | null,
-                    })
-                  }
-                  tags={tags}
-                  flows={otherFlows}
-                />
-              </CardContent>
-            </Card>
-          ) : nodeData ? (
-            <Card className="border-none shadow-none">
-              <CardHeader className="px-0 pt-0">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Configuration</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={deleteSelected} className="text-destructive hover:text-destructive">
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="px-0">
-                <NodeInspector
-                  nodeType={nodeData.nodeType}
-                  config={nodeData.config}
-                  onChange={updateSelectedConfig}
-                  tags={tags}
-                  flows={otherFlows}
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <p className="text-sm text-muted-foreground">Cliquez sur un nœud pour le configurer.</p>
-          )}
+        {/* Right sidebar — inspector (desktop only) */}
+        <div className="hidden h-full w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4 md:block">
+          {inspectorContent}
         </div>
       </div>
+
+      {/* Mobile: node palette sheet */}
+      <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
+        <SheetContent side="bottom" className="max-h-[70vh] gap-1 overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Ajouter un nœud</SheetTitle>
+          </SheetHeader>
+          {paletteContent}
+        </SheetContent>
+      </Sheet>
+
+      {/* Mobile: node inspector sheet */}
+      <Sheet open={isMobile && selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
+        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Configuration du nœud</SheetTitle>
+          </SheetHeader>
+          {inspectorContent}
+        </SheetContent>
+      </Sheet>
     </ReactFlowProvider>
   )
 }

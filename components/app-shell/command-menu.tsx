@@ -36,10 +36,21 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
 
   return (
     <>
+      {/* Mobile: icon-only trigger */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-8 w-56 cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5 text-xs text-muted-foreground transition-colors hover:border-border/80 hover:bg-muted/70"
+        aria-label="Rechercher"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+      >
+        <Search className="size-4" strokeWidth={1.75} />
+      </button>
+
+      {/* Desktop: full search field */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="hidden h-8 w-56 cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5 text-xs text-muted-foreground transition-colors hover:border-border/80 hover:bg-muted/70 md:flex"
       >
         <Search className="size-3.5 shrink-0" strokeWidth={1.75} />
         <span className="flex-1 text-left">Rechercher…</span>

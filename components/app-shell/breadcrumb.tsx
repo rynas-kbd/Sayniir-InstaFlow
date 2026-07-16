@@ -12,7 +12,7 @@ export function Breadcrumb({ businessType }: { businessType: BusinessType }) {
     const item = section.items.find((i) => pathname === i.href || pathname.startsWith(`${i.href}/`))
     if (item) {
       return (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex">
           <span>{section.label}</span>
           <ChevronRight className="size-3" strokeWidth={1.75} />
           <span className="font-medium text-foreground">{item.label}</span>

@@ -30,7 +30,7 @@ export default async function RdvPage() {
       <PageHeader title="Rendez-vous" description="Prises de rendez-vous automatisées par l'IA." />
       <div className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6">
         {safeAppointments.length > 0 && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatCard title="Total" value={safeAppointments.length} icon={CalendarClock} />
             <StatCard title="En attente" value={pendingCount} icon={Clock} />
             <StatCard title="Confirmés" value={confirmedCount} icon={CheckCircle2} />

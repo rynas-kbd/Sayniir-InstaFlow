@@ -38,7 +38,7 @@ export default async function AccountsPage() {
 
         <div className="space-y-5 p-4 md:p-6">
         {safeAccounts.length > 0 && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatCard title="Comptes connectés" value={safeAccounts.length} icon={Link2} />
             <StatCard title="Actifs" value={activeCount} icon={CheckCircle2} />
             <StatCard title="Expirés" value={expiredCount} icon={XCircle} />

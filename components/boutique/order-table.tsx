@@ -92,8 +92,8 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
 
   return (
     <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
-      {/* Header */}
-      <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-x-4 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+      {/* Header — desktop only */}
+      <div className="hidden grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-x-4 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 md:grid">
         <span className="flex items-center gap-1.5"><Package className="size-3" /> Client</span>
         <span>Produit</span>
         <span>Total</span>
@@ -112,58 +112,96 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
             .slice(0, 2)
             .toUpperCase()
 
+          const dateLabel = new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+
           return (
-            <div
-              key={order.id}
-              className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-muted/30"
-            >
-              {/* Customer */}
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  {initials}
+            <div key={order.id}>
+              {/* Desktop row */}
+              <div className="hidden grid-cols-[1fr_1fr_auto_auto_auto_auto] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-muted/30 md:grid">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-semibold text-foreground">{order.customer_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{order.customer_phone}</p>
+                  </div>
                 </div>
+
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-semibold text-foreground">{order.customer_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{order.customer_phone}</p>
+                  <p className="truncate text-[13px] text-foreground">
+                    {order.product_name}
+                    {order.size && <span className="text-muted-foreground"> · {order.size}</span>}
+                    {order.color && <span className="text-muted-foreground"> · {order.color}</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Qté {order.quantity}</p>
                 </div>
+
+                <p className="whitespace-nowrap text-sm font-bold text-foreground tabular-nums">
+                  {order.total_amount.toLocaleString('fr-FR')}
+                  <span className="ml-0.5 text-xs font-medium text-muted-foreground">DZD</span>
+                </p>
+
+                <StatusSelect
+                  value={order.payment_status as PaymentStatus}
+                  options={PAYMENT_STATUSES}
+                  config={PAYMENT_CONFIG}
+                  onChange={(v) => updateStatus(order.id, 'payment_status', v)}
+                />
+
+                <StatusSelect
+                  value={order.shipping_status as ShippingStatus}
+                  options={SHIPPING_STATUSES}
+                  config={SHIPPING_CONFIG}
+                  onChange={(v) => updateStatus(order.id, 'shipping_status', v)}
+                />
+
+                <p className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">{dateLabel}</p>
               </div>
 
-              {/* Product */}
-              <div className="min-w-0">
-                <p className="truncate text-[13px] text-foreground">
+              {/* Mobile card */}
+              <div className="flex flex-col gap-3 px-4 py-3.5 md:hidden">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{order.customer_name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{order.customer_phone}</p>
+                    </div>
+                  </div>
+                  <p className="shrink-0 whitespace-nowrap text-sm font-bold text-foreground tabular-nums">
+                    {order.total_amount.toLocaleString('fr-FR')}
+                    <span className="ml-0.5 text-xs font-medium text-muted-foreground">DZD</span>
+                  </p>
+                </div>
+
+                <p className="text-sm text-foreground">
                   {order.product_name}
                   {order.size && <span className="text-muted-foreground"> · {order.size}</span>}
                   {order.color && <span className="text-muted-foreground"> · {order.color}</span>}
+                  <span className="text-muted-foreground"> · Qté {order.quantity}</span>
                 </p>
-                <p className="text-xs text-muted-foreground">Qté {order.quantity}</p>
+
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusSelect
+                      value={order.payment_status as PaymentStatus}
+                      options={PAYMENT_STATUSES}
+                      config={PAYMENT_CONFIG}
+                      onChange={(v) => updateStatus(order.id, 'payment_status', v)}
+                    />
+                    <StatusSelect
+                      value={order.shipping_status as ShippingStatus}
+                      options={SHIPPING_STATUSES}
+                      config={SHIPPING_CONFIG}
+                      onChange={(v) => updateStatus(order.id, 'shipping_status', v)}
+                    />
+                  </div>
+                  <p className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">{dateLabel}</p>
+                </div>
               </div>
-
-              {/* Amount */}
-              <p className="whitespace-nowrap text-sm font-bold text-foreground tabular-nums">
-                {order.total_amount.toLocaleString('fr-FR')}
-                <span className="ml-0.5 text-xs font-medium text-muted-foreground">DZD</span>
-              </p>
-
-              {/* Payment Status */}
-              <StatusSelect
-                value={order.payment_status as PaymentStatus}
-                options={PAYMENT_STATUSES}
-                config={PAYMENT_CONFIG}
-                onChange={(v) => updateStatus(order.id, 'payment_status', v)}
-              />
-
-              {/* Shipping Status */}
-              <StatusSelect
-                value={order.shipping_status as ShippingStatus}
-                options={SHIPPING_STATUSES}
-                config={SHIPPING_CONFIG}
-                onChange={(v) => updateStatus(order.id, 'shipping_status', v)}
-              />
-
-              {/* Date */}
-              <p className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-                {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-              </p>
             </div>
           )
         })}
