@@ -134,6 +134,7 @@ export function RuleFormDialog({
                 <Label htmlFor="rule-name">Nom de la règle</Label>
                 <Input
                   id="rule-name"
+                  autoFocus
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Ex : Réponse de bienvenue"

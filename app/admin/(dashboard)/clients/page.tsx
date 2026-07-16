@@ -77,7 +77,7 @@ export default async function AdminClientsPage({
         title="Utilisateurs"
         description={`${rows.length} résultat${rows.length !== 1 ? 's' : ''}${q ? ` pour « ${q} »` : ''}`}
         actions={
-          <Button render={<Link href="/admin/clients/new" />}>
+          <Button nativeButton={false} render={<Link href="/admin/clients/new" />}>
             <UserPlus className="size-4" /> Nouvel utilisateur
           </Button>
         }
@@ -164,7 +164,7 @@ export default async function AdminClientsPage({
                       />
                     </div>
 
-                    <Button size="sm" variant="outline" render={<Link href={`/admin/clients/${user.id}`} />}>
+                    <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/admin/clients/${user.id}`} />}>
                       Gérer
                     </Button>
                   </div>

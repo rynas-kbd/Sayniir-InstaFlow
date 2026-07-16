@@ -44,14 +44,30 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 -- RLS
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users view own subscription"
-  ON public.subscriptions FOR SELECT
-  USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'subscriptions'
+      AND policyname = 'Users view own subscription'
+  ) THEN
+    CREATE POLICY "Users view own subscription"
+      ON public.subscriptions FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own subscription"
-  ON public.subscriptions FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'subscriptions'
+      AND policyname = 'Users manage own subscription'
+  ) THEN
+    CREATE POLICY "Users manage own subscription"
+      ON public.subscriptions FOR ALL
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- ─── 4. Index utiles ────────────────────────────────────────────────────────
 

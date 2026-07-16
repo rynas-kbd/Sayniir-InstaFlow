@@ -71,19 +71,44 @@ ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_tags ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users manage own contacts"
-  ON public.contacts FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'contacts'
+      AND policyname = 'Users manage own contacts'
+  ) THEN
+    CREATE POLICY "Users manage own contacts"
+      ON public.contacts FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own tags"
-  ON public.tags FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'tags'
+      AND policyname = 'Users manage own tags'
+  ) THEN
+    CREATE POLICY "Users manage own tags"
+      ON public.tags FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own contact tags"
-  ON public.contact_tags FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'contact_tags'
+      AND policyname = 'Users manage own contact tags'
+  ) THEN
+    CREATE POLICY "Users manage own contact tags"
+      ON public.contact_tags FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 COMMIT;
+

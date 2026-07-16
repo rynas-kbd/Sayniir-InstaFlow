@@ -83,20 +83,44 @@ ALTER TABLE public.booking_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users manage own booking sessions"
-  ON public.booking_sessions FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'booking_sessions'
+      AND policyname = 'Users manage own booking sessions'
+  ) THEN
+    CREATE POLICY "Users manage own booking sessions"
+      ON public.booking_sessions FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own appointments"
-  ON public.appointments FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'appointments'
+      AND policyname = 'Users manage own appointments'
+  ) THEN
+    CREATE POLICY "Users manage own appointments"
+      ON public.appointments FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own leads"
-  ON public.leads FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'leads'
+      AND policyname = 'Users manage own leads'
+  ) THEN
+    CREATE POLICY "Users manage own leads"
+      ON public.leads FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────
 -- Fix: channel_accounts unique constraint doesn't cover WhatsApp rows

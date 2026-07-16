@@ -60,14 +60,31 @@ CREATE INDEX IF NOT EXISTS idx_campaign_sends_pending ON public.campaign_sends(c
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.campaign_sends ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users manage own campaigns"
-  ON public.campaigns FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'campaigns'
+      AND policyname = 'Users manage own campaigns'
+  ) THEN
+    CREATE POLICY "Users manage own campaigns"
+      ON public.campaigns FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own campaign sends"
-  ON public.campaign_sends FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'campaign_sends'
+      AND policyname = 'Users manage own campaign sends'
+  ) THEN
+    CREATE POLICY "Users manage own campaign sends"
+      ON public.campaign_sends FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 COMMIT;
+

@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
                 Activer ou désactiver les abonnements, enregistrer des paiements, gérer les mots-clés.
               </p>
             </div>
-            <Button size="sm" variant="outline" render={<Link href="/admin/clients" />}>
+            <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/admin/clients" />}>
               Voir les clients <ArrowRight className="size-3.5" />
             </Button>
           </CardContent>

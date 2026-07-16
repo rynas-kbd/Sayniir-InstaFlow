@@ -71,7 +71,7 @@ export function ProductFormDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="space-y-1.5">
             <Label htmlFor="p-name">Nom</Label>
-            <Input id="p-name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input id="p-name" autoFocus required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p-desc">Description</Label>

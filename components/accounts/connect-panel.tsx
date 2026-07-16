@@ -88,6 +88,7 @@ export function ConnectPanel() {
               <Label htmlFor="wa-token">Token d&apos;accès permanent</Label>
               <Input
                 id="wa-token"
+                autoFocus
                 required
                 value={waFields.accessToken}
                 onChange={(e) => setWaFields({ ...waFields, accessToken: e.target.value })}

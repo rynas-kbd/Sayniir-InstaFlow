@@ -31,8 +31,17 @@ CREATE INDEX IF NOT EXISTS idx_events_channel_created ON public.events(channel_a
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 -- Read-only for users; writes happen via the admin (service-role) client only.
-CREATE POLICY IF NOT EXISTS "Users read own events"
-  ON public.events FOR SELECT
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'events'
+      AND policyname = 'Users read own events'
+  ) THEN
+    CREATE POLICY "Users read own events"
+      ON public.events FOR SELECT
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 COMMIT;
+

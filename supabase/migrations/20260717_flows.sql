@@ -93,24 +93,57 @@ ALTER TABLE public.flow_nodes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.flow_edges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.flow_runs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users manage own flows"
-  ON public.flows FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'flows'
+      AND policyname = 'Users manage own flows'
+  ) THEN
+    CREATE POLICY "Users manage own flows"
+      ON public.flows FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own flow nodes"
-  ON public.flow_nodes FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'flow_nodes'
+      AND policyname = 'Users manage own flow nodes'
+  ) THEN
+    CREATE POLICY "Users manage own flow nodes"
+      ON public.flow_nodes FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own flow edges"
-  ON public.flow_edges FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'flow_edges'
+      AND policyname = 'Users manage own flow edges'
+  ) THEN
+    CREATE POLICY "Users manage own flow edges"
+      ON public.flow_edges FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users manage own flow runs"
-  ON public.flow_runs FOR ALL
-  USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
-  WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'flow_runs'
+      AND policyname = 'Users manage own flow runs'
+  ) THEN
+    CREATE POLICY "Users manage own flow runs"
+      ON public.flow_runs FOR ALL
+      USING (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()))
+      WITH CHECK (channel_account_id IN (SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 COMMIT;
+
