@@ -24,8 +24,72 @@ export function NodeInspector({
   }
 
   switch (nodeType) {
-    case 'trigger':
-      return <p className="text-sm text-muted-foreground">Point de départ du flow. Le déclencheur se configure dans la liste des flows.</p>
+    case 'trigger': {
+      const triggerType = (config.trigger_type as string) ?? 'any_message'
+      // Use local raw string state so we don't PATCH on every keystroke
+      const keywords = ((config.trigger_keywords as string[] | null) ?? []).join(', ')
+      const postIds = ((config.target_post_ids as string[] | null) ?? []).join(', ')
+      const isComment = triggerType === 'any_comment' || triggerType === 'comment_keyword'
+
+      function commitKeywords(raw: string) {
+        const arr = raw ? raw.split(',').map((k) => k.trim()).filter(Boolean) : null
+        onChange({ ...config, trigger_keywords: arr })
+      }
+
+      function commitPostIds(raw: string) {
+        const arr = raw ? raw.split(',').map((k) => k.trim()).filter(Boolean) : null
+        onChange({ ...config, target_post_ids: arr })
+      }
+
+      return (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Type de déclencheur</Label>
+            <Select value={triggerType} onValueChange={(v) => v && onChange({ ...config, trigger_type: v, trigger_keywords: null, target_post_ids: null })}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any_message">Tout message DM</SelectItem>
+                <SelectItem value="keyword">Mot-clé dans DM</SelectItem>
+                <SelectItem value="any_comment">Tout commentaire</SelectItem>
+                <SelectItem value="comment_keyword">Mot-clé dans commentaire</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(triggerType === 'keyword' || triggerType === 'comment_keyword') && (
+            <div className="space-y-1.5">
+              <Label>Mots-clés (séparés par virgule)</Label>
+              <Input
+                defaultValue={keywords}
+                onBlur={(e) => commitKeywords(e.target.value)}
+                placeholder="promo, commande, prix…"
+              />
+              <p className="text-xs text-muted-foreground">Le flow se déclenche si le message contient l&apos;un de ces mots.</p>
+            </div>
+          )}
+
+          {isComment && (
+            <div className="space-y-1.5">
+              <Label>IDs de posts ciblés (optionnel)</Label>
+              <Input
+                defaultValue={postIds}
+                onBlur={(e) => commitPostIds(e.target.value)}
+                placeholder="123456789, 987654321…"
+              />
+              <p className="text-xs text-muted-foreground">Laissez vide pour tous les posts.</p>
+            </div>
+          )}
+
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+            <p className="text-[11px] text-muted-foreground">
+              💡 Modifications sauvegardées automatiquement.
+            </p>
+          </div>
+        </div>
+      )
+    }
 
     case 'send_message': {
       const messageType = (config.message_type as string) ?? 'text'

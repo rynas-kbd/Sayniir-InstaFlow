@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { FlowCanvas } from '@/components/flows/builder/flow-canvas'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowSummary } from '@/components/flows/types'
+import type { FlowMeta } from '@/components/flows/builder/flow-canvas'
 
 export default async function FlowBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,6 +24,15 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
       .neq('id', id),
   ])
 
+  const flowMeta: FlowMeta = {
+    id: flow.id,
+    name: flow.name,
+    trigger_type: flow.trigger_type,
+    trigger_keywords: flow.trigger_keywords ?? null,
+    target_post_ids: flow.target_post_ids ?? null,
+    status: flow.status,
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
@@ -33,7 +43,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
       </div>
       <div className="min-h-0 flex-1">
         <FlowCanvas
-          flowId={id}
+          flow={flowMeta}
           initialNodes={(nodes ?? []) as FlowNodeRecord[]}
           initialEdges={(edges ?? []) as FlowEdgeRecord[]}
           tags={tags ?? []}

@@ -86,14 +86,23 @@ function toReactFlowEdge(record: FlowEdgeRecord): Edge {
   }
 }
 
+export interface FlowMeta {
+  id: string
+  name: string
+  trigger_type: string
+  trigger_keywords: string[] | null
+  target_post_ids: string[] | null
+  status: string
+}
+
 export function FlowCanvas({
-  flowId,
+  flow,
   initialNodes,
   initialEdges,
   tags,
   otherFlows,
 }: {
-  flowId: string
+  flow: FlowMeta
   initialNodes: FlowNodeRecord[]
   initialEdges: FlowEdgeRecord[]
   tags: ContactTag[]
@@ -103,6 +112,16 @@ export function FlowCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  // Local copy of trigger config (so changes are reflected immediately)
+  const [triggerConfig, setTriggerConfig] = useState<{
+    trigger_type: string
+    trigger_keywords: string[] | null
+    target_post_ids: string[] | null
+  }>({
+    trigger_type: flow.trigger_type,
+    trigger_keywords: flow.trigger_keywords,
+    target_post_ids: flow.target_post_ids,
+  })
 
   const selectedNode = nodes.find((n) => n.id === selectedId)
 
@@ -129,6 +148,27 @@ export function FlowCanvas({
     )
   }
 
+  async function updateTrigger(patch: Partial<typeof triggerConfig>) {
+    const next = { ...triggerConfig, ...patch }
+    setTriggerConfig(next)
+    try {
+      const res = await fetch(`/api/flows/${flow.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trigger_type: next.trigger_type,
+          trigger_keywords: next.trigger_keywords,
+          target_post_ids: next.target_post_ids,
+        }),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      toast.success('Déclencheur mis à jour')
+    } catch {
+      setTriggerConfig(triggerConfig) // rollback
+      toast.error('Impossible de mettre à jour le déclencheur')
+    }
+  }
+
   function deleteSelected() {
     if (!selectedId) return
     setNodes((nds) => nds.filter((n) => n.id !== selectedId))
@@ -152,7 +192,7 @@ export function FlowCanvas({
           source_handle: e.sourceHandle ?? 'default',
         })),
       }
-      const res = await fetch(`/api/flows/${flowId}/graph`, {
+      const res = await fetch(`/api/flows/${flow.id}/graph`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -170,10 +210,12 @@ export function FlowCanvas({
   }
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as FlowNodeData) : null
+  const isTriggerSelected = selectedId === 'trigger'
 
   return (
     <ReactFlowProvider>
       <div className="flex h-full">
+        {/* Left sidebar — add nodes */}
         <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3">
           <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
           {ADDABLE.map(({ type, icon: Icon, label }) => (
@@ -186,6 +228,7 @@ export function FlowCanvas({
           </Button>
         </div>
 
+        {/* Canvas */}
         <div className="flex-1">
           <ReactFlow
             nodes={nodes}
@@ -204,17 +247,37 @@ export function FlowCanvas({
           </ReactFlow>
         </div>
 
-        <div className="w-64 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4">
-          {nodeData ? (
+        {/* Right sidebar — inspector */}
+        <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4">
+          {isTriggerSelected ? (
+            <Card className="border-none shadow-none">
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className="text-sm">Déclencheur</CardTitle>
+              </CardHeader>
+              <CardContent className="px-0">
+                <NodeInspector
+                  nodeType="trigger"
+                  config={triggerConfig as Record<string, unknown>}
+                  onChange={(cfg) =>
+                    updateTrigger({
+                      trigger_type: cfg.trigger_type as string,
+                      trigger_keywords: cfg.trigger_keywords as string[] | null,
+                      target_post_ids: cfg.target_post_ids as string[] | null,
+                    })
+                  }
+                  tags={tags}
+                  flows={otherFlows}
+                />
+              </CardContent>
+            </Card>
+          ) : nodeData ? (
             <Card className="border-none shadow-none">
               <CardHeader className="px-0 pt-0">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">Configuration</CardTitle>
-                  {nodeData.nodeType !== 'trigger' && (
-                    <Button variant="ghost" size="icon" onClick={deleteSelected} className="text-destructive hover:text-destructive">
-                      <Trash2 className="size-4" />
-                    </Button>
-                  )}
+                  <Button variant="ghost" size="icon" onClick={deleteSelected} className="text-destructive hover:text-destructive">
+                    <Trash2 className="size-4" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="px-0">
@@ -228,7 +291,7 @@ export function FlowCanvas({
               </CardContent>
             </Card>
           ) : (
-            <p className="text-sm text-muted-foreground">Sélectionnez un nœud pour le configurer.</p>
+            <p className="text-sm text-muted-foreground">Cliquez sur un nœud pour le configurer.</p>
           )}
         </div>
       </div>
