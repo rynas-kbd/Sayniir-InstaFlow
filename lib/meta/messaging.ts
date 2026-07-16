@@ -235,6 +235,26 @@ function sendButtonTextFallback(
 
 
 /**
+ * Show the native "typing…" indicator to a recipient. Best-effort: never
+ * throws, since this is purely cosmetic and must not break a flow.
+ */
+export async function sendTypingIndicator(igUserId: string, accessToken: string, recipientId: string): Promise<void> {
+  try {
+    const res = await fetch(`https://graph.instagram.com/${GRAPH_API_VERSION}/${igUserId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ recipient: { id: recipientId }, sender_action: 'typing_on' }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      console.error('[sendTypingIndicator] Meta API error:', JSON.stringify(data?.error))
+    }
+  } catch (err) {
+    console.error('[sendTypingIndicator] Request failed:', err)
+  }
+}
+
+/**
  * Custom error for expired tokens — allows callers to handle separately.
  */
 export class TokenExpiredError extends Error {

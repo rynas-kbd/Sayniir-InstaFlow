@@ -97,6 +97,9 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
 
     case 'delay': {
       const seconds = Number(node.config.seconds) || 60
+      // Best-effort: shows the native "typing…" indicator so the wait
+      // reads as a person composing a reply rather than dead silence.
+      await ctx.adapter.sendTypingIndicator?.(ctx.ref, ctx.run.sender_id)
       return { type: 'wait', seconds }
     }
 

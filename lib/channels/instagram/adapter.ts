@@ -6,7 +6,7 @@ import {
   subscribeToWebhooks as igSubscribeToWebhooks,
 } from '../../meta/oauth'
 import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload } from '../../meta/webhook'
-import { sendReply, fetchSenderProfile, sendCardReply, sendButtonMessage } from '../../meta/messaging'
+import { sendReply, fetchSenderProfile, sendCardReply, sendButtonMessage, sendTypingIndicator } from '../../meta/messaging'
 import { refreshLongLivedToken } from '../../meta/token-refresh'
 import { verifyWebhookSignature } from '../shared/signature'
 import type {
@@ -143,6 +143,11 @@ export const instagramAdapter: ChannelAdapter = {
     }
     const result = await sendButtonMessage(ref.externalId, ref.accessToken, recipientExternalId, text, buttons, false)
     return result ? { messageId: result.message_id } : null
+  },
+
+  async sendTypingIndicator(ref: ChannelAccountRef, recipientExternalId: string) {
+    if (!ref.externalId) return
+    await sendTypingIndicator(ref.externalId, ref.accessToken, recipientExternalId)
   },
 
   async refreshToken(currentToken: string) {

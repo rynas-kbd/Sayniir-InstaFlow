@@ -71,6 +71,7 @@ export interface ChannelAdapter {
     text: string,
     buttons: ChannelButton[]
   ): Promise<{ messageId: string } | null>
+  sendTypingIndicator?(ref: ChannelAccountRef, recipientExternalId: string): Promise<void>
   refreshToken?(currentToken: string): Promise<{ accessToken: string; expiresIn: number }>
   fetchSenderProfile?(senderId: string, accessToken: string): Promise<{ name?: string; username?: string; profilePic?: string } | null>
 }

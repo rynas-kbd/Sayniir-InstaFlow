@@ -207,4 +207,20 @@ export const messengerAdapter: ChannelAdapter = {
     }
     return { messageId: data.message_id as string }
   },
+
+  async sendTypingIndicator(ref: ChannelAccountRef, recipientExternalId: string) {
+    try {
+      const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/me/messages?access_token=${ref.accessToken}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipient: { id: recipientExternalId }, sender_action: 'typing_on' }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        console.error('[Messenger sendTypingIndicator] Meta API error:', JSON.stringify(data?.error))
+      }
+    } catch (err) {
+      console.error('[Messenger sendTypingIndicator] Request failed:', err)
+    }
+  },
 }
