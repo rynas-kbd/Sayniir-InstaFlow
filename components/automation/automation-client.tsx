@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui/empty-state'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RuleFormDialog } from './rule-form-dialog'
-import { RuleRow } from './rule-row'
+import { RuleCard } from './rule-card'
 import type { AutomationRule, ChannelAccountLite, RuleFormPayload } from './types'
 
 export function AutomationClient({
@@ -65,7 +65,7 @@ export function AutomationClient({
       if (!res.ok) throw new Error('Toggle request failed')
       const updated: AutomationRule = await res.json()
       setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-      toast.success(updated.is_active ? 'Règle activée' : 'Règle désactivée')
+      toast.success(updated.is_active ? '✅ Règle activée' : '⏸️ Règle désactivée')
     } catch {
       toast.error('Impossible de modifier la règle')
     } finally {
@@ -79,7 +79,7 @@ export function AutomationClient({
       const res = await fetch(`/api/rules/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete request failed')
       setRules((prev) => prev.filter((r) => r.id !== id))
-      toast.success('Règle supprimée')
+      toast.success('🗑️ Règle supprimée')
     } catch {
       toast.error('Impossible de supprimer la règle')
     } finally {
@@ -92,7 +92,7 @@ export function AutomationClient({
   const activeCount = rules.filter((r) => r.is_active).length
 
   return (
-    <div className="mx-auto max-w-4xl p-4 pb-16 sm:p-6">
+    <div className="mx-auto w-full max-w-6xl p-4 pb-16 sm:p-6">
       {(showModal || editingRule) && (
         <RuleFormDialog
           open
@@ -107,23 +107,28 @@ export function AutomationClient({
         />
       )}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      {/* Stats Header Summary */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard title="Règles totales" value={rules.length} />
-        <StatCard title="Actives" value={activeCount} />
-        <StatCard title="Règles DM" value={dmCount} />
+        <StatCard title="Règles actives" value={activeCount} />
+        <StatCard title="Automatisations DM" value={dmCount} />
         <StatCard title="Commentaires" value={commentCount} />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dm' | 'comment')}>
-          <TabsList>
-            <TabsTrigger value="dm">Messages privés ({dmCount})</TabsTrigger>
-            <TabsTrigger value="comment">Commentaires ({commentCount})</TabsTrigger>
+          <TabsList className="bg-muted/60 p-0.5 border border-border/40">
+            <TabsTrigger value="dm" className="px-4 py-1.5 text-xs font-medium">
+              Messages privés ({dmCount})
+            </TabsTrigger>
+            <TabsTrigger value="comment" className="px-4 py-1.5 text-xs font-medium">
+              Commentaires ({commentCount})
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         {accounts.length > 0 && (
-          <Button size="sm" onClick={() => setShowModal(true)}>
-            <Plus className="size-3.5" /> Nouvelle règle
+          <Button onClick={() => setShowModal(true)}>
+            <Plus className="size-4" /> Nouvelle règle
           </Button>
         )}
       </div>
@@ -140,15 +145,15 @@ export function AutomationClient({
           title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
           description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
           action={
-            <Button size="sm" onClick={() => setShowModal(true)}>
-              <Plus className="size-3.5" /> Créer ma première règle
+            <Button onClick={() => setShowModal(true)}>
+              <Plus className="size-4" /> Créer ma première règle
             </Button>
           }
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRules.map((rule) => (
-            <RuleRow
+            <RuleCard
               key={rule.id}
               rule={rule}
               account={accountMap[rule.channel_account_id]}
@@ -159,6 +164,17 @@ export function AutomationClient({
               onDelete={() => handleDelete(rule.id)}
             />
           ))}
+
+          {/* Create new rule card button in the grid */}
+          <button
+            onClick={() => setShowModal(true)}
+            className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+          >
+            <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+              <Plus className="size-5" />
+            </div>
+            <span className="text-sm font-medium">Nouvelle règle</span>
+          </button>
         </div>
       )}
     </div>

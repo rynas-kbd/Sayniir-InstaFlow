@@ -12,7 +12,15 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import type { Tag } from '@/components/contacts/types'
 
-export function CreateCampaignDialog({ channelAccountId, tags }: { channelAccountId: string; tags: Tag[] }) {
+export function CreateCampaignDialog({
+  channelAccountId,
+  tags,
+  asCard = false,
+}: {
+  channelAccountId: string
+  tags: Tag[]
+  asCard?: boolean
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -58,8 +66,27 @@ export function CreateCampaignDialog({ channelAccountId, tags }: { channelAccoun
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
-        <Plus className="size-4" /> Nouvelle campagne
+      <DialogTrigger
+        render={
+          asCard ? (
+            <button className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary" />
+          ) : (
+            <Button />
+          )
+        }
+      >
+        {asCard ? (
+          <>
+            <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+              <Plus className="size-5" />
+            </div>
+            <span className="text-sm font-medium">Nouvelle campagne</span>
+          </>
+        ) : (
+          <>
+            <Plus className="size-4" /> Nouvelle campagne
+          </>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
