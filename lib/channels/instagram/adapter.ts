@@ -6,7 +6,7 @@ import {
   subscribeToWebhooks as igSubscribeToWebhooks,
 } from '../../meta/oauth'
 import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload } from '../../meta/webhook'
-import { sendReply, fetchSenderProfile, sendCardReply } from '../../meta/messaging'
+import { sendReply, fetchSenderProfile, sendCardReply, sendButtonMessage } from '../../meta/messaging'
 import { refreshLongLivedToken } from '../../meta/token-refresh'
 import { verifyWebhookSignature } from '../shared/signature'
 import type {
@@ -14,6 +14,7 @@ import type {
   ChannelAccountRef,
   NormalizedInboundMessage,
   NormalizedInboundComment,
+  ChannelButton,
 } from '../types'
 
 /**
@@ -57,6 +58,19 @@ export const instagramAdapter: ChannelAdapter = {
     const results: NormalizedInboundMessage[] = []
 
     for (const { pageId, messaging } of events) {
+      if (messaging.postback) {
+        results.push({
+          platform: 'instagram',
+          channelExternalId: pageId,
+          senderId: messaging.sender.id,
+          recipientId: messaging.recipient.id,
+          messageId: `postback-${messaging.timestamp}-${messaging.sender.id}`,
+          postbackPayload: messaging.postback.payload,
+          timestamp: messaging.timestamp,
+        })
+        continue
+      }
+
       if (!messaging.message) continue
       const audioAttachment = messaging.message.attachments?.find((att) => att.type === 'audio')
 
@@ -121,6 +135,15 @@ export const instagramAdapter: ChannelAdapter = {
     return result ? { messageId: result.message_id } : null
   },
 
+
+  async sendButtons(ref: ChannelAccountRef, recipientExternalId: string, text: string, buttons: ChannelButton[]) {
+    if (!ref.externalId) {
+      console.error('[instagram:sendButtons] ❌ externalId is empty — cannot send message!')
+      return null
+    }
+    const result = await sendButtonMessage(ref.externalId, ref.accessToken, recipientExternalId, text, buttons, false)
+    return result ? { messageId: result.message_id } : null
+  },
 
   async refreshToken(currentToken: string) {
     return refreshLongLivedToken(currentToken)

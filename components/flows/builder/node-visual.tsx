@@ -10,7 +10,7 @@ import {
   ArrowRightCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { FlowNodeType } from '../types'
+import type { FlowNodeType, CardButton } from '../types'
 
 const NODE_META: Record<FlowNodeType, { icon: typeof Zap; label: string }> = {
   trigger: { icon: Zap, label: 'Déclencheur' },
@@ -35,6 +35,10 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
   const meta = NODE_META[nodeData.nodeType]
   const Icon = meta.icon
   const isTrigger = nodeData.nodeType === 'trigger'
+  const postbackButtons =
+    nodeData.nodeType === 'send_message'
+      ? ((nodeData.config.card_buttons as CardButton[] | undefined) ?? []).filter((b) => b.type === 'postback')
+      : []
 
   return (
     <div
@@ -58,6 +62,24 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
             <span>Vrai</span>
             <span>Faux</span>
+          </div>
+        </>
+      ) : postbackButtons.length > 0 ? (
+        <>
+          {postbackButtons.map((btn, idx) => (
+            <Handle
+              key={idx}
+              type="source"
+              position={Position.Bottom}
+              id={`btn-${idx}`}
+              style={{ left: `${((idx + 1) / (postbackButtons.length + 1)) * 100}%` }}
+              className="!bg-primary"
+            />
+          ))}
+          <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+            {postbackButtons.map((btn, idx) => (
+              <span key={idx} className="truncate">{btn.title || `Bouton ${idx + 1}`}</span>
+            ))}
           </div>
         </>
       ) : (

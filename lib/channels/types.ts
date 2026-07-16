@@ -14,7 +14,15 @@ export interface NormalizedInboundMessage {
   messageId: string
   text?: string
   audioUrl?: string
+  postbackPayload?: string
   timestamp: number
+}
+
+export interface ChannelButton {
+  type: 'postback' | 'web_url'
+  title: string
+  url?: string
+  payload?: string
 }
 
 export interface NormalizedInboundComment {
@@ -56,6 +64,12 @@ export interface ChannelAdapter {
     subtitle?: string,
     imageUrl?: string,
     buttons?: Array<{ title: string; url: string }>
+  ): Promise<{ messageId: string } | null>
+  sendButtons?(
+    ref: ChannelAccountRef,
+    recipientExternalId: string,
+    text: string,
+    buttons: ChannelButton[]
   ): Promise<{ messageId: string } | null>
   refreshToken?(currentToken: string): Promise<{ accessToken: string; expiresIn: number }>
   fetchSenderProfile?(senderId: string, accessToken: string): Promise<{ name?: string; username?: string; profilePic?: string } | null>

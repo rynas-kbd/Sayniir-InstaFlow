@@ -2,6 +2,13 @@ import { createAdminClient } from '../supabase/admin'
 import { callAgentLLM } from '../agent/engine'
 import { addTag, removeTag, getContact } from '../contacts/service'
 import type { FlowNode, NodeExecContext, NodeResult } from './types'
+import type { ChannelButton } from '../channels/types'
+
+interface CardButtonConfig {
+  type?: 'postback' | 'web_url'
+  title: string
+  url?: string
+}
 
 async function evaluateCondition(node: FlowNode, ctx: NodeExecContext): Promise<'true' | 'false'> {
   const { field, operator, value } = node.config as { field?: string; operator?: string; value?: string }
@@ -33,10 +40,28 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
         const title = (node.config.card_title as string) || ''
         const subtitle = (node.config.card_subtitle as string) || undefined
         const imageUrl = (node.config.card_image_url as string) || undefined
-        const buttons = (node.config.card_buttons as Array<{ title: string; url: string }>) || []
-        
-        if (title && ctx.adapter.sendCard) {
-          await ctx.adapter.sendCard(ctx.ref, ctx.run.sender_id, title, subtitle, imageUrl, buttons)
+        const buttons = (node.config.card_buttons as CardButtonConfig[]) || []
+        const hasPostback = buttons.some((b) => b.type === 'postback')
+
+        if (hasPostback && ctx.adapter.sendButtons) {
+          const channelButtons: ChannelButton[] = buttons.map((b, idx) =>
+            b.type === 'postback'
+              ? { type: 'postback', title: b.title, payload: `${node.flow_id}:${node.node_key}:${idx}` }
+              : { type: 'web_url', title: b.title, url: b.url }
+          )
+          await ctx.adapter.sendButtons(ctx.ref, ctx.run.sender_id, title || subtitle || '', channelButtons)
+          // Pause here: the run only advances again once a button is
+          // clicked (postback), handled separately in continueRunFromPostback.
+          return { type: 'pause' }
+        } else if (title && ctx.adapter.sendCard) {
+          await ctx.adapter.sendCard(
+            ctx.ref,
+            ctx.run.sender_id,
+            title,
+            subtitle,
+            imageUrl,
+            buttons.map((b) => ({ title: b.title, url: b.url ?? '' }))
+          )
         }
       } else {
         const text = (node.config.text as string) || ''

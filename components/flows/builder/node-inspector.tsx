@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import type { FlowNodeType } from '../types'
+import type { FlowNodeType, CardButton } from '../types'
 import type { Tag } from '@/components/contacts/types'
 import type { FlowSummary } from '../types'
 
@@ -93,7 +93,7 @@ export function NodeInspector({
 
     case 'send_message': {
       const messageType = (config.message_type as string) ?? 'text'
-      const buttons = (config.card_buttons as Array<{ title: string; url: string }>) ?? []
+      const buttons = (config.card_buttons as CardButton[]) ?? []
 
       return (
         <div className="space-y-4">
@@ -155,7 +155,7 @@ export function NodeInspector({
                   {buttons.length < 3 && (
                     <button
                       type="button"
-                      onClick={() => set('card_buttons', [...buttons, { title: 'Acheter', url: 'https://' }])}
+                      onClick={() => set('card_buttons', [...buttons, { type: 'web_url', title: 'Acheter', url: 'https://' }])}
                       className="text-xs text-primary font-medium hover:underline cursor-pointer"
                     >
                       + Ajouter
@@ -164,44 +164,71 @@ export function NodeInspector({
                 </div>
 
                 <div className="space-y-2.5">
-                  {buttons.map((btn, idx) => (
-                    <div key={idx} className="flex flex-col gap-1.5 rounded-md border border-border p-2 bg-muted/20">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-medium text-muted-foreground">Bouton {idx + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
+                  {buttons.map((btn, idx) => {
+                    const btnType = btn.type ?? 'web_url'
+                    return (
+                      <div key={idx} className="flex flex-col gap-1.5 rounded-md border border-border p-2 bg-muted/20">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-medium text-muted-foreground">Bouton {idx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const copy = [...buttons]
+                              copy.splice(idx, 1)
+                              set('card_buttons', copy)
+                            }}
+                            className="text-[10px] text-destructive hover:underline cursor-pointer"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                        <Select
+                          value={btnType}
+                          onValueChange={(v) => {
+                            if (!v) return
                             const copy = [...buttons]
-                            copy.splice(idx, 1)
+                            copy[idx] = v === 'postback' ? { type: 'postback', title: btn.title } : { type: 'web_url', title: btn.title, url: btn.url ?? 'https://' }
                             set('card_buttons', copy)
                           }}
-                          className="text-[10px] text-destructive hover:underline cursor-pointer"
                         >
-                          Supprimer
-                        </button>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="web_url">Lien (URL)</SelectItem>
+                            <SelectItem value="postback">Bouton d&apos;action (continue le flow)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          value={btn.title}
+                          onChange={(e) => {
+                            const copy = [...buttons]
+                            copy[idx] = { ...copy[idx], title: e.target.value }
+                            set('card_buttons', copy)
+                          }}
+                          placeholder="Texte du bouton"
+                          className="h-7 text-xs"
+                        />
+                        {btnType === 'web_url' && (
+                          <Input
+                            value={btn.url ?? ''}
+                            onChange={(e) => {
+                              const copy = [...buttons]
+                              copy[idx] = { ...copy[idx], url: e.target.value }
+                              set('card_buttons', copy)
+                            }}
+                            placeholder="Lien URL (https://...)"
+                            className="h-7 text-xs"
+                          />
+                        )}
+                        {btnType === 'postback' && (
+                          <p className="text-[10px] text-muted-foreground">
+                            Reliez ce bouton à un nœud suivant sur le canvas pour définir ce qui se passe au clic.
+                          </p>
+                        )}
                       </div>
-                      <Input
-                        value={btn.title}
-                        onChange={(e) => {
-                          const copy = [...buttons]
-                          copy[idx] = { ...copy[idx], title: e.target.value }
-                          set('card_buttons', copy)
-                        }}
-                        placeholder="Texte du bouton"
-                        className="h-7 text-xs"
-                      />
-                      <Input
-                        value={btn.url}
-                        onChange={(e) => {
-                          const copy = [...buttons]
-                          copy[idx] = { ...copy[idx], url: e.target.value }
-                          set('card_buttons', copy)
-                        }}
-                        placeholder="Lien URL (https://...)"
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  ))}
+                    )
+                  })}
                   {buttons.length === 0 && (
                     <p className="text-xs text-muted-foreground italic text-center py-2">Aucun bouton. L'utilisateur cliquera sur la carte.</p>
                   )}

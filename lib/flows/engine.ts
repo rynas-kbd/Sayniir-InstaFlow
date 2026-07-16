@@ -34,7 +34,8 @@ async function continueRun(
   run: FlowRun,
   platform: Platform,
   account: DispatchAccount,
-  agentArgs: AgentArgs
+  agentArgs: AgentArgs,
+  startHandle: string = 'default'
 ): Promise<void> {
   const supabase = createAdminClient()
   const { nodes, edges } = await loadGraph(run.flow_id)
@@ -66,7 +67,7 @@ async function continueRun(
   // trigger (no side effect) on a fresh run, or a delay node whose wait
   // has now elapsed on resume. Either way, advance past it once before
   // executing anything new.
-  let currentKey = run.current_node_key ? findEdgeTarget(edges, run.current_node_key, 'default') : null
+  let currentKey = run.current_node_key ? findEdgeTarget(edges, run.current_node_key, startHandle) : null
 
   while (currentKey) {
     const node = nodes.find((n) => n.node_key === currentKey)
@@ -84,6 +85,13 @@ async function continueRun(
     if (result.type === 'wait') {
       const resumeAt = new Date(Date.now() + result.seconds * 1000).toISOString()
       await supabase.from('flow_runs').update({ status: 'waiting', current_node_key: currentKey, resume_at: resumeAt }).eq('id', run.id)
+      return
+    }
+    if (result.type === 'pause') {
+      // Waits indefinitely for an external event (button click) — resume_at
+      // stays null so the delay cron (which filters .lte('resume_at', now))
+      // never picks this run up; only continueRunFromPostback can advance it.
+      await supabase.from('flow_runs').update({ status: 'waiting', current_node_key: currentKey, resume_at: null }).eq('id', run.id)
       return
     }
     if (result.type === 'stop') {
@@ -182,6 +190,46 @@ export async function runFlowsForInboundComment(input: {
   if (!matched) return false
 
   await startRun(matched.id, input.platform, input.account, input.contactId, input.senderId, input.agentArgs)
+  return true
+}
+
+/**
+ * Called from dispatchInboundMessage when an inbound event carries a
+ * postback payload (`${flowId}:${nodeKey}:${buttonIndex}`, set by
+ * lib/flows/nodes.ts when sending a send_message node with postback
+ * buttons). Finds the run paused at that exact node for that sender and
+ * advances it via the matching `btn-{index}` edge, instead of re-running
+ * trigger matching from scratch. Returns false if no matching paused run
+ * is found (payload stale, run already completed/cancelled, etc).
+ */
+export async function continueRunFromPostback(
+  payload: string,
+  platform: Platform,
+  account: DispatchAccount,
+  senderId: string,
+  agentArgs: AgentArgs
+): Promise<boolean> {
+  const [flowId, nodeKey, buttonIndexStr] = payload.split(':')
+  const buttonIndex = Number(buttonIndexStr)
+  if (!flowId || !nodeKey || Number.isNaN(buttonIndex)) return false
+
+  const supabase = createAdminClient()
+  const { data: run } = await supabase
+    .from('flow_runs')
+    .select('*')
+    .eq('flow_id', flowId)
+    .eq('channel_account_id', account.id)
+    .eq('sender_id', senderId)
+    .eq('current_node_key', nodeKey)
+    .in('status', ['active', 'waiting'])
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!run) return false
+
+  await supabase.from('flow_runs').update({ status: 'active' }).eq('id', run.id)
+  await continueRun(run as FlowRun, platform, account, agentArgs, `btn-${buttonIndex}`)
   return true
 }
 

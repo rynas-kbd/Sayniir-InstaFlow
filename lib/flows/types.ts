@@ -40,4 +40,8 @@ export interface NodeExecContext {
   }
 }
 
-export type NodeResult = { type: 'continue'; handle: string } | { type: 'wait'; seconds: number } | { type: 'stop' }
+export type NodeResult =
+  | { type: 'continue'; handle: string }
+  | { type: 'wait'; seconds: number }
+  | { type: 'pause' }
+  | { type: 'stop' }

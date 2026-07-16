@@ -151,6 +151,88 @@ export async function sendCardReply(
   return sendReply(igUserId, accessToken, recipientId, textFallback)
 }
 
+export interface ButtonMessageButton {
+  type: 'postback' | 'web_url'
+  title: string
+  url?: string
+  payload?: string
+}
+
+/**
+ * Send a "Button Template" message (text + up to 3 buttons, no title/image required).
+ * Unlike the Generic Template, this is attempted directly on Instagram
+ * (graph.instagram.com) since buttons of this kind are known to work there in
+ * production. Falls back to a formatted text message if the API rejects it.
+ */
+export async function sendButtonMessage(
+  igUserId: string,
+  accessToken: string,
+  recipientId: string,
+  text: string,
+  buttons: ButtonMessageButton[],
+  useMessengerApi = false
+): Promise<{ message_id: string } | null> {
+  const body = {
+    recipient: { id: recipientId },
+    message: {
+      attachment: {
+        type: 'template',
+        payload: {
+          template_type: 'button',
+          text: text.substring(0, 640),
+          buttons: buttons.slice(0, 3).map((b) =>
+            b.type === 'postback'
+              ? { type: 'postback', title: b.title.substring(0, 20), payload: (b.payload ?? '').substring(0, 1000) }
+              : { type: 'web_url', title: b.title.substring(0, 20), url: b.url }
+          ),
+        },
+      },
+    },
+    messaging_type: 'RESPONSE',
+  }
+
+  const baseUrl = useMessengerApi ? 'https://graph.facebook.com' : 'https://graph.instagram.com'
+
+  try {
+    const res = await fetch(`${baseUrl}/${GRAPH_API_VERSION}/${igUserId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      console.error('[sendButtonMessage] Meta API error, falling back to text:', JSON.stringify(data.error))
+      if (data.error?.code === 190) throw new TokenExpiredError(`Access token expired for ${igUserId}: ${data.error.message}`)
+      return sendButtonTextFallback(igUserId, accessToken, recipientId, text, buttons)
+    }
+
+    console.log(`[sendButtonMessage] ✅ Sent button template to ${recipientId}`)
+    return { message_id: data.message_id as string }
+  } catch (err) {
+    if (err instanceof TokenExpiredError) throw err
+    console.error('[sendButtonMessage] Request failed, falling back to text:', err)
+    return sendButtonTextFallback(igUserId, accessToken, recipientId, text, buttons)
+  }
+}
+
+function sendButtonTextFallback(
+  igUserId: string,
+  accessToken: string,
+  recipientId: string,
+  text: string,
+  buttons: ButtonMessageButton[]
+): Promise<{ message_id: string } | null> {
+  const lines = [text]
+  if (buttons.length > 0) {
+    lines.push('')
+    for (const btn of buttons) {
+      lines.push(btn.type === 'web_url' ? `👉 ${btn.title}: ${btn.url}` : `👉 ${btn.title}`)
+    }
+  }
+  return sendReply(igUserId, accessToken, recipientId, lines.join('\n'))
+}
+
 
 /**
  * Custom error for expired tokens — allows callers to handle separately.

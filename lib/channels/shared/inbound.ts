@@ -6,7 +6,7 @@ import { TokenExpiredError } from '../../meta/messaging'
 import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
 import { upsertContact } from '../../contacts/service'
-import { runFlowsForInbound, runFlowsForInboundComment } from '../../flows/engine'
+import { runFlowsForInbound, runFlowsForInboundComment, continueRunFromPostback } from '../../flows/engine'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
 
 const GREETING_RE =
@@ -46,6 +46,40 @@ async function deactivateAccount(accountId: string): Promise<void> {
  */
 export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Promise<void> {
   if (msg.senderId === msg.recipientId || msg.senderId === msg.channelExternalId) return
+
+  // ── Button click (postback) — resume the paused flow run directly,
+  // never re-evaluate triggers from scratch. ─────────────────────────────
+  if (msg.postbackPayload) {
+    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
+    if (!account || !(await isSubscriptionValid(account.user_id))) return
+
+    const supabase = createAdminClient()
+    const { data: agentSettings } = await supabase
+      .from('agent_settings')
+      .select('ai_provider, ai_api_key, ai_model')
+      .eq('channel_account_id', account.id)
+      .single()
+
+    const { isEncrypted, decryptApiKey } = await import('../../crypto')
+    let apiKey: string | null = agentSettings?.ai_api_key || null
+    if (apiKey && isEncrypted(apiKey)) {
+      try {
+        apiKey = await decryptApiKey(apiKey)
+      } catch {
+        apiKey = null
+      }
+    }
+
+    await continueRunFromPostback(
+      msg.postbackPayload,
+      msg.platform,
+      { id: account.id, user_id: account.user_id, access_token: account.access_token },
+      msg.senderId,
+      { aiProvider: agentSettings?.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings?.ai_model || null }
+    )
+    return
+  }
+
   if (!msg.text && !msg.audioUrl) return
 
   const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)

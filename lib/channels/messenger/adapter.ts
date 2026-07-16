@@ -1,7 +1,7 @@
 import { parseWebhookMessaging, type WebhookPayload } from '../../meta/webhook'
 import { verifyWebhookSignature } from '../shared/signature'
 import { getLoginUrl, exchangeCodeForToken, exchangeForLongLivedToken, listPages, subscribeToWebhooks as fbSubscribeToWebhooks } from './oauth'
-import type { ChannelAdapter, ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment } from '../types'
+import type { ChannelAdapter, ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, ChannelButton } from '../types'
 
 const GRAPH_API_VERSION = 'v21.0'
 
@@ -50,6 +50,19 @@ export const messengerAdapter: ChannelAdapter = {
     const results: NormalizedInboundMessage[] = []
 
     for (const { pageId, messaging } of events) {
+      if (messaging.postback) {
+        results.push({
+          platform: 'messenger',
+          channelExternalId: pageId,
+          senderId: messaging.sender.id,
+          recipientId: messaging.recipient.id,
+          messageId: `postback-${messaging.timestamp}-${messaging.sender.id}`,
+          postbackPayload: messaging.postback.payload,
+          timestamp: messaging.timestamp,
+        })
+        continue
+      }
+
       if (!messaging.message) continue
       const audioAttachment = messaging.message.attachments?.find((att) => att.type === 'audio')
 
@@ -156,6 +169,40 @@ export const messengerAdapter: ChannelAdapter = {
 
     if (!res.ok || data.error) {
       console.error('[Messenger sendCard] Meta API error:', JSON.stringify(data.error))
+      return null
+    }
+    return { messageId: data.message_id as string }
+  },
+
+  async sendButtons(ref: ChannelAccountRef, recipientExternalId: string, text: string, buttons: ChannelButton[]) {
+    const body = {
+      recipient: { id: recipientExternalId },
+      message: {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'button',
+            text: text.substring(0, 640),
+            buttons: buttons.slice(0, 3).map((b) =>
+              b.type === 'postback'
+                ? { type: 'postback', title: b.title.substring(0, 20), payload: (b.payload ?? '').substring(0, 1000) }
+                : { type: 'web_url', title: b.title.substring(0, 20), url: b.url }
+            ),
+          },
+        },
+      },
+      messaging_type: 'RESPONSE',
+    }
+
+    const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/me/messages?access_token=${ref.accessToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      console.error('[Messenger sendButtons] Meta API error:', JSON.stringify(data.error))
       return null
     }
     return { messageId: data.message_id as string }
