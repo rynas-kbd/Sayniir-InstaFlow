@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   CalendarClock,
   Target,
+  Megaphone,
 } from 'lucide-react'
 
 export type BusinessType = 'ecommerce' | 'coaching' | 'agency' | 'generic'
@@ -56,6 +57,7 @@ export function getNavSections(businessType: BusinessType): NavSection[] {
       items: [
         { href: '/flows', label: 'Flows', icon: Workflow },
         { href: '/automation', label: 'Règles', icon: Zap },
+        { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
       ],
     },
   ]
