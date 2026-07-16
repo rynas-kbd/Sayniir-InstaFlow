@@ -108,14 +108,21 @@ export default async function InboxPage({
           activeConvId ? 'hidden md:flex' : 'flex'
         )}
       >
-        <div className="shrink-0 border-b border-border px-3 pt-4 pb-3">
-          <div className="mb-3 flex items-baseline justify-between px-1">
-            <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Inbox</h1>
-            <p className="text-xs text-muted-foreground tabular-nums">
-              {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
-            </p>
+        <div className="shrink-0 border-b border-border px-4 pt-5 pb-3">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-bold tracking-tight text-foreground">Inbox</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            {conversations.some((c) => c.hasUnreplied) && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                {conversations.filter((c) => c.hasUnreplied).length}
+              </span>
+            )}
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex gap-1 rounded-lg bg-muted p-0.5">
             {FILTERS.map(({ key, label }) => {
               const params = new URLSearchParams()
               if (key !== 'all') params.set('filter', key)
@@ -127,8 +134,10 @@ export default async function InboxPage({
                   key={key}
                   href={href}
                   className={cn(
-                    'rounded-md px-2 py-1 text-xs font-medium transition-colors',
-                    isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    'flex-1 rounded-md px-2 py-1.5 text-center text-xs font-medium transition-all',
+                    isActive
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {label}
@@ -153,10 +162,14 @@ export default async function InboxPage({
             backHref={`/inbox${activeFilter !== 'all' ? `?filter=${activeFilter}` : ''}`}
           />
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-10 text-center">
-            <MessageSquare className="mb-1 size-4 text-muted-foreground" strokeWidth={1.5} />
-            <p className="text-[13px] font-medium text-foreground">Sélectionnez une conversation</p>
-            <p className="text-xs text-muted-foreground">Cliquez sur un contact à gauche pour voir les messages</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
+              <MessageSquare className="size-6 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-foreground">Sélectionnez une conversation</p>
+              <p className="mt-1 text-xs text-muted-foreground">Cliquez sur un contact à gauche pour voir les messages</p>
+            </div>
           </div>
         )}
       </div>
