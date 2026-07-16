@@ -6,7 +6,7 @@ import {
   subscribeToWebhooks as igSubscribeToWebhooks,
 } from '../../meta/oauth'
 import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload } from '../../meta/webhook'
-import { sendReply, fetchSenderProfile } from '../../meta/messaging'
+import { sendReply, fetchSenderProfile, sendCardReply } from '../../meta/messaging'
 import { refreshLongLivedToken } from '../../meta/token-refresh'
 import { verifyWebhookSignature } from '../shared/signature'
 import type {
@@ -103,21 +103,10 @@ export const instagramAdapter: ChannelAdapter = {
     recipientExternalId: string,
     title: string,
     subtitle?: string,
-    _imageUrl?: string,
+    imageUrl?: string,
     buttons?: Array<{ title: string; url: string }>
   ) {
-    // Instagram DM API does not support Messenger generic-template cards.
-    // Fall back to a formatted text message instead.
-    const lines: string[] = [title]
-    if (subtitle) lines.push(subtitle)
-    if (buttons && buttons.length > 0) {
-      lines.push('')
-      for (const btn of buttons) {
-        lines.push(`• ${btn.title}: ${btn.url}`)
-      }
-    }
-    const text = lines.join('\n')
-    const result = await sendReply(ref.externalId, ref.accessToken, recipientExternalId, text)
+    const result = await sendCardReply(ref.externalId, ref.accessToken, recipientExternalId, title, subtitle, imageUrl, buttons)
     return result ? { messageId: result.message_id } : null
   },
 

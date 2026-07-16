@@ -39,7 +39,17 @@ async function continueRun(
   const supabase = createAdminClient()
   const { nodes, edges } = await loadGraph(run.flow_id)
   const adapter = getAdapter(platform)
-  const ref: ChannelAccountRef = { id: account.id, externalId: '', accessToken: account.access_token }
+  const { data: dbAccount } = await supabase
+    .from('channel_accounts')
+    .select('page_id, phone_number_id, instagram_business_id')
+    .eq('id', account.id)
+    .single()
+
+  const externalId = (platform === 'whatsapp'
+    ? dbAccount?.phone_number_id
+    : dbAccount?.instagram_business_id || dbAccount?.page_id) || ''
+
+  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
   const ctx: NodeExecContext = { account, ref, adapter, run, agentArgs }
 
   // The node at current_node_key has already "fired" — either it's the
