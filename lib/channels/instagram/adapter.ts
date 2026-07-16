@@ -94,6 +94,11 @@ export const instagramAdapter: ChannelAdapter = {
     text: string,
     quickReplies?: Array<{ title: string; payload: string }>
   ) {
+    console.log(`[instagram:sendMessage] externalId=${ref.externalId} recipient=${recipientExternalId}`)
+    if (!ref.externalId) {
+      console.error('[instagram:sendMessage] ❌ externalId is empty — cannot send message!')
+      return null
+    }
     const result = await sendReply(ref.externalId, ref.accessToken, recipientExternalId, text, quickReplies)
     return result ? { messageId: result.message_id } : null
   },
@@ -106,7 +111,13 @@ export const instagramAdapter: ChannelAdapter = {
     imageUrl?: string,
     buttons?: Array<{ title: string; url: string }>
   ) {
-    const result = await sendCardReply(ref.externalId, ref.accessToken, recipientExternalId, title, subtitle, imageUrl, buttons)
+    console.log(`[instagram:sendCard] externalId=${ref.externalId} recipient=${recipientExternalId}`)
+    if (!ref.externalId) {
+      console.error('[instagram:sendCard] ❌ externalId is empty — cannot send card!')
+      return null
+    }
+    // Instagram does not support generic templates — sendCardReply handles the fallback to text
+    const result = await sendCardReply(ref.externalId, ref.accessToken, recipientExternalId, title, subtitle, imageUrl, buttons, false)
     return result ? { messageId: result.message_id } : null
   },
 

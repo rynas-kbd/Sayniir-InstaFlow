@@ -67,7 +67,14 @@ export async function sendReply(
 }
 
 /**
- * Send a generic template card reply via the Instagram/Messenger Messaging API.
+ * Send a card reply via Instagram or Messenger.
+ *
+ * IMPORTANT: The Instagram Business API (graph.instagram.com) does NOT support
+ * generic template cards. Only the Messenger API (graph.facebook.com) supports them.
+ *
+ * Strategy:
+ * - If `useMessengerApi` is true → use graph.facebook.com with a generic template
+ * - Otherwise → send a formatted text message on graph.instagram.com
  */
 export async function sendCardReply(
   igUserId: string,
@@ -76,66 +83,72 @@ export async function sendCardReply(
   title: string,
   subtitle?: string,
   imageUrl?: string,
-  buttons?: Array<{ title: string; url: string }>
+  buttons?: Array<{ title: string; url: string }>,
+  useMessengerApi = false
 ): Promise<{ message_id: string } | null> {
-  const body: any = {
-    recipient: { id: recipientId },
-    message: {
-      attachment: {
-        type: 'template',
-        payload: {
-          template_type: 'generic',
-          elements: [
-            {
-              title: title.substring(0, 80),
-            }
-          ]
-        }
-      }
-    },
-    messaging_type: 'RESPONSE',
-  }
 
-  const element = body.message.attachment.payload.elements[0]
+  if (useMessengerApi) {
+    // ── Messenger path: generic template card (Facebook Page DMs) ──────────
+    const element: Record<string, unknown> = { title: title.substring(0, 80) }
+    if (subtitle) element.subtitle = subtitle.substring(0, 80)
+    if (imageUrl) element.image_url = imageUrl
+    if (buttons && buttons.length > 0) {
+      element.buttons = buttons.slice(0, 3).map((b) => ({
+        type: 'web_url',
+        url: b.url,
+        title: b.title.substring(0, 20),
+      }))
+    }
 
-  if (subtitle) {
-    element.subtitle = subtitle.substring(0, 80)
-  }
-  if (imageUrl) {
-    element.image_url = imageUrl
-  }
-  if (buttons && buttons.length > 0) {
-    element.buttons = buttons.slice(0, 3).map((b) => ({
-      type: 'web_url',
-      url: b.url,
-      title: b.title.substring(0, 20)
-    }))
-  }
-
-  const res = await fetch(
-    `https://graph.instagram.com/${GRAPH_API_VERSION}/${igUserId}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
+    const body = {
+      recipient: { id: recipientId },
+      message: {
+        attachment: {
+          type: 'template',
+          payload: { template_type: 'generic', elements: [element] },
+        },
       },
-      body: JSON.stringify(body),
+      messaging_type: 'RESPONSE',
     }
-  )
 
-  const data = await res.json()
-
-  if (!res.ok || data.error) {
-    console.error('[sendCardReply] Meta API error:', JSON.stringify(data.error))
-    if (data.error?.code === 190) {
-      throw new TokenExpiredError(`Access token expired for ${igUserId}: ${data.error.message}`)
+    console.log(`[sendCardReply] Sending Messenger generic template to ${recipientId} via pageId ${igUserId}`)
+    const res = await fetch(
+      `https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+      }
+    )
+    const data = await res.json()
+    if (!res.ok || data.error) {
+      console.error('[sendCardReply] Messenger API error:', JSON.stringify(data.error))
+      if (data.error?.code === 190) throw new TokenExpiredError(`Access token expired for ${igUserId}: ${data.error.message}`)
+      return null
     }
-    return null
+    console.log(`[sendCardReply] ✅ Sent Messenger card to ${recipientId}:`, title)
+    return { message_id: data.message_id as string }
   }
 
-  console.log(`[sendCardReply] ✅ Sent card to ${recipientId}:`, title)
-  return { message_id: data.message_id as string }
+  // ── Instagram path: generic templates NOT supported → send formatted text ──
+  // Build a rich text representation of the card
+  const lines: string[] = []
+  lines.push(`📋 *${title}*`)
+  if (subtitle) lines.push(subtitle)
+  if (imageUrl) lines.push(`🖼️ ${imageUrl}`)
+  if (buttons && buttons.length > 0) {
+    lines.push('')
+    for (const btn of buttons.slice(0, 3)) {
+      lines.push(`👉 ${btn.title}: ${btn.url}`)
+    }
+  }
+  const textFallback = lines.join('\n')
+
+  console.log(`[sendCardReply] Instagram does not support generic templates — sending formatted text to ${recipientId} via ${igUserId}`)
+  return sendReply(igUserId, accessToken, recipientId, textFallback)
 }
 
 

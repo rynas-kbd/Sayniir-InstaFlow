@@ -49,6 +49,16 @@ async function continueRun(
     ? dbAccount?.phone_number_id
     : dbAccount?.instagram_business_id || dbAccount?.page_id) || ''
 
+  console.log(`[flows:continueRun] Resolved externalId="${externalId}" for account=${account.id} platform=${platform}`, {
+    page_id: dbAccount?.page_id,
+    instagram_business_id: dbAccount?.instagram_business_id,
+    phone_number_id: dbAccount?.phone_number_id,
+  })
+
+  if (!externalId) {
+    console.error(`[flows:continueRun] ❌ externalId is EMPTY for account=${account.id} — messages will fail!`)
+  }
+
   const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
   const ctx: NodeExecContext = { account, ref, adapter, run, agentArgs }
 
