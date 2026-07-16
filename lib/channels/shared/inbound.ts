@@ -258,6 +258,32 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     aiModel: agentSettings?.ai_model || null,
   }
 
+  // ── Scenario 0: visual flows (opt-in via agent_settings.flows_enabled) ──
+  // Checked first, ahead of the Q&A/order-taking agent and the classic
+  // rules fallback below: a matching flow trigger is an explicit, specific
+  // configuration and must take priority over the generic agent — otherwise
+  // an account with Q&A/order-taking enabled would never reach this block
+  // (both scenarios below return unconditionally) and flows would silently
+  // never fire. Accounts without flows_enabled keep their exact current
+  // behavior untouched.
+  if (agentSettings?.flows_enabled) {
+    const handled = await runFlowsForInbound({
+      platform: msg.platform,
+      account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
+      contactId,
+      senderId: msg.senderId,
+      messageText,
+      agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
+    })
+    if (handled) {
+      await supabase
+        .from('message_logs')
+        .update({ auto_reply_sent: true, reply_text: '[Géré par Flow]', replied_at: new Date().toISOString() })
+        .eq('message_id', msg.messageId)
+      return
+    }
+  }
+
   // ── Scenario A: active order session → continue the tunnel (reset on greeting) ──
   if (activeSession && isOrderTakingActive) {
     if (GREETING_RE.test(messageText.trim())) {
@@ -333,27 +359,6 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
       await supabase
         .from('message_logs')
         .update({ auto_reply_sent: true, reply_text: '[Géré par Prise de Commande IA]', replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
-      return
-    }
-  }
-
-  // ── Scenario 0: visual flows (opt-in via agent_settings.flows_enabled) ──
-  // Gated behind a per-account flag so every existing account keeps its
-  // exact current behavior until it builds and enables a flow.
-  if (agentSettings?.flows_enabled) {
-    const handled = await runFlowsForInbound({
-      platform: msg.platform,
-      account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
-      contactId,
-      senderId: msg.senderId,
-      messageText,
-      agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
-    })
-    if (handled) {
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: '[Géré par Flow]', replied_at: new Date().toISOString() })
         .eq('message_id', msg.messageId)
       return
     }
