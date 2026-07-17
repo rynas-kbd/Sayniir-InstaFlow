@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Camera, MessageCircle, Phone } from 'lucide-react'
+import { Camera, MessageCircle, Phone, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,10 +11,9 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 
 export function ConnectPanel() {
   const router = useRouter()
@@ -78,42 +77,45 @@ export function ConnectPanel() {
       <Dialog open={waOpen} onOpenChange={setWaOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Connecter WhatsApp</DialogTitle>
-            <DialogDescription>
-              Depuis Meta Business Manager : token System User permanent, phone_number_id et WABA ID.
-            </DialogDescription>
+            <FormDialogHeader
+              icon={Phone}
+              title="Connecter WhatsApp"
+              description="Depuis Meta Business Manager : token System User permanent, phone_number_id et WABA ID."
+            />
           </DialogHeader>
-          <form onSubmit={submitWhatsApp} className="flex flex-col gap-3.5">
-            <div className="space-y-1.5">
-              <Label htmlFor="wa-token">Token d&apos;accès permanent</Label>
-              <Input
-                id="wa-token"
-                autoFocus
-                required
-                value={waFields.accessToken}
-                onChange={(e) => setWaFields({ ...waFields, accessToken: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="wa-phone-id">Phone Number ID</Label>
-              <Input
-                id="wa-phone-id"
-                required
-                value={waFields.phoneNumberId}
-                onChange={(e) => setWaFields({ ...waFields, phoneNumberId: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="wa-waba-id">WABA ID</Label>
-              <Input
-                id="wa-waba-id"
-                required
-                value={waFields.wabaId}
-                onChange={(e) => setWaFields({ ...waFields, wabaId: e.target.value })}
-              />
-            </div>
-            {waError && <p className="text-sm text-destructive">{waError}</p>}
-            <DialogFooter>
+          <form onSubmit={submitWhatsApp} className="flex flex-col gap-3">
+            <FormSection icon={KeyRound} label="Identifiants API">
+              <div className="space-y-1.5">
+                <Label htmlFor="wa-token">Token d&apos;accès permanent</Label>
+                <Input
+                  id="wa-token"
+                  autoFocus
+                  required
+                  value={waFields.accessToken}
+                  onChange={(e) => setWaFields({ ...waFields, accessToken: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="wa-phone-id">Phone Number ID</Label>
+                <Input
+                  id="wa-phone-id"
+                  required
+                  value={waFields.phoneNumberId}
+                  onChange={(e) => setWaFields({ ...waFields, phoneNumberId: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="wa-waba-id">WABA ID</Label>
+                <Input
+                  id="wa-waba-id"
+                  required
+                  value={waFields.wabaId}
+                  onChange={(e) => setWaFields({ ...waFields, wabaId: e.target.value })}
+                />
+              </div>
+              {waError && <p className="text-sm text-destructive">{waError}</p>}
+            </FormSection>
+            <DialogFooter className="mt-1">
               <Button type="button" variant="outline" onClick={() => setWaOpen(false)} disabled={loadingPlatform !== null}>
                 Annuler
               </Button>

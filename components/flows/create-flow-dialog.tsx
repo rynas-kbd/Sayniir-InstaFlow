@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Workflow, FileText } from 'lucide-react'
+import { Plus, Workflow, FileText, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,10 +11,10 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import { FLOW_TEMPLATES, BLANK_TEMPLATE } from '@/lib/flows/templates'
 
 const TEMPLATE_OPTIONS = [BLANK_TEMPLATE, ...FLOW_TEMPLATES]
@@ -112,19 +112,11 @@ export function CreateFlowDialog({
 
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <div className="mb-1 flex size-10 items-center justify-center rounded-xl bg-primary/10">
-            <Workflow className="size-5 text-primary" />
-          </div>
-          <DialogTitle className="text-lg">Créer un flow</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Partez d&apos;un template ou d&apos;une toile vide.
-          </p>
+          <FormDialogHeader icon={Workflow} title="Créer un flow" description="Partez d'un template ou d'une toile vide." />
         </DialogHeader>
 
-        <form onSubmit={handleCreate} className="mt-2 flex flex-col gap-5">
-          {/* Templates */}
-          <div className="space-y-2">
-            <Label>Modèle</Label>
+        <form onSubmit={handleCreate} className="flex flex-col gap-3">
+          <FormSection icon={Sparkles} label="Modèle">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {TEMPLATE_OPTIONS.map((opt) => {
                 const Icon = opt.icon ?? FileText
@@ -149,22 +141,23 @@ export function CreateFlowDialog({
                 )
               })}
             </div>
-          </div>
+          </FormSection>
 
-          {/* Name */}
-          <div className="space-y-1.5">
-            <Label htmlFor="flow-name">Nom du flow</Label>
-            <Input
-              id="flow-name"
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={selectedTemplate?.namePlaceholder ?? 'Ex : Accueil nouveaux contacts'}
-              maxLength={80}
-            />
-          </div>
+          <FormSection icon={Workflow} label="Nom">
+            <div className="space-y-1.5">
+              <Label htmlFor="flow-name">Nom du flow</Label>
+              <Input
+                id="flow-name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={selectedTemplate?.namePlaceholder ?? 'Ex : Accueil nouveaux contacts'}
+                maxLength={80}
+              />
+            </div>
+          </FormSection>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="mt-1 gap-2">
             <Button
               type="button"
               variant="outline"

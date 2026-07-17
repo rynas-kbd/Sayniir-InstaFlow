@@ -15,20 +15,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { FormSection as Section } from '@/components/shared/form-section'
 import { PostSelector } from './post-selector'
 import type { AutomationRule, ChannelAccountLite, RuleFormPayload, RuleCardButton } from './types'
-
-function Section({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2.5 rounded-xl border border-border bg-card/50 p-3.5">
-      <div className="flex items-center gap-1.5">
-        <Icon className="size-3.5 text-primary" strokeWidth={1.75} />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      </div>
-      {children}
-    </div>
-  )
-}
 
 export function RuleFormDialog({
   open,

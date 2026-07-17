@@ -3,14 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Type, ImageIcon } from 'lucide-react'
+import { Plus, Type, ImageIcon, Megaphone, Users, CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import { ManageSegmentsDialog, type Segment } from './manage-segments-dialog'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import type { Tag } from '@/components/contacts/types'
@@ -112,34 +113,35 @@ export function CreateCampaignDialog({
           </>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nouvelle campagne</DialogTitle>
+          <FormDialogHeader icon={Megaphone} title="Nouvelle campagne" description="Diffusez un message à une audience ciblée." />
         </DialogHeader>
-        <form onSubmit={handleCreate} className="flex flex-col gap-3.5">
-          <div className="space-y-1.5">
-            <Label htmlFor="campaign-name">Nom</Label>
-            <Input
-              id="campaign-name"
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex : Promo Ramadan"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="campaign-message">Message</Label>
-            <Textarea
-              id="campaign-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Bonjour ! Nouvelle offre disponible…"
-              rows={4}
-            />
-          </div>
+        <form onSubmit={handleCreate} className="flex flex-col gap-3">
+          <FormSection icon={Type} label="Contenu">
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-name">Nom</Label>
+              <Input
+                id="campaign-name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex : Promo Ramadan"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-message">Message</Label>
+              <Textarea
+                id="campaign-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Bonjour ! Nouvelle offre disponible…"
+                rows={4}
+              />
+            </div>
+          </FormSection>
 
-          <div className="space-y-2">
-            <Label>Type de réponse</Label>
+          <FormSection icon={ImageIcon} label="Réponse">
             <div className="flex gap-2">
               <button
                 type="button"
@@ -160,24 +162,24 @@ export function CreateCampaignDialog({
                 <ImageIcon className="size-3.5" /> Carte
               </button>
             </div>
-          </div>
 
-          {responseType === 'card' && (
-            <CardFieldsEditor
-              title={cardTitle}
-              subtitle={cardSubtitle}
-              imageUrl={cardImageUrl}
-              buttons={cardButtons}
-              onTitleChange={setCardTitle}
-              onSubtitleChange={setCardSubtitle}
-              onImageUrlChange={setCardImageUrl}
-              onButtonsChange={setCardButtons}
-            />
-          )}
+            {responseType === 'card' && (
+              <CardFieldsEditor
+                title={cardTitle}
+                subtitle={cardSubtitle}
+                imageUrl={cardImageUrl}
+                buttons={cardButtons}
+                onTitleChange={setCardTitle}
+                onSubtitleChange={setCardSubtitle}
+                onImageUrlChange={setCardImageUrl}
+                onButtonsChange={setCardButtons}
+              />
+            )}
+          </FormSection>
 
-          <div className="space-y-1.5">
+          <FormSection icon={Users} label="Audience">
             <div className="flex items-center justify-between">
-              <Label>Audience</Label>
+              <Label>Cible</Label>
               <ManageSegmentsDialog channelAccountId={channelAccountId} tags={tags} segments={segments} onChange={setSegments} />
             </div>
             <Select value={segmentId || 'none'} onValueChange={(v) => setSegmentId(v === 'none' ? '' : (v ?? ''))}>
@@ -208,12 +210,16 @@ export function CreateCampaignDialog({
                 )}
               </div>
             )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="campaign-schedule">Planifier (optionnel)</Label>
-            <Input id="campaign-schedule" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
-          </div>
-          <DialogFooter>
+          </FormSection>
+
+          <FormSection icon={CalendarClock} label="Planification">
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-schedule">Envoyer plus tard (optionnel)</Label>
+              <Input id="campaign-schedule" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+            </div>
+          </FormSection>
+
+          <DialogFooter className="mt-1">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
               Annuler
             </Button>

@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Tag as TagIcon } from 'lucide-react'
+import { Plus, Trash2, Tag as TagIcon, Palette, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components/ui/dialog'
+import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import type { Tag } from './types'
 
 const COLORS = ['#6366f1', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed']
@@ -57,50 +58,54 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Gérer les tags</DialogTitle>
+          <FormDialogHeader icon={TagIcon} title="Gérer les tags" description="Organisez vos contacts par étiquettes colorées." />
         </DialogHeader>
 
-        <form onSubmit={createTag} className="flex flex-wrap items-center gap-2.5">
-          <Input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nom du tag"
-            className="min-w-[140px] flex-1"
-          />
-          <div className="flex items-center gap-1.5">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className="size-7 shrink-0 cursor-pointer rounded-full border-2 sm:size-5"
-                style={{ backgroundColor: c, borderColor: color === c ? 'var(--foreground)' : 'transparent' }}
-                aria-label={c}
-              />
-            ))}
-          </div>
-          <Button type="submit" size="icon" disabled={saving || !name.trim()} aria-label="Créer le tag">
-            <Plus className="size-4" />
-          </Button>
-        </form>
+        <FormSection icon={Palette} label="Nouveau tag">
+          <form onSubmit={createTag} className="flex flex-wrap items-center gap-2.5">
+            <Input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nom du tag"
+              className="min-w-[140px] flex-1"
+            />
+            <div className="flex items-center gap-1.5">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className="size-7 shrink-0 cursor-pointer rounded-full border-2 sm:size-5"
+                  style={{ backgroundColor: c, borderColor: color === c ? 'var(--foreground)' : 'transparent' }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+            <Button type="submit" size="icon" disabled={saving || !name.trim()} aria-label="Créer le tag">
+              <Plus className="size-4" />
+            </Button>
+          </form>
+        </FormSection>
 
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <Badge key={tag.id} variant="outline" style={{ borderColor: tag.color, color: tag.color }} className="gap-1">
-              {tag.name}
-              <button
-                type="button"
-                onClick={() => deleteTag(tag.id)}
-                aria-label="Supprimer"
-                className="-my-1 -mr-1 cursor-pointer rounded-full p-1.5"
-              >
-                <Trash2 className="size-3" />
-              </button>
-            </Badge>
-          ))}
-          {tags.length === 0 && <p className="text-xs text-muted-foreground">Aucun tag pour l&apos;instant.</p>}
-        </div>
+        <FormSection icon={List} label="Tags existants">
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Badge key={tag.id} variant="outline" style={{ borderColor: tag.color, color: tag.color }} className="gap-1">
+                {tag.name}
+                <button
+                  type="button"
+                  onClick={() => deleteTag(tag.id)}
+                  aria-label="Supprimer"
+                  className="-my-1 -mr-1 cursor-pointer rounded-full p-1.5"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              </Badge>
+            ))}
+            {tags.length === 0 && <p className="text-xs text-muted-foreground">Aucun tag pour l&apos;instant.</p>}
+          </div>
+        </FormSection>
       </DialogContent>
     </Dialog>
   )
