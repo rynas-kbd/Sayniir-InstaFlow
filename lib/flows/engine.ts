@@ -74,6 +74,12 @@ async function continueRun(
     const node = nodes.find((n) => n.node_key === currentKey)
     if (!node) break
 
+    // Best-effort funnel log — never blocks node execution on failure.
+    supabase
+      .from('flow_node_events')
+      .insert({ flow_id: run.flow_id, channel_account_id: account.id, node_key: currentKey })
+      .then(() => {})
+
     let result
     try {
       result = await executeNode(node, ctx)
@@ -141,6 +147,11 @@ async function startRun(
     console.error('[flows:startRun] Failed to create flow_run:', error)
     return
   }
+
+  supabase
+    .from('flow_node_events')
+    .insert({ flow_id: flowId, channel_account_id: account.id, node_key: triggerNode.node_key })
+    .then(() => {})
 
   await continueRun(run as FlowRun, platform, account, agentArgs)
 }
