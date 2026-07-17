@@ -2,7 +2,9 @@ import { createAdminClient } from '../supabase/admin'
 import { getAdapter } from '../channels/registry'
 import { resolveAudience } from '../contacts/service'
 import { TokenExpiredError } from '../meta/messaging'
+import { renderTemplate } from '../personalization'
 import type { ChannelAccountRef, Platform } from '../channels/types'
+import type { Contact } from '../contacts/types'
 
 
 
@@ -46,7 +48,7 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
 
   const { data: pending } = await supabase
     .from('campaign_sends')
-    .select('id, contact_id, contacts(sender_id, is_subscribed, last_inbound_at)')
+    .select('id, contact_id, contacts(sender_id, is_subscribed, last_inbound_at, full_name, username, phone, email, custom_fields)')
     .eq('campaign_id', campaignId)
     .eq('status', 'pending')
     .limit(limit)
@@ -59,11 +61,12 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
   let failed = 0
 
   for (const row of pending ?? []) {
-    const contact = row.contacts as unknown as { sender_id: string; is_subscribed: boolean; last_inbound_at: string | null }
+    const contact = row.contacts as unknown as Partial<Contact> & { sender_id: string }
     if (!contact) continue
 
     try {
-      const result = await adapter.sendMessage(ref, contact.sender_id, campaign.message_template)
+      const personalizedText = renderTemplate(campaign.message_template, contact)
+      const result = await adapter.sendMessage(ref, contact.sender_id, personalizedText)
       await supabase
         .from('campaign_sends')
         .update({ status: 'sent', sent_message_id: result?.messageId ?? null, sent_at: new Date().toISOString() })

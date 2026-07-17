@@ -5,7 +5,8 @@ import { handleAgentMessage, type BusinessType } from '../../agent/router'
 import { TokenExpiredError } from '../../meta/messaging'
 import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
-import { upsertContact } from '../../contacts/service'
+import { upsertContact, getContact } from '../../contacts/service'
+import { renderTemplate } from '../../personalization'
 import { runFlowsForInbound, runFlowsForInboundComment, continueRunFromPostback } from '../../flows/engine'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
 
@@ -419,7 +420,14 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   if (!replyText) return
 
   try {
-    const cardButtons = (matchedRule?.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []
+    const contact = contactId ? await getContact(account.id, contactId) : null
+    replyText = renderTemplate(replyText, contact)
+
+    const cardButtons = ((matchedRule?.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []).map(
+      (b) => ({ ...b, title: renderTemplate(b.title, contact) })
+    )
+    const cardTitle = renderTemplate(matchedRule?.card_title || replyText, contact)
+    const cardSubtitle = matchedRule?.card_subtitle ? renderTemplate(matchedRule.card_subtitle, contact) : undefined
     const isCard = matchedRule?.response_type === 'card'
     const hasImage = !!matchedRule?.card_image_url
 
@@ -428,15 +436,15 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
       result = await adapter.sendButtons(
         ref,
         msg.senderId,
-        matchedRule?.card_title || replyText,
+        cardTitle,
         cardButtons.map((b) => ({ type: b.type ?? 'web_url', title: b.title, url: b.url }))
       )
     } else if (isCard && adapter.sendCard) {
       result = await adapter.sendCard(
         ref,
         msg.senderId,
-        matchedRule?.card_title || replyText,
-        matchedRule?.card_subtitle ?? undefined,
+        cardTitle,
+        cardSubtitle,
         matchedRule?.card_image_url ?? undefined,
         cardButtons.map((b) => ({ title: b.title, url: b.url ?? '' }))
       )
@@ -542,17 +550,48 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
   // Comment replies remain Instagram-only (no public-comment concept on
   // WhatsApp/Messenger's DM-only surface used here) — delegate to the
   // existing comment-reply helpers rather than the generic adapter.
-  const { sendCommentReply, sendPrivateReplyToComment } = await import('../../meta/comments')
-  const replyText = matchedRule.response_text
+  const { sendCommentReply, sendPrivateReplyToComment, sendPrivateButtonReplyToComment, sendPrivateCardReplyToComment } = await import(
+    '../../meta/comments'
+  )
+  const commentContact = contactId ? await getContact(account.id, contactId) : null
+  const replyText = renderTemplate(matchedRule.response_text, commentContact)
   const replyMethod = matchedRule.reply_method || 'comment'
+  const isCard = matchedRule.response_type === 'card'
+  const cardButtons = (
+    (matchedRule.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []
+  ).map((b) => ({ ...b, title: renderTemplate(b.title, commentContact) }))
+
+  async function sendDm(dmText: string) {
+    if (isCard) {
+      return matchedRule.card_image_url
+        ? sendPrivateCardReplyToComment(
+            comment.channelExternalId,
+            comment.commentId,
+            account!.access_token,
+            renderTemplate(matchedRule.card_title || dmText, commentContact),
+            matchedRule.card_subtitle ? renderTemplate(matchedRule.card_subtitle, commentContact) : undefined,
+            matchedRule.card_image_url ?? undefined,
+            cardButtons
+          )
+        : sendPrivateButtonReplyToComment(
+            comment.channelExternalId,
+            comment.commentId,
+            account!.access_token,
+            renderTemplate(matchedRule.card_title || dmText, commentContact),
+            cardButtons
+          )
+    }
+    return sendPrivateReplyToComment(comment.channelExternalId, comment.commentId, account!.access_token, dmText)
+  }
 
   try {
     let result = null
     if (replyMethod === 'both') {
       result = await sendCommentReply(comment.commentId, account.access_token, replyText)
-      await sendPrivateReplyToComment(comment.channelExternalId, comment.commentId, account.access_token, matchedRule.response_text_dm || replyText)
+      const dmText = matchedRule.response_text_dm ? renderTemplate(matchedRule.response_text_dm, commentContact) : replyText
+      await sendDm(dmText)
     } else if (replyMethod === 'dm') {
-      result = await sendPrivateReplyToComment(comment.channelExternalId, comment.commentId, account.access_token, replyText)
+      result = await sendDm(replyText)
     } else {
       result = await sendCommentReply(comment.commentId, account.access_token, replyText)
     }

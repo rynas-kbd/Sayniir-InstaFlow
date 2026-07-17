@@ -1,8 +1,10 @@
 import { createAdminClient } from '../supabase/admin'
 import { callAgentLLM } from '../agent/engine'
 import { addTag, removeTag, getContact } from '../contacts/service'
+import { renderTemplate } from '../personalization'
 import type { FlowNode, NodeExecContext, NodeResult } from './types'
 import type { ChannelButton } from '../channels/types'
+import type { Contact } from '../contacts/types'
 
 interface CardButtonConfig {
   type?: 'postback' | 'web_url'
@@ -35,12 +37,16 @@ async function evaluateCondition(node: FlowNode, ctx: NodeExecContext): Promise<
 export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise<NodeResult> {
   switch (node.type) {
     case 'send_message': {
+      const contact: Partial<Contact> | null = ctx.run.contact_id ? await getContact(ctx.account.id, ctx.run.contact_id) : null
       const messageType = node.config.message_type as string | undefined
       if (messageType === 'card') {
-        const title = (node.config.card_title as string) || ''
-        const subtitle = (node.config.card_subtitle as string) || undefined
+        const title = renderTemplate((node.config.card_title as string) || '', contact)
+        const subtitle = renderTemplate((node.config.card_subtitle as string) || '', contact) || undefined
         const imageUrl = (node.config.card_image_url as string) || undefined
-        const buttons = (node.config.card_buttons as CardButtonConfig[]) || []
+        const buttons = ((node.config.card_buttons as CardButtonConfig[]) || []).map((b) => ({
+          ...b,
+          title: renderTemplate(b.title, contact),
+        }))
         // Button Template (no image) attempts a real tappable button on
         // Instagram; Generic Template (with image) is known to fail there
         // and always falls back to text. Prefer the real-button path
@@ -68,7 +74,7 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
           )
         }
       } else {
-        const text = (node.config.text as string) || ''
+        const text = renderTemplate((node.config.text as string) || '', contact)
         if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
       }
       return { type: 'continue', handle: 'default' }
