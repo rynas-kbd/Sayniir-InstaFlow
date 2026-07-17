@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { ContactTable } from '@/components/contacts/contact-table'
 import { ManageTagsDialog } from '@/components/contacts/manage-tags-dialog'
+import { ContactsCsvActions } from '@/components/contacts/contacts-csv-actions'
 import type { Contact, Tag } from '@/components/contacts/types'
 
 export default async function ContactsPage() {
@@ -46,7 +47,12 @@ export default async function ContactsPage() {
       <PageHeader
         title="Contacts"
         description={`${contacts?.length ?? 0} contact${(contacts?.length ?? 0) !== 1 ? 's' : ''}`}
-        actions={<ManageTagsDialog channelAccountId={account.id} tags={(tags ?? []) as Tag[]} />}
+        actions={
+          <div className="flex items-center gap-1.5">
+            <ContactsCsvActions channelAccountId={account.id} />
+            <ManageTagsDialog channelAccountId={account.id} tags={(tags ?? []) as Tag[]} />
+          </div>
+        }
       />
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <ContactTable channelAccountId={account.id} initialContacts={(contacts ?? []) as Contact[]} tags={(tags ?? []) as Tag[]} />
