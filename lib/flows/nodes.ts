@@ -106,6 +106,13 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
       return { type: 'continue', handle }
     }
 
+    case 'capture_input': {
+      // Pauses here; the run only advances once a text reply arrives,
+      // handled separately in engine.ts::tryContinueRunFromTextCapture
+      // (mirrors how postback buttons pause send_message nodes).
+      return { type: 'pause' }
+    }
+
     case 'delay': {
       const seconds = Number(node.config.seconds) || 60
       // Best-effort: shows the native "typing…" indicator so the wait

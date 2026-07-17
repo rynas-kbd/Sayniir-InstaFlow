@@ -218,6 +218,44 @@ export function NodeInspector({
         </div>
       )
 
+    case 'capture_input':
+      return (
+        <div className="space-y-3.5">
+          <div className="space-y-1.5">
+            <Label>Nom de la variable</Label>
+            <Input
+              value={(config.variable_name as string) ?? ''}
+              onChange={(e) => set('variable_name', e.target.value)}
+              placeholder="ex: email, budget, taille…"
+            />
+            <p className="text-xs text-muted-foreground">
+              Le prochain message du contact sera enregistré sous ce nom, réutilisable dans une condition
+              (<code>custom_fields.{(config.variable_name as string) || 'nom'}</code>).
+            </p>
+          </div>
+
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-muted/20 p-2.5">
+            <input
+              type="checkbox"
+              checked={!!config.save_to_custom_field}
+              onChange={(e) => set('save_to_custom_field', e.target.checked)}
+              className="mt-0.5 size-3.5 cursor-pointer accent-primary"
+            />
+            <span className="text-xs text-muted-foreground">
+              Enregistrer aussi dans les champs personnalisés du contact — permet de la réutiliser dans un message
+              avec <code>{'{{champ.' + ((config.variable_name as string) || 'nom') + '}}'}</code>.
+            </span>
+          </label>
+
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+            <p className="text-[11px] text-muted-foreground">
+              💡 Placez un nœud « Envoyer un message » juste avant pour poser la question — ce nœud ne fait que
+              mettre le flow en attente de la réponse.
+            </p>
+          </div>
+        </div>
+      )
+
     case 'jump':
       return (
         <div className="space-y-1.5">

@@ -2,6 +2,7 @@ import { createAdminClient } from '../supabase/admin'
 import { getAdapter } from '../channels/registry'
 import { matchesMessageTrigger, matchesCommentTrigger } from './matcher'
 import { executeNode } from './nodes'
+import { getContact, setContactFields } from '../contacts/service'
 import type { ChannelAccountRef, Platform } from '../channels/types'
 import type { FlowNode, FlowEdge, FlowRun, NodeExecContext } from './types'
 
@@ -230,6 +231,63 @@ export async function continueRunFromPostback(
 
   await supabase.from('flow_runs').update({ status: 'active' }).eq('id', run.id)
   await continueRun(run as FlowRun, platform, account, agentArgs, `btn-${buttonIndex}`)
+  return true
+}
+
+/**
+ * Called from dispatchInboundMessage for a plain text message, before any
+ * trigger matching: if this sender has a run paused at a `capture_input`
+ * node, store the text as the reply instead of treating it as a fresh
+ * trigger. Returns false (no-op) if there's no such paused run, so the
+ * caller can fall through to normal trigger/Q&A/rules handling.
+ */
+export async function tryContinueRunFromTextCapture(
+  text: string,
+  platform: Platform,
+  account: DispatchAccount,
+  senderId: string,
+  agentArgs: AgentArgs
+): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data: run } = await supabase
+    .from('flow_runs')
+    .select('*')
+    .eq('channel_account_id', account.id)
+    .eq('sender_id', senderId)
+    .in('status', ['active', 'waiting'])
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!run || !run.current_node_key) return false
+
+  const { data: node } = await supabase
+    .from('flow_nodes')
+    .select('*')
+    .eq('flow_id', run.flow_id)
+    .eq('node_key', run.current_node_key)
+    .maybeSingle()
+
+  if (!node || node.type !== 'capture_input') return false
+
+  const variableName = (node.config as Record<string, unknown> | null)?.variable_name as string | undefined
+  const saveToCustomField = !!(node.config as Record<string, unknown> | null)?.save_to_custom_field
+
+  let nextContext = run.context as Record<string, unknown>
+  if (variableName) {
+    nextContext = { ...nextContext, [variableName]: text }
+    await supabase.from('flow_runs').update({ context: nextContext }).eq('id', run.id)
+
+    if (saveToCustomField && run.contact_id) {
+      const contact = await getContact(account.id, run.contact_id)
+      await setContactFields(account.id, run.contact_id, {
+        custom_fields: { ...(contact?.custom_fields ?? {}), [variableName]: text },
+      })
+    }
+  }
+
+  await supabase.from('flow_runs').update({ status: 'active' }).eq('id', run.id)
+  await continueRun({ ...(run as FlowRun), context: nextContext }, platform, account, agentArgs, 'default')
   return true
 }
 

@@ -1,4 +1,4 @@
-export type FlowNodeType = 'trigger' | 'send_message' | 'condition' | 'delay' | 'set_tag' | 'remove_tag' | 'ai_reply' | 'jump'
+export type FlowNodeType = 'trigger' | 'send_message' | 'condition' | 'delay' | 'set_tag' | 'remove_tag' | 'ai_reply' | 'jump' | 'capture_input'
 
 export interface CardButton {
   type: 'postback' | 'web_url'

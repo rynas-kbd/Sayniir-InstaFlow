@@ -8,6 +8,7 @@ import {
   TagIcon,
   Sparkles,
   ArrowRightCircle,
+  ListPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FlowNodeType, CardButton } from '../types'
@@ -21,6 +22,7 @@ const NODE_META: Record<FlowNodeType, { icon: typeof Zap; label: string }> = {
   set_tag: { icon: Tag, label: 'Ajouter un tag' },
   remove_tag: { icon: TagIcon, label: 'Retirer un tag' },
   jump: { icon: ArrowRightCircle, label: 'Aller vers un flow' },
+  capture_input: { icon: ListPlus, label: 'Enregistrer la réponse' },
 }
 
 export interface FlowNodeData {
