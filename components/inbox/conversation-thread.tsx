@@ -4,9 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { ChevronLeft, Bot, Zap, Send, Pause, Play } from 'lucide-react'
+import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { MessageItem } from './types'
+
+export interface Snippet {
+  id: string
+  shortcut: string
+  text: string
+}
 
 interface ExtendedMessageItem extends MessageItem {
   isAutoReply?: boolean
@@ -39,6 +47,7 @@ export function ConversationThread({
   senderId,
   contactId,
   initialBotPaused,
+  initialSnippets,
 }: {
   messages: MessageItem[]
   senderName: string
@@ -49,12 +58,16 @@ export function ConversationThread({
   senderId: string
   contactId: string | null
   initialBotPaused: boolean
+  initialSnippets: Snippet[]
 }) {
   const [localMessages, setLocalMessages] = useState(messages)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [botPaused, setBotPaused] = useState(initialBotPaused)
   const [togglingPause, setTogglingPause] = useState(false)
+  const [snippets, setSnippets] = useState(initialSnippets)
+  const [snippetsOpen, setSnippetsOpen] = useState(false)
+  const [newShortcut, setNewShortcut] = useState('')
 
   const sorted = [...localMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
@@ -119,6 +132,34 @@ export function ConversationThread({
       toast.error("Impossible d'envoyer le message")
     } finally {
       setSending(false)
+    }
+  }
+
+  async function saveSnippet() {
+    if (!newShortcut.trim() || !draft.trim()) return
+    try {
+      const res = await fetch('/api/snippets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel_account_id: channelAccountId, shortcut: newShortcut.trim(), text: draft.trim() }),
+      })
+      if (!res.ok) throw new Error()
+      const created: Snippet = await res.json()
+      setSnippets((prev) => [created, ...prev])
+      setNewShortcut('')
+      toast.success('Réponse rapide enregistrée')
+    } catch {
+      toast.error("Impossible d'enregistrer la réponse rapide")
+    }
+  }
+
+  async function deleteSnippet(id: string) {
+    try {
+      const res = await fetch(`/api/snippets/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setSnippets((prev) => prev.filter((s) => s.id !== id))
+    } catch {
+      toast.error('Impossible de supprimer')
     }
   }
 
@@ -274,6 +315,58 @@ export function ConversationThread({
 
       {/* Composer */}
       <div className="flex shrink-0 items-end gap-2 border-t border-border bg-card/80 p-3 backdrop-blur-sm">
+        <Popover open={snippetsOpen} onOpenChange={setSnippetsOpen}>
+          <PopoverTrigger
+            render={<Button type="button" variant="outline" size="icon" aria-label="Réponses rapides" />}
+          >
+            <MessageSquareText className="size-4" />
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-2" align="start" side="top">
+            <div className="mb-1.5 px-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Réponses rapides
+            </div>
+            <div className="max-h-52 space-y-0.5 overflow-y-auto">
+              {snippets.length === 0 ? (
+                <p className="px-1.5 py-2 text-xs italic text-muted-foreground">Aucune réponse rapide.</p>
+              ) : (
+                snippets.map((s) => (
+                  <div key={s.id} className="group flex items-center gap-1 rounded-lg hover:bg-muted">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDraft(s.text)
+                        setSnippetsOpen(false)
+                      }}
+                      className="flex-1 truncate px-2.5 py-2 text-left text-xs"
+                    >
+                      <span className="font-semibold text-primary">/{s.shortcut}</span>{' '}
+                      <span className="text-muted-foreground">{s.text}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteSnippet(s.id)}
+                      className="mr-1 shrink-0 cursor-pointer rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
+                      aria-label="Supprimer"
+                    >
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="mt-1.5 flex items-center gap-1.5 border-t border-border pt-1.5">
+              <Input
+                value={newShortcut}
+                onChange={(e) => setNewShortcut(e.target.value)}
+                placeholder="raccourci (ex: prix)"
+                className="h-7 text-xs"
+              />
+              <Button type="button" size="icon-sm" onClick={saveSnippet} disabled={!newShortcut.trim() || !draft.trim()} aria-label="Enregistrer le brouillon comme réponse rapide">
+                <Plus className="size-3.5" />
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

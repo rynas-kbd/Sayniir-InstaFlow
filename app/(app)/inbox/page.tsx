@@ -114,6 +114,14 @@ export default async function InboxPage({
         ).data
       : null
 
+  const { data: snippets } = activeConv
+    ? await supabase
+        .from('snippets')
+        .select('*')
+        .eq('channel_account_id', activeConv.channelAccountId)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
       <div
@@ -178,6 +186,7 @@ export default async function InboxPage({
             senderId={activeConvId}
             contactId={activeContact?.id ?? null}
             initialBotPaused={activeContact?.bot_paused ?? false}
+            initialSnippets={snippets ?? []}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
