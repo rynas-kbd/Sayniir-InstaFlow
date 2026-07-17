@@ -73,6 +73,11 @@ export const instagramAdapter: ChannelAdapter = {
 
       if (!messaging.message) continue
       const audioAttachment = messaging.message.attachments?.find((att) => att.type === 'audio')
+      const storyEventType: 'reply' | 'mention' | undefined = messaging.message.reply_to?.story
+        ? 'reply'
+        : messaging.message.attachments?.some((att) => att.type === 'story_mention')
+          ? 'mention'
+          : undefined
 
       results.push({
         platform: 'instagram',
@@ -82,6 +87,7 @@ export const instagramAdapter: ChannelAdapter = {
         messageId: messaging.message.mid,
         text: messaging.message.text,
         audioUrl: audioAttachment?.payload?.url,
+        storyEventType,
         timestamp: messaging.timestamp,
       })
     }

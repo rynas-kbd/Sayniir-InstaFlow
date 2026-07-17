@@ -15,6 +15,7 @@ export interface NormalizedInboundMessage {
   text?: string
   audioUrl?: string
   postbackPayload?: string
+  storyEventType?: 'reply' | 'mention'
   timestamp: number
 }
 

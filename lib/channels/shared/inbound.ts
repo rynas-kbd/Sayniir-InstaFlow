@@ -341,6 +341,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
       contactId,
       senderId: msg.senderId,
       messageText,
+      storyEventType: msg.storyEventType,
       agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
     })
     if (handled) {
@@ -456,11 +457,15 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   let matchedRule: (typeof rules extends (infer T)[] | null ? T : never) | null = null
   if (rules && rules.length > 0) {
     const lowerText = messageText.toLowerCase()
-    const keywordRule = rules.find(
-      (rule) => rule.trigger_type === 'keyword' && rule.trigger_keywords?.some((kw: string) => lowerText.includes(kw.toLowerCase()))
-    )
-    const anyMessageRule = rules.find((rule) => rule.trigger_type === 'any_message')
-    matchedRule = keywordRule ?? anyMessageRule ?? null
+    if (msg.storyEventType) {
+      matchedRule = rules.find((rule) => rule.trigger_type === `story_${msg.storyEventType}`) ?? null
+    } else {
+      const keywordRule = rules.find(
+        (rule) => rule.trigger_type === 'keyword' && rule.trigger_keywords?.some((kw: string) => lowerText.includes(kw.toLowerCase()))
+      )
+      const anyMessageRule = rules.find((rule) => rule.trigger_type === 'any_message')
+      matchedRule = keywordRule ?? anyMessageRule ?? null
+    }
     replyText = matchedRule?.response_text ?? null
   }
 

@@ -4,7 +4,16 @@ export interface FlowTriggerLike {
   target_post_ids?: string[] | null
 }
 
-export function matchesMessageTrigger(flow: FlowTriggerLike, messageText: string): boolean {
+export function matchesMessageTrigger(
+  flow: FlowTriggerLike,
+  messageText: string,
+  storyEventType?: 'reply' | 'mention'
+): boolean {
+  if (flow.trigger_type === 'story_reply') return storyEventType === 'reply'
+  if (flow.trigger_type === 'story_mention') return storyEventType === 'mention'
+  // A story reply/mention still carries text, but shouldn't silently match
+  // a generic any_message/keyword flow — those are for regular DMs.
+  if (storyEventType) return false
   if (flow.trigger_type === 'any_message') return true
   if (flow.trigger_type === 'keyword') {
     const lower = messageText.toLowerCase()

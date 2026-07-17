@@ -152,6 +152,7 @@ export async function runFlowsForInbound(input: {
   contactId: string | null
   senderId: string
   messageText: string
+  storyEventType?: 'reply' | 'mention'
   agentArgs: AgentArgs
 }): Promise<boolean> {
   const supabase = createAdminClient()
@@ -162,7 +163,7 @@ export async function runFlowsForInbound(input: {
     .eq('status', 'active')
     .order('priority', { ascending: false })
 
-  const matched = (flows ?? []).find((f) => matchesMessageTrigger(f, input.messageText))
+  const matched = (flows ?? []).find((f) => matchesMessageTrigger(f, input.messageText, input.storyEventType))
   if (!matched) return false
 
   await startRun(matched.id, input.platform, input.account, input.contactId, input.senderId, input.agentArgs)

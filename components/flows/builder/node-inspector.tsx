@@ -55,6 +55,8 @@ export function NodeInspector({
                 <SelectItem value="keyword">Mot-clé dans DM</SelectItem>
                 <SelectItem value="any_comment">Tout commentaire</SelectItem>
                 <SelectItem value="comment_keyword">Mot-clé dans commentaire</SelectItem>
+                <SelectItem value="story_reply">Réponse à une story</SelectItem>
+                <SelectItem value="story_mention">Mention dans une story</SelectItem>
               </SelectContent>
             </Select>
           </div>

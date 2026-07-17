@@ -101,6 +101,8 @@ export function RuleFormDialog({
       ? [
           { value: 'any_message', label: 'Tout DM', icon: MessageSquare },
           { value: 'keyword', label: 'Mot-clé (DM)', icon: Hash },
+          { value: 'story_reply', label: 'Réponse à une story', icon: MessageSquare },
+          { value: 'story_mention', label: 'Mention en story', icon: MessageSquare },
         ]
       : [
           { value: 'any_comment', label: 'Tout commentaire', icon: MessageSquare },

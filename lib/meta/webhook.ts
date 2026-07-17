@@ -37,7 +37,7 @@ export interface WebhookMessage {
   mid: string
   text?: string
   attachments?: Array<{ type: string; payload: { url?: string } }>
-  reply_to?: { mid: string }
+  reply_to?: { mid?: string; story?: { id: string; url?: string } }
 }
 
 export interface WebhookMessaging {
