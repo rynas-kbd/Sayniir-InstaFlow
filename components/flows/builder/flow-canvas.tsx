@@ -362,15 +362,18 @@ export function FlowCanvas({
   ) : nodeData ? (
     <Card className="border-none shadow-none">
       <CardHeader className="px-0 pt-0">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">Configuration</CardTitle>
-          <Button variant="ghost" size="icon" onClick={deleteSelected} className="text-destructive hover:text-destructive">
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+        <CardTitle className="text-sm">Configuration</CardTitle>
       </CardHeader>
-      <CardContent className="px-0">
+      <CardContent className="flex flex-col gap-4 px-0">
         <NodeInspector nodeType={nodeData.nodeType} config={nodeData.config} onChange={updateSelectedConfig} tags={tags} flows={otherFlows} />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={deleteSelected}
+          className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="size-3.5" /> Supprimer le nœud
+        </Button>
       </CardContent>
     </Card>
   ) : (
