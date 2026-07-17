@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Users, Plus, X, Trash2, Tag as TagIcon, Phone, User } from 'lucide-react'
+import { Users, Plus, X, Trash2, Tag as TagIcon, Phone, User, ListPlus } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -71,6 +72,21 @@ export function ContactTable({
       }
     } catch {
       toast.error('Impossible de mettre à jour les tags')
+    }
+  }
+
+  async function saveCustomFields(contactId: string, fields: Record<string, string>) {
+    try {
+      const res = await fetch(`/api/contacts/${contactId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_fields: fields }),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      setContacts((prev) => prev.map((c) => (c.id === contactId ? { ...c, custom_fields: fields } : c)))
+      toast.success('Champs personnalisés enregistrés')
+    } catch {
+      toast.error('Impossible d\'enregistrer les champs')
     }
   }
 
@@ -197,15 +213,18 @@ export function ContactTable({
 
                 {/* Action buttons */}
                 <TableCell className="px-3 sm:px-5 py-3.5 text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeletingId(contact.id)}
-                    className="size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                    aria-label="Supprimer contact"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <div className="flex items-center justify-end gap-1">
+                    <CustomFieldsPopover contact={contact} onSave={(fields) => saveCustomFields(contact.id, fields)} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeletingId(contact.id)}
+                      className="size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      aria-label="Supprimer contact"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )
@@ -233,5 +252,114 @@ export function ContactTable({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+function CustomFieldsPopover({
+  contact,
+  onSave,
+}: {
+  contact: Contact
+  onSave: (fields: Record<string, string>) => void | Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [rows, setRows] = useState<Array<{ key: string; value: string }>>([])
+  const [saving, setSaving] = useState(false)
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next)
+    if (next) {
+      const entries = Object.entries(contact.custom_fields ?? {})
+      setRows(entries.length > 0 ? entries.map(([key, value]) => ({ key, value: String(value) })) : [{ key: '', value: '' }])
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    const fields: Record<string, string> = {}
+    for (const row of rows) {
+      if (row.key.trim()) fields[row.key.trim()] = row.value
+    }
+    try {
+      await onSave(fields)
+      setOpen(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const count = Object.keys(contact.custom_fields ?? {}).length
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-primary/10 hover:text-primary focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+            aria-label="Champs personnalisés"
+          />
+        }
+      >
+        <ListPlus className="size-4" />
+        {count > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+            {count}
+          </span>
+        )}
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-3" align="end">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Champs personnalisés
+        </div>
+        <div className="space-y-2">
+          {rows.map((row, idx) => (
+            <div key={idx} className="flex items-center gap-1.5">
+              <Input
+                value={row.key}
+                onChange={(e) => {
+                  const copy = [...rows]
+                  copy[idx] = { ...copy[idx], key: e.target.value }
+                  setRows(copy)
+                }}
+                placeholder="clé (ex: budget)"
+                className="h-8 text-xs"
+              />
+              <Input
+                value={row.value}
+                onChange={(e) => {
+                  const copy = [...rows]
+                  copy[idx] = { ...copy[idx], value: e.target.value }
+                  setRows(copy)
+                }}
+                placeholder="valeur"
+                className="h-8 text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setRows(rows.filter((_, i) => i !== idx))}
+                className="-m-1 shrink-0 cursor-pointer rounded-full p-1 text-muted-foreground hover:text-destructive"
+                aria-label="Supprimer ce champ"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setRows([...rows, { key: '', value: '' }])}
+            className="cursor-pointer text-xs font-medium text-primary hover:underline"
+          >
+            + Ajouter un champ
+          </button>
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? 'Enregistrement…' : 'Enregistrer'}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

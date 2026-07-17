@@ -14,5 +14,6 @@ export interface Contact {
   email: string | null
   is_subscribed: boolean
   last_inbound_at: string | null
+  custom_fields: Record<string, string> | null
   contact_tags: { tag_id: string; tags: Tag }[]
 }

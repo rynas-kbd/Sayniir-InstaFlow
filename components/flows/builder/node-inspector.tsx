@@ -159,7 +159,7 @@ export function NodeInspector({
             <Input
               value={(config.field as string) ?? ''}
               onChange={(e) => set('field', e.target.value)}
-              placeholder="phone, email, context.xyz…"
+              placeholder="phone, email, custom_fields.budget, context.xyz…"
             />
           </div>
           <div className="space-y-1.5">

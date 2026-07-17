@@ -19,6 +19,11 @@ async function evaluateCondition(node: FlowNode, ctx: NodeExecContext): Promise<
   let actual: unknown
   if (field.startsWith('context.')) {
     actual = ctx.run.context[field.slice('context.'.length)]
+  } else if (field.startsWith('custom_fields.')) {
+    if (ctx.run.contact_id) {
+      const contact = await getContact(ctx.account.id, ctx.run.contact_id)
+      actual = contact?.custom_fields?.[field.slice('custom_fields.'.length)]
+    }
   } else if (ctx.run.contact_id) {
     const contact = await getContact(ctx.account.id, ctx.run.contact_id)
     actual = field === 'tags' ? undefined : (contact as Record<string, unknown> | null)?.[field]
