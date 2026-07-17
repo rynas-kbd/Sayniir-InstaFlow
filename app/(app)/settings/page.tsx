@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SignOutButton } from '@/components/settings/sign-out-button'
+import { TeamMembersCard } from '@/components/settings/team-members-card'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 
 function SectionTitle({
@@ -35,6 +36,11 @@ export default async function SettingsPage() {
 
   const instagramUsername = user!.user_metadata?.instagram_username
   const displayName = instagramUsername ? `@${instagramUsername}` : (user!.email ?? 'Utilisateur')
+
+  const { data: account } = await supabase.from('channel_accounts').select('id').eq('user_id', user!.id).order('connected_at').limit(1).maybeSingle()
+  const { data: teamMembers } = account
+    ? await supabase.from('team_members').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false })
+    : { data: [] }
 
   const fields = [
     { label: 'Email', value: user!.email ?? '—', icon: Mail },
@@ -77,6 +83,8 @@ export default async function SettingsPage() {
               ))}
             </CardContent>
           </Card>
+
+          {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} />}
 
           <Card className="border-destructive/20">
             <CardHeader>

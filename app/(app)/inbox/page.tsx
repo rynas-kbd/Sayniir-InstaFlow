@@ -107,12 +107,16 @@ export default async function InboxPage({
       ? (
           await supabase
             .from('contacts')
-            .select('id, bot_paused')
+            .select('id, bot_paused, assigned_to')
             .eq('channel_account_id', activeConv.channelAccountId)
             .eq('sender_id', activeConvId)
             .maybeSingle()
         ).data
       : null
+
+  const { data: teamMembers } = activeConv
+    ? await supabase.from('team_members').select('name, email').eq('channel_account_id', activeConv.channelAccountId)
+    : { data: [] }
 
   const { data: snippets } = activeConv
     ? await supabase
@@ -187,6 +191,8 @@ export default async function InboxPage({
             contactId={activeContact?.id ?? null}
             initialBotPaused={activeContact?.bot_paused ?? false}
             initialSnippets={snippets ?? []}
+            teamMembers={teamMembers ?? []}
+            initialAssignedTo={activeContact?.assigned_to ?? ''}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">

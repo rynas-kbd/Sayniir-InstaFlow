@@ -48,6 +48,8 @@ export function ConversationThread({
   contactId,
   initialBotPaused,
   initialSnippets,
+  teamMembers,
+  initialAssignedTo,
 }: {
   messages: MessageItem[]
   senderName: string
@@ -59,6 +61,8 @@ export function ConversationThread({
   contactId: string | null
   initialBotPaused: boolean
   initialSnippets: Snippet[]
+  teamMembers: { name: string; email: string }[]
+  initialAssignedTo: string
 }) {
   const [localMessages, setLocalMessages] = useState(messages)
   const [draft, setDraft] = useState('')
@@ -68,6 +72,21 @@ export function ConversationThread({
   const [snippets, setSnippets] = useState(initialSnippets)
   const [snippetsOpen, setSnippetsOpen] = useState(false)
   const [newShortcut, setNewShortcut] = useState('')
+  const [assignedTo, setAssignedTo] = useState(initialAssignedTo)
+
+  async function handleAssign(email: string) {
+    if (!contactId) return
+    setAssignedTo(email)
+    try {
+      await fetch(`/api/contacts/${contactId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_to: email || null }),
+      })
+    } catch {
+      toast.error("Impossible d'assigner la conversation")
+    }
+  }
 
   const sorted = [...localMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
@@ -220,6 +239,21 @@ export function ConversationThread({
             <p className="truncate text-[11px] text-muted-foreground">via @{accountUsername}</p>
           )}
         </div>
+
+        {contactId && teamMembers.length > 0 && (
+          <select
+            value={assignedTo}
+            onChange={(e) => handleAssign(e.target.value)}
+            className="hidden shrink-0 cursor-pointer rounded-full border border-border bg-transparent px-2 py-1 text-[11px] text-muted-foreground outline-none sm:block"
+          >
+            <option value="">Non assigné</option>
+            {teamMembers.map((m) => (
+              <option key={m.email} value={m.email}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         {contactId && (
           <button
