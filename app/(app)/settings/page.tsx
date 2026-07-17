@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/app-shell/page-header'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SignOutButton } from '@/components/settings/sign-out-button'
 import { TeamMembersCard } from '@/components/settings/team-members-card'
+import { BillingCard } from '@/components/settings/billing-card'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 
 function SectionTitle({
@@ -41,6 +42,12 @@ export default async function SettingsPage() {
   const { data: teamMembers } = account
     ? await supabase.from('team_members').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false })
     : { data: [] }
+
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('status, expires_at')
+    .eq('user_id', user!.id)
+    .maybeSingle()
 
   const fields = [
     { label: 'Email', value: user!.email ?? '—', icon: Mail },
@@ -83,6 +90,8 @@ export default async function SettingsPage() {
               ))}
             </CardContent>
           </Card>
+
+          <BillingCard status={subscription?.status ?? null} expiresAt={subscription?.expires_at ?? null} />
 
           {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} />}
 
