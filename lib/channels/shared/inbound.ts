@@ -48,6 +48,40 @@ async function deactivateAccount(accountId: string): Promise<void> {
 export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Promise<void> {
   if (msg.senderId === msg.recipientId || msg.senderId === msg.channelExternalId) return
 
+  // ── Bot paused for this contact (human is handling it manually in the
+  // inbox) — log the message so it shows in the thread, but skip every
+  // form of automation below (postback, capture, flows, rules, AI). ──────
+  {
+    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
+    if (account) {
+      const supabase = createAdminClient()
+      const { data: contact } = await supabase
+        .from('contacts')
+        .select('id, bot_paused')
+        .eq('channel_account_id', account.id)
+        .eq('sender_id', msg.senderId)
+        .maybeSingle()
+
+      if (contact?.bot_paused) {
+        if (msg.text || msg.audioUrl) {
+          await supabase.from('message_logs').upsert(
+            {
+              channel_account_id: account.id,
+              contact_id: contact.id,
+              sender_id: msg.senderId,
+              message_id: msg.messageId,
+              message_text: msg.text ?? '[audio]',
+              direction: 'incoming',
+              auto_reply_sent: false,
+            },
+            { onConflict: 'message_id' }
+          )
+        }
+        return
+      }
+    }
+  }
+
   // ── Button click (postback) — resume the paused flow run directly,
   // never re-evaluate triggers from scratch. ─────────────────────────────
   if (msg.postbackPayload) {

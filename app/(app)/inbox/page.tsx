@@ -57,6 +57,7 @@ export default async function InboxPage({
       senderUsername: string | null
       senderFullName: string | null
       senderProfilePic: string | null
+      channelAccountId: string
     }
   >()
 
@@ -70,6 +71,7 @@ export default async function InboxPage({
         senderUsername: msg.sender_username ?? null,
         senderFullName: msg.sender_full_name ?? null,
         senderProfilePic: msg.sender_profile_pic ?? null,
+        channelAccountId: msg.channel_account_id,
       })
     }
     convMap.get(key)!.msgs.push(msg as MessageItem)
@@ -99,6 +101,18 @@ export default async function InboxPage({
   const threadMessages: MessageItem[] = activeConv
     ? [...activeConv.msgs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     : []
+
+  const activeContact =
+    activeConv && activeConvId
+      ? (
+          await supabase
+            .from('contacts')
+            .select('id, bot_paused')
+            .eq('channel_account_id', activeConv.channelAccountId)
+            .eq('sender_id', activeConvId)
+            .maybeSingle()
+        ).data
+      : null
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
@@ -160,6 +174,10 @@ export default async function InboxPage({
             senderProfilePic={activeConv.senderProfilePic}
             accountUsername={activeConv.accountUsername}
             backHref={`/inbox${activeFilter !== 'all' ? `?filter=${activeFilter}` : ''}`}
+            channelAccountId={activeConv.channelAccountId}
+            senderId={activeConvId}
+            contactId={activeContact?.id ?? null}
+            initialBotPaused={activeContact?.bot_paused ?? false}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">

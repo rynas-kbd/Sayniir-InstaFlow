@@ -1,6 +1,11 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronLeft, Bot, Zap } from 'lucide-react'
+import { toast } from 'sonner'
+import { ChevronLeft, Bot, Zap, Send, Pause, Play } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { MessageItem } from './types'
 
 interface ExtendedMessageItem extends MessageItem {
@@ -30,14 +35,28 @@ export function ConversationThread({
   senderProfilePic,
   accountUsername,
   backHref,
+  channelAccountId,
+  senderId,
+  contactId,
+  initialBotPaused,
 }: {
   messages: MessageItem[]
   senderName: string
   senderProfilePic: string | null
   accountUsername: string | null
   backHref?: string
+  channelAccountId: string
+  senderId: string
+  contactId: string | null
+  initialBotPaused: boolean
 }) {
-  const sorted = [...messages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  const [localMessages, setLocalMessages] = useState(messages)
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [botPaused, setBotPaused] = useState(initialBotPaused)
+  const [togglingPause, setTogglingPause] = useState(false)
+
+  const sorted = [...localMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
   const displayItems: ExtendedMessageItem[] = []
   for (const msg of sorted) {
@@ -66,6 +85,62 @@ export function ConversationThread({
 
   const initial = senderName[0]?.toUpperCase() ?? '?'
   const gradient = getAvatarGradient(senderName)
+
+  async function sendMessage() {
+    const text = draft.trim()
+    if (!text || sending) return
+    setSending(true)
+    try {
+      const res = await fetch('/api/inbox/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel_account_id: channelAccountId, sender_id: senderId, text }),
+      })
+      if (!res.ok) throw new Error()
+      const logged = await res.json()
+      setLocalMessages((prev) => [
+        ...prev,
+        {
+          id: logged.id ?? `local-${Date.now()}`,
+          direction: 'outgoing',
+          message_text: text,
+          message_type: 'text',
+          reply_text: null,
+          auto_reply_sent: false,
+          created_at: logged.created_at ?? new Date().toISOString(),
+          sender_username: null,
+          sender_full_name: null,
+          sender_profile_pic: null,
+          sender_id: senderId,
+        },
+      ])
+      setDraft('')
+    } catch {
+      toast.error("Impossible d'envoyer le message")
+    } finally {
+      setSending(false)
+    }
+  }
+
+  async function togglePause() {
+    if (!contactId) return
+    setTogglingPause(true)
+    const next = !botPaused
+    try {
+      const res = await fetch(`/api/contacts/${contactId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bot_paused: next }),
+      })
+      if (!res.ok) throw new Error()
+      setBotPaused(next)
+      toast.success(next ? 'Bot mis en pause pour ce contact' : 'Bot réactivé pour ce contact')
+    } catch {
+      toast.error('Impossible de changer le statut du bot')
+    } finally {
+      setTogglingPause(false)
+    }
+  }
 
   return (
     <>
@@ -105,7 +180,24 @@ export function ConversationThread({
           )}
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+        {contactId && (
+          <button
+            type="button"
+            onClick={togglePause}
+            disabled={togglingPause}
+            className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50 ${
+              botPaused
+                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400'
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
+            }`}
+            title={botPaused ? 'Réactiver le bot pour ce contact' : 'Mettre le bot en pause pour ce contact'}
+          >
+            {botPaused ? <Pause className="size-3" /> : <Play className="size-3" />}
+            {botPaused ? 'Bot en pause' : 'Bot actif'}
+          </button>
+        )}
+
+        <div className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
           <Bot className="size-3" />
           {sorted.length} message{sorted.length !== 1 ? 's' : ''}
         </div>
@@ -178,6 +270,26 @@ export function ConversationThread({
             })}
           </div>
         ))}
+      </div>
+
+      {/* Composer */}
+      <div className="flex shrink-0 items-end gap-2 border-t border-border bg-card/80 p-3 backdrop-blur-sm">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          placeholder="Écrire un message…"
+          rows={1}
+          className="max-h-32 min-h-9 flex-1 resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        />
+        <Button size="icon" onClick={sendMessage} disabled={sending || !draft.trim()} aria-label="Envoyer">
+          <Send className="size-4" />
+        </Button>
       </div>
     </>
   )
