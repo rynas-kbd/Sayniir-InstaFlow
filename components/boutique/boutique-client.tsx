@@ -1,17 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Package, ShoppingCart, Bot, Sparkles } from 'lucide-react'
+import { Package, ShoppingCart, Bot, Sparkles, Plug } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductTable } from './product-table'
 import { OrderTable } from './order-table'
 import { AgentSettingsCard } from './agent-settings-card'
+import { ShopifyComingSoon } from './shopify-coming-soon'
 import type { Product, Order, AgentSettings } from './types'
 
 const TABS = [
   { key: 'products', label: 'Produits',   icon: Package },
   { key: 'orders',   label: 'Commandes',  icon: ShoppingCart },
   { key: 'ai',       label: 'Config IA',  icon: Bot },
+  { key: 'integrations', label: 'Intégrations', icon: Plug },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
@@ -117,6 +119,7 @@ export function BoutiqueClient({
           {tab === 'ai' && (
             <AgentSettingsCard channelAccountId={channelAccountId} initialSettings={agentSettings} />
           )}
+          {tab === 'integrations' && <ShopifyComingSoon />}
         </div>
       </div>
     </div>
