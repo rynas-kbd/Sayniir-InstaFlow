@@ -1,6 +1,6 @@
 import { createAdminClient } from '../supabase/admin'
 import { getAdapter } from '../channels/registry'
-import { resolveAudience } from '../contacts/service'
+import { resolveAudience, resolveSegment } from '../contacts/service'
 import { TokenExpiredError } from '../meta/messaging'
 import { renderTemplate } from '../personalization'
 import type { ChannelAccountRef, Platform } from '../channels/types'
@@ -14,7 +14,9 @@ export async function enqueueRecipients(campaignId: string): Promise<number> {
   const { data: campaign } = await supabase.from('campaigns').select('*').eq('id', campaignId).single()
   if (!campaign) return 0
 
-  const contactIds = await resolveAudience(campaign.channel_account_id, campaign.audience_tag_ids ?? [])
+  const contactIds = campaign.segment_id
+    ? await resolveSegment(campaign.channel_account_id, campaign.segment_id)
+    : await resolveAudience(campaign.channel_account_id, campaign.audience_tag_ids ?? [])
   if (contactIds.length === 0) return 0
 
   const rows = contactIds.map((contactId) => ({

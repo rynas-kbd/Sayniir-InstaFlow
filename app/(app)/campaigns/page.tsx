@@ -36,9 +36,10 @@ export default async function CampaignsPage() {
     )
   }
 
-  const [{ data: campaigns }, { data: tags }] = await Promise.all([
+  const [{ data: campaigns }, { data: tags }, { data: segments }] = await Promise.all([
     supabase.from('campaigns').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     supabase.from('tags').select('*').eq('channel_account_id', account.id).order('name'),
+    supabase.from('segments').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
   ])
 
   const safeCampaigns = (campaigns ?? []) as Campaign[]
@@ -72,7 +73,7 @@ export default async function CampaignsPage() {
       <PageHeader
         title="Campagnes"
         description="Diffusions ciblées vers vos contacts et segments."
-        actions={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} />}
+        actions={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} />}
       />
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
@@ -89,7 +90,7 @@ export default async function CampaignsPage() {
             icon={Megaphone}
             title="Aucune campagne"
             description="Créez votre première diffusion ciblée pour envoyer des messages de masse à vos segments."
-            action={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} />}
+            action={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} />}
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -102,7 +103,7 @@ export default async function CampaignsPage() {
             ))}
             
             {/* Create new campaign card button in the grid */}
-            <CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} asCard />
+            <CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} asCard />
           </div>
         )}
       </div>

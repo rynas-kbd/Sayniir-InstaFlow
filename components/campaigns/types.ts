@@ -5,6 +5,7 @@ export interface Campaign {
   name: string
   message_template: string
   audience_tag_ids: string[]
+  segment_id?: string | null
   status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'failed'
   scheduled_at: string | null
   created_at: string

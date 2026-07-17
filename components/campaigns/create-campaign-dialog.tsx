@@ -11,16 +11,20 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { ManageSegmentsDialog, type Segment } from './manage-segments-dialog'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import type { Tag } from '@/components/contacts/types'
 import type { CardButton } from '@/components/flows/types'
 
 export function CreateCampaignDialog({
   channelAccountId,
   tags,
+  segments: initialSegments,
   asCard = false,
 }: {
   channelAccountId: string
   tags: Tag[]
+  segments: Segment[]
   asCard?: boolean
 }) {
   const router = useRouter()
@@ -35,6 +39,8 @@ export function CreateCampaignDialog({
   const [cardSubtitle, setCardSubtitle] = useState('')
   const [cardImageUrl, setCardImageUrl] = useState('')
   const [cardButtons, setCardButtons] = useState<CardButton[]>([])
+  const [segments, setSegments] = useState(initialSegments)
+  const [segmentId, setSegmentId] = useState<string>('')
 
   function toggleTag(tagId: string) {
     setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]))
@@ -53,6 +59,7 @@ export function CreateCampaignDialog({
           name: name.trim(),
           message_template: message.trim(),
           audience_tag_ids: selectedTags,
+          segment_id: segmentId || null,
           scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           response_type: responseType,
           card_title: cardTitle,
@@ -169,19 +176,38 @@ export function CreateCampaignDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label>Audience (tags — vide = tous les contacts abonnés)</Label>
-            <div className="flex flex-wrap gap-3">
-              {tags.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Aucun tag créé.</p>
-              ) : (
-                tags.map((tag) => (
-                  <label key={tag.id} className="flex items-center gap-1.5 text-sm">
-                    <Checkbox checked={selectedTags.includes(tag.id)} onCheckedChange={() => toggleTag(tag.id)} />
-                    {tag.name}
-                  </label>
-                ))
-              )}
+            <div className="flex items-center justify-between">
+              <Label>Audience</Label>
+              <ManageSegmentsDialog channelAccountId={channelAccountId} tags={tags} segments={segments} onChange={setSegments} />
             </div>
+            <Select value={segmentId || 'none'} onValueChange={(v) => setSegmentId(v === 'none' ? '' : (v ?? ''))}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Tags (ci-dessous)</SelectItem>
+                {segments.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    Segment : {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {!segmentId && (
+              <div className="flex flex-wrap gap-3 pt-1">
+                {tags.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Aucun tag créé — vide = tous les contacts abonnés.</p>
+                ) : (
+                  tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center gap-1.5 text-sm">
+                      <Checkbox checked={selectedTags.includes(tag.id)} onCheckedChange={() => toggleTag(tag.id)} />
+                      {tag.name}
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="campaign-schedule">Planifier (optionnel)</Label>

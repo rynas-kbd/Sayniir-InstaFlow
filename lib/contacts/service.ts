@@ -84,6 +84,50 @@ export async function removeTag(contactId: string, tagId: string): Promise<void>
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Resolves a saved segment (AND-combined: must have every tag, optional
+ * exact custom-field match, optional "no inbound message in N days").
+ */
+export async function resolveSegment(channelAccountId: string, segmentId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data: segment } = await supabase.from('segments').select('*').eq('id', segmentId).eq('channel_account_id', channelAccountId).single()
+  if (!segment) return []
+
+  let query = supabase.from('contacts').select('id, custom_fields, last_inbound_at').eq('channel_account_id', channelAccountId)
+  const { data: allContacts } = await query
+  let candidates = allContacts ?? []
+
+  if (segment.tag_ids?.length) {
+    const { data: taggedRows } = await supabase
+      .from('contact_tags')
+      .select('contact_id, tag_id')
+      .eq('channel_account_id', channelAccountId)
+      .in('tag_id', segment.tag_ids)
+    const tagsByContact = new Map<string, Set<string>>()
+    for (const row of taggedRows ?? []) {
+      if (!tagsByContact.has(row.contact_id)) tagsByContact.set(row.contact_id, new Set())
+      tagsByContact.get(row.contact_id)!.add(row.tag_id)
+    }
+    candidates = candidates.filter((c) => {
+      const tags = tagsByContact.get(c.id)
+      return tags && segment.tag_ids.every((t: string) => tags.has(t))
+    })
+  }
+
+  if (segment.custom_field_key) {
+    candidates = candidates.filter(
+      (c) => String((c.custom_fields as Record<string, unknown> | null)?.[segment.custom_field_key] ?? '') === (segment.custom_field_value ?? '')
+    )
+  }
+
+  if (segment.min_days_since_last_inbound != null) {
+    const cutoff = Date.now() - segment.min_days_since_last_inbound * 86400000
+    candidates = candidates.filter((c) => !c.last_inbound_at || new Date(c.last_inbound_at).getTime() <= cutoff)
+  }
+
+  return candidates.map((c) => c.id)
+}
+
 /** Resolves the set of contact ids matching a tag filter (OR across tags), for campaign audiences. */
 export async function resolveAudience(channelAccountId: string, tagIds: string[]): Promise<string[]> {
   const supabase = createAdminClient()
