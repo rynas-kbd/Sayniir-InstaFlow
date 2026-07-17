@@ -47,6 +47,7 @@ export interface WebhookMessaging {
   message?: WebhookMessage
   postback?: { payload: string; title: string }
   reaction?: { action: string; emoji: string; mid: string }
+  referral?: { ref: string; source?: string; type?: string }
 }
 
 export interface WebhookEntry {

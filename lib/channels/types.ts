@@ -16,6 +16,7 @@ export interface NormalizedInboundMessage {
   audioUrl?: string
   postbackPayload?: string
   storyEventType?: 'reply' | 'mention'
+  referralRef?: string
   timestamp: number
 }
 

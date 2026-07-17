@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { FlowCanvas } from '@/components/flows/builder/flow-canvas'
 import { FlowAnalyticsPopover } from '@/components/flows/builder/flow-analytics-popover'
+import { GrowthLinkPopover } from '@/components/flows/builder/growth-link-popover'
 import { getFlowFunnel } from '@/lib/flows/analytics'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowSummary } from '@/components/flows/types'
 import type { FlowMeta } from '@/components/flows/builder/flow-canvas'
@@ -26,7 +27,11 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
       .neq('id', id),
   ])
 
-  const funnel = await getFlowFunnel(id)
+  const [funnel, { data: account }, { data: growthLinks }] = await Promise.all([
+    getFlowFunnel(id),
+    supabase.from('channel_accounts').select('instagram_username').eq('id', flow.channel_account_id).single(),
+    supabase.from('growth_links').select('*').eq('flow_id', id).order('created_at', { ascending: false }),
+  ])
 
   const flowMeta: FlowMeta = {
     id: flow.id,
@@ -44,7 +49,13 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
           <ArrowLeft className="size-3.5" /> Flows
         </Link>
         <span className="text-sm font-semibold text-foreground">{flow.name}</span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <GrowthLinkPopover
+            channelAccountId={flow.channel_account_id}
+            flowId={id}
+            instagramUsername={account?.instagram_username ?? null}
+            links={growthLinks ?? []}
+          />
           <FlowAnalyticsPopover funnel={funnel} />
         </div>
       </div>

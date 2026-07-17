@@ -7,7 +7,13 @@ import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
 import { upsertContact, getContact } from '../../contacts/service'
 import { renderTemplate } from '../../personalization'
-import { runFlowsForInbound, runFlowsForInboundComment, continueRunFromPostback, tryContinueRunFromTextCapture } from '../../flows/engine'
+import {
+  runFlowsForInbound,
+  runFlowsForInboundComment,
+  continueRunFromPostback,
+  tryContinueRunFromTextCapture,
+  startRunFromGrowthLink,
+} from '../../flows/engine'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
 
 const GREETING_RE =
@@ -78,6 +84,49 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
           )
         }
         return
+      }
+    }
+  }
+
+  // ── Growth link (ref deep link) opened — start the linked flow directly,
+  // the link itself is the trigger, no keyword/comment matching involved. ──
+  if (msg.referralRef) {
+    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
+    if (account && (await isSubscriptionValid(account.user_id))) {
+      const supabase = createAdminClient()
+      const { data: link } = await supabase
+        .from('growth_links')
+        .select('id, flow_id, clicks')
+        .eq('channel_account_id', account.id)
+        .eq('code', msg.referralRef)
+        .maybeSingle()
+
+      if (link) {
+        await supabase.from('growth_links').update({ clicks: link.clicks + 1 }).eq('id', link.id)
+        const contactId = await upsertContact(account.id, msg.senderId)
+        const { data: agentSettings } = await supabase
+          .from('agent_settings')
+          .select('ai_provider, ai_api_key, ai_model')
+          .eq('channel_account_id', account.id)
+          .single()
+        const { isEncrypted, decryptApiKey } = await import('../../crypto')
+        let apiKey: string | null = agentSettings?.ai_api_key || null
+        if (apiKey && isEncrypted(apiKey)) {
+          try {
+            apiKey = await decryptApiKey(apiKey)
+          } catch {
+            apiKey = null
+          }
+        }
+        await startRunFromGrowthLink(
+          link.flow_id,
+          msg.platform,
+          { id: account.id, user_id: account.user_id, access_token: account.access_token },
+          contactId,
+          msg.senderId,
+          { aiProvider: agentSettings?.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings?.ai_model || null }
+        )
+        if (!msg.text) return
       }
     }
   }

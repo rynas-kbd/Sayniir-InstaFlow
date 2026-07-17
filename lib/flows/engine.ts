@@ -207,6 +207,22 @@ export async function runFlowsForInboundComment(input: {
 }
 
 /**
+ * Called from dispatchInboundMessage when the inbound event carries a
+ * growth-link referral ref matching a flow directly — bypasses trigger
+ * matching entirely (the link IS the trigger).
+ */
+export async function startRunFromGrowthLink(
+  flowId: string,
+  platform: Platform,
+  account: DispatchAccount,
+  contactId: string | null,
+  senderId: string,
+  agentArgs: AgentArgs
+): Promise<void> {
+  await startRun(flowId, platform, account, contactId, senderId, agentArgs)
+}
+
+/**
  * Called from dispatchInboundMessage when an inbound event carries a
  * postback payload (`${flowId}:${nodeKey}:${buttonIndex}`, set by
  * lib/flows/nodes.ts when sending a send_message node with postback

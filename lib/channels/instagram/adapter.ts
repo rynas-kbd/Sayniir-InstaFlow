@@ -71,7 +71,22 @@ export const instagramAdapter: ChannelAdapter = {
         continue
       }
 
-      if (!messaging.message) continue
+      if (!messaging.message) {
+        // A referral-only event (m.me/ig.me deep link opened, no text yet)
+        // still has no .message — surface it so growth links can fire.
+        if (messaging.referral?.ref) {
+          results.push({
+            platform: 'instagram',
+            channelExternalId: pageId,
+            senderId: messaging.sender.id,
+            recipientId: messaging.recipient.id,
+            messageId: `referral-${messaging.timestamp}-${messaging.sender.id}`,
+            referralRef: messaging.referral.ref,
+            timestamp: messaging.timestamp,
+          })
+        }
+        continue
+      }
       const audioAttachment = messaging.message.attachments?.find((att) => att.type === 'audio')
       const storyEventType: 'reply' | 'mention' | undefined = messaging.message.reply_to?.story
         ? 'reply'
@@ -88,6 +103,7 @@ export const instagramAdapter: ChannelAdapter = {
         text: messaging.message.text,
         audioUrl: audioAttachment?.payload?.url,
         storyEventType,
+        referralRef: messaging.referral?.ref,
         timestamp: messaging.timestamp,
       })
     }
