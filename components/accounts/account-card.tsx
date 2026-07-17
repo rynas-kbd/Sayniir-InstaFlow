@@ -8,6 +8,7 @@ import { Camera, ExternalLink, Trash2, Power } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { getAvatarColor } from '@/lib/avatar-color'
+import { WidgetSnippetPopover } from './widget-snippet-popover'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -169,10 +170,16 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
             Déconnecter
           </button>
 
-          <Button variant="outline" size="sm" onClick={handleToggle} disabled={loading !== null} className="h-7 gap-1.5 text-xs">
-            <Power className="size-3.5" />
-            {account.is_active ? 'Désactiver' : 'Activer'}
-          </Button>
+          <div className="flex items-center gap-1">
+            <WidgetSnippetPopover
+              platform={account.platform}
+              target={account.platform === 'whatsapp' ? (account.phone_number ?? '') : (account.instagram_username ?? account.page_id ?? '')}
+            />
+            <Button variant="outline" size="sm" onClick={handleToggle} disabled={loading !== null} className="h-7 gap-1.5 text-xs">
+              <Power className="size-3.5" />
+              {account.is_active ? 'Désactiver' : 'Activer'}
+            </Button>
+          </div>
         </div>
       </div>
 
