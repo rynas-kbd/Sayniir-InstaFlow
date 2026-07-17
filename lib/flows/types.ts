@@ -5,7 +5,17 @@ export interface FlowNode {
   id: string
   flow_id: string
   node_key: string
-  type: 'trigger' | 'send_message' | 'condition' | 'delay' | 'set_tag' | 'remove_tag' | 'ai_reply' | 'jump' | 'capture_input'
+  type:
+    | 'trigger'
+    | 'send_message'
+    | 'condition'
+    | 'delay'
+    | 'set_tag'
+    | 'remove_tag'
+    | 'ai_reply'
+    | 'jump'
+    | 'capture_input'
+    | 'external_request'
   config: Record<string, unknown>
 }
 

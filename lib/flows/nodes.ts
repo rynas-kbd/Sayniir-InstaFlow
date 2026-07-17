@@ -106,6 +106,45 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
       return { type: 'continue', handle }
     }
 
+    case 'external_request': {
+      const url = node.config.url as string | undefined
+      const method = ((node.config.method as string) || 'POST').toUpperCase()
+      const bodyTemplate = (node.config.body as string) || ''
+      const saveAs = node.config.save_response_as as string | undefined
+
+      if (url) {
+        try {
+          const contact = ctx.run.contact_id ? await getContact(ctx.account.id, ctx.run.contact_id) : null
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 8000)
+          const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: method === 'GET' ? undefined : renderTemplate(bodyTemplate, contact) || undefined,
+            signal: controller.signal,
+          }).finally(() => clearTimeout(timeout))
+
+          if (saveAs) {
+            const text = await res.text().catch(() => '')
+            let parsed: unknown = text
+            try {
+              parsed = JSON.parse(text)
+            } catch {
+              // keep as raw text
+            }
+            const supabase = createAdminClient()
+            await supabase
+              .from('flow_runs')
+              .update({ context: { ...ctx.run.context, [saveAs]: parsed } })
+              .eq('id', ctx.run.id)
+          }
+        } catch (err) {
+          console.error('[flows:external_request] Request failed:', err)
+        }
+      }
+      return { type: 'continue', handle: 'default' }
+    }
+
     case 'capture_input': {
       // Pauses here; the run only advances once a text reply arrives,
       // handled separately in engine.ts::tryContinueRunFromTextCapture

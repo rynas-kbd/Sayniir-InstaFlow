@@ -28,6 +28,7 @@ import {
   Trash2,
   Plus,
   ListPlus,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,6 +45,7 @@ const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare; label: string }
   { type: 'send_message', icon: MessageSquare, label: 'Message' },
   { type: 'ai_reply', icon: Sparkles, label: 'Réponse IA' },
   { type: 'capture_input', icon: ListPlus, label: 'Enregistrer réponse' },
+  { type: 'external_request', icon: Globe, label: 'Requête externe' },
   { type: 'condition', icon: GitBranch, label: 'Condition' },
   { type: 'delay', icon: Clock, label: 'Délai' },
   { type: 'set_tag', icon: Tag, label: 'Ajouter tag' },
@@ -75,6 +77,8 @@ function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string
       return (config.instructions as string) || 'Aucune instruction'
     case 'capture_input':
       return config.variable_name ? `Variable : ${config.variable_name}` : 'Non configuré'
+    case 'external_request':
+      return config.url ? String(config.url) : 'Non configuré'
     case 'condition':
       return config.field ? `${config.field} ${config.operator ?? 'equals'} ${config.value ?? ''}` : 'Non configuré'
     case 'delay':

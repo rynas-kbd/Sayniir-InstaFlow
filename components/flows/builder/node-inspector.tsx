@@ -220,6 +220,58 @@ export function NodeInspector({
         </div>
       )
 
+    case 'external_request':
+      return (
+        <div className="space-y-3.5">
+          <div className="space-y-1.5">
+            <Label>URL</Label>
+            <Input
+              value={(config.url as string) ?? ''}
+              onChange={(e) => set('url', e.target.value)}
+              placeholder="https://hooks.zapier.com/…"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Méthode</Label>
+            <Select value={(config.method as string) ?? 'POST'} onValueChange={(v) => v && set('method', v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="POST">POST</SelectItem>
+                <SelectItem value="GET">GET</SelectItem>
+                <SelectItem value="PUT">PUT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {(config.method ?? 'POST') !== 'GET' && (
+            <div className="space-y-1.5">
+              <Label>Corps (JSON)</Label>
+              <Textarea
+                value={(config.body as string) ?? ''}
+                onChange={(e) => set('body', e.target.value)}
+                placeholder={'{"nom": "{{nom}}", "telephone": "{{telephone}}"}'}
+                rows={4}
+                className="font-mono text-xs"
+              />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label>Enregistrer la réponse sous (optionnel)</Label>
+            <Input
+              value={(config.save_response_as as string) ?? ''}
+              onChange={(e) => set('save_response_as', e.target.value)}
+              placeholder="ex: crm_response"
+            />
+          </div>
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+            <p className="text-[11px] text-muted-foreground">
+              💡 Ne bloque jamais le flow — en cas d&apos;échec de la requête, le flow continue normalement.
+            </p>
+          </div>
+        </div>
+      )
+
     case 'capture_input':
       return (
         <div className="space-y-3.5">
