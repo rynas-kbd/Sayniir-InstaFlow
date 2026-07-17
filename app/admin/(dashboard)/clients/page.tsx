@@ -128,8 +128,8 @@ export default async function AdminClientsPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
-                  <TableHead>Compte Instagram</TableHead>
-                  <TableHead>Rôle</TableHead>
+                  <TableHead className="hidden sm:table-cell">Compte Instagram</TableHead>
+                  <TableHead className="hidden sm:table-cell">Rôle</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
@@ -163,7 +163,7 @@ export default async function AdminClientsPage({
                         </div>
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-2">
                           {ig?.page_picture_url ? (
                             <Image src={ig.page_picture_url} alt="" width={22} height={22} unoptimized className="size-[22px] rounded-full object-cover" />
@@ -178,7 +178,7 @@ export default async function AdminClientsPage({
                         </div>
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                           {user.role === 'admin' ? 'Admin' : 'Client'}
                         </Badge>

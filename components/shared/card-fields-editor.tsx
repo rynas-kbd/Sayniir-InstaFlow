@@ -52,7 +52,7 @@ export function CardFieldsEditor({
             <button
               type="button"
               onClick={() => onButtonsChange([...buttons, { type: 'web_url', title: 'Acheter', url: 'https://' }])}
-              className="cursor-pointer text-xs font-medium text-primary hover:underline"
+              className="-m-1.5 cursor-pointer p-1.5 text-xs font-medium text-primary hover:underline"
             >
               + Ajouter
             </button>
@@ -73,7 +73,7 @@ export function CardFieldsEditor({
                       copy.splice(idx, 1)
                       onButtonsChange(copy)
                     }}
-                    className="cursor-pointer text-[10px] text-destructive hover:underline"
+                    className="-m-1.5 cursor-pointer p-1.5 text-[10px] text-destructive hover:underline"
                   >
                     Supprimer
                   </button>
@@ -92,7 +92,7 @@ export function CardFieldsEditor({
                       onButtonsChange(copy)
                     }}
                   >
-                    <SelectTrigger className="h-7 text-xs">
+                    <SelectTrigger className="h-8 sm:h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -110,7 +110,7 @@ export function CardFieldsEditor({
                     onButtonsChange(copy)
                   }}
                   placeholder="Texte du bouton"
-                  className="h-7 text-xs"
+                  className="h-8 sm:h-7 text-xs"
                 />
 
                 {btnType === 'web_url' && (
@@ -122,7 +122,7 @@ export function CardFieldsEditor({
                       onButtonsChange(copy)
                     }}
                     placeholder="Lien URL (https://...)"
-                    className="h-7 text-xs"
+                    className="h-8 sm:h-7 text-xs"
                   />
                 )}
 

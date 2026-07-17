@@ -60,15 +60,21 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
           <DialogTitle>Gérer les tags</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={createTag} className="flex gap-2">
-          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du tag" />
-          <div className="flex items-center gap-1">
+        <form onSubmit={createTag} className="flex flex-wrap items-center gap-2.5">
+          <Input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nom du tag"
+            className="min-w-[140px] flex-1"
+          />
+          <div className="flex items-center gap-1.5">
             {COLORS.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                className="size-5 shrink-0 rounded-full border-2"
+                className="size-7 shrink-0 cursor-pointer rounded-full border-2 sm:size-5"
                 style={{ backgroundColor: c, borderColor: color === c ? 'var(--foreground)' : 'transparent' }}
                 aria-label={c}
               />
@@ -83,7 +89,12 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
           {tags.map((tag) => (
             <Badge key={tag.id} variant="outline" style={{ borderColor: tag.color, color: tag.color }} className="gap-1">
               {tag.name}
-              <button type="button" onClick={() => deleteTag(tag.id)} aria-label="Supprimer">
+              <button
+                type="button"
+                onClick={() => deleteTag(tag.id)}
+                aria-label="Supprimer"
+                className="-my-1 -mr-1 cursor-pointer rounded-full p-1.5"
+              >
                 <Trash2 className="size-3" />
               </button>
             </Badge>

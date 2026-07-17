@@ -88,7 +88,7 @@ export function BoutiqueClient({
                 )}
               >
                 <Icon className="size-4 shrink-0" />
-                <span className="hidden sm:inline">{label}</span>
+                <span className="text-[11px] sm:text-sm">{label}</span>
                 {count !== undefined && (
                   <span
                     className={cn(

@@ -388,7 +388,7 @@ export function FlowCanvas({
           >
             <Background />
             <Controls />
-            <MiniMap className="!bg-card" />
+            <MiniMap className="!hidden !bg-card md:!block" />
           </ReactFlow>
 
           {/* Mobile FAB — opens node palette */}

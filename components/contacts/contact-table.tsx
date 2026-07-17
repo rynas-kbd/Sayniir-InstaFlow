@@ -102,10 +102,10 @@ export function ContactTable({
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow className="border-b border-border/60">
-            <TableHead className="font-semibold text-foreground/80 px-5 py-4">Client</TableHead>
-            <TableHead className="font-semibold text-foreground/80 px-5 py-4">Tags</TableHead>
-            <TableHead className="font-semibold text-foreground/80 px-5 py-4">Dernier inbound</TableHead>
-            <TableHead className="text-right font-semibold text-foreground/80 px-5 py-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">Client</TableHead>
+            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">Tags</TableHead>
+            <TableHead className="hidden font-semibold text-foreground/80 px-5 py-4 sm:table-cell">Dernier inbound</TableHead>
+            <TableHead className="text-right font-semibold text-foreground/80 px-3 sm:px-5 py-4">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-border/40">
@@ -117,7 +117,7 @@ export function ContactTable({
             return (
               <TableRow key={contact.id} className="group hover:bg-muted/10 transition-colors border-b border-border/40 last:border-0">
                 {/* Client Profile and Details */}
-                <TableCell className="px-5 py-3.5">
+                <TableCell className="px-3 sm:px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${avatarColorClass}`}>
                       {initial}
@@ -135,7 +135,7 @@ export function ContactTable({
                 </TableCell>
 
                 {/* Tag Pills and add tags popover */}
-                <TableCell className="px-5 py-3.5">
+                <TableCell className="px-3 sm:px-5 py-3.5">
                   <div className="flex flex-wrap items-center gap-1.5">
                     {contact.contact_tags.map((ct) => (
                       <Badge
@@ -183,7 +183,7 @@ export function ContactTable({
                 </TableCell>
 
                 {/* Last Message Inbound */}
-                <TableCell className="px-5 py-3.5 text-xs text-muted-foreground/80 font-medium">
+                <TableCell className="hidden px-5 py-3.5 text-xs text-muted-foreground/80 font-medium sm:table-cell">
                   {contact.last_inbound_at ? (
                     new Date(contact.last_inbound_at).toLocaleDateString('fr-FR', {
                       day: 'numeric',
@@ -196,7 +196,7 @@ export function ContactTable({
                 </TableCell>
 
                 {/* Action buttons */}
-                <TableCell className="px-5 py-3.5 text-right">
+                <TableCell className="px-3 sm:px-5 py-3.5 text-right">
                   <Button
                     variant="ghost"
                     size="icon"

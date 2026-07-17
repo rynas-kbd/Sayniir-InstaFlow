@@ -125,7 +125,7 @@ export function CreateFlowDialog({
           {/* Templates */}
           <div className="space-y-2">
             <Label>Modèle</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {TEMPLATE_OPTIONS.map((opt) => {
                 const Icon = opt.icon ?? FileText
                 const selected = templateId === opt.id

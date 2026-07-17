@@ -77,7 +77,7 @@ export function ProductFormDialog({
             <Label htmlFor="p-desc">Description</Label>
             <Textarea id="p-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
-          <div className="flex gap-3.5">
+          <div className="flex flex-col gap-3.5 sm:flex-row">
             <div className="flex-1 space-y-1.5">
               <Label htmlFor="p-price">Prix (DZD)</Label>
               <Input
@@ -99,7 +99,7 @@ export function ProductFormDialog({
               />
             </div>
           </div>
-          <div className="flex gap-3.5">
+          <div className="flex flex-col gap-3.5 sm:flex-row">
             <div className="flex-1 space-y-1.5">
               <Label htmlFor="p-sizes">Tailles (virgules)</Label>
               <Input id="p-sizes" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="S, M, L" />
@@ -111,7 +111,7 @@ export function ProductFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p-image">URL image</Label>
-            <Input id="p-image" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+            <Input id="p-image" type="url" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
