@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus } from 'lucide-react'
+import { Plus, Type, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
+import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
 import type { Tag } from '@/components/contacts/types'
+import type { CardButton } from '@/components/flows/types'
 
 export function CreateCampaignDialog({
   channelAccountId,
@@ -28,6 +30,11 @@ export function CreateCampaignDialog({
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [scheduledAt, setScheduledAt] = useState('')
   const [saving, setSaving] = useState(false)
+  const [responseType, setResponseType] = useState<'text' | 'card'>('text')
+  const [cardTitle, setCardTitle] = useState('')
+  const [cardSubtitle, setCardSubtitle] = useState('')
+  const [cardImageUrl, setCardImageUrl] = useState('')
+  const [cardButtons, setCardButtons] = useState<CardButton[]>([])
 
   function toggleTag(tagId: string) {
     setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]))
@@ -47,6 +54,11 @@ export function CreateCampaignDialog({
           message_template: message.trim(),
           audience_tag_ids: selectedTags,
           scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+          response_type: responseType,
+          card_title: cardTitle,
+          card_subtitle: cardSubtitle,
+          card_image_url: cardImageUrl,
+          card_buttons: cardButtons,
         }),
       })
       if (!res.ok) throw new Error('Erreur')
@@ -55,6 +67,11 @@ export function CreateCampaignDialog({
       setMessage('')
       setSelectedTags([])
       setScheduledAt('')
+      setResponseType('text')
+      setCardTitle('')
+      setCardSubtitle('')
+      setCardImageUrl('')
+      setCardButtons([])
       toast.success('Campagne créée')
       router.refresh()
     } catch {
@@ -113,6 +130,44 @@ export function CreateCampaignDialog({
               rows={4}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label>Type de réponse</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setResponseType('text')}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors ${
+                  responseType === 'text' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Type className="size-3.5" /> Texte
+              </button>
+              <button
+                type="button"
+                onClick={() => setResponseType('card')}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors ${
+                  responseType === 'card' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <ImageIcon className="size-3.5" /> Carte
+              </button>
+            </div>
+          </div>
+
+          {responseType === 'card' && (
+            <CardFieldsEditor
+              title={cardTitle}
+              subtitle={cardSubtitle}
+              imageUrl={cardImageUrl}
+              buttons={cardButtons}
+              onTitleChange={setCardTitle}
+              onSubtitleChange={setCardSubtitle}
+              onImageUrlChange={setCardImageUrl}
+              onButtonsChange={setCardButtons}
+            />
+          )}
+
           <div className="space-y-1.5">
             <Label>Audience (tags — vide = tous les contacts abonnés)</Label>
             <div className="flex flex-wrap gap-3">

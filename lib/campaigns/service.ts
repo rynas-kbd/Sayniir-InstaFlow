@@ -65,8 +65,32 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
     if (!contact) continue
 
     try {
+      const isCard = campaign.response_type === 'card'
+      const cardButtons = ((campaign.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []).map(
+        (b) => ({ ...b, title: renderTemplate(b.title, contact) })
+      )
       const personalizedText = renderTemplate(campaign.message_template, contact)
-      const result = await adapter.sendMessage(ref, contact.sender_id, personalizedText)
+
+      let result: { messageId: string } | null
+      if (isCard && !campaign.card_image_url && cardButtons.length > 0 && adapter.sendButtons) {
+        result = await adapter.sendButtons(
+          ref,
+          contact.sender_id,
+          renderTemplate(campaign.card_title || personalizedText, contact),
+          cardButtons.map((b) => ({ type: b.type ?? 'web_url', title: b.title, url: b.url }))
+        )
+      } else if (isCard && adapter.sendCard) {
+        result = await adapter.sendCard(
+          ref,
+          contact.sender_id,
+          renderTemplate(campaign.card_title || personalizedText, contact),
+          campaign.card_subtitle ? renderTemplate(campaign.card_subtitle, contact) : undefined,
+          campaign.card_image_url ?? undefined,
+          cardButtons.map((b) => ({ title: b.title, url: b.url ?? '' }))
+        )
+      } else {
+        result = await adapter.sendMessage(ref, contact.sender_id, personalizedText)
+      }
       await supabase
         .from('campaign_sends')
         .update({ status: 'sent', sent_message_id: result?.messageId ?? null, sent_at: new Date().toISOString() })
