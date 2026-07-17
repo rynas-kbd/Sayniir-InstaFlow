@@ -10,6 +10,7 @@ import {
   ArrowRightCircle,
   ListPlus,
   Globe,
+  SplitSquareHorizontal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FlowNodeType, CardButton } from '../types'
@@ -25,6 +26,7 @@ const NODE_META: Record<FlowNodeType, { icon: typeof Zap; label: string }> = {
   jump: { icon: ArrowRightCircle, label: 'Aller vers un flow' },
   capture_input: { icon: ListPlus, label: 'Enregistrer la réponse' },
   external_request: { icon: Globe, label: 'Requête externe' },
+  split_test: { icon: SplitSquareHorizontal, label: 'Split A/B' },
 }
 
 export interface FlowNodeData {
@@ -66,6 +68,15 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
             <span>Vrai</span>
             <span>Faux</span>
+          </div>
+        </>
+      ) : nodeData.nodeType === 'split_test' ? (
+        <>
+          <Handle type="source" position={Position.Bottom} id="a" style={{ left: '30%' }} className="!bg-primary" />
+          <Handle type="source" position={Position.Bottom} id="b" style={{ left: '70%' }} className="!bg-violet-500" />
+          <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+            <span>A ({(nodeData.config.percentage_a as number) ?? 50}%)</span>
+            <span>B ({100 - ((nodeData.config.percentage_a as number) ?? 50)}%)</span>
           </div>
         </>
       ) : postbackButtons.length > 0 ? (

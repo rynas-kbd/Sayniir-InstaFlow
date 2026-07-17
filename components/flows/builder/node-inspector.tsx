@@ -220,6 +220,23 @@ export function NodeInspector({
         </div>
       )
 
+    case 'split_test':
+      return (
+        <div className="space-y-1.5">
+          <Label>Répartition (% vers la branche A)</Label>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            value={(config.percentage_a as number) ?? 50}
+            onChange={(e) => set('percentage_a', Number(e.target.value))}
+          />
+          <p className="text-xs text-muted-foreground">
+            Le reste va vers la branche B. Chaque contact est réparti aléatoirement une seule fois.
+          </p>
+        </div>
+      )
+
     case 'external_request':
       return (
         <div className="space-y-3.5">

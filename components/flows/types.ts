@@ -9,6 +9,7 @@ export type FlowNodeType =
   | 'jump'
   | 'capture_input'
   | 'external_request'
+  | 'split_test'
 
 export interface CardButton {
   type: 'postback' | 'web_url'

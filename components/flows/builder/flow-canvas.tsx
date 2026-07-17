@@ -29,6 +29,7 @@ import {
   Plus,
   ListPlus,
   Globe,
+  SplitSquareHorizontal,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,6 +47,7 @@ const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare; label: string }
   { type: 'ai_reply', icon: Sparkles, label: 'Réponse IA' },
   { type: 'capture_input', icon: ListPlus, label: 'Enregistrer réponse' },
   { type: 'external_request', icon: Globe, label: 'Requête externe' },
+  { type: 'split_test', icon: SplitSquareHorizontal, label: 'Split A/B' },
   { type: 'condition', icon: GitBranch, label: 'Condition' },
   { type: 'delay', icon: Clock, label: 'Délai' },
   { type: 'set_tag', icon: Tag, label: 'Ajouter tag' },
@@ -79,6 +81,8 @@ function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string
       return config.variable_name ? `Variable : ${config.variable_name}` : 'Non configuré'
     case 'external_request':
       return config.url ? String(config.url) : 'Non configuré'
+    case 'split_test':
+      return `${(config.percentage_a as number) ?? 50}% A / ${100 - ((config.percentage_a as number) ?? 50)}% B`
     case 'condition':
       return config.field ? `${config.field} ${config.operator ?? 'equals'} ${config.value ?? ''}` : 'Non configuré'
     case 'delay':

@@ -16,6 +16,7 @@ export interface FlowNode {
     | 'jump'
     | 'capture_input'
     | 'external_request'
+    | 'split_test'
   config: Record<string, unknown>
 }
 

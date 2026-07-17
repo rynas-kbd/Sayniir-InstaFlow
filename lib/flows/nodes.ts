@@ -106,6 +106,12 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
       return { type: 'continue', handle }
     }
 
+    case 'split_test': {
+      const percentA = Number(node.config.percentage_a) || 50
+      const handle = Math.random() * 100 < percentA ? 'a' : 'b'
+      return { type: 'continue', handle }
+    }
+
     case 'external_request': {
       const url = node.config.url as string | undefined
       const method = ((node.config.method as string) || 'POST').toUpperCase()
