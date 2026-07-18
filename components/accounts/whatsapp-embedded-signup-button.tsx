@@ -86,43 +86,52 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
     setLoading(true)
     signupData.current = {}
 
+    // The Facebook JS SDK inspects the callback it's given and rejects async
+    // functions outright ("Expression is of type asyncfunction, not
+    // function"), so the callback passed to FB.login must stay a plain
+    // synchronous function — it just fires off the async handler below
+    // without awaiting it (the SDK doesn't use the callback's return value).
+    async function handleLoginResponse(response: { authResponse?: { code?: string } }) {
+      const code = response.authResponse?.code
+      if (!code) {
+        toast.error('Connexion WhatsApp annulée ou refusée')
+        setLoading(false)
+        return
+      }
+
+      // The WA_EMBEDDED_SIGNUP postMessage can arrive slightly after the
+      // FB.login callback fires — give it a short grace window.
+      for (let i = 0; i < 20 && !signupData.current.phoneNumberId; i++) {
+        await new Promise((r) => setTimeout(r, 250))
+      }
+
+      const { phoneNumberId, wabaId } = signupData.current
+      if (!phoneNumberId || !wabaId) {
+        toast.error("Aucun numéro n'a été configuré dans le popup WhatsApp")
+        setLoading(false)
+        return
+      }
+
+      try {
+        const res = await fetch('/api/accounts/whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, phoneNumberId, wabaId }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Échec de la connexion')
+        toast.success('Compte WhatsApp connecté')
+        router.refresh()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Erreur inconnue')
+      } finally {
+        setLoading(false)
+      }
+    }
+
     window.FB.login(
-      async (response) => {
-        const code = response.authResponse?.code
-        if (!code) {
-          toast.error('Connexion WhatsApp annulée ou refusée')
-          setLoading(false)
-          return
-        }
-
-        // The WA_EMBEDDED_SIGNUP postMessage can arrive slightly after the
-        // FB.login callback fires — give it a short grace window.
-        for (let i = 0; i < 20 && !signupData.current.phoneNumberId; i++) {
-          await new Promise((r) => setTimeout(r, 250))
-        }
-
-        const { phoneNumberId, wabaId } = signupData.current
-        if (!phoneNumberId || !wabaId) {
-          toast.error("Aucun numéro n'a été configuré dans le popup WhatsApp")
-          setLoading(false)
-          return
-        }
-
-        try {
-          const res = await fetch('/api/accounts/whatsapp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, phoneNumberId, wabaId }),
-          })
-          const data = await res.json()
-          if (!res.ok) throw new Error(data.error || 'Échec de la connexion')
-          toast.success('Compte WhatsApp connecté')
-          router.refresh()
-        } catch (err) {
-          toast.error(err instanceof Error ? err.message : 'Erreur inconnue')
-        } finally {
-          setLoading(false)
-        }
+      (response) => {
+        void handleLoginResponse(response)
       },
       { config_id: configId, response_type: 'code', override_default_response_type: true }
     )
