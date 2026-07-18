@@ -33,7 +33,12 @@ export default async function AccountsPage() {
         <PageHeader
           title="Comptes connectés"
           description="Gérez vos comptes Instagram, Messenger et WhatsApp."
-          actions={<ConnectPanel />}
+          actions={
+            <ConnectPanel
+              whatsappAppId={process.env.NEXT_PUBLIC_META_WHATSAPP_APP_ID ?? null}
+              whatsappConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? null}
+            />
+          }
         />
 
         <div className="space-y-5 p-4 md:p-6">

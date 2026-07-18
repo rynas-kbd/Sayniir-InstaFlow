@@ -5,24 +5,29 @@ import type { ChannelAdapter, ChannelAccountRef, NormalizedInboundMessage, Norma
 const GRAPH_API_VERSION = 'v21.0'
 
 /**
- * WhatsApp adapter — no OAuth (per plan: manual connection via a pasted
- * permanent System User token + phone_number_id + WABA ID, see
- * app/api/accounts/whatsapp/route.ts), a structurally different webhook
- * envelope (lib/channels/whatsapp/webhook.ts), and no public-comment concept.
+ * WhatsApp adapter — connection happens via Embedded Signup, a client-driven
+ * popup (Facebook JS SDK's FB.login + a WA_EMBEDDED_SIGNUP postMessage event,
+ * see components/accounts/whatsapp-embedded-signup-button.tsx) rather than a
+ * server redirect URL. That flow doesn't fit this generic ChannelAdapter
+ * interface (built around getLoginUrl → redirect → callback), so the actual
+ * OAuth code exchange lives in app/api/accounts/whatsapp/route.ts instead —
+ * these three methods are unused for WhatsApp and intentionally throw.
+ * Also has a structurally different webhook envelope
+ * (lib/channels/whatsapp/webhook.ts) and no public-comment concept.
  */
 export const whatsappAdapter: ChannelAdapter = {
   platform: 'whatsapp',
 
   getLoginUrl(): string {
-    throw new Error('WhatsApp has no OAuth flow — connect via POST /api/accounts/whatsapp with a manual token')
+    throw new Error('WhatsApp uses Embedded Signup (client popup) — see components/accounts/whatsapp-embedded-signup-button.tsx')
   },
 
   async exchangeToken(): Promise<{ accessToken: string; expiresIn?: number }> {
-    throw new Error('WhatsApp has no OAuth flow — connect via POST /api/accounts/whatsapp with a manual token')
+    throw new Error('WhatsApp uses Embedded Signup (client popup) — see app/api/accounts/whatsapp/route.ts')
   },
 
   async getAccountInfo(): Promise<never> {
-    throw new Error('WhatsApp has no OAuth flow — connect via POST /api/accounts/whatsapp with a manual token')
+    throw new Error('WhatsApp uses Embedded Signup (client popup) — see app/api/accounts/whatsapp/route.ts')
   },
 
   async subscribeToWebhooks(): Promise<void> {
