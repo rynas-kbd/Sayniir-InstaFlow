@@ -10,7 +10,7 @@ const SCOPES = ['pages_show_list', 'pages_messaging', 'pages_read_engagement'].j
 
 export function getLoginUrl(state?: string): string {
   const params = new URLSearchParams({
-    client_id: process.env.META_APP_ID!,
+    client_id: process.env.META_MESSENGER_APP_ID!,
     redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/messenger/callback`,
     scope: SCOPES,
     response_type: 'code',
@@ -21,8 +21,8 @@ export function getLoginUrl(state?: string): string {
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
   const params = new URLSearchParams({
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: process.env.META_MESSENGER_APP_ID!,
+    client_secret: process.env.META_MESSENGER_APP_SECRET!,
     redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/messenger/callback`,
     code,
   })
@@ -38,8 +38,8 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
 export async function exchangeForLongLivedToken(shortLivedToken: string): Promise<{ accessToken: string; expiresIn: number }> {
   const params = new URLSearchParams({
     grant_type: 'fb_exchange_token',
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: process.env.META_MESSENGER_APP_ID!,
+    client_secret: process.env.META_MESSENGER_APP_SECRET!,
     fb_exchange_token: shortLivedToken,
   })
   const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/oauth/access_token?${params.toString()}`)

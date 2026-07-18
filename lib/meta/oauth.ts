@@ -18,7 +18,7 @@ const SCOPES = [
 export function getLoginUrl(state?: string): string {
   const params = new URLSearchParams({
     force_reauth: 'true',
-    client_id: process.env.META_APP_ID!,
+    client_id: process.env.META_INSTAGRAM_APP_ID!,
     redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
     scope: SCOPES,
     response_type: 'code',
@@ -35,8 +35,8 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: process.env.META_APP_ID!,
-      client_secret: process.env.META_APP_SECRET!,
+      client_id: process.env.META_INSTAGRAM_APP_ID!,
+      client_secret: process.env.META_INSTAGRAM_APP_SECRET!,
       grant_type: 'authorization_code',
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
       code,
@@ -64,7 +64,7 @@ export async function exchangeForLongLivedToken(
 ): Promise<{ accessToken: string; expiresIn: number }> {
   const params = new URLSearchParams({
     grant_type: 'ig_exchange_token',
-    client_secret: process.env.META_APP_SECRET!,
+    client_secret: process.env.META_INSTAGRAM_APP_SECRET!,
     access_token: shortLivedToken,
   })
 

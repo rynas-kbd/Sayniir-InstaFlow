@@ -25,6 +25,12 @@ const VERIFY_TOKEN_ENV: Record<Platform, string> = {
   whatsapp: 'META_WHATSAPP_VERIFY_TOKEN',
 }
 
+const APP_SECRET_ENV: Record<Platform, string> = {
+  instagram: 'META_INSTAGRAM_APP_SECRET',
+  messenger: 'META_MESSENGER_APP_SECRET',
+  whatsapp: 'META_APP_SECRET',
+}
+
 async function isSubscriptionValid(userId: string): Promise<boolean> {
   const supabase = createAdminClient()
   const { data: subscription } = await supabase
@@ -753,7 +759,7 @@ export function createWebhookRoute(platform: Platform) {
   async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get('x-hub-signature-256')
-    const appSecret = process.env.META_APP_SECRET ?? ''
+    const appSecret = process.env[APP_SECRET_ENV[platform]] ?? ''
     const adapter = getAdapter(platform)
 
     if (!adapter.verifyWebhookSignature(rawBody, signature, appSecret)) {

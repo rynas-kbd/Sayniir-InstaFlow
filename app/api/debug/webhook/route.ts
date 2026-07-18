@@ -17,9 +17,14 @@ export async function GET() {
   const results: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     env_check: {
-      META_APP_ID: process.env.META_APP_ID ? '✅ Set' : '❌ MISSING',
-      META_APP_SECRET: process.env.META_APP_SECRET ? `✅ Set (${process.env.META_APP_SECRET!.substring(0, 6)}...)` : '❌ MISSING',
+      META_INSTAGRAM_APP_ID: process.env.META_INSTAGRAM_APP_ID ? '✅ Set' : '❌ MISSING',
+      META_INSTAGRAM_APP_SECRET: process.env.META_INSTAGRAM_APP_SECRET ? `✅ Set (${process.env.META_INSTAGRAM_APP_SECRET!.substring(0, 6)}...)` : '❌ MISSING',
+      META_MESSENGER_APP_ID: process.env.META_MESSENGER_APP_ID ? '✅ Set' : '❌ MISSING',
+      META_MESSENGER_APP_SECRET: process.env.META_MESSENGER_APP_SECRET ? `✅ Set (${process.env.META_MESSENGER_APP_SECRET!.substring(0, 6)}...)` : '❌ MISSING',
+      META_APP_ID: process.env.META_APP_ID ? '✅ Set (WhatsApp)' : '❌ MISSING',
+      META_APP_SECRET: process.env.META_APP_SECRET ? `✅ Set (WhatsApp, ${process.env.META_APP_SECRET!.substring(0, 6)}...)` : '❌ MISSING',
       META_WEBHOOK_VERIFY_TOKEN: process.env.META_WEBHOOK_VERIFY_TOKEN ? '✅ Set' : '❌ MISSING',
+      META_MESSENGER_VERIFY_TOKEN: process.env.META_MESSENGER_VERIFY_TOKEN ? '✅ Set' : '❌ MISSING',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? '❌ MISSING',
     },
   }

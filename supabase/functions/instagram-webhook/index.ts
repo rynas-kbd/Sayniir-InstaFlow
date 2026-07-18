@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
   if (req.method === 'POST') {
     const rawBody = await req.text()
     const signature = req.headers.get('x-hub-signature-256')
-    const appSecret = Deno.env.get('META_APP_SECRET') ?? ''
+    const appSecret = Deno.env.get('META_INSTAGRAM_APP_SECRET') ?? ''
 
     // Verify HMAC-SHA256 signature (now async using Web Crypto API)
     const isValid = await verifyWebhookSignature(rawBody, signature, appSecret)
