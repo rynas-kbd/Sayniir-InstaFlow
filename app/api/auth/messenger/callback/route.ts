@@ -20,15 +20,15 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[Messenger Callback] Error from Meta:', error)
-    return NextResponse.redirect(`${appUrl}/dashboard?error=access_denied`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=access_denied`)
   }
   if (!code) {
-    return NextResponse.redirect(`${appUrl}/dashboard?error=missing_code`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=missing_code`)
   }
 
   const storedState = request.cookies.get('messenger_oauth_state')?.value
   if (state && storedState && state !== storedState) {
-    return NextResponse.redirect(`${appUrl}/dashboard?error=invalid_state`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
   }
 
   try {
@@ -46,10 +46,13 @@ export async function GET(request: NextRequest) {
     const pages = await listPages(longLivedUserToken)
 
     if (pages.length === 0) {
-      return NextResponse.redirect(`${appUrl}/dashboard?error=no_pages`)
+      return NextResponse.redirect(`${appUrl}/accounts?error=no_pages`)
     }
 
     const adminSupabase = createAdminClient()
+
+    let savedCount = 0
+    let lastErrorMessage: string | null = null
 
     for (const page of pages) {
       const { error: upsertError } = await adminSupabase.from('channel_accounts').upsert(
@@ -71,10 +74,17 @@ export async function GET(request: NextRequest) {
 
       if (upsertError) {
         console.error('[Messenger Callback] Upsert error for page', page.id, upsertError)
+        lastErrorMessage = upsertError.message
         continue
       }
 
+      savedCount += 1
       await subscribeToWebhooks(page.id, page.access_token)
+    }
+
+    if (savedCount === 0) {
+      const reason = lastErrorMessage ?? 'Unknown error'
+      return NextResponse.redirect(`${appUrl}/accounts?error=db_error&reason=${encodeURIComponent(reason)}`)
     }
 
     const { data: existingSub } = await adminSupabase.from('subscriptions').select('id').eq('user_id', user.id).single()
@@ -82,11 +92,11 @@ export async function GET(request: NextRequest) {
       await adminSupabase.from('subscriptions').insert({ user_id: user.id, status: 'inactive' })
     }
 
-    const response = NextResponse.redirect(`${appUrl}/dashboard`)
+    const response = NextResponse.redirect(`${appUrl}/accounts?connected=messenger`)
     response.cookies.delete('messenger_oauth_state')
     return response
   } catch (err) {
     console.error('[Messenger Callback] Unhandled error:', err)
-    return NextResponse.redirect(`${appUrl}/dashboard?error=server_error`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=server_error`)
   }
 }

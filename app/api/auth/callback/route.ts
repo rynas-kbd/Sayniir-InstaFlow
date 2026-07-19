@@ -25,17 +25,17 @@ export async function GET(request: NextRequest) {
   // Handle OAuth errors
   if (error) {
     console.error('[OAuth Callback] Error from Meta:', error)
-    return NextResponse.redirect(`${appUrl}/dashboard?error=access_denied`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=access_denied`)
   }
 
   if (!code) {
-    return NextResponse.redirect(`${appUrl}/dashboard?error=missing_code`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=missing_code`)
   }
 
   // CSRF: Validate state
   const storedState = request.cookies.get('oauth_state')?.value
   if (state && storedState && state !== storedState) {
-    return NextResponse.redirect(`${appUrl}/dashboard?error=invalid_state`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
   }
 
   try {
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     if (upsertError) {
       console.error('[OAuth Callback] Upsert error:', upsertError)
-      return NextResponse.redirect(`${appUrl}/dashboard?error=db_error`)
+      return NextResponse.redirect(`${appUrl}/accounts?error=db_error&reason=${encodeURIComponent(upsertError.message)}`)
     }
 
     // Step 5: Get the channel_account ID for subscription linking
@@ -124,11 +124,11 @@ export async function GET(request: NextRequest) {
     // Step 6: Subscribe to Meta webhooks using the global Instagram ID
     await subscribeToWebhooks(igPageId, longLivedToken)
 
-    const response = NextResponse.redirect(`${appUrl}/dashboard`)
+    const response = NextResponse.redirect(`${appUrl}/accounts?connected=instagram`)
     response.cookies.delete('oauth_state')
     return response
   } catch (err) {
     console.error('[OAuth Callback] Unhandled error:', err)
-    return NextResponse.redirect(`${appUrl}/dashboard?error=server_error`)
+    return NextResponse.redirect(`${appUrl}/accounts?error=server_error`)
   }
 }

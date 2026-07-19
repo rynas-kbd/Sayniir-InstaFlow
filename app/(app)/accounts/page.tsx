@@ -1,9 +1,11 @@
+import { Suspense } from 'react'
 import { Camera, CheckCircle2, XCircle, Link2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { ConnectPanel } from '@/components/accounts/connect-panel'
+import { ConnectResultToast } from '@/components/accounts/connect-result-toast'
 import { AccountCard, type ChannelAccount } from '@/components/accounts/account-card'
 
 export default async function AccountsPage() {
@@ -29,6 +31,9 @@ export default async function AccountsPage() {
 
   return (
     <div className="h-full overflow-y-auto">
+      <Suspense fallback={null}>
+        <ConnectResultToast />
+      </Suspense>
       <div className="mx-auto max-w-4xl">
         <PageHeader
           title="Comptes connectés"
