@@ -46,6 +46,8 @@ export function ConnectResultToast() {
         toast.error("Échec d'enregistrement", {
           description: reason ?? 'Erreur inconnue lors de la sauvegarde du compte.',
         })
+      } else if (error === 'no_pages' && reason) {
+        toast.error(ERROR_MESSAGES.no_pages, { description: reason })
       } else {
         toast.error(ERROR_MESSAGES[error] ?? 'Une erreur est survenue pendant la connexion.')
       }

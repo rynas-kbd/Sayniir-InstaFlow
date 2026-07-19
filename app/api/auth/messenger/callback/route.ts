@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { exchangeCodeForToken, exchangeForLongLivedToken, listPages, subscribeToWebhooks } from '@/lib/channels/messenger/oauth'
+import {
+  exchangeCodeForToken,
+  exchangeForLongLivedToken,
+  listGrantedPermissions,
+  listPages,
+  subscribeToWebhooks,
+} from '@/lib/channels/messenger/oauth'
 import { sealAccessToken } from '@/lib/channels/shared/tokens'
 
 /**
@@ -46,7 +52,9 @@ export async function GET(request: NextRequest) {
     const pages = await listPages(longLivedUserToken)
 
     if (pages.length === 0) {
-      return NextResponse.redirect(`${appUrl}/accounts?error=no_pages`)
+      const granted = await listGrantedPermissions(longLivedUserToken)
+      const reason = `Permissions accordées: ${granted}`
+      return NextResponse.redirect(`${appUrl}/accounts?error=no_pages&reason=${encodeURIComponent(reason)}`)
     }
 
     const adminSupabase = createAdminClient()

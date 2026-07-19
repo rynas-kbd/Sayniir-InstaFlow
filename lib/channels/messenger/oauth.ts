@@ -72,6 +72,34 @@ export async function listPages(userAccessToken: string): Promise<MessengerPage[
   return (data.data ?? []) as MessengerPage[]
 }
 
+/**
+ * Diagnostic helper: list permissions actually granted on a user token.
+ * Used when listPages() returns zero Pages, to tell apart "scope never
+ * granted" from "Page not attributable to this token" (e.g. Business
+ * Manager-owned Page) without needing server log access. Best-effort —
+ * never throws, since it only feeds an error message.
+ */
+export async function listGrantedPermissions(userAccessToken: string): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${GRAPH_API_VERSION}/me/permissions?access_token=${userAccessToken}`
+    )
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      return `Erreur lors de la lecture des permissions: ${data.error?.message ?? 'Unknown error'}`
+    }
+
+    const granted = (data.data ?? [])
+      .filter((p: { permission: string; status: string }) => p.status === 'granted')
+      .map((p: { permission: string }) => p.permission)
+
+    return granted.length > 0 ? granted.join(', ') : 'aucune'
+  } catch (err) {
+    return `Erreur lors de la lecture des permissions: ${err instanceof Error ? err.message : 'Unknown error'}`
+  }
+}
+
 /** Subscribe a Page to receive Messenger webhook events (messages field). */
 export async function subscribeToWebhooks(pageId: string, pageAccessToken: string): Promise<void> {
   try {
