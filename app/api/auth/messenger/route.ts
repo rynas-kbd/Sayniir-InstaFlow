@@ -7,6 +7,11 @@ import { getLoginUrl } from '@/lib/channels/messenger/oauth'
  * Page permissions. Mirrors app/api/auth/facebook/route.ts's CSRF pattern.
  */
 export async function GET() {
+  if (!process.env.META_MESSENGER_CONFIG_ID) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    return NextResponse.redirect(`${appUrl}/accounts?error=config_missing`)
+  }
+
   const state = Math.random().toString(36).substring(2, 15)
   const loginUrl = getLoginUrl(state)
 

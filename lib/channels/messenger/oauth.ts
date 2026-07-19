@@ -1,18 +1,25 @@
 const GRAPH_API_VERSION = 'v21.0'
 
 /**
- * Messenger uses classic Facebook Login for Business — a different OAuth
- * flow from Instagram Business Login (lib/meta/oauth.ts). One authorization
- * can return several Pages, so callers must enumerate them via listPages()
- * rather than assuming a single connected account like Instagram.
+ * Messenger uses Facebook Login for Business — a different OAuth flow from
+ * Instagram Business Login (lib/meta/oauth.ts). One authorization can return
+ * several Pages, so callers must enumerate them via listPages() rather than
+ * assuming a single connected account like Instagram.
+ *
+ * Uses a login configuration (config_id) rather than a raw `scope` param:
+ * the classic scope-only flow grants pages_show_list at the user level but
+ * does not attribute any Page as an asset, so me/accounts comes back empty
+ * even though the permission shows as granted. config_id makes the Page
+ * selection explicit (same pattern as the WhatsApp Embedded Signup button —
+ * see META_WHATSAPP_CONFIG_ID / whatsapp-embedded-signup-button.tsx).
+ * Create the configuration in the App Dashboard > Facebook Login for
+ * Business > Configurations, token type "User", assets "Pages".
  */
-const SCOPES = ['pages_show_list', 'pages_messaging', 'pages_read_engagement'].join(',')
-
 export function getLoginUrl(state?: string): string {
   const params = new URLSearchParams({
     client_id: process.env.META_MESSENGER_APP_ID!,
     redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/messenger/callback`,
-    scope: SCOPES,
+    config_id: process.env.META_MESSENGER_CONFIG_ID!,
     response_type: 'code',
     ...(state && { state }),
   })

@@ -16,6 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing_code: 'Connexion interrompue avant autorisation.',
   no_pages: 'Aucune Page Facebook gérée par ce compte. Messenger nécessite une Page.',
   server_error: 'Une erreur est survenue pendant la connexion.',
+  config_missing: 'Connexion Messenger non configurée (config_id manquant).',
 }
 
 /**
