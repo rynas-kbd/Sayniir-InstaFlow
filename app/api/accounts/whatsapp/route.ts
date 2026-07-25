@@ -79,6 +79,14 @@ export async function POST(request: NextRequest) {
     .eq('phone_number_id', phoneNumberId)
     .maybeSingle()
 
+  if (!existingAccount) {
+    const { checkChannelLimit } = await import('@/lib/plans/restrictions')
+    const { allowed, limit } = await checkChannelLimit(user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: `Limite de ${limit} canal/canaux atteinte pour votre plan.` }, { status: 403 })
+    }
+  }
+
   const row = {
     user_id: user.id,
     platform: 'whatsapp' as const,

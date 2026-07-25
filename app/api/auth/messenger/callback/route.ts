@@ -63,6 +63,23 @@ export async function GET(request: NextRequest) {
     let lastErrorMessage: string | null = null
 
     for (const page of pages) {
+      // Check if account already exists to allow updates, otherwise check limits
+      const { data: existingAccount } = await adminSupabase
+        .from('channel_accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('platform', 'messenger')
+        .eq('page_id', page.id)
+        .maybeSingle()
+
+      if (!existingAccount) {
+        const { checkChannelLimit } = await import('@/lib/plans/restrictions')
+        const { allowed, limit } = await checkChannelLimit(user.id)
+        if (!allowed) {
+          return NextResponse.redirect(`${appUrl}/accounts?error=limit_reached&reason=${encodeURIComponent(`Limite de ${limit} canal/canaux atteinte pour votre plan.`)}`)
+        }
+      }
+
       const { error: upsertError } = await adminSupabase.from('channel_accounts').upsert(
         {
           user_id: user.id,

@@ -14,6 +14,38 @@ export async function upsertContact(
   try {
     const supabase = createAdminClient()
     const now = new Date().toISOString()
+
+    // 1. Check if contact already exists
+    const { data: existing } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('channel_account_id', channelAccountId)
+      .eq('sender_id', senderId)
+      .maybeSingle()
+
+    if (existing) {
+      // Just update seen timestamps and details if profile provided
+      await supabase
+        .from('contacts')
+        .update({
+          username: senderProfile?.username || undefined,
+          full_name: senderProfile?.name || undefined,
+          profile_pic: senderProfile?.profilePic || undefined,
+          last_seen_at: now,
+          last_inbound_at: now,
+        })
+        .eq('id', existing.id)
+      return existing.id
+    }
+
+    // 2. Check contact limit for new contact
+    const { checkContactLimit } = await import('../plans/restrictions')
+    const isAllowed = await checkContactLimit(channelAccountId)
+    if (!isAllowed) {
+      console.warn(`[upsertContact] Contact limit reached for account: ${channelAccountId} — skipping new contact creation.`)
+      return null
+    }
+
     const { data, error } = await supabase
       .from('contacts')
       .upsert(

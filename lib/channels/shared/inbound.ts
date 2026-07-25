@@ -246,6 +246,30 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
 
   // ── Voice notes ────────────────────────────────────────────────────────
   if (msg.audioUrl) {
+    // Check auto reply limit for voice note
+    const { checkAutoReplyLimit } = await import('../../plans/restrictions')
+    const autoReplyAllowed = await checkAutoReplyLimit(account.id)
+    if (!autoReplyAllowed) {
+      console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${account.id} — skipping voice reply.`)
+      // Log the message as incoming with no auto reply
+      await supabase.from('message_logs').upsert(
+        {
+          channel_account_id: account.id,
+          contact_id: contactId,
+          sender_id: msg.senderId,
+          sender_username: senderProfile?.username || null,
+          sender_full_name: senderProfile?.name || null,
+          sender_profile_pic: senderProfile?.profilePic || null,
+          message_id: msg.messageId,
+          message_text: '[🎙️ Vocal]',
+          direction: 'incoming',
+          auto_reply_sent: false,
+        },
+        { onConflict: 'message_id' }
+      )
+      return
+    }
+
     const { downloadAudio, processVoiceWithGemini } = await import('../../meta/voice')
     let audioBuffer: Buffer
     try {
@@ -356,6 +380,13 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     },
     { onConflict: 'message_id' }
   )
+
+  const { checkAutoReplyLimit } = await import('../../plans/restrictions')
+  const autoReplyAllowed = await checkAutoReplyLimit(account.id)
+  if (!autoReplyAllowed) {
+    console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${account.id} — skipping text reply.`)
+    return
+  }
 
   const { data: rules } = await supabase
     .from('automation_rules')
@@ -616,6 +647,13 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
     },
     { onConflict: 'comment_id' }
   )
+
+  const { checkAutoReplyLimit } = await import('../../plans/restrictions')
+  const autoReplyAllowed = await checkAutoReplyLimit(account.id)
+  if (!autoReplyAllowed) {
+    console.warn(`[dispatchInboundComment] Auto reply limit reached for account: ${account.id} — skipping comment reply.`)
+    return
+  }
 
   const { data: agentSettings } = await supabase.from('agent_settings').select('flows_enabled, ai_provider, ai_api_key, ai_model').eq('channel_account_id', account.id).single()
 

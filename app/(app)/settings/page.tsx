@@ -45,7 +45,7 @@ export default async function SettingsPage() {
 
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('status, expires_at')
+    .select('status, expires_at, plan')
     .eq('user_id', user!.id)
     .maybeSingle()
 
@@ -93,7 +93,7 @@ export default async function SettingsPage() {
 
           <BillingCard status={subscription?.status ?? null} expiresAt={subscription?.expires_at ?? null} />
 
-          {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} />}
+          {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} userPlan={subscription?.plan ?? 'free'} />}
 
           <Card className="glass-card border-destructive/20">
             <CardHeader>

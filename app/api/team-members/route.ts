@@ -42,6 +42,30 @@ export async function POST(request: NextRequest) {
   const { data: account } = await supabase.from('channel_accounts').select('id').eq('id', channel_account_id).eq('user_id', user.id).single()
   if (!account) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
+  const { getUserPlanAndSubscription } = await import('@/lib/plans/restrictions')
+  const { plan } = await getUserPlanAndSubscription(user.id)
+
+  if (plan === 'free' || plan === 'pro') {
+    return NextResponse.json(
+      { error: "Votre plan actuel ne permet pas d'ajouter des membres d'équipe. Veuillez passer à l'abonnement Premium." },
+      { status: 403 }
+    )
+  }
+
+  if (plan === 'premium') {
+    const { count } = await supabase
+      .from('team_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('channel_account_id', channel_account_id)
+
+    if (count && count >= 10) {
+      return NextResponse.json(
+        { error: "Limite de 10 membres d'équipe atteinte pour le plan Premium." },
+        { status: 403 }
+      )
+    }
+  }
+
   const { data: member, error } = await supabase
     .from('team_members')
     .insert({ channel_account_id, name: name.trim(), email: email.trim() })

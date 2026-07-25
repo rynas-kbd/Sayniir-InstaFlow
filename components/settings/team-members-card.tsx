@@ -14,14 +14,25 @@ export interface TeamMember {
   email: string
 }
 
-export function TeamMembersCard({ channelAccountId, initialMembers }: { channelAccountId: string; initialMembers: TeamMember[] }) {
+export function TeamMembersCard({
+  channelAccountId,
+  initialMembers,
+  userPlan = 'free',
+}: {
+  channelAccountId: string
+  initialMembers: TeamMember[]
+  userPlan?: string
+}) {
   const [members, setMembers] = useState(initialMembers)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const isPremium = userPlan === 'premium'
+  const isLimitReached = members.length >= 10
+
   async function addMember() {
-    if (!name.trim() || !email.trim()) return
+    if (!name.trim() || !email.trim() || !isPremium || isLimitReached) return
     setSaving(true)
     try {
       const res = await fetch('/api/team-members', {
@@ -29,14 +40,17 @@ export function TeamMembersCard({ channelAccountId, initialMembers }: { channelA
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ channel_account_id: channelAccountId, name: name.trim(), email: email.trim() }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || "Impossible d'ajouter ce membre")
+      }
       const created: TeamMember = await res.json()
       setMembers((prev) => [created, ...prev])
       setName('')
       setEmail('')
       toast.success('Membre ajouté')
-    } catch {
-      toast.error("Impossible d'ajouter ce membre")
+    } catch (err: any) {
+      toast.error(err.message || "Impossible d'ajouter ce membre")
     } finally {
       setSaving(false)
     }
@@ -92,15 +106,25 @@ export function TeamMembersCard({ channelAccountId, initialMembers }: { channelA
           </div>
         </FormSection>
 
-        <FormSection icon={UserPlus} label="Ajouter un membre">
-          <div className="flex items-center gap-1.5">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" className="text-xs" />
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="text-xs" />
-            <Button type="button" size="icon-sm" onClick={addMember} disabled={saving || !name.trim() || !email.trim()} aria-label="Ajouter">
-              <Plus className="size-3.5" />
-            </Button>
+        {!isPremium ? (
+          <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
+            ⚠️ Le partage d&apos;inbox et l&apos;ajout de membres d&apos;équipe sont réservés au plan <strong>Premium</strong>.
           </div>
-        </FormSection>
+        ) : isLimitReached ? (
+          <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
+            ⚠️ Limite de 10 membres d&apos;équipe atteinte pour votre plan Premium.
+          </div>
+        ) : (
+          <FormSection icon={UserPlus} label="Ajouter un membre">
+            <div className="flex items-center gap-1.5">
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" className="text-xs" />
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="text-xs" />
+              <Button type="button" size="icon-sm" onClick={addMember} disabled={saving || !name.trim() || !email.trim()} aria-label="Ajouter">
+                <Plus className="size-3.5" />
+              </Button>
+            </div>
+          </FormSection>
+        )}
       </CardContent>
     </Card>
   )

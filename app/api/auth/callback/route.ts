@@ -67,6 +67,23 @@ export async function GET(request: NextRequest) {
 
     const adminSupabase = createAdminClient()
 
+    // Check if account already exists to allow updates, otherwise check limits
+    const { data: existingAccount } = await adminSupabase
+      .from('channel_accounts')
+      .select('id')
+      .eq('user_id', supabaseUserId)
+      .eq('platform', 'instagram')
+      .eq('page_id', igPageId)
+      .maybeSingle()
+
+    if (!existingAccount) {
+      const { checkChannelLimit } = await import('@/lib/plans/restrictions')
+      const { allowed, limit } = await checkChannelLimit(supabaseUserId)
+      if (!allowed) {
+        return NextResponse.redirect(`${appUrl}/accounts?error=limit_reached&reason=${encodeURIComponent(`Limite de ${limit} canal/canaux atteinte pour votre plan.`)}`)
+      }
+    }
+
     // Step 4: Upsert the channel account in DB linked to user
     const { error: upsertError } = await adminSupabase
       .from('channel_accounts')
