@@ -1,8 +1,21 @@
-export default function AuthLayout({
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // If the user already has a valid session, skip auth pages entirely
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect('/dashboard')
+  }
+
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary/8 via-background to-background px-6 py-12">
       <div className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-primary/10 blur-3xl" />
