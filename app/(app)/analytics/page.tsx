@@ -30,7 +30,7 @@ export default async function AnalyticsPage() {
       <div className="flex-1 overflow-y-auto space-y-6 p-4 sm:p-6">
         
         {/* Intro banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-5 flex items-center justify-between gap-4">
+        <div className="glass-banner relative overflow-hidden rounded-2xl px-5 py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <BarChart3 className="size-5" />
@@ -57,9 +57,9 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Graph representation */}
-        <Card className="border border-border/70 hover:shadow-sm transition-all duration-200">
+        <Card className="glass-card hover:shadow-md transition-all duration-200">
           <CardHeader className="border-b border-border/40 pb-4">
-            <CardTitle className="text-sm font-semibold">Volume de messagerie</CardTitle>
+            <CardTitle className="text-sm">Volume de messagerie</CardTitle>
             <CardDescription className="text-xs">Messages reçus vs réponses automatiques envoyées par jour</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">

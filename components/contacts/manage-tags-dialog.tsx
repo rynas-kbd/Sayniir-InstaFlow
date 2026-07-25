@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components
 import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import type { Tag } from './types'
 
-const COLORS = ['#6366f1', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed']
+const COLORS = ['#b2622d', '#728157', '#645c50', '#b23a2e', '#643312', '#3d472b']
 
 export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { channelAccountId: string; tags: Tag[] }) {
   const [tags, setTags] = useState(initialTags)

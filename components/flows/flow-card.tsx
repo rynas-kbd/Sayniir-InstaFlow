@@ -30,9 +30,9 @@ function getTriggerLabel(flow: FlowSummary): string {
 
 // Status config
 const STATUS_CONFIG = {
-  active: { label: 'Actif', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' },
-  paused: { label: 'En pause', dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800' },
-  draft:  { label: 'Brouillon', dot: 'bg-zinc-400', badge: 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700' },
+  active: { label: 'Actif', dot: 'bg-success', badge: 'bg-success/10 text-success border-success/20' },
+  paused: { label: 'En pause', dot: 'bg-warning', badge: 'bg-warning/10 text-warning border-warning/20' },
+  draft:  { label: 'Brouillon', dot: 'bg-muted-foreground/50', badge: 'bg-muted text-muted-foreground border-border' },
 } as const
 
 // Node type icons for preview

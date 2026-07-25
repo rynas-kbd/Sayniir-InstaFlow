@@ -110,8 +110,8 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                     variant={hasStock ? 'secondary' : 'destructive'}
                     className={`text-[10px] font-medium py-0 px-2.5 rounded-full border ${
                       hasStock
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
-                        : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                        ? 'bg-success/10 text-success border-success/20'
+                        : 'bg-destructive/10 text-destructive border-destructive/20'
                     }`}
                   >
                     {hasStock ? `${product.stock_quantity} en stock` : 'Rupture'}

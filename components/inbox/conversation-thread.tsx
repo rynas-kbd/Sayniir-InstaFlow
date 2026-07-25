@@ -22,12 +22,12 @@ interface ExtendedMessageItem extends MessageItem {
 
 // Deterministic gradient for avatar
 const AVATAR_COLORS = [
-  'from-violet-500 to-purple-600',
-  'from-blue-500 to-indigo-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-500',
-  'from-rose-500 to-pink-600',
-  'from-cyan-500 to-sky-600',
+  'from-terracotta-400 to-terracotta-600',
+  'from-sage-400 to-sage-600',
+  'from-terracotta-300 to-terracotta-500',
+  'from-sage-300 to-sage-500',
+  'from-sand-500 to-sand-700',
+  'from-terracotta-500 to-sage-600',
 ]
 function getAvatarGradient(str: string): string {
   let hash = 0
@@ -262,7 +262,7 @@ export function ConversationThread({
             disabled={togglingPause}
             className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50 ${
               botPaused
-                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400'
+                ? 'bg-warning/15 text-warning hover:bg-warning/25'
                 : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
             title={botPaused ? 'Réactiver le bot pour ce contact' : 'Mettre le bot en pause pour ce contact'}

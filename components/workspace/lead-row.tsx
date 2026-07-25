@@ -65,7 +65,7 @@ export function LeadRow({ lead }: { lead: Lead }) {
   const barClass = STATUS_BAR[status]
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5">
+    <div className="glass-stat group relative flex flex-col rounded-2xl transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5">
       {barClass && <div className={`absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r ${barClass}`} />}
 
       <div className="flex flex-1 flex-col gap-3 p-4">

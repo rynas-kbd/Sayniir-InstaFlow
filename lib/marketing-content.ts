@@ -44,9 +44,9 @@ export const SOCIAL_PROOF = [
 ]
 
 export const SCREENSHOTS = [
-  { src: '/screenshots/dashboard.png', alt: 'Tableau de bord Sayniir' },
-  { src: '/screenshots/flow-builder.png', alt: 'Constructeur de flows Sayniir' },
-  { src: '/screenshots/inbox.png', alt: 'Inbox unifié Sayniir' },
+  { src: '/screenshots/dashboard.png', alt: 'Tableau de bord Instaflow' },
+  { src: '/screenshots/flow-builder.png', alt: 'Constructeur de flows Instaflow' },
+  { src: '/screenshots/inbox.png', alt: 'Inbox unifié Instaflow' },
 ]
 
 export const PRICING_TIERS = [
@@ -98,7 +98,7 @@ export const FAQ_ITEMS = [
     theme: 'Sécurité',
     question: 'Est-ce autorisé par Instagram et Meta ? Je risque un ban ?',
     answer:
-      "Sayniir utilise exclusivement les API officielles de Meta (Instagram Messaging API, Messenger Platform, WhatsApp Business API). Aucun scraping ni automatisation non-officielle : votre compte reste conforme aux règles de la plateforme.",
+      "Instaflow utilise exclusivement les API officielles de Meta (Instagram Messaging API, Messenger Platform, WhatsApp Business API). Aucun scraping ni automatisation non-officielle : votre compte reste conforme aux règles de la plateforme.",
   },
   {
     theme: 'Fonctionnement',
@@ -114,9 +114,9 @@ export const FAQ_ITEMS = [
   },
   {
     theme: 'Sécurité',
-    question: "Qu'est-ce que la fenêtre de messagerie de 24h et comment Sayniir la gère ?",
+    question: "Qu'est-ce que la fenêtre de messagerie de 24h et comment Instaflow la gère ?",
     answer:
-      "Meta limite l'envoi de messages hors conversation à une fenêtre de 24h après le dernier message du contact. Sayniir respecte automatiquement cette règle pour vos flows et campagnes, sans action de votre part.",
+      "Meta limite l'envoi de messages hors conversation à une fenêtre de 24h après le dernier message du contact. Instaflow respecte automatiquement cette règle pour vos flows et campagnes, sans action de votre part.",
   },
   {
     theme: 'Facturation',

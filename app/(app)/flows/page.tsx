@@ -48,7 +48,7 @@ export default async function FlowsPage() {
   return (
     <div className="flex h-full flex-col">
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="border-b border-border bg-card px-6 py-5">
+      <div className="glass-banner border-b border-border/40 px-6 py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-foreground">Flows</h1>
@@ -141,7 +141,7 @@ function FlowsEmptyState({ channelAccountId }: { channelAccountId: string }) {
           { emoji: '🔀', title: 'Conditions', desc: 'Adaptez le scénario selon les mots-clés' },
           { emoji: '⏱️', title: 'Délais', desc: 'Attendez avant d\'envoyer le message suivant' },
         ].map((tip) => (
-          <div key={tip.title} className="rounded-xl border border-border bg-card p-3.5">
+          <div key={tip.title} className="glass-stat rounded-2xl p-3.5">
             <div className="text-xl">{tip.emoji}</div>
             <div className="mt-1.5 text-xs font-medium text-foreground">{tip.title}</div>
             <div className="mt-0.5 text-xs text-muted-foreground">{tip.desc}</div>

@@ -96,11 +96,11 @@ export function RuleCard({
           <span
             className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
               rule.is_active
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
-                : 'border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400'
+                ? 'border-success/20 bg-success/10 text-success'
+                : 'border-border bg-muted text-muted-foreground'
             }`}
           >
-            <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
+            <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
             {rule.is_active ? 'Active' : 'Désactivée'}
           </span>
 

@@ -5,113 +5,254 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ─────────────────────────────────────────────
-   Sayniir design tokens — v3 "SaaS premium"
-   Neutral-first system: hierarchy comes from 1px borders and
-   background contrast. Violet accent reserved for primary
-   actions, active states and focus rings.
-   Light values on :root, dark on .dark
+   Instaflow design tokens — "Organic"
+   Warm, rounded, a little playful: a cream-and-sand ground with a
+   terracotta accent and a sage second accent, Caprasimo display
+   headings over Figtree body text, 16px radii that grow into pills
+   and soft circular shapes.
+
+   Ported from the Organic design system (Claude Design project
+   82ff1fea-9946-4dbf-9054-a855785c2a12). Light values on :root are
+   the system as authored; dark values on .dark are a derived
+   variant — Organic ships light-only, so the dark ramp mirrors the
+   light one's lightness axis (ramp step 100 goes from lightest to
+   darkest, 900 the reverse) so existing "fill-100 / text-800"
+   pairings keep working unchanged in dark mode.
+
+   Every raw token below is prefixed --organic- and declared exactly
+   once (plus its .dark override). Nothing here is named --color-*,
+   --radius-*, --shadow-* or --font-* — those prefixes are Tailwind's
+   namespace, reserved for the @theme inline block further down.
+   Reusing them here would silently redeclare the same custom
+   property twice with different values (this bit us once already:
+   an earlier draft named the raw terracotta hue --color-accent,
+   which collided with shadcn's --color-accent hover-surface token).
    ───────────────────────────────────────────── */
 :root {
-  --radius: 0.5rem; /* 8px — slightly softer corners */
+  --organic-bg: #f5ead8;
+  --organic-surface: #ebddc5;
+  --organic-text: #201e1d;
+  --organic-terracotta: #c67139;
+  --organic-sage: #7a8a5e;
+  --organic-divider: color-mix(in srgb, #201e1d 16%, transparent);
 
-  --background: oklch(0.988 0 0);
-  --foreground: oklch(0.15 0 0);
+  /* Tonal ramps — same shared-lightness-scale idea as Organic's source:
+     the same step of any role should read as the same visual weight. */
+  --organic-sand-100: #f9f4ed;
+  --organic-sand-200: #eee7db;
+  --organic-sand-300: #dcd3c4;
+  --organic-sand-400: #c0b6a5;
+  --organic-sand-500: #a19786;
+  --organic-sand-600: #82796a;
+  --organic-sand-700: #645c50;
+  --organic-sand-800: #474238;
+  --organic-sand-900: #2e2b25;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
+  --organic-terracotta-100: #fff2eb;
+  --organic-terracotta-200: #ffe1d0;
+  --organic-terracotta-300: #ffc6a5;
+  --organic-terracotta-400: #f6a06b;
+  --organic-terracotta-500: #d67f48;
+  --organic-terracotta-600: #b2622d;
+  --organic-terracotta-700: #8c491a;
+  --organic-terracotta-800: #643312;
+  --organic-terracotta-900: #402310;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
+  --organic-sage-100: #f0fae1;
+  --organic-sage-200: #e1eecc;
+  --organic-sage-300: #ccdbb2;
+  --organic-sage-400: #aebf92;
+  --organic-sage-500: #8fa073;
+  --organic-sage-600: #728157;
+  --organic-sage-700: #56633f;
+  --organic-sage-800: #3d472b;
+  --organic-sage-900: #272e1b;
 
-  --primary: oklch(0.5 0.19 277);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Warmed red — distinct from terracotta, not orange-adjacent */
+  --organic-destructive-500: #b23a2e;
+  --organic-destructive-700: #8a2c22;
 
-  --secondary: oklch(0.965 0 0);
-  --secondary-foreground: oklch(0.2 0 0);
+  /* var(--font-caprasimo) / var(--font-outfit) resolve to the full font-family
+     string injected by next/font into a <style> tag in <head> when the
+     corresponding class is on <html> (see app/layout.tsx). system-ui/sans-serif
+     remain as the true final fallback if the webfont fails to load. */
+  --organic-heading-family: var(--font-caprasimo), system-ui, sans-serif;
+  --organic-heading-weight: 400;
+  --organic-body-family: var(--font-outfit), system-ui, sans-serif;
 
-  --muted: oklch(0.962 0 0);
-  --muted-foreground: oklch(0.48 0 0);
+  --organic-space-1: 4.4px;
+  --organic-space-2: 8.8px;
+  --organic-space-3: 13.2px;
+  --organic-space-4: 17.6px;
+  --organic-space-6: 26.4px;
+  --organic-space-8: 35.2px;
 
-  --accent: oklch(0.955 0 0);
-  --accent-foreground: oklch(0.15 0 0);
+  --organic-radius-sm: 8px;
+  --organic-radius-md: 16px;
+  --organic-radius-lg: 28px;
 
-  --destructive: oklch(0.55 0.21 27);
-  --destructive-foreground: oklch(0.985 0 0);
-
-  --success: oklch(0.56 0.13 155);
-  --warning: oklch(0.62 0.14 65);
-
-  --border: oklch(0.918 0 0);
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.5 0.19 277 / 0.45);
-
-  --sidebar: oklch(0.976 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.5 0.19 277);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.936 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.918 0 0);
-  --sidebar-ring: oklch(0.5 0.19 277 / 0.45);
-
-  --chart-1: oklch(0.5 0.19 277);
-  --chart-2: oklch(0.56 0.13 155);
-  --chart-3: oklch(0.62 0.14 65);
-  --chart-4: oklch(0.55 0.15 240);
-  --chart-5: oklch(0.5 0 0);
+  --organic-shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --organic-shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --organic-shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
 }
 
 .dark {
-  --background: oklch(0.148 0.006 280);
-  --foreground: oklch(0.94 0 0);
+  --organic-bg: #1b1714;
+  --organic-surface: #241e19;
+  --organic-text: #f3e8da;
+  --organic-terracotta: #e2884d;
+  --organic-sage: #9ab27a;
+  --organic-divider: color-mix(in srgb, #f3e8da 14%, transparent);
 
-  --card: oklch(0.178 0.005 280);
-  --card-foreground: oklch(0.94 0 0);
+  --organic-sand-100: #17130f;
+  --organic-sand-200: #1f1a15;
+  --organic-sand-300: #2c2620;
+  --organic-sand-400: #3c342b;
+  --organic-sand-500: #524739;
+  --organic-sand-600: #6e5f4d;
+  --organic-sand-700: #93816a;
+  --organic-sand-800: #bcac92;
+  --organic-sand-900: #e8dcc6;
 
-  --popover: oklch(0.188 0.005 280);
-  --popover-foreground: oklch(0.94 0 0);
+  --organic-terracotta-100: #3a2416;
+  --organic-terracotta-200: #4d2f1a;
+  --organic-terracotta-300: #653c1f;
+  --organic-terracotta-400: #855025;
+  --organic-terracotta-500: #a8672e;
+  --organic-terracotta-600: #cf8442;
+  --organic-terracotta-700: #e2a06a;
+  --organic-terracotta-800: #f0c199;
+  --organic-terracotta-900: #f9e0c8;
 
-  --primary: oklch(0.66 0.17 277);
-  --primary-foreground: oklch(0.985 0 0);
+  --organic-sage-100: #1a2213;
+  --organic-sage-200: #232e19;
+  --organic-sage-300: #2e3d20;
+  --organic-sage-400: #3d502a;
+  --organic-sage-500: #506636;
+  --organic-sage-600: #698249;
+  --organic-sage-700: #8ba066;
+  --organic-sage-800: #b3c890;
+  --organic-sage-900: #ddeec0;
 
-  --secondary: oklch(0.228 0.005 280);
-  --secondary-foreground: oklch(0.9 0 0);
+  --organic-destructive-500: #d9695a;
+  --organic-destructive-700: #f0958a;
 
-  --muted: oklch(0.225 0.005 280);
-  --muted-foreground: oklch(0.60 0 0);
+  --organic-shadow-sm: 0 0 0 1px color-mix(in srgb, #f3e8da 8%, transparent), 0 1px 2px color-mix(in srgb, #000000 35%, transparent);
+  --organic-shadow-md: 0 0 0 1px color-mix(in srgb, #f3e8da 8%, transparent), 0 3px 10px color-mix(in srgb, #000000 45%, transparent);
+  --organic-shadow-lg: 0 0 0 1px color-mix(in srgb, #f3e8da 10%, transparent), 0 12px 32px color-mix(in srgb, #000000 55%, transparent);
+}
 
-  --accent: oklch(0.238 0.005 280);
-  --accent-foreground: oklch(0.94 0 0);
+/* ─────────────────────────────────────────────
+   shadcn semantic tokens — mapped onto the raw --organic-* tier
+   above. Declared once per theme, referencing --organic-* only.
 
-  --destructive: oklch(0.65 0.19 25);
-  --destructive-foreground: oklch(0.985 0 0);
+   NOTE the trap this avoids: shadcn's --accent is a low-key
+   hover/active surface (menu items, tabs), NOT a brand color — it
+   must NOT point at --organic-terracotta or every menu hover turns
+   orange. Brand color lives on --primary.
+   ───────────────────────────────────────────── */
+:root {
+  --radius: var(--organic-radius-md);
 
-  --success: oklch(0.68 0.13 155);
-  --warning: oklch(0.72 0.14 65);
+  --background: var(--organic-bg);
+  --foreground: var(--organic-text);
 
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.66 0.17 277 / 0.45);
+  --card: var(--organic-surface);
+  --card-foreground: var(--organic-text);
 
-  --sidebar: oklch(0.163 0.005 280);
-  --sidebar-foreground: oklch(0.94 0 0);
-  --sidebar-primary: oklch(0.66 0.17 277);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.228 0.005 280);
-  --sidebar-accent-foreground: oklch(0.94 0 0);
-  --sidebar-border: oklch(1 0 0 / 7%);
-  --sidebar-ring: oklch(0.66 0.17 277 / 0.45);
+  --popover: var(--organic-surface);
+  --popover-foreground: var(--organic-text);
 
-  --chart-1: oklch(0.66 0.17 277);
-  --chart-2: oklch(0.68 0.13 155);
-  --chart-3: oklch(0.72 0.14 65);
-  --chart-4: oklch(0.65 0.14 240);
-  --chart-5: oklch(0.62 0 0);
+  --primary: var(--organic-terracotta);
+  --primary-foreground: var(--organic-bg);
+
+  --secondary: var(--organic-sand-200);
+  --secondary-foreground: var(--organic-text);
+
+  --muted: var(--organic-sand-200);
+  --muted-foreground: color-mix(in srgb, var(--organic-text) 58%, transparent);
+
+  --accent: var(--organic-sand-200);
+  --accent-foreground: var(--organic-text);
+
+  --destructive: var(--organic-destructive-500);
+  --destructive-foreground: var(--organic-bg);
+
+  --success: var(--organic-sage-600);
+  --warning: var(--organic-terracotta-600);
+
+  --border: var(--organic-divider);
+  --input: var(--organic-divider);
+  --ring: var(--organic-terracotta);
+
+  --sidebar: var(--organic-surface);
+  --sidebar-foreground: var(--organic-text);
+  --sidebar-primary: var(--organic-terracotta);
+  --sidebar-primary-foreground: var(--organic-bg);
+  --sidebar-accent: var(--organic-sand-200);
+  --sidebar-accent-foreground: var(--organic-text);
+  --sidebar-border: var(--organic-divider);
+  --sidebar-ring: var(--organic-terracotta);
+
+  --chart-1: var(--organic-terracotta-600);
+  --chart-2: var(--organic-sage-600);
+  --chart-3: var(--organic-terracotta-400);
+  --chart-4: var(--organic-sage-400);
+  --chart-5: var(--organic-sand-600);
+}
+
+.dark {
+  --background: var(--organic-bg);
+  --foreground: var(--organic-text);
+
+  --card: var(--organic-surface);
+  --card-foreground: var(--organic-text);
+
+  --popover: var(--organic-surface);
+  --popover-foreground: var(--organic-text);
+
+  --primary: var(--organic-terracotta);
+  --primary-foreground: var(--organic-sand-100);
+
+  --secondary: var(--organic-sand-200);
+  --secondary-foreground: var(--organic-text);
+
+  --muted: var(--organic-sand-200);
+  --muted-foreground: color-mix(in srgb, var(--organic-text) 62%, transparent);
+
+  --accent: var(--organic-sand-200);
+  --accent-foreground: var(--organic-text);
+
+  --destructive: var(--organic-destructive-500);
+  --destructive-foreground: var(--organic-sand-100);
+
+  --success: var(--organic-sage-600);
+  --warning: var(--organic-terracotta-600);
+
+  --border: var(--organic-divider);
+  --input: var(--organic-divider);
+  --ring: var(--organic-terracotta);
+
+  --sidebar: var(--organic-surface);
+  --sidebar-foreground: var(--organic-text);
+  --sidebar-primary: var(--organic-terracotta);
+  --sidebar-primary-foreground: var(--organic-sand-100);
+  --sidebar-accent: var(--organic-sand-200);
+  --sidebar-accent-foreground: var(--organic-text);
+  --sidebar-border: var(--organic-divider);
+  --sidebar-ring: var(--organic-terracotta);
+
+  --chart-1: var(--organic-terracotta-600);
+  --chart-2: var(--organic-sage-600);
+  --chart-3: var(--organic-terracotta-400);
+  --chart-4: var(--organic-sage-400);
+  --chart-5: var(--organic-sand-600);
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
+  --font-sans: var(--organic-body-family);
   --font-mono: var(--font-jetbrains-mono), "Fira Code", monospace;
+  --font-heading: var(--organic-heading-family);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -144,20 +285,59 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --radius-sm: calc(var(--radius) - 3px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 6px);
-  --radius-2xl: calc(var(--radius) + 10px);
-  --radius-3xl: calc(var(--radius) + 14px);
-  --radius-4xl: calc(var(--radius) + 18px);
-
-  --font-heading: var(--font-sans);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* The raw Organic ramps, exposed as their own Tailwind color
+     families (bg-terracotta-600, text-sage-700, from-sand-300…) for
+     status badges, avatar palettes and the landing page — kept
+     under names distinct from the shadcn semantic tokens above so
+     "accent" (hover surface) never collides with "terracotta"
+     (brand color). */
+  --color-terracotta: var(--organic-terracotta);
+  --color-terracotta-100: var(--organic-terracotta-100);
+  --color-terracotta-200: var(--organic-terracotta-200);
+  --color-terracotta-300: var(--organic-terracotta-300);
+  --color-terracotta-400: var(--organic-terracotta-400);
+  --color-terracotta-500: var(--organic-terracotta-500);
+  --color-terracotta-600: var(--organic-terracotta-600);
+  --color-terracotta-700: var(--organic-terracotta-700);
+  --color-terracotta-800: var(--organic-terracotta-800);
+  --color-terracotta-900: var(--organic-terracotta-900);
+
+  --color-sage: var(--organic-sage);
+  --color-sage-100: var(--organic-sage-100);
+  --color-sage-200: var(--organic-sage-200);
+  --color-sage-300: var(--organic-sage-300);
+  --color-sage-400: var(--organic-sage-400);
+  --color-sage-500: var(--organic-sage-500);
+  --color-sage-600: var(--organic-sage-600);
+  --color-sage-700: var(--organic-sage-700);
+  --color-sage-800: var(--organic-sage-800);
+  --color-sage-900: var(--organic-sage-900);
+
+  --color-sand-100: var(--organic-sand-100);
+  --color-sand-200: var(--organic-sand-200);
+  --color-sand-300: var(--organic-sand-300);
+  --color-sand-400: var(--organic-sand-400);
+  --color-sand-500: var(--organic-sand-500);
+  --color-sand-600: var(--organic-sand-600);
+  --color-sand-700: var(--organic-sand-700);
+  --color-sand-800: var(--organic-sand-800);
+  --color-sand-900: var(--organic-sand-900);
+
+  /* Organic over-rounds: sm/md stay close to shadcn defaults, lg+ grow
+     fast so cards, popovers and dialogs read as soft containers. */
+  --radius-sm: var(--organic-radius-sm);
+  --radius-md: var(--organic-radius-md);
+  --radius-lg: var(--organic-radius-lg);
+  --radius-xl: 34px;
+  --radius-2xl: 40px;
+  --radius-3xl: 46px;
+  --radius-4xl: 52px;
 }
 
 @layer base {
@@ -166,13 +346,37 @@
   }
   html {
     @apply font-sans;
+    /* Explicit fallback: ensures font-family is set even before the
+       @apply-generated var() resolves. Overridden by font-sans once
+       --font-outfit is injected by Next.js. */
+    font-family: var(--font-outfit), var(--font-sans), system-ui, sans-serif;
   }
   body {
-    /* ↑ from 13px → 14px for legibility */
     @apply bg-background text-foreground text-sm antialiased;
-    font-feature-settings: "cv11", "ss01", "tnum";
-    letter-spacing: -0.005em;
+    font-size: 15px;
     line-height: 1.55;
+    font-family: inherit;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--organic-heading-family);
+    font-weight: var(--organic-heading-weight);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+  h1 { font-size: 42px; }
+  h2 { font-size: 32px; }
+  h3 { font-size: 25px; }
+  h4 { font-size: 20px; }
+  h5 { font-size: 16px; }
+  h6 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  :focus-visible {
+    outline: 2px solid var(--organic-terracotta);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--organic-terracotta) 30%, transparent);
   }
 
   /* ── Global smooth interactions ── */
@@ -203,12 +407,56 @@
   select {
     cursor: pointer;
   }
+}
 
-  /* Headings slightly tighter */
-  h1, h2, h3, h4, h5, h6 {
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-  }
+/* ─────────────────────────────────────────────
+   Organic radius overrides — applied per data-slot rather than by
+   editing each ui/ component's rounded-* class. Deliberately NOT a
+   blanket [data-slot] rule: avatar, status-dot, skeleton, separator
+   and the scrollbar thumb keep radii that are meaningful on their own
+   (circles, hairlines) and must not be pulled into this.
+
+   Unlayered on purpose: app/globals.css keeps its resets in @layer
+   base and Tailwind's utilities in @layer utilities — an unlayered
+   rule beats both regardless of specificity, so these win over any
+   rounded-* class a component still carries.
+   ───────────────────────────────────────────── */
+[data-slot="button"],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="badge"],
+[data-slot="select-trigger"],
+[data-slot="command-input-wrapper"],
+[data-slot="input-group"],
+[data-slot="tabs-list"],
+[data-slot="tabs-trigger"] {
+  border-radius: 999px;
+}
+
+[data-slot="card"],
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"],
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"],
+[data-slot="select-content"],
+[data-slot="command"] {
+  border-radius: calc(var(--radius-lg) * 1.15);
+}
+
+/* Card corners round; the footer sits flush at the bottom, so only
+   round the top corners it doesn't already own. */
+[data-slot="card-footer"] {
+  border-radius: 0 0 calc(var(--radius-lg) * 1.15) calc(var(--radius-lg) * 1.15);
+}
+
+/* Caprasimo ships one weight (400). Without this, a component's
+   font-semibold/font-bold utility (in @layer utilities, which beats
+   @layer base regardless of specificity) would fake-bold it in the
+   browser — this unlayered rule outranks utility classes too, so it
+   wins back the single real weight on every heading. */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--organic-heading-weight);
 }
 
 /* ─────────────────────────────────────────────
@@ -238,7 +486,7 @@
 .gradient-hero {
   background: radial-gradient(
     ellipse 80% 60% at 50% -10%,
-    oklch(0.66 0.17 277 / 0.12) 0%,
+    color-mix(in srgb, var(--organic-terracotta) 16%, transparent) 0%,
     transparent 70%
   );
 }
@@ -246,13 +494,17 @@
 .dark .gradient-hero {
   background: radial-gradient(
     ellipse 80% 60% at 50% -10%,
-    oklch(0.66 0.17 277 / 0.18) 0%,
+    color-mix(in srgb, var(--organic-terracotta) 22%, transparent) 0%,
     transparent 70%
   );
 }
 
 .gradient-border {
-  background: linear-gradient(135deg, oklch(0.66 0.17 277 / 0.3), oklch(0.56 0.13 155 / 0.15));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--organic-terracotta) 30%, transparent),
+    color-mix(in srgb, var(--organic-sage) 20%, transparent)
+  );
 }
 
 /* ─────────────────────────────────────────────
@@ -265,11 +517,140 @@
 }
 .feature-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px oklch(0.5 0.19 277 / 0.08);
-  border-color: oklch(0.5 0.19 277 / 0.3);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--organic-terracotta) 10%, transparent);
+  border-color: color-mix(in srgb, var(--organic-terracotta) 35%, transparent);
 }
 
 .dark .feature-card:hover {
-  box-shadow: 0 8px 32px oklch(0.66 0.17 277 / 0.12);
-  border-color: oklch(0.66 0.17 277 / 0.4);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--organic-terracotta) 16%, transparent);
+  border-color: color-mix(in srgb, var(--organic-terracotta) 45%, transparent);
+}
+
+/* ─────────────────────────────────────────────
+   Glassmorphism — Organic palette
+   Three tiers:
+     .glass-card   → main content panels
+     .glass-stat   → stat number cards (lighter)
+     .glass-banner → hero welcome banner (more opaque)
+   All use backdrop-filter + saturate so the
+   aurora blobs in the layout shine through.
+   ───────────────────────────────────────────── */
+
+.glass-card {
+  background: color-mix(in srgb, var(--organic-bg) 52%, transparent);
+  backdrop-filter: blur(24px) saturate(1.8) brightness(1.03);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) brightness(1.03);
+  border: 1px solid color-mix(in srgb, var(--organic-sand-300) 55%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 40%, transparent) inset,
+    0 4px 24px color-mix(in srgb, var(--organic-terracotta) 6%, transparent);
+}
+.dark .glass-card {
+  background: color-mix(in srgb, var(--organic-surface) 48%, transparent);
+  border-color: color-mix(in srgb, var(--organic-sand-300) 30%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 8%, transparent) inset,
+    0 4px 24px color-mix(in srgb, black 30%, transparent);
+}
+
+.glass-stat {
+  background: color-mix(in srgb, var(--organic-bg) 45%, transparent);
+  backdrop-filter: blur(20px) saturate(1.6) brightness(1.04);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(1.04);
+  border: 1px solid color-mix(in srgb, var(--organic-sand-300) 50%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 50%, transparent) inset,
+    0 2px 12px color-mix(in srgb, var(--organic-terracotta) 5%, transparent);
+}
+.dark .glass-stat {
+  background: color-mix(in srgb, var(--organic-surface) 42%, transparent);
+  border-color: color-mix(in srgb, var(--organic-sand-300) 25%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 6%, transparent) inset,
+    0 2px 12px color-mix(in srgb, black 25%, transparent);
+}
+
+.glass-banner {
+  background: color-mix(in srgb, var(--organic-bg) 65%, transparent);
+  backdrop-filter: blur(32px) saturate(1.9) brightness(1.02);
+  -webkit-backdrop-filter: blur(32px) saturate(1.9) brightness(1.02);
+  border: 1px solid color-mix(in srgb, var(--organic-terracotta) 20%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 55%, transparent) inset,
+    0 8px 32px color-mix(in srgb, var(--organic-terracotta) 10%, transparent);
+}
+.dark .glass-banner {
+  background: color-mix(in srgb, var(--organic-surface) 58%, transparent);
+  border-color: color-mix(in srgb, var(--organic-terracotta) 18%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 7%, transparent) inset,
+    0 8px 32px color-mix(in srgb, var(--organic-terracotta) 12%, transparent);
+}
+
+/* ─────────────────────────────────────────────
+   Custom scrollbars — Organic style
+   8px wide with a 2px transparent border on the
+   thumb (background-clip: padding-box) so the
+   pill "floats" with breathing room inside a
+   barely-there warm track. Colours drawn
+   exclusively from the --organic-* sand + terracotta
+   ramps so they feel native to the design system.
+   ───────────────────────────────────────────── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--organic-sand-500) 55%, transparent) transparent;
+}
+.dark * {
+  scrollbar-color: color-mix(in srgb, var(--organic-sand-600) 50%, transparent) transparent;
+}
+
+/* WebKit — dimensions */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* WebKit — track: warm sand ghost tint */
+::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--organic-sand-300) 28%, transparent);
+  margin-block: 4px; /* small breathing gap at both ends */
+}
+
+/* WebKit — thumb: floating pill via border trick */
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  /* 2px transparent border + background-clip creates padding so the
+     pill sits centred inside the track without touching its edges */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-color: color-mix(in srgb, var(--organic-sand-500) 60%, transparent);
+  transition: background-color 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--organic-terracotta-500) 70%, transparent);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--organic-terracotta-600) 80%, transparent);
+}
+
+/* Dark mode */
+.dark ::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--organic-sand-300) 20%, transparent);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--organic-sand-600) 55%, transparent);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--organic-terracotta-600) 65%, transparent);
+}
+.dark ::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--organic-terracotta-700) 75%, transparent);
+}
+
+/* Corner where H + V bars meet */
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

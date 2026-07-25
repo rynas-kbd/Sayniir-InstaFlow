@@ -1,6 +1,9 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { motion } from 'framer-motion'
 
 export function AuthCard({
   tagline,
@@ -10,18 +13,24 @@ export function AuthCard({
   children: ReactNode
 }) {
   return (
-    <Card className="border-border/60 shadow-xl shadow-primary/5">
-      <CardContent className="pt-3">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/30">
-            <MessageCircle className="size-5 text-primary-foreground" strokeWidth={2.5} />
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <Card className="border-border/60 shadow-xl shadow-primary/5">
+        <CardContent className="pt-3">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/30">
+              <MessageCircle className="size-5 text-primary-foreground" strokeWidth={2.5} />
+            </div>
+            <p className="text-[15px] font-semibold tracking-tight text-foreground">Instaflow</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">{tagline}</p>
           </div>
-          <p className="text-[15px] font-semibold tracking-tight text-foreground">Sayniir</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">{tagline}</p>
-        </div>
-        {children}
-      </CardContent>
-    </Card>
+          {children}
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 

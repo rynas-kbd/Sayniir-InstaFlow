@@ -20,13 +20,13 @@ import type { Campaign } from './types'
 const STATUS_CONFIG = {
   draft: {
     label: 'Brouillon',
-    dot: 'bg-zinc-400',
-    badge: 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-950/40 dark:text-zinc-400 dark:border-zinc-800'
+    dot: 'bg-muted-foreground/50',
+    badge: 'bg-muted text-muted-foreground border-border'
   },
   scheduled: {
     label: 'Planifiée',
-    dot: 'bg-amber-400 animate-pulse',
-    badge: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+    dot: 'bg-warning animate-pulse',
+    badge: 'bg-warning/10 text-warning border-warning/20'
   },
   sending: {
     label: 'Envoi en cours',
@@ -35,13 +35,13 @@ const STATUS_CONFIG = {
   },
   sent: {
     label: 'Envoyée',
-    dot: 'bg-emerald-500',
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+    dot: 'bg-success',
+    badge: 'bg-success/10 text-success border-success/20'
   },
   cancelled: {
     label: 'Annulée',
-    dot: 'bg-zinc-400',
-    badge: 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700'
+    dot: 'bg-muted-foreground/50',
+    badge: 'bg-muted text-muted-foreground border-border'
   },
   failed: {
     label: 'Échec',
@@ -147,13 +147,13 @@ export function CampaignCard({
   return (
     <>
       <div
-        className={`group relative flex flex-col rounded-xl border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 ${
-          campaign.status === 'sent' ? 'border-emerald-500/10' : ''
+        className={`glass-stat group relative flex flex-col rounded-2xl transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 ${
+          campaign.status === 'sent' ? 'border-success/10' : ''
         }`}
       >
         {/* Active color strip at the top */}
         {campaign.status === 'sent' && (
-          <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400" />
+          <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r from-success/60 via-success to-success/60" />
         )}
         {campaign.status === 'sending' && (
           <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
@@ -222,7 +222,7 @@ export function CampaignCard({
               <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    campaign.status === 'failed' ? 'bg-destructive' : 'bg-emerald-500'
+                    campaign.status === 'failed' ? 'bg-destructive' : 'bg-success'
                   }`}
                   style={{ width: `${progressPercent}%` }}
                 />

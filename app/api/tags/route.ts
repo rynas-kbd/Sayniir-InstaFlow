@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const { data: tag, error } = await supabase
     .from('tags')
-    .insert({ channel_account_id, name, color: color || '#888888' })
+    .insert({ channel_account_id, name, color: color || '#a19786' })
     .select()
     .single()
 

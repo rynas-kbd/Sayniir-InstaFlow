@@ -31,11 +31,11 @@ export function FlowAnalyticsPopover({ funnel }: { funnel: FlowFunnelSummary }) 
             <p className="text-[10px] text-muted-foreground">Total</p>
           </div>
           <div>
-            <p className="text-base font-bold text-emerald-600 tabular-nums dark:text-emerald-400">{funnel.completed}</p>
+            <p className="text-base font-bold text-success tabular-nums">{funnel.completed}</p>
             <p className="text-[10px] text-muted-foreground">Terminés</p>
           </div>
           <div>
-            <p className="text-base font-bold text-amber-600 tabular-nums dark:text-amber-400">{funnel.active}</p>
+            <p className="text-base font-bold text-warning tabular-nums">{funnel.active}</p>
             <p className="text-[10px] text-muted-foreground">En cours</p>
           </div>
           <div>

@@ -100,7 +100,7 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
   return (
     <>
       <div
-        className={`group relative flex flex-col rounded-xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 ${account.is_active ? '' : 'opacity-60'}`}
+        className={`glass-stat group relative flex flex-col rounded-2xl transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 ${account.is_active ? '' : 'opacity-60'}`}
       >
         {account.is_active && !isExpired && (
           <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r from-primary/60 via-primary to-primary/60" />

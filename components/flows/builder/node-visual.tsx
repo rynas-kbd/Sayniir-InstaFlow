@@ -73,7 +73,7 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
       ) : nodeData.nodeType === 'split_test' ? (
         <>
           <Handle type="source" position={Position.Bottom} id="a" style={{ left: '30%' }} className="!bg-primary" />
-          <Handle type="source" position={Position.Bottom} id="b" style={{ left: '70%' }} className="!bg-violet-500" />
+          <Handle type="source" position={Position.Bottom} id="b" style={{ left: '70%' }} className="!bg-sage-500" />
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
             <span>A ({(nodeData.config.percentage_a as number) ?? 50}%)</span>
             <span>B ({100 - ((nodeData.config.percentage_a as number) ?? 50)}%)</span>

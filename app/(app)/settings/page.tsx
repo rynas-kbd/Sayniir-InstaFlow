@@ -66,7 +66,7 @@ export default async function SettingsPage() {
         <PageHeader title="Paramètres" description="Gérez votre compte et vos préférences." />
 
         <div className="space-y-4 p-4 sm:p-6">
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-br from-primary/8 via-card to-card px-5 py-5">
+          <div className="glass-banner flex items-center gap-4 rounded-2xl px-5 py-5">
             <div className={`flex size-14 shrink-0 items-center justify-center rounded-full text-lg font-semibold ${getAvatarColor(user!.id)}`}>
               {getInitials(displayName)}
             </div>
@@ -95,7 +95,7 @@ export default async function SettingsPage() {
 
           {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} />}
 
-          <Card className="border-destructive/20">
+          <Card className="glass-card border-destructive/20">
             <CardHeader>
               <SectionTitle icon={ShieldAlert} title="Zone de danger" sub="Déconnecter votre session sur cet appareil." destructive />
             </CardHeader>

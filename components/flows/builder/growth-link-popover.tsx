@@ -80,7 +80,7 @@ export function GrowthLinkPopover({
         </p>
 
         {!instagramUsername && (
-          <p className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+          <p className="mb-2 rounded-md border border-warning/20 bg-warning/10 px-2 py-1.5 text-[11px] text-warning">
             Compte Instagram non identifié — le lien ne sera pas généré correctement.
           </p>
         )}

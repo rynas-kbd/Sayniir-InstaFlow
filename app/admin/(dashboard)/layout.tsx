@@ -27,7 +27,7 @@ export default async function AdminLayout({
           href="/admin"
           className="mb-5 flex h-8 items-center gap-2 rounded-md px-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground hover:bg-sidebar-accent/60"
         >
-          Sayniir
+          Instaflow
           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Admin</span>
         </Link>
 

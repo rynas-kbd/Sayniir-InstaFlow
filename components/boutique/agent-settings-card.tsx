@@ -14,11 +14,11 @@ import type { AgentSettings } from './types'
 const PROVIDERS = ['gemini', 'groq', 'openai', 'anthropic', 'openrouter'] as const
 
 const PROVIDER_COLORS: Record<string, string> = {
-  gemini: 'text-blue-500',
-  groq: 'text-emerald-500',
-  openai: 'text-teal-500',
-  anthropic: 'text-orange-500',
-  openrouter: 'text-violet-500',
+  gemini: 'text-terracotta-500',
+  groq: 'text-sage-500',
+  openai: 'text-sage-700',
+  anthropic: 'text-terracotta-700',
+  openrouter: 'text-sand-600',
 }
 
 function SettingRow({
@@ -89,7 +89,7 @@ export function AgentSettingsCard({ channelAccountId, initialSettings }: { chann
             icon={MessageCircleQuestion}
             title="Assistant Q&A"
             description="Répond aux questions sur le catalogue automatiquement."
-            accent="text-blue-500"
+            accent="text-terracotta-500"
             control={
               <Switch
                 checked={settings.is_qa_active}
@@ -102,7 +102,7 @@ export function AgentSettingsCard({ channelAccountId, initialSettings }: { chann
             icon={ShoppingBag}
             title="Prise de commande"
             description="Collecte taille, adresse, téléphone et confirme la commande."
-            accent="text-violet-500"
+            accent="text-sage-500"
             control={
               <Switch
                 checked={settings.is_order_taking_active}

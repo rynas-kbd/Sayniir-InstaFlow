@@ -32,7 +32,7 @@ export function MobileNav({ businessType }: { businessType: BusinessType }) {
               />
             }
           >
-            Sayniir
+            Instaflow
           </SheetTitle>
         </SheetHeader>
 

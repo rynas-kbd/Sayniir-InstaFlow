@@ -39,7 +39,7 @@ export function BoutiqueClient({
   return (
     <div className="flex flex-col gap-6">
       {/* ── Hero Banner ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 px-6 py-7 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-terracotta-600 via-terracotta-500 to-sage-700 px-6 py-7 text-white shadow-lg">
         {/* decorative blobs */}
         <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-10 right-20 size-32 rounded-full bg-white/10 blur-2xl" />

@@ -86,7 +86,7 @@ export function ShopifyIntegrationPanel({ channelAccountId }: { channelAccountId
     <Card>
       <CardHeader>
         <CardTitle className="text-sm">Shopify</CardTitle>
-        <CardDescription>Synchronisez votre catalogue Shopify avec Sayniir.</CardDescription>
+        <CardDescription>Synchronisez votre catalogue Shopify avec Instaflow.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {connection ? (

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AppSidebar } from '@/components/app-shell/sidebar'
 import { Topbar } from '@/components/app-shell/topbar'
 import type { BusinessType } from '@/components/app-shell/nav-config'
+import { PageTransitionWrapper } from '@/components/app-shell/page-transition'
 
 export default async function AppLayout({
   children,
@@ -55,9 +56,30 @@ export default async function AppLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        {/* ── Aurora blobs — the "light source" behind glass panels ── */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          {/* Terracotta top-right */}
+          <div
+            className="absolute -top-32 -right-24 size-[520px] rounded-full blur-[140px]"
+            style={{ background: 'color-mix(in srgb, var(--organic-terracotta) 22%, transparent)' }}
+          />
+          {/* Sage mid-left */}
+          <div
+            className="absolute top-1/3 -left-32 size-[420px] rounded-full blur-[120px]"
+            style={{ background: 'color-mix(in srgb, var(--organic-sage) 16%, transparent)' }}
+          />
+          {/* Warm terracotta bottom-center */}
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 size-[380px] rounded-full blur-[110px]"
+            style={{ background: 'color-mix(in srgb, var(--organic-terracotta-300) 18%, transparent)' }}
+          />
+        </div>
+
         <Topbar businessType={businessType} email={user.email ?? null} notificationCounts={notificationCounts} />
-        <main className="flex-1 overflow-hidden">{children}</main>
+        <main className="relative z-10 flex-1 overflow-hidden">
+          <PageTransitionWrapper>{children}</PageTransitionWrapper>
+        </main>
       </div>
     </div>
   )

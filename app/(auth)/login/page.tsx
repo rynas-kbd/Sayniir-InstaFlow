@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { AuthCard, GoogleIcon } from '@/components/auth/auth-card'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -54,11 +55,19 @@ export default function LoginPage() {
 
   return (
     <AuthCard tagline="Connectez-vous à votre compte">
-      {error && (
-        <div className="mb-5 rounded-md border border-destructive/25 bg-destructive/10 px-3.5 py-2.5 text-center text-[13px] text-destructive">
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, y: -8 }}
+            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="mb-5 overflow-hidden rounded-md border border-destructive/25 bg-destructive/10 px-3.5 py-2.5 text-center text-[13px] text-destructive"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Button
         type="button"

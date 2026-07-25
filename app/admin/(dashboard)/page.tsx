@@ -28,7 +28,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Vue d'ensemble" description="Gestion globale des clients Sayniir." />
+      <PageHeader title="Vue d'ensemble" description="Gestion globale des clients Instaflow." />
 
       <div className="space-y-6 p-4 md:p-6">
         <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-6 sm:px-8">
@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
             <ShieldCheck className="size-3.5" />
             Espace administrateur
           </span>
-          <h2 className="mt-3 text-lg font-bold text-foreground sm:text-xl">Panel de gestion Sayniir</h2>
+          <h2 className="mt-3 text-lg font-bold text-foreground sm:text-xl">Panel de gestion Instaflow</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             Suivez les abonnements clients et gérez les accès en un coup d'œil.
           </p>

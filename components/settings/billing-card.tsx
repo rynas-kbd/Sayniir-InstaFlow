@@ -38,7 +38,7 @@ export function BillingCard({ status, expiresAt }: BillingCardProps) {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">Abonnement</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Gérez votre abonnement Sayniir.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Gérez votre abonnement Instaflow.</p>
           </div>
         </div>
 

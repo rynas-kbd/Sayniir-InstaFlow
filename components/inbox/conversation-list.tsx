@@ -8,12 +8,12 @@ import type { Conversation } from './types'
 
 // Deterministic color palette for avatars
 const AVATAR_COLORS = [
-  'from-violet-500 to-purple-600',
-  'from-blue-500 to-indigo-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-500',
-  'from-rose-500 to-pink-600',
-  'from-cyan-500 to-sky-600',
+  'from-terracotta-400 to-terracotta-600',
+  'from-sage-400 to-sage-600',
+  'from-terracotta-300 to-terracotta-500',
+  'from-sage-300 to-sage-500',
+  'from-sand-500 to-sand-700',
+  'from-terracotta-500 to-sage-600',
 ]
 
 function getAvatarGradient(str: string): string {
