@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X, Check, Sparkles } from 'lucide-react'
+import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
-import { PLAN_CONFIG, PLAN_KEYS, type PlanKey } from '@/lib/plans'
+import { PLAN_CONFIG, type PlanKey } from '@/lib/plans'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { StatusDot } from '@/components/ui/status-dot'
@@ -12,11 +12,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+
 import DeleteClientButton from './DeleteClientButton'
+import SubscriptionForm from './SubscriptionForm'
 import {
-  updateSubscription,
   addKeyword,
   deleteKeyword,
   toggleKeyword,
@@ -180,16 +179,16 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
               className="flex flex-col gap-4 sm:flex-row sm:items-end"
             >
               <div className="flex-1 space-y-1.5">
-                <Label>Nouveau rôle</Label>
-                <Select name="role" defaultValue={profile.role ?? 'client'}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="role-select">Nouveau rôle</Label>
+                <select
+                  id="role-select"
+                  name="role"
+                  defaultValue={profile.role ?? 'client'}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="client">👤 Client</option>
+                  <option value="admin">🛡️ Administrateur</option>
+                </select>
               </div>
               <Button type="submit" variant="outline">
                 Changer
@@ -198,129 +197,19 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           </CardContent>
         </Card>
 
-        {/* ── Subscription + Plan ── */}
         <Card>
           <CardHeader>
             <SectionTitle icon={CreditCard} title="Abonnement & Plan" sub="Choisissez le plan du client et configurez son abonnement." />
           </CardHeader>
           <CardContent>
-            <form
-              action={async (formData: FormData) => {
-                'use server'
-                await updateSubscription(userId, {
-                  plan: (formData.get('plan') as PlanKey) ?? 'free',
-                  status: formData.get('status') as 'active' | 'inactive' | 'expired',
-                  expires_at: (formData.get('expires_at') as string) || null,
-                  amount_paid: formData.get('amount_paid') ? Number(formData.get('amount_paid')) : null,
-                  payment_notes: (formData.get('payment_notes') as string) || null,
-                })
-              }}
-              className="flex flex-col gap-6"
-            >
-              {/* Plan selector — visual cards */}
-              <div>
-                <Label className="mb-3 block text-sm font-semibold">Plan</Label>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {PLAN_KEYS.map((key) => {
-                    const cfg = PLAN_CONFIG[key]
-                    const isSelected = key === currentPlan
-                    return (
-                      <label
-                        key={key}
-                        htmlFor={`plan-${key}`}
-                        className={cn(
-                          'group relative flex cursor-pointer flex-col rounded-2xl border-2 p-4 transition-all duration-200',
-                          isSelected
-                            ? cn(cfg.borderClass, 'bg-primary/3')
-                            : 'border-border hover:border-primary/30'
-                        )}
-                      >
-                        <input
-                          id={`plan-${key}`}
-                          type="radio"
-                          name="plan"
-                          value={key}
-                          defaultChecked={isSelected}
-                          className="sr-only"
-                        />
-                        {/* Selected indicator */}
-                        <div className={cn(
-                          'absolute right-3 top-3 flex size-5 items-center justify-center rounded-full border-2 transition-all',
-                          isSelected ? cn(cfg.borderClass, 'bg-current') : 'border-border'
-                        )}>
-                          {isSelected && <Check className="size-3 text-white" strokeWidth={3} />}
-                        </div>
-
-                        {cfg.highlighted && (
-                          <div className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                            <Sparkles className="size-3" /> Populaire
-                          </div>
-                        )}
-
-                        <span className={cn('text-sm font-bold', isSelected ? 'text-foreground' : 'text-foreground/80')}>
-                          {cfg.label}
-                        </span>
-                        <span className="mt-0.5 text-xl font-black text-foreground">{cfg.priceMonthly}</span>
-                        <span className="text-[10px] text-muted-foreground">{cfg.period}</span>
-
-                        <ul className="mt-3 space-y-1.5">
-                          {cfg.features.map((f) => (
-                            <li key={f} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                              <Check className="mt-0.5 size-3 shrink-0 text-success" />
-                              {f}
-                            </li>
-                          ))}
-                        </ul>
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Status + dates */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Statut de l&apos;abonnement</Label>
-                  <Select name="status" defaultValue={currentStatus}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">✅ Actif</SelectItem>
-                      <SelectItem value="inactive">⏸️ Inactif</SelectItem>
-                      <SelectItem value="expired">❌ Expiré</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="expires_at">Date d&apos;expiration</Label>
-                  <Input id="expires_at" name="expires_at" type="date" defaultValue={expiresAt} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="amount_paid">Montant payé (DZD)</Label>
-                  <Input
-                    id="amount_paid"
-                    name="amount_paid"
-                    type="number"
-                    defaultValue={subscription?.amount_paid ?? ''}
-                    placeholder="ex: 2000"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="payment_notes">Notes de paiement</Label>
-                  <Input
-                    id="payment_notes"
-                    name="payment_notes"
-                    defaultValue={subscription?.payment_notes ?? ''}
-                    placeholder="Payé cash le 20/05"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="self-start">
-                Enregistrer l&apos;abonnement
-              </Button>
-            </form>
+            <SubscriptionForm
+              userId={userId}
+              currentPlan={currentPlan}
+              currentStatus={currentStatus as 'active' | 'inactive' | 'expired'}
+              expiresAt={expiresAt}
+              amountPaid={subscription?.amount_paid ?? null}
+              paymentNotes={subscription?.payment_notes ?? null}
+            />
           </CardContent>
         </Card>
 
