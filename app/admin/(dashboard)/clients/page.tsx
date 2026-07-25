@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Camera, UserPlus, Search, Users, ShieldCheck } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PLAN_CONFIG, type PlanKey } from '@/lib/plans'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ export const dynamic = 'force-dynamic'
 
 interface ClientSubscription {
   id: string
+  plan: string | null
   status: string
   expires_at: string | null
   amount_paid: number | null
@@ -51,7 +53,7 @@ export default async function AdminClientsPage({
     .from('profiles')
     .select(
       `id, full_name, email, role, created_at, admin_notes,
-      subscriptions(id, status, expires_at, amount_paid),
+      subscriptions(id, plan, status, expires_at, amount_paid),
       channel_accounts(instagram_username, page_picture_url, is_active)`
     )
     .order('created_at', { ascending: false })
@@ -129,6 +131,7 @@ export default async function AdminClientsPage({
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead className="hidden sm:table-cell">Compte Instagram</TableHead>
+                  <TableHead className="hidden md:table-cell">Plan</TableHead>
                   <TableHead className="hidden sm:table-cell">Rôle</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -143,6 +146,8 @@ export default async function AdminClientsPage({
                   const status = sub?.status ?? 'inactive'
                   const displayStatus = isExpired && status === 'active' ? 'expired' : status
                   const name = user.full_name ?? 'Sans nom'
+                  const planKey = (sub?.plan ?? 'free') as PlanKey
+                  const planCfg = PLAN_CONFIG[planKey]
 
                   return (
                     <TableRow key={user.id}>
@@ -176,6 +181,12 @@ export default async function AdminClientsPage({
                             {ig?.instagram_username ? `@${ig.instagram_username}` : '—'}
                           </span>
                         </div>
+                      </TableCell>
+
+                      <TableCell className="hidden md:table-cell">
+                        <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold', planCfg.badgeClass)}>
+                          {planCfg.label}
+                        </span>
                       </TableCell>
 
                       <TableCell className="hidden sm:table-cell">

@@ -3,14 +3,16 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import type { PlanKey } from '@/lib/plans'
 import type { AdminUserAttributes } from '@supabase/supabase-js'
 
 /**
- * Mettre à jour l'abonnement d'un client (dates, montant, notes).
+ * Mettre à jour l'abonnement d'un client (plan, dates, montant, notes).
  */
 export async function updateSubscription(
   userId: string,
   data: {
+    plan: PlanKey
     status: 'active' | 'inactive' | 'expired'
     expires_at: string | null
     amount_paid: number | null
@@ -30,6 +32,7 @@ export async function updateSubscription(
     const res = await supabase
       .from('subscriptions')
       .update({
+        plan: data.plan,
         status: data.status,
         expires_at: data.expires_at,
         amount_paid: data.amount_paid,
@@ -44,6 +47,7 @@ export async function updateSubscription(
       .from('subscriptions')
       .insert({
         user_id: userId,
+        plan: data.plan,
         status: data.status,
         expires_at: data.expires_at,
         amount_paid: data.amount_paid,
@@ -57,7 +61,7 @@ export async function updateSubscription(
 
   if (error) throw new Error(error.message)
 
-  // Sync is_active on the instagram_account
+  // Sync is_active on channel accounts
   await supabase
     .from('channel_accounts')
     .update({ is_active: data.status === 'active' })
@@ -65,6 +69,7 @@ export async function updateSubscription(
 
   revalidatePath(`/admin/clients/${userId}`)
   revalidatePath('/admin/clients')
+  revalidatePath('/admin')
 }
 
 /**
@@ -133,7 +138,7 @@ export async function updateProfile(userId: string, data: { full_name: string; e
     if (data.new_password) updateData.password = data.new_password
     
     const { error: authError } = await supabase.auth.admin.updateUserById(userId, updateData)
-    if (authError) throw new Error("Erreur mise à jour authentification: " + authError.message)
+    if (authError) throw new Error('Erreur mise à jour authentification: ' + authError.message)
   }
 
   const { error } = await supabase
@@ -189,8 +194,6 @@ export async function saveAdminNotes(userId: string, notes: string) {
 export async function deleteClient(userId: string) {
   const supabase = createAdminClient()
   
-  // Deleting user from Auth usually cascades, but we can be explicit if needed.
-  // Using auth.admin.deleteUser is the correct way to completely remove a user.
   const { error } = await supabase.auth.admin.deleteUser(userId)
   
   if (error) {
