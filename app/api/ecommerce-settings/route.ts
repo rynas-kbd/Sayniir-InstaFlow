@@ -82,7 +82,8 @@ export async function PATCH(request: NextRequest) {
     default_message_enabled,
     default_message_text,
     default_message_frequency,
-    flows_enabled
+    flows_enabled,
+    vertical_config
   } = body
 
   if (!channel_account_id) {
@@ -132,6 +133,7 @@ export async function PATCH(request: NextRequest) {
       default_message_text: default_message_text ?? existing?.default_message_text ?? 'Merci pour votre message ! Nous vous répondrons bientôt. 🙏',
       default_message_frequency: default_message_frequency ?? existing?.default_message_frequency ?? 'always',
       flows_enabled: flows_enabled ?? existing?.flows_enabled ?? false,
+      vertical_config: vertical_config ?? existing?.vertical_config ?? {},
       updated_at: new Date().toISOString()
     })
     .select()

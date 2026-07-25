@@ -36,4 +36,10 @@ export interface AgentSettings {
   ai_provider: string
   ai_api_key: string
   ai_model: string
+  instructions: string[]
+  infos_to_collect: string[]
+  vertical_config: {
+    faqs?: Array<{ question: string; answer: string }>
+    persona?: string
+  }
 }

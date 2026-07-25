@@ -58,7 +58,11 @@ export default async function BoutiquePage() {
     ai_provider: rawSettings?.ai_provider ?? 'gemini',
     ai_api_key: apiKey,
     ai_model: rawSettings?.ai_model ?? 'gemini-1.5-flash',
+    instructions: rawSettings?.instructions ?? [],
+    infos_to_collect: rawSettings?.infos_to_collect ?? [],
+    vertical_config: rawSettings?.vertical_config ?? {},
   }
+
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">

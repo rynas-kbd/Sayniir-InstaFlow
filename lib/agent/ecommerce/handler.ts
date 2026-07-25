@@ -46,6 +46,8 @@ export async function handleQaMessage({
   accessToken,
   products,
   customInstructions = [],
+  faqs = [],
+  persona,
   isOrderTakingActive = false,
   skipReplyOnPurchaseIntent = false,
   aiProvider,
@@ -58,6 +60,8 @@ export async function handleQaMessage({
   accessToken: string
   products: Product[]
   customInstructions?: string[]
+  faqs?: Array<{ question: string; answer: string }>
+  persona?: string
   isOrderTakingActive?: boolean
   skipReplyOnPurchaseIntent?: boolean
   aiProvider?: string | null
@@ -79,13 +83,20 @@ export async function handleQaMessage({
     ? `Si le client veut commander (ex: "je veux commander", "comment commander"), mets hasPurchaseIntent = true.`
     : `hasPurchaseIntent doit toujours être false.`
 
+  const faqBlock = faqs.length
+    ? `=== BASE DE CONNAISSANCES (réponds en priorité à partir de ces Q&R) ===\n${faqs.map((f) => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n')}\n`
+    : ''
+
+  const personaBlock = persona
+    ? `=== TON RÔLE & PERSONNALITÉ ===\n${persona}\n`
+    : 'Tu es un assistant e-commerce pour une boutique Instagram algérienne.\nTu réponds aux questions des clients sur le catalogue, les prix, les tailles, la livraison.\n'
+
   const prompt = `
-Tu es un assistant e-commerce pour une boutique Instagram algérienne.
-Tu réponds aux questions des clients sur le catalogue, les prix, les tailles, la livraison.
+${personaBlock}
 Tu ne prends pas de commandes.
 
 ${customInstructions.length ? `=== INSTRUCTIONS ===\n${customInstructions.map((i) => '- ' + i).join('\n')}\n` : ''}
-
+${faqBlock}
 === CATALOGUE ===
 ${productList || 'Aucun produit actif.'}
 
@@ -94,8 +105,9 @@ ${productList || 'Aucun produit actif.'}
 
 === TÂCHES ===
 1. Détecte la langue : "fr", "ar", "darija", ou "en".
-2. Réponds de manière chaleureuse et précise dans la langue du client.
-3. ${orderHint}
+2. Si la question est couverte par la base de connaissances, utilise-la en priorité.
+3. Réponds de manière chaleureuse et précise dans la langue du client.
+4. ${orderHint}
 
 JSON uniquement (sans backticks) :
 {

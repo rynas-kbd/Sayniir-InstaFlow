@@ -404,9 +404,12 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     .neq('status', 'cancelled')
     .maybeSingle()
 
+  const verticalConfig = agentSettings?.vertical_config ?? {}
   const agentArgs = {
     customInstructions: agentSettings?.instructions || [],
     infosToCollect: agentSettings?.infos_to_collect || [],
+    faqs: (verticalConfig as { faqs?: Array<{ question: string; answer: string }> })?.faqs || [],
+    persona: (verticalConfig as { persona?: string })?.persona || undefined,
     aiProvider: agentSettings?.ai_provider || null,
     aiApiKey: resolvedApiKey,
     aiModel: agentSettings?.ai_model || null,
