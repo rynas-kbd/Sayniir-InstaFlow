@@ -16,6 +16,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import type { FlowSummary, FlowNodeType } from './types'
+import { InsightBadge } from '@/components/ai/insight-badge'
+import type { AiInsight } from '@/components/ai/types'
 
 // Map trigger types to readable labels
 function getTriggerLabel(flow: FlowSummary): string {
@@ -45,7 +47,7 @@ const NODE_ICONS: Partial<Record<FlowNodeType, React.ElementType>> = {
   remove_tag: Tag,
 }
 
-export function FlowCard({ flow: initialFlow }: { flow: FlowSummary }) {
+export function FlowCard({ flow: initialFlow, insights = [] }: { flow: FlowSummary; insights?: AiInsight[] }) {
   const [flow, setFlow] = useState(initialFlow)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toggling, setToggling] = useState(false)
@@ -103,12 +105,15 @@ export function FlowCard({ flow: initialFlow }: { flow: FlowSummary }) {
               <span className={`size-1.5 rounded-full ${cfg.dot} ${flow.status === 'active' ? 'animate-pulse' : ''}`} />
               {cfg.label}
             </span>
-            <Switch
-              checked={flow.status === 'active'}
-              onCheckedChange={toggleActive}
-              disabled={toggling}
-              aria-label="Activer/désactiver le flow"
-            />
+            <div className="flex items-center gap-1.5">
+              <InsightBadge insights={insights} />
+              <Switch
+                checked={flow.status === 'active'}
+                onCheckedChange={toggleActive}
+                disabled={toggling}
+                aria-label="Activer/désactiver le flow"
+              />
+            </div>
           </div>
 
           {/* Flow name */}

@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/components/app-shell/page-skeleton'
+import { DashboardSkeleton } from '@/components/app-shell/page-skeleton'
 
 export default function Loading() {
-  return <PageSkeleton stats />
+  return <DashboardSkeleton />
 }

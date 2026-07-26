@@ -58,6 +58,8 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
   const adapter = getAdapter(account.platform as Platform)
   const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
 
+  const MESSAGING_WINDOW_MS = 24 * 60 * 60 * 1000
+
   let sent = 0
   let skipped = 0
   let failed = 0
@@ -65,6 +67,19 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
   for (const row of pending ?? []) {
     const contact = row.contacts as unknown as Partial<Contact> & { sender_id: string }
     if (!contact) continue
+
+    if (contact.is_subscribed === false) {
+      await supabase.from('campaign_sends').update({ status: 'skipped_unsubscribed' }).eq('id', row.id)
+      skipped += 1
+      continue
+    }
+
+    const lastInboundAt = contact.last_inbound_at ? new Date(contact.last_inbound_at).getTime() : null
+    if (!lastInboundAt || Date.now() - lastInboundAt > MESSAGING_WINDOW_MS) {
+      await supabase.from('campaign_sends').update({ status: 'skipped_window' }).eq('id', row.id)
+      skipped += 1
+      continue
+    }
 
     try {
       const isCard = campaign.response_type === 'card'

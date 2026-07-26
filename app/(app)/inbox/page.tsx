@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import { ConversationList } from '@/components/inbox/conversation-list'
@@ -126,29 +126,63 @@ export default async function InboxPage({
         .order('created_at', { ascending: false })
     : { data: [] }
 
+  const unrepliedCount = conversations.filter((c) => c.hasUnreplied).length
+
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
+      {/* ─── Left sidebar ─── */}
       <div
         className={cn(
-          'w-full shrink-0 flex-col overflow-hidden border-border bg-card md:flex md:w-80 md:border-r',
+          'w-full shrink-0 flex-col overflow-hidden md:flex md:w-[300px]',
+          'border-r border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)]',
+          'bg-[color-mix(in_srgb,var(--organic-bg)_55%,transparent)] backdrop-blur-md',
           activeConvId ? 'hidden md:flex' : 'flex'
         )}
       >
-        <div className="shrink-0 border-b border-border px-4 pt-5 pb-3">
+        {/* Sidebar header */}
+        <div
+          className="shrink-0 px-4 pt-5 pb-3"
+          style={{
+            borderBottom: '1px solid color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+            background: 'color-mix(in srgb, var(--organic-bg) 40%, transparent)',
+          }}
+        >
+          {/* Title row */}
           <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-bold tracking-tight text-foreground">Inbox</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
-              </p>
+            <div className="flex items-center gap-2.5">
+              {/* Left accent bar */}
+              <div
+                className="h-5 w-[3px] rounded-full"
+                style={{
+                  background: 'linear-gradient(to bottom, var(--organic-terracotta), var(--organic-sage))',
+                }}
+              />
+              <div>
+                <h1 className="text-[15px] font-bold tracking-tight text-foreground">Inbox</h1>
+                <p className="text-[11px] tabular-nums" style={{ color: 'color-mix(in srgb, var(--organic-text, var(--foreground)) 45%, transparent)' }}>
+                  {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
-            {conversations.some((c) => c.hasUnreplied) && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                {conversations.filter((c) => c.hasUnreplied).length}
+
+            {unrepliedCount > 0 && (
+              <span
+                className="flex min-w-[22px] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white"
+                style={{ background: 'var(--organic-terracotta-600)' }}
+              >
+                {unrepliedCount}
               </span>
             )}
           </div>
-          <div className="flex gap-1 rounded-lg bg-muted p-0.5">
+
+          {/* Filter pills */}
+          <div
+            className="flex gap-1 rounded-xl p-1 flex-row flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden select-none"
+            style={{
+              background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--organic-sand-400) 20%, transparent)',
+            }}
+          >
             {FILTERS.map(({ key, label }) => {
               const params = new URLSearchParams()
               if (key !== 'all') params.set('filter', key)
@@ -159,12 +193,16 @@ export default async function InboxPage({
                 <Link
                   key={key}
                   href={href}
-                  className={cn(
-                    'flex-1 rounded-md px-2 py-1.5 text-center text-xs font-medium transition-all',
+                  className="flex-1 rounded-lg px-1.5 py-1.5 text-center text-[10.5px] font-medium transition-all duration-150 whitespace-nowrap"
+                  style={
                     isActive
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
+                      ? {
+                          background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
+                          color: 'var(--organic-terracotta-700)',
+                          boxShadow: '0 1px 3px color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+                        }
+                      : { color: 'color-mix(in srgb, var(--foreground) 50%, transparent)' }
+                  }
                 >
                   {label}
                 </Link>
@@ -173,12 +211,20 @@ export default async function InboxPage({
           </div>
         </div>
 
+        {/* Conversation list */}
         <div className="flex-1 overflow-y-auto">
           <ConversationList conversations={conversations} activeId={activeConvId} filter={activeFilter} />
         </div>
       </div>
 
-      <div className={cn('min-w-0 flex-1 flex-col overflow-hidden', activeConvId ? 'flex' : 'hidden md:flex')}>
+      {/* ─── Right thread panel ─── */}
+      <div
+        className={cn(
+          'min-w-0 flex-1 flex-col overflow-hidden',
+          'bg-[color-mix(in_srgb,var(--organic-bg)_45%,transparent)] backdrop-blur-sm',
+          activeConvId ? 'flex' : 'hidden md:flex'
+        )}
+      >
         {activeConv && activeConvId ? (
           <ConversationThread
             messages={threadMessages}
@@ -195,13 +241,26 @@ export default async function InboxPage({
             initialAssignedTo={activeContact?.assigned_to ?? ''}
           />
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
-              <MessageSquare className="size-6 text-muted-foreground" strokeWidth={1.5} />
+          // Empty state
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10 text-center">
+            <div
+              className="relative flex size-16 items-center justify-center rounded-2xl"
+              style={{
+                background: 'color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--organic-terracotta) 18%, transparent)',
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 rounded-2xl blur-xl opacity-40"
+                style={{ background: 'color-mix(in srgb, var(--organic-terracotta) 30%, transparent)' }}
+              />
+              <Inbox className="relative size-7" style={{ color: 'var(--organic-terracotta-600)' }} strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-[14px] font-semibold text-foreground">Sélectionnez une conversation</p>
-              <p className="mt-1 text-xs text-muted-foreground">Cliquez sur un contact à gauche pour voir les messages</p>
+              <p className="text-[14.5px] font-semibold text-foreground">Sélectionnez une conversation</p>
+              <p className="mt-1 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}>
+                Cliquez sur un contact à gauche pour voir ses messages
+              </p>
             </div>
           </div>
         )}

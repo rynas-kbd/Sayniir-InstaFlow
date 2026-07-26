@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/components/app-shell/page-skeleton'
+import { FlowsSkeleton } from '@/components/app-shell/page-skeleton'
 
 export default function Loading() {
-  return <PageSkeleton />
+  return <FlowsSkeleton />
 }

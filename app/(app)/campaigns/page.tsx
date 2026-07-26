@@ -6,6 +6,7 @@ import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dia
 import { CampaignCard } from '@/components/campaigns/campaign-card'
 import { StatCard } from '@/components/dashboard/stat-card'
 import type { Campaign } from '@/components/campaigns/types'
+import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function CampaignsPage() {
   const supabase = await createClient()
@@ -36,13 +37,27 @@ export default async function CampaignsPage() {
     )
   }
 
-  const [{ data: campaigns }, { data: tags }, { data: segments }] = await Promise.all([
+  const [{ data: campaigns }, { data: tags }, { data: segments }, { data: insightRows }] = await Promise.all([
     supabase.from('campaigns').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     supabase.from('tags').select('*').eq('channel_account_id', account.id).order('name'),
     supabase.from('segments').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
+    supabase
+      .from('ai_insights')
+      .select('id, rule_id, scope, subject_id, severity, title, detail, fix_tool_name, fix_tool_input')
+      .eq('channel_account_id', account.id)
+      .eq('scope', 'campaign')
+      .is('dismissed_at', null),
   ])
 
   const safeCampaigns = (campaigns ?? []) as Campaign[]
+
+  const insightsByCampaignId = new Map<string, AiInsight[]>()
+  for (const row of insightRows ?? []) {
+    const insight = mapAiInsightRow(row)
+    const list = insightsByCampaignId.get(insight.subjectId) ?? []
+    list.push(insight)
+    insightsByCampaignId.set(insight.subjectId, list)
+  }
 
   const sendCountsByCampaign = new Map<string, { sent: number; pending: number; failed: number }>()
   if (safeCampaigns.length > 0) {
@@ -99,6 +114,7 @@ export default async function CampaignsPage() {
                 key={campaign.id}
                 campaign={campaign}
                 sendCounts={sendCountsByCampaign.get(campaign.id) ?? { sent: 0, pending: 0, failed: 0 }}
+                insights={insightsByCampaignId.get(campaign.id) ?? []}
               />
             ))}
             

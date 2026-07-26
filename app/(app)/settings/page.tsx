@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { SignOutButton } from '@/components/settings/sign-out-button'
 import { TeamMembersCard } from '@/components/settings/team-members-card'
 import { BillingCard } from '@/components/settings/billing-card'
+import { CopilotSettingsCard } from '@/components/ai/copilot-settings-card'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
+import { checkAiCreditLimit } from '@/lib/ai/credits/meter'
+import type { CopilotProviderKind } from '@/lib/ai/models'
 
 function SectionTitle({
   icon: Icon,
@@ -48,6 +51,17 @@ export default async function SettingsPage() {
     .select('status, expires_at, plan')
     .eq('user_id', user!.id)
     .maybeSingle()
+
+  const [credits, { data: copilotSettings }] = await Promise.all([
+    checkAiCreditLimit(user!.id),
+    account
+      ? supabase
+          .from('agent_settings')
+          .select('copilot_provider, copilot_api_key, copilot_model, copilot_enabled')
+          .eq('channel_account_id', account.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
 
   const fields = [
     { label: 'Email', value: user!.email ?? '—', icon: Mail },
@@ -92,6 +106,21 @@ export default async function SettingsPage() {
           </Card>
 
           <BillingCard status={subscription?.status ?? null} expiresAt={subscription?.expires_at ?? null} />
+
+          {account && (
+            <CopilotSettingsCard
+              channelAccountId={account.id}
+              initialSettings={{
+                copilot_provider: (copilotSettings?.copilot_provider ?? 'groq') as CopilotProviderKind,
+                copilot_api_key: copilotSettings?.copilot_api_key ? '••••••••••••' : '',
+                copilot_model: copilotSettings?.copilot_model ?? '',
+                copilot_enabled: copilotSettings?.copilot_enabled ?? false,
+              }}
+              byokAllowed={credits.limits.byokAllowed}
+              creditsUsed={credits.used}
+              creditsLimit={credits.limit}
+            />
+          )}
 
           {account && <TeamMembersCard channelAccountId={account.id} initialMembers={teamMembers ?? []} userPlan={subscription?.plan ?? 'free'} />}
 

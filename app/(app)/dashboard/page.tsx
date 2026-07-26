@@ -145,20 +145,26 @@ export default async function DashboardPage() {
               title="Messages reçus"
               value={totalMessages ?? 0}
               icon={MessageSquare}
+              accent="terracotta"
+              description="Conversations DMs entrantes"
             />
           </DashboardItem>
           <DashboardItem>
             <StatCard
-              title="Réponses automatiques"
+              title="Réponses auto"
               value={totalReplied}
               icon={Zap}
+              accent="sage"
+              description="Traitées par vos automations"
             />
           </DashboardItem>
           <DashboardItem>
             <StatCard
-              title="Comptes connectés"
+              title="Canaux actifs"
               value={`${activeAccounts} / ${safeAccounts.length}`}
               icon={Link2}
+              accent="sand"
+              description="Comptes Meta connectés"
             />
           </DashboardItem>
           <DashboardItem>
@@ -166,6 +172,8 @@ export default async function DashboardPage() {
               title="Taux de réponse"
               value={`${replyRate}%`}
               icon={TrendingUp}
+              accent="primary"
+              description="Efficacité de vos automations"
             />
           </DashboardItem>
         </div>

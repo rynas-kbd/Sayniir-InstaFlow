@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import type { Campaign } from './types'
+import { InsightBadge } from '@/components/ai/insight-badge'
+import type { AiInsight } from '@/components/ai/types'
 
 // Status styling config
 const STATUS_CONFIG = {
@@ -53,9 +55,11 @@ const STATUS_CONFIG = {
 export function CampaignCard({
   campaign: initialCampaign,
   sendCounts,
+  insights = [],
 }: {
   campaign: Campaign
   sendCounts: { sent: number; pending: number; failed: number }
+  insights?: AiInsight[]
 }) {
   const [campaign, setCampaign] = useState(initialCampaign)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -162,12 +166,15 @@ export function CampaignCard({
         <div className="flex flex-1 flex-col gap-3 p-4">
           {/* Status and Action button */}
           <div className="flex items-center justify-between gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge}`}
-            >
-              <span className={`size-1.5 rounded-full ${cfg.dot}`} />
-              {cfg.label}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge}`}
+              >
+                <span className={`size-1.5 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+              </span>
+              <InsightBadge insights={insights} />
+            </div>
 
             {/* Inline controls */}
             {campaign.status === 'draft' && (

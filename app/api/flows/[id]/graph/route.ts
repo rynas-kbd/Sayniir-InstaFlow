@@ -33,37 +33,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Un flow doit avoir exactement un nœud de déclenchement' }, { status: 400 })
   }
 
-  await supabase.from('flow_edges').delete().eq('flow_id', id)
-  await supabase.from('flow_nodes').delete().eq('flow_id', id)
-
-  if (nodes.length > 0) {
-    const { error: nodesError } = await supabase.from('flow_nodes').insert(
-      nodes.map((n) => ({
-        flow_id: id,
-        channel_account_id: flow.channel_account_id,
-        node_key: n.node_key,
-        type: n.type,
-        config: n.config ?? {},
-        position: n.position ?? { x: 0, y: 0 },
-      }))
-    )
-    if (nodesError) return NextResponse.json({ error: nodesError.message }, { status: 500 })
-  }
-
-  if (edges.length > 0) {
-    const { error: edgesError } = await supabase.from('flow_edges').insert(
-      edges.map((e) => ({
-        flow_id: id,
-        channel_account_id: flow.channel_account_id,
-        source_node_key: e.source_node_key,
-        target_node_key: e.target_node_key,
-        source_handle: e.source_handle ?? 'default',
-      }))
-    )
-    if (edgesError) return NextResponse.json({ error: edgesError.message }, { status: 500 })
-  }
-
-  await supabase.from('flows').update({ graph_snapshot: body, updated_at: new Date().toISOString() }).eq('id', id)
+  const { error: rpcError } = await supabase.rpc('replace_flow_graph', {
+    p_flow_id: id,
+    p_channel_account_id: flow.channel_account_id,
+    p_nodes: nodes.map((n) => ({
+      node_key: n.node_key,
+      type: n.type,
+      config: n.config ?? {},
+      position: n.position ?? { x: 0, y: 0 },
+    })),
+    p_edges: edges.map((e) => ({
+      source_node_key: e.source_node_key,
+      target_node_key: e.target_node_key,
+      source_handle: e.source_handle ?? 'default',
+    })),
+    p_graph_snapshot: body,
+  })
+  if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 })
 
   return NextResponse.json({ success: true })
 }

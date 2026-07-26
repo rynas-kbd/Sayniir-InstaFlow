@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { resumeRun } from '@/lib/flows/engine'
 import { enqueueRecipients, sendBatch } from '@/lib/campaigns/service'
 import { isEncrypted, decryptApiKey } from '@/lib/crypto'
+import { refreshAllAccountFindings } from '@/lib/ai/lint/run'
 import type { Platform } from '@/lib/channels/types'
 
 export const runtime = 'nodejs'
@@ -96,6 +97,13 @@ export async function GET(request: NextRequest) {
       console.error(`[flow-runs cron] Failed to send scheduled campaign ${dueCampaign.id}:`, err)
       await supabase.from('campaigns').update({ status: 'failed' }).eq('id', dueCampaign.id)
     }
+  }
+
+  // ── Deterministic lint refresh (zero LLM cost) ───────────────────────
+  try {
+    await refreshAllAccountFindings()
+  } catch (err) {
+    console.error('[flow-runs cron] Failed to refresh AI insights:', err)
   }
 
   return NextResponse.json({ resumed, campaignsSent })

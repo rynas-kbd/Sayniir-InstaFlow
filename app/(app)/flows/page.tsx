@@ -5,6 +5,8 @@ import { CreateFlowDialog } from '@/components/flows/create-flow-dialog'
 import { FlowCard } from '@/components/flows/flow-card'
 import { FlowsEnabledToggle } from '@/components/flows/flows-enabled-toggle'
 import type { FlowSummary } from '@/components/flows/types'
+import { flowIdFromSubject } from '@/lib/ai/lint/types'
+import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function FlowsPage() {
   const supabase = await createClient()
@@ -34,16 +36,31 @@ export default async function FlowsPage() {
     )
   }
 
-  const [{ data: flows }, { data: settings }, { data: runsData }] = await Promise.all([
+  const [{ data: flows }, { data: settings }, { data: runsData }, { data: insightRows }] = await Promise.all([
     supabase.from('flows').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     supabase.from('agent_settings').select('flows_enabled').eq('channel_account_id', account.id).maybeSingle(),
     supabase.from('flow_runs').select('id, status').eq('channel_account_id', account.id),
+    supabase
+      .from('ai_insights')
+      .select('id, rule_id, scope, subject_id, severity, title, detail, fix_tool_name, fix_tool_input')
+      .eq('channel_account_id', account.id)
+      .eq('scope', 'flow')
+      .is('dismissed_at', null),
   ])
 
   const safeFlows = (flows ?? []) as FlowSummary[]
   const activeCount = safeFlows.filter((f) => f.status === 'active').length
   const totalRuns = runsData?.length ?? 0
   const completedRuns = runsData?.filter((r) => r.status === 'completed').length ?? 0
+
+  const insightsByFlowId = new Map<string, AiInsight[]>()
+  for (const row of insightRows ?? []) {
+    const insight = mapAiInsightRow(row)
+    const flowId = flowIdFromSubject(insight.subjectId)
+    const list = insightsByFlowId.get(flowId) ?? []
+    list.push(insight)
+    insightsByFlowId.set(flowId, list)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -82,7 +99,7 @@ export default async function FlowsPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {safeFlows.map((flow) => (
-                <FlowCard key={flow.id} flow={flow} />
+                <FlowCard key={flow.id} flow={flow} insights={insightsByFlowId.get(flow.id) ?? []} />
               ))}
               {/* Add new card */}
               <CreateFlowDialog channelAccountId={account.id} asCard />

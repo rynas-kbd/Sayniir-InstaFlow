@@ -8,10 +8,17 @@ const SAFETY_TIMEOUT_MS = 2500
 const COUNT_DURATION_MS = 1400
 
 function animateCount(el: Element): void {
-  const raw = el.textContent ?? ''
+  const htmlEl = el as HTMLElement
+  
+  // Save original text if not already saved, to allow resetting later
+  if (!htmlEl.dataset.originalText && el.textContent) {
+    htmlEl.dataset.originalText = el.textContent
+  }
+
+  const raw = htmlEl.dataset.originalText ?? el.textContent ?? ''
   const match = raw.match(/-?[\d,]*\.?\d+/)
-  if (!match || (el as HTMLElement).dataset.counted) return
-  ;(el as HTMLElement).dataset.counted = '1'
+  if (!match || htmlEl.dataset.counted) return
+  htmlEl.dataset.counted = '1'
 
   const plain = match[0].replace(/,/g, '')
   const grouped = match[0].includes(',')
@@ -27,9 +34,22 @@ function animateCount(el: Element): void {
     const eased = 1 - Math.pow(1 - progress, 3)
     const value = (target * eased).toFixed(decimals)
     el.textContent = prefix + (grouped ? Number(value).toLocaleString('en-US') : value) + suffix
-    if (progress < 1) requestAnimationFrame(step)
+    
+    // Only continue animation if the element is still marked as counted.
+    // If it was reset (uncounted) because it left the viewport, we stop.
+    if (progress < 1 && htmlEl.dataset.counted === '1') {
+      requestAnimationFrame(step)
+    }
   }
   requestAnimationFrame(step)
+}
+
+function resetCount(el: Element): void {
+  const htmlEl = el as HTMLElement
+  if (htmlEl.dataset.originalText) {
+    el.textContent = htmlEl.dataset.originalText
+  }
+  delete htmlEl.dataset.counted
 }
 
 /**
@@ -52,11 +72,15 @@ export function RevealScope({ children }: { children: React.ReactNode }) {
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue
+          if (!entry.isIntersecting) {
+            entry.target.classList.remove('lp-in')
+            if (entry.target.hasAttribute('data-count')) resetCount(entry.target)
+            entry.target.querySelectorAll('[data-count]').forEach(resetCount)
+            continue
+          }
           entry.target.classList.add('lp-in')
           if (entry.target.hasAttribute('data-count')) animateCount(entry.target)
           entry.target.querySelectorAll('[data-count]').forEach(animateCount)
-          io.unobserve(entry.target)
         }
       },
       { rootMargin: REVEAL_MARGIN, threshold: REVEAL_THRESHOLD }

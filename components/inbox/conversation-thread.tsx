@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Trash2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -20,21 +20,19 @@ interface ExtendedMessageItem extends MessageItem {
   isAutoReply?: boolean
 }
 
-// Deterministic gradient for avatar
-const AVATAR_COLORS = [
-  'from-terracotta-400 to-terracotta-600',
-  'from-sage-400 to-sage-600',
-  'from-terracotta-300 to-terracotta-500',
-  'from-sage-300 to-sage-500',
-  'from-sand-500 to-sand-700',
-  'from-terracotta-500 to-sage-600',
+// Deterministic organic gradient for avatar
+const AVATAR_PALETTES = [
+  { from: 'var(--organic-terracotta-400)', to: 'var(--organic-terracotta-600)' },
+  { from: 'var(--organic-sage-400)', to: 'var(--organic-sage-600)' },
+  { from: 'var(--organic-terracotta-300)', to: 'var(--organic-sage-500)' },
+  { from: 'var(--organic-sand-400)', to: 'var(--organic-terracotta-500)' },
 ]
-function getAvatarGradient(str: string): string {
+function getAvatarPalette(str: string) {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash)
   }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+  return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length]
 }
 
 export function ConversationThread({
@@ -64,7 +62,20 @@ export function ConversationThread({
   teamMembers: { name: string; email: string }[]
   initialAssignedTo: string
 }) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [localMessages, setLocalMessages] = useState(messages)
+
+  // Scroll to bottom when conversation loads or messages update
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+    }
+  }, [localMessages, senderId])
+
+  // Sync messages prop to state
+  useEffect(() => {
+    setLocalMessages(messages)
+  }, [messages])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [botPaused, setBotPaused] = useState(initialBotPaused)
@@ -116,7 +127,7 @@ export function ConversationThread({
   }
 
   const initial = senderName[0]?.toUpperCase() ?? '?'
-  const gradient = getAvatarGradient(senderName)
+  const palette = getAvatarPalette(senderName)
 
   async function sendMessage() {
     const text = draft.trim()
@@ -204,12 +215,26 @@ export function ConversationThread({
 
   return (
     <>
-      {/* Header */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm">
+      {/* ─── Header ─── */}
+      <div
+        className="relative flex h-14 shrink-0 items-center gap-3 px-4"
+        style={{
+          background: 'color-mix(in srgb, var(--organic-bg) 60%, transparent)',
+          backdropFilter: 'blur(24px)',
+          borderBottom: '1px solid color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+        }}
+      >
+        {/* Subtle aurora in header */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-40 opacity-[0.05]"
+          style={{ background: 'linear-gradient(to left, var(--organic-terracotta), transparent)' }}
+        />
+
         {backHref && (
           <Link
             href={backHref}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:hidden"
+            style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)' }}
           >
             <ChevronLeft className="size-4" />
           </Link>
@@ -220,75 +245,124 @@ export function ConversationThread({
           <Image
             src={senderProfilePic}
             alt={senderName}
-            width={32}
-            height={32}
+            width={34}
+            height={34}
             unoptimized
-            className="size-8 rounded-full object-cover ring-2 ring-border"
+            className="size-[34px] shrink-0 rounded-full object-cover"
+            style={{ boxShadow: `0 0 0 2px color-mix(in srgb, var(--organic-terracotta) 22%, transparent)` }}
           />
         ) : (
           <div
-            className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white ${gradient}`}
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
+            style={{
+              background: `linear-gradient(135deg, ${palette.from}, ${palette.to})`,
+              boxShadow: `0 2px 8px color-mix(in srgb, ${palette.to} 30%, transparent)`,
+            }}
           >
             {initial}
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="truncate text-[13px] font-semibold text-foreground">{senderName}</p>
+        {/* Name + channel */}
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <p className="truncate text-[13.5px] font-semibold text-foreground">{senderName}</p>
           {accountUsername && (
-            <p className="truncate text-[11px] text-muted-foreground">via @{accountUsername}</p>
+            <p className="truncate text-[11px]" style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}>
+              via @{accountUsername}
+            </p>
           )}
         </div>
 
-        {contactId && teamMembers.length > 0 && (
-          <select
-            value={assignedTo}
-            onChange={(e) => handleAssign(e.target.value)}
-            className="hidden shrink-0 cursor-pointer rounded-full border border-border bg-transparent px-2 py-1 text-[11px] text-muted-foreground outline-none sm:block"
-          >
-            <option value="">Non assigné</option>
-            {teamMembers.map((m) => (
-              <option key={m.email} value={m.email}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        )}
+        {/* Actions */}
+        <div className="relative flex shrink-0 items-center gap-2">
+          {/* Assign select */}
+          {contactId && teamMembers.length > 0 && (
+            <select
+              value={assignedTo}
+              onChange={(e) => handleAssign(e.target.value)}
+              className="hidden cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-medium outline-none transition-all sm:block"
+              style={{
+                background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
+                color: 'color-mix(in srgb, var(--foreground) 65%, transparent)',
+              }}
+            >
+              <option value="">Non assigné</option>
+              {teamMembers.map((m) => (
+                <option key={m.email} value={m.email}>{m.name}</option>
+              ))}
+            </select>
+          )}
 
-        {contactId && (
-          <button
-            type="button"
-            onClick={togglePause}
-            disabled={togglingPause}
-            className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50 ${
-              botPaused
-                ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
-            title={botPaused ? 'Réactiver le bot pour ce contact' : 'Mettre le bot en pause pour ce contact'}
-          >
-            {botPaused ? <Pause className="size-3" /> : <Play className="size-3" />}
-            {botPaused ? 'Bot en pause' : 'Bot actif'}
-          </button>
-        )}
+          {/* Bot pause toggle */}
+          {contactId && (
+            <button
+              type="button"
+              onClick={togglePause}
+              disabled={togglingPause}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
+              style={
+                botPaused
+                  ? {
+                      background: 'color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--organic-terracotta) 20%, transparent)',
+                      color: 'var(--organic-terracotta-700)',
+                    }
+                  : {
+                      background: 'color-mix(in srgb, var(--organic-sage) 10%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--organic-sage) 20%, transparent)',
+                      color: 'var(--organic-sage-700)',
+                    }
+              }
+            >
+              {botPaused ? <Pause className="size-3" /> : <Play className="size-3" />}
+              {botPaused ? 'Bot en pause' : 'Bot actif'}
+            </button>
+          )}
 
-        <div className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-          <Bot className="size-3" />
-          {sorted.length} message{sorted.length !== 1 ? 's' : ''}
+          {/* Message count */}
+          <div
+            className="hidden shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium sm:flex"
+            style={{
+              background: 'color-mix(in srgb, var(--organic-sand-300) 15%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--organic-sand-400) 20%, transparent)',
+              color: 'color-mix(in srgb, var(--foreground) 50%, transparent)',
+            }}
+          >
+            <Bot className="size-3" strokeWidth={1.75} />
+            {sorted.length} msg{sorted.length !== 1 ? 's' : ''}
+          </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-background/60 px-4 pt-6 pb-8 md:px-6">
+      {/* ─── Messages ─── */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto px-4 pt-6 pb-8 md:px-6 scroll-smooth"
+        style={{ background: 'color-mix(in srgb, var(--organic-bg) 35%, transparent)' }}
+      >
         {groups.map((group) => (
           <div key={group.date}>
             {/* Date separator */}
             <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-border/60" />
-              <span className="whitespace-nowrap rounded-full border border-border/60 bg-muted/60 px-3 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <div
+                className="h-px flex-1"
+                style={{ background: 'color-mix(in srgb, var(--organic-sand-400) 25%, transparent)' }}
+              />
+              <span
+                className="whitespace-nowrap rounded-full px-3 py-0.5 text-[11px] font-medium"
+                style={{
+                  background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
+                  color: 'color-mix(in srgb, var(--foreground) 45%, transparent)',
+                }}
+              >
                 {group.date}
               </span>
-              <div className="h-px flex-1 bg-border/60" />
+              <div
+                className="h-px flex-1"
+                style={{ background: 'color-mix(in srgb, var(--organic-sand-400) 25%, transparent)' }}
+              />
             </div>
 
             {group.items.map((msg, idx) => {
@@ -305,20 +379,40 @@ export function ConversationThread({
                   <div className={`flex max-w-[68%] flex-col gap-1 ${isIncoming ? 'items-start' : 'items-end'}`}>
                     {/* Auto-reply label */}
                     {isAutoReply && (
-                      <span className="mb-0.5 flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                        <Zap className="size-2.5 text-primary" />
+                      <span
+                        className="mb-0.5 flex items-center gap-1 text-[10px] font-semibold"
+                        style={{ color: 'var(--organic-terracotta-600)' }}
+                      >
+                        <Sparkles className="size-2.5" />
                         Réponse automatique
                       </span>
                     )}
 
+                    {/* Bubble */}
                     <div
-                      className={`rounded-2xl px-3.5 py-2.5 break-words shadow-sm ${
+                      className="break-words rounded-2xl px-3.5 py-2.5 shadow-sm"
+                      style={
                         isIncoming
-                          ? 'rounded-tl-sm bg-muted/80 text-foreground'
+                          ? {
+                              background: 'color-mix(in srgb, var(--organic-bg) 80%, transparent)',
+                              border: '1px solid color-mix(in srgb, var(--organic-sand-400) 30%, transparent)',
+                              borderTopLeftRadius: '6px',
+                              backdropFilter: 'blur(8px)',
+                            }
                           : isAutoReply
-                            ? 'rounded-tr-sm bg-primary/85 text-primary-foreground ring-1 ring-primary/20'
-                            : 'rounded-tr-sm bg-primary text-primary-foreground'
-                      }`}
+                            ? {
+                                background: 'color-mix(in srgb, var(--organic-terracotta) 75%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--organic-terracotta) 30%, transparent)',
+                                borderTopRightRadius: '6px',
+                                color: 'white',
+                              }
+                            : {
+                                background: 'linear-gradient(135deg, var(--organic-terracotta-500), var(--organic-terracotta-700))',
+                                borderTopRightRadius: '6px',
+                                color: 'white',
+                                boxShadow: '0 4px 12px color-mix(in srgb, var(--organic-terracotta) 30%, transparent)',
+                              }
+                      }
                     >
                       {msg.message_text ? (
                         <p className="text-[13px] leading-relaxed">{msg.message_text}</p>
@@ -333,10 +427,16 @@ export function ConversationThread({
                       )}
                     </div>
 
-                    <span className="px-0.5 text-[11px] text-muted-foreground/60 tabular-nums">
+                    {/* Timestamp */}
+                    <span
+                      className="px-0.5 text-[10.5px] tabular-nums"
+                      style={{ color: 'color-mix(in srgb, var(--foreground) 32%, transparent)' }}
+                    >
                       {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       {msg.auto_reply_sent && !isAutoReply && (
-                        <span className="ml-1 text-primary/60">· Répondu</span>
+                        <span style={{ marginLeft: '4px', color: 'var(--organic-terracotta-600)' }}>
+                          · <Zap className="inline size-2.5" /> Répondu
+                        </span>
                       )}
                     </span>
                   </div>
@@ -347,39 +447,82 @@ export function ConversationThread({
         ))}
       </div>
 
-      {/* Composer */}
-      <div className="flex shrink-0 items-end gap-2 border-t border-border bg-card/80 p-3 backdrop-blur-sm">
+      {/* ─── Composer ─── */}
+      <div
+        className="flex shrink-0 items-end gap-2 p-3"
+        style={{
+          background: 'color-mix(in srgb, var(--organic-bg) 65%, transparent)',
+          backdropFilter: 'blur(24px)',
+          borderTop: '1px solid color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+        }}
+      >
+        {/* Snippets popover */}
         <Popover open={snippetsOpen} onOpenChange={setSnippetsOpen}>
           <PopoverTrigger
-            render={<Button type="button" variant="outline" size="icon" aria-label="Réponses rapides" />}
+            render={
+              <button
+                type="button"
+                aria-label="Réponses rapides"
+                className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-all duration-150"
+                style={{
+                  background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
+                  color: 'color-mix(in srgb, var(--foreground) 55%, transparent)',
+                }}
+              />
+            }
           >
-            <MessageSquareText className="size-4" />
+            <MessageSquareText className="size-4" strokeWidth={1.75} />
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-2" align="start" side="top">
-            <div className="mb-1.5 px-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <PopoverContent
+            className="w-72 overflow-hidden rounded-2xl border-0 p-0 shadow-xl"
+            align="start"
+            side="top"
+            style={{
+              background: 'color-mix(in srgb, var(--organic-bg) 85%, transparent)',
+              backdropFilter: 'blur(24px) saturate(1.8)',
+              border: '1px solid color-mix(in srgb, var(--organic-sand-300) 40%, transparent)',
+              boxShadow: '0 8px 32px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)',
+            }}
+          >
+            <div
+              className="px-3.5 py-2.5 text-[10px] font-bold uppercase tracking-wider"
+              style={{
+                borderBottom: '1px solid color-mix(in srgb, var(--organic-sand-300) 30%, transparent)',
+                color: 'color-mix(in srgb, var(--foreground) 45%, transparent)',
+              }}
+            >
               Réponses rapides
             </div>
-            <div className="max-h-52 space-y-0.5 overflow-y-auto">
+            <div className="max-h-52 space-y-0.5 overflow-y-auto p-1.5">
               {snippets.length === 0 ? (
-                <p className="px-1.5 py-2 text-xs italic text-muted-foreground">Aucune réponse rapide.</p>
+                <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">Aucune réponse rapide.</p>
               ) : (
                 snippets.map((s) => (
-                  <div key={s.id} className="group flex items-center gap-1 rounded-lg hover:bg-muted">
+                  <div
+                    key={s.id}
+                    className="group flex items-center gap-1 rounded-lg transition-all duration-100"
+                    style={{
+                      // hover done via onMouseEnter/Leave — or let browser handle via CSS
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => {
                         setDraft(s.text)
                         setSnippetsOpen(false)
                       }}
-                      className="flex-1 truncate px-2.5 py-2 text-left text-xs"
+                      className="flex-1 truncate rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_18%,transparent)]"
                     >
-                      <span className="font-semibold text-primary">/{s.shortcut}</span>{' '}
+                      <span className="font-bold" style={{ color: 'var(--organic-terracotta-600)' }}>
+                        /{s.shortcut}
+                      </span>{' '}
                       <span className="text-muted-foreground">{s.text}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteSnippet(s.id)}
-                      className="mr-1 shrink-0 cursor-pointer rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
+                      className="mr-1 shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
                       aria-label="Supprimer"
                     >
                       <Trash2 className="size-3" />
@@ -388,19 +531,30 @@ export function ConversationThread({
                 ))
               )}
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 border-t border-border pt-1.5">
+            <div
+              className="flex items-center gap-1.5 p-2"
+              style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-sand-300) 25%, transparent)' }}
+            >
               <Input
                 value={newShortcut}
                 onChange={(e) => setNewShortcut(e.target.value)}
                 placeholder="raccourci (ex: prix)"
                 className="h-7 text-xs"
               />
-              <Button type="button" size="icon-sm" onClick={saveSnippet} disabled={!newShortcut.trim() || !draft.trim()} aria-label="Enregistrer le brouillon comme réponse rapide">
+              <Button
+                type="button"
+                size="icon-sm"
+                onClick={saveSnippet}
+                disabled={!newShortcut.trim() || !draft.trim()}
+                aria-label="Enregistrer"
+              >
                 <Plus className="size-3.5" />
               </Button>
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Textarea */}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -412,11 +566,40 @@ export function ConversationThread({
           }}
           placeholder="Écrire un message…"
           rows={1}
-          className="max-h-32 min-h-9 flex-1 resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="max-h-32 min-h-9 flex-1 resize-none rounded-xl px-3.5 py-2 text-[13.5px] outline-none transition-all"
+          style={{
+            background: 'color-mix(in srgb, var(--organic-bg) 70%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--organic-sand-400) 30%, transparent)',
+            color: 'var(--foreground)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--organic-terracotta) 35%, transparent)'
+            e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--organic-sand-400) 30%, transparent)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
-        <Button size="icon" onClick={sendMessage} disabled={sending || !draft.trim()} aria-label="Envoyer">
-          <Send className="size-4" />
-        </Button>
+
+        {/* Send button */}
+        <button
+          type="button"
+          onClick={sendMessage}
+          disabled={sending || !draft.trim()}
+          aria-label="Envoyer"
+          className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white shadow-md transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+          style={{
+            background: draft.trim()
+              ? 'linear-gradient(135deg, var(--organic-terracotta-500), var(--organic-terracotta-700))'
+              : 'color-mix(in srgb, var(--organic-sand-400) 30%, transparent)',
+            boxShadow: draft.trim()
+              ? '0 4px 12px color-mix(in srgb, var(--organic-terracotta) 30%, transparent)'
+              : 'none',
+          }}
+        >
+          <Send className="size-4" strokeWidth={2} />
+        </button>
       </div>
     </>
   )

@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-shell/sidebar'
 import { Topbar } from '@/components/app-shell/topbar'
 import type { BusinessType } from '@/components/app-shell/nav-config'
 import { PageTransitionWrapper } from '@/components/app-shell/page-transition'
+import { CopilotProvider } from '@/components/ai/copilot-provider'
 
 export default async function AppLayout({
   children,
@@ -53,7 +54,10 @@ export default async function AppLayout({
     pendingAppointments: pendingAppointments ?? 0,
   }
 
+  const primaryAccountId = accountIds[0] ?? null
+
   return (
+    <CopilotProvider channelAccountId={primaryAccountId}>
     <div className="flex h-screen overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
       <div className="relative flex min-w-0 flex-1 flex-col">
@@ -82,5 +86,6 @@ export default async function AppLayout({
         </main>
       </div>
     </div>
+    </CopilotProvider>
   )
 }

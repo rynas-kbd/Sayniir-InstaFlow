@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FlowNodeType, CardButton } from '../types'
+import { InsightBadge } from '@/components/ai/insight-badge'
+import type { AiInsight } from '@/components/ai/types'
 
 const NODE_META: Record<FlowNodeType, { icon: typeof Zap; label: string }> = {
   trigger: { icon: Zap, label: 'Déclencheur' },
@@ -33,6 +35,7 @@ export interface FlowNodeData {
   nodeType: FlowNodeType
   config: Record<string, unknown>
   summary: string
+  insights?: AiInsight[]
   [key: string]: unknown
 }
 
@@ -49,10 +52,13 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        'w-52 rounded-md border bg-card px-3 py-2.5 transition-shadow',
+        'relative w-52 rounded-md border bg-card px-3 py-2.5 transition-shadow',
         selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'
       )}
     >
+      {nodeData.insights && nodeData.insights.length > 0 && (
+        <InsightBadge insights={nodeData.insights} className="absolute -right-2 -top-2 z-10 bg-card" />
+      )}
       {!isTrigger && <Handle type="target" position={Position.Top} className="!bg-muted-foreground" />}
 
       <div className="flex items-center gap-1.5">

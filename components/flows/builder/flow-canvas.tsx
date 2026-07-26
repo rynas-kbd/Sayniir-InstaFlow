@@ -39,6 +39,7 @@ import { FlowNodeVisual, type FlowNodeData } from './node-visual'
 import { NodeInspector } from './node-inspector'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowNodeType, FlowSummary } from '../types'
 import type { Tag as ContactTag } from '@/components/contacts/types'
+import type { AiInsight } from '@/components/ai/types'
 
 const nodeTypes = { flowNode: FlowNodeVisual }
 
@@ -97,12 +98,12 @@ function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string
   }
 }
 
-function toReactFlowNode(record: FlowNodeRecord): Node {
+function toReactFlowNode(record: FlowNodeRecord, insights: AiInsight[]): Node {
   return {
     id: record.node_key,
     type: 'flowNode',
     position: record.position ?? { x: 0, y: 0 },
-    data: { nodeType: record.type, config: record.config, summary: summaryFor(record.type, record.config) },
+    data: { nodeType: record.type, config: record.config, summary: summaryFor(record.type, record.config), insights },
   }
 }
 
@@ -130,12 +131,14 @@ export function FlowCanvas({
   initialEdges,
   tags,
   otherFlows,
+  insightsByNodeKey = {},
 }: {
   flow: FlowMeta
   initialNodes: FlowNodeRecord[]
   initialEdges: FlowEdgeRecord[]
   tags: ContactTag[]
   otherFlows: FlowSummary[]
+  insightsByNodeKey?: Record<string, AiInsight[]>
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
     initialNodes.map((n) => {
@@ -154,10 +157,11 @@ export function FlowCanvas({
             nodeType: n.type,
             config: enrichedConfig,
             summary: summaryFor(n.type, enrichedConfig),
+            insights: insightsByNodeKey[n.node_key] ?? [],
           },
         }
       }
-      return toReactFlowNode(n)
+      return toReactFlowNode(n, insightsByNodeKey[n.node_key] ?? [])
     })
   )
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
