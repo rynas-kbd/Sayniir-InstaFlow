@@ -8,7 +8,7 @@
 async function callLLMWithGemini<T>(prompt: string, apiKey: string, model: string): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,25 +127,25 @@ export async function callAgentLLM<T>(
   const provider = aiProvider || 'gemini'
   const apiKey =
     aiApiKey || (provider === 'gemini' ? process.env.GEMINI_API_KEY : provider === 'groq' ? process.env.GROQ_API_KEY : null)
-  const model = aiModel || (provider === 'gemini' ? 'gemini-1.5-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : '')
+  const model = aiModel || (provider === 'gemini' ? 'gemini-2.0-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : '')
 
   if (!apiKey) {
     if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
-      return callLLMWithGemini<T>(prompt, process.env.GEMINI_API_KEY, model || 'gemini-1.5-flash')
+      return callLLMWithGemini<T>(prompt, process.env.GEMINI_API_KEY, model || 'gemini-2.0-flash')
     }
     if (provider === 'groq' && process.env.GROQ_API_KEY) {
       return callLLMWithGroq<T>(prompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
     }
     const systemGemini = process.env.GEMINI_API_KEY
     if (systemGemini) {
-      return callLLMWithGemini<T>(prompt, systemGemini, 'gemini-1.5-flash')
+      return callLLMWithGemini<T>(prompt, systemGemini, 'gemini-2.0-flash')
     }
     throw new Error(`Aucune clé API disponible pour le fournisseur: ${provider}`)
   }
 
   switch (provider) {
     case 'gemini':
-      return callLLMWithGemini<T>(prompt, apiKey, model || 'gemini-1.5-flash')
+      return callLLMWithGemini<T>(prompt, apiKey, model || 'gemini-2.0-flash')
     case 'groq':
       return callLLMWithGroq<T>(prompt, apiKey, model || 'llama-3.3-70b-versatile')
     case 'openai':

@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS public.agent_settings (
   infos_to_collect TEXT[] DEFAULT '{}',
   ai_provider TEXT DEFAULT 'gemini',
   ai_api_key TEXT DEFAULT NULL,
-  ai_model TEXT DEFAULT 'gemini-1.5-flash',
+  ai_model TEXT DEFAULT 'gemini-2.0-flash',
   default_message_enabled BOOLEAN DEFAULT TRUE,
   default_message_text TEXT DEFAULT 'Merci pour votre message ! Nous vous répondrons bientôt. 🙏',
   default_message_frequency TEXT DEFAULT 'always',

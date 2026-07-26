@@ -15,7 +15,7 @@ export const PROVIDER_CONFIG: Record<CopilotProviderKind, ProviderConfigEntry> =
   deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1/chat/completions', defaultModel: 'deepseek-chat' },
   // Google's OpenAI-compatibility endpoint, not the native generateContent API — lets Gemini share
   // the same adapter as the other 4 instead of a bespoke streaming/tool-calling implementation.
-  gemini: { label: 'Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', defaultModel: 'gemini-1.5-flash' },
+  gemini: { label: 'Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', defaultModel: 'gemini-2.0-flash' },
 }
 
 /** BYOK model picker — starts with 1-2 models per provider, meant to grow. */
@@ -28,7 +28,7 @@ export const COPILOT_MODEL_CATALOG: Record<CopilotProviderKind, { value: string;
   openai: [{ value: 'gpt-4o-mini', label: 'GPT-4o mini' }],
   openrouter: [{ value: 'openai/gpt-4o-mini', label: 'GPT-4o mini (OpenRouter)' }],
   deepseek: [{ value: 'deepseek-chat', label: 'DeepSeek Chat' }],
-  gemini: [{ value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' }],
+  gemini: [{ value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' }],
 }
 
 export const COPILOT_MAX_TOKENS = 4096
