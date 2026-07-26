@@ -30,6 +30,7 @@ export interface ProductFormApi {
   errors: ProductFormErrors
   saving: boolean
   isEdit: boolean
+  channelAccountId: string
   setField: <K extends ProductFormField>(key: K, value: ProductFormState[K]) => void
   submit: (e: React.FormEvent) => void
 }
