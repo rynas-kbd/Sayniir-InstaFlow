@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // GET /api/rules — list rules for the current user
@@ -82,6 +83,6 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(rule, { status: 201 })
 }

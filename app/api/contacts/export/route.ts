@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`
-  return value
-}
+import { csvEscape } from '@/lib/security/csv-escape'
 
 // GET /api/contacts/export?accountId=...
 export async function GET(request: NextRequest) {

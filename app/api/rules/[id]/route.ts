@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // PATCH /api/rules/[id] — update a rule
@@ -42,7 +43,7 @@ export async function PATCH(
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(rule)
 }
 
@@ -62,6 +63,6 @@ export async function DELETE(
     .delete()
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json({ success: true })
 }

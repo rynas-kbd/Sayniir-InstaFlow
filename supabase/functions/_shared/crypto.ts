@@ -59,14 +59,18 @@ export async function decryptApiKey(enc: string): Promise<string> {
   return decoder.decode(plainBuffer);
 }
 
+// Mirrors lib/crypto.ts's isEncrypted() so the Node and Deno runtimes agree
+// on whether the same stored value counts as "encrypted" — additionally
+// checks the IV segment decodes to exactly 12 bytes (AES-GCM's fixed IV
+// length here), not just that both segments are valid base64.
 export function isEncrypted(value: string): boolean {
   if (!value) return false;
   const parts = value.split(':');
   if (parts.length !== 2) return false;
   try {
-    decodeBase64(parts[0]);
+    const iv = decodeBase64(parts[0]);
     decodeBase64(parts[1]);
-    return true;
+    return iv.length === 12;
   } catch {
     return false;
   }

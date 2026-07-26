@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidShopifyDomain } from '@/lib/security/shopify-domain'
+import { jsonError } from '@/lib/api/errors'
 
 interface ShopifyVariant {
   price: string
@@ -45,6 +47,12 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
   if (!connection) return NextResponse.json({ error: 'Aucune boutique Shopify connectée.' }, { status: 400 })
 
+  // Re-validate on every read, not just at connect time — a row persisted
+  // before this check existed (or written directly) must not keep firing.
+  if (!isValidShopifyDomain(connection.shop_domain)) {
+    return NextResponse.json({ error: 'Domaine Shopify enregistré invalide. Reconnectez la boutique.' }, { status: 400 })
+  }
+
   const res = await fetch(`https://${connection.shop_domain}/admin/api/2024-01/products.json?limit=250`, {
     headers: { 'X-Shopify-Access-Token': connection.access_token },
   })
@@ -56,12 +64,12 @@ export async function POST(request: NextRequest) {
   const mapped = shopifyProducts.map((p) => normalizeShopifyProduct(p, accountId))
 
   const { error: deleteError } = await supabase.from('products').delete().eq('channel_account_id', accountId)
-  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  if (deleteError) return jsonError(500, 'Impossible de supprimer les anciens produits', deleteError)
 
   const { data: inserted, error } = mapped.length
     ? await supabase.from('products').insert(mapped).select()
     : { data: [], error: null }
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, "Impossible d'importer les produits Shopify", error)
 
   await supabase
     .from('shopify_connections')

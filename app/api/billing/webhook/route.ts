@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const REPLAY_TOLERANCE_SECONDS = 300
+
 // Verifies the Stripe-Signature header per Stripe's documented HMAC scheme:
 // header = "t=<timestamp>,v1=<hex hmac-sha256(secret, `${timestamp}.${rawBody}`)>"
-function verifyStripeSignature(rawBody: string, signatureHeader: string, secret: string): boolean {
+// Returns the timestamp on success so the caller can additionally enforce
+// freshness — the signature alone doesn't expire, so without a timestamp
+// check a captured request body is replayable indefinitely.
+function verifyStripeSignature(rawBody: string, signatureHeader: string, secret: string): number | null {
   const parts = Object.fromEntries(
     signatureHeader.split(',').map((p) => {
       const [k, v] = p.split('=')
@@ -13,13 +18,16 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string, secret:
   )
   const timestamp = parts.t
   const expectedSig = parts.v1
-  if (!timestamp || !expectedSig) return false
+  if (!timestamp || !expectedSig) return null
 
   const computed = createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex')
   const computedBuf = Buffer.from(computed, 'hex')
   const expectedBuf = Buffer.from(expectedSig, 'hex')
-  if (computedBuf.length !== expectedBuf.length) return false
-  return timingSafeEqual(computedBuf, expectedBuf)
+  if (computedBuf.length !== expectedBuf.length) return null
+  if (!timingSafeEqual(computedBuf, expectedBuf)) return null
+
+  const parsedTimestamp = Number(timestamp)
+  return Number.isFinite(parsedTimestamp) ? parsedTimestamp : null
 }
 
 // POST /api/billing/webhook — Stripe webhook. Activates a subscription on
@@ -33,12 +41,37 @@ export async function POST(request: NextRequest) {
 
   const rawBody = await request.text()
   const signatureHeader = request.headers.get('stripe-signature')
-  if (!signatureHeader || !verifyStripeSignature(rawBody, signatureHeader, webhookSecret)) {
+  const eventTimestamp = signatureHeader ? verifyStripeSignature(rawBody, signatureHeader, webhookSecret) : null
+  if (eventTimestamp === null) {
     return NextResponse.json({ error: 'Signature invalide' }, { status: 400 })
+  }
+
+  // Reject stale requests — the signature itself never expires, so without
+  // this a captured webhook body is replayable indefinitely.
+  if (Math.abs(Date.now() / 1000 - eventTimestamp) > REPLAY_TOLERANCE_SECONDS) {
+    return NextResponse.json({ error: 'Requête expirée' }, { status: 400 })
   }
 
   const event = JSON.parse(rawBody)
   const supabase = createAdminClient()
+
+  // Dedup on event.id — replaying a previously-processed event (e.g.
+  // checkout.session.completed) would otherwise extend expires_at by
+  // another month and re-activate accounts on every replay.
+  if (event.id) {
+    const { error: dedupError } = await supabase
+      .from('stripe_webhook_events')
+      .insert({ event_id: event.id, event_type: event.type })
+    if (dedupError) {
+      // Unique violation → already processed. Any other error we log and
+      // still proceed rather than dropping a legitimate event on an
+      // infrastructure hiccup.
+      if (dedupError.code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+      console.error('[billing:webhook] Failed to record event id:', dedupError)
+    }
+  }
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object

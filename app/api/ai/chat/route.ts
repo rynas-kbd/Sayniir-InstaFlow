@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'channelAccountId et message sont requis' }, { status: 400 })
   }
 
-  const { data: account } = await supabase.from('channel_accounts').select('id').eq('id', channelAccountId).maybeSingle()
+  // Explicit ownership check for defense in depth, matching every other
+  // per-resource route — RLS alone would still block a cross-tenant read
+  // today, but this doesn't rely on that being the only line of defense.
+  const { data: account } = await supabase.from('channel_accounts').select('id').eq('id', channelAccountId).eq('user_id', user.id).maybeSingle()
   if (!account) return NextResponse.json({ error: 'Compte introuvable' }, { status: 404 })
 
   if (conversationId) {

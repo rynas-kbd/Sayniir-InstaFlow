@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { randomInt } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     : await adminSupabase.from('channel_accounts').insert(row)
 
   if (writeError) {
-    return NextResponse.json({ error: writeError.message }, { status: 500 })
+    return jsonError(500, 'Une erreur est survenue', writeError)
   }
 
   try {

@@ -1,8 +1,46 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Content-Security-Policy — shipped Report-Only for now (see
+ * docs/SECURITY_AUDIT.md). Report-Only never blocks anything; it only logs
+ * violations to the browser console, which is exactly what we want before
+ * committing to an enforcing policy on a codebase this size. Flip to
+ * `Content-Security-Policy` (drop `-Report-Only`) once a normal pass through
+ * the app shows no unexpected violations.
+ */
+function buildCsp(nonce: string): string {
+  return [
+    `default-src 'self'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `style-src 'self' 'unsafe-inline'`, // Tailwind/CSS-in-JS inline styles — documented tradeoff
+    `img-src 'self' blob: data: https:`,
+    `font-src 'self' data:`,
+    `connect-src 'self' https://*.supabase.co https://graph.instagram.com https://graph.facebook.com`,
+    `object-src 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `frame-ancestors 'none'`,
+  ].join('; ')
+}
+
+function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
+  response.headers.set('x-nonce', nonce)
+  response.headers.set('Content-Security-Policy-Report-Only', buildCsp(nonce))
+  return response
+}
+
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  // Generated before the Supabase client so it's present on every response
+  // path below, including the early redirects.
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-nonce', nonce)
+
+  let supabaseResponse = withSecurityHeaders(
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    nonce
+  )
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +54,10 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = withSecurityHeaders(
+            NextResponse.next({ request: { headers: requestHeaders } }),
+            nonce
+          )
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -32,7 +73,7 @@ export async function proxy(request: NextRequest) {
   if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    return withSecurityHeaders(NextResponse.redirect(url), nonce)
   }
 
   // Protect /admin routes — require role=admin, except /admin/login
@@ -40,7 +81,7 @@ export async function proxy(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
-      return NextResponse.redirect(url)
+      return withSecurityHeaders(NextResponse.redirect(url), nonce)
     }
     // Check admin role from profiles table
     const { data: profile } = await supabase
@@ -52,7 +93,7 @@ export async function proxy(request: NextRequest) {
     if (!profile || profile.role !== 'admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
+      return withSecurityHeaders(NextResponse.redirect(url), nonce)
     }
   }
 
@@ -66,7 +107,7 @@ export async function proxy(request: NextRequest) {
     if (profile?.role === 'admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/admin'
-      return NextResponse.redirect(url)
+      return withSecurityHeaders(NextResponse.redirect(url), nonce)
     }
   }
 
@@ -74,7 +115,7 @@ export async function proxy(request: NextRequest) {
   if (user && request.nextUrl.pathname === '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    return withSecurityHeaders(NextResponse.redirect(url), nonce)
   }
 
   return supabaseResponse

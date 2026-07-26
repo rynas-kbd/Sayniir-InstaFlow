@@ -1,4 +1,18 @@
 /**
+ * Constant-time string comparison (Deno-compatible — no Node.js `crypto`
+ * dependency). Used for the hub.verify_token handshake, which is a shared
+ * secret and shouldn't be compared with plain `===`.
+ */
+export function safeEqualStr(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b || a.length !== b.length) return false
+  let result = 0
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return result === 0
+}
+
+/**
  * Verify the X-Hub-Signature-256 header sent by Meta on every webhook POST.
  * Uses the native Web Crypto API (Deno-compatible — no Node.js dependencies).
  */
@@ -7,17 +21,24 @@ export async function verifyWebhookSignature(
   signature: string | null,
   appSecret: string
 ): Promise<boolean> {
-  if (!signature) return false
+  if (!signature || !appSecret) return false
 
   // Signature format: "sha256=<hex_digest>"
   const parts = signature.split('=')
   if (parts.length !== 2 || parts[0] !== 'sha256') return false
 
+  // Reject anything that isn't valid hex before .match() — an empty or
+  // malformed hex string (e.g. "sha256=") previously threw on the
+  // non-null-asserted .match() call, surfacing as an unhandled 500 instead
+  // of a clean 401.
+  const receivedHex = parts[1]
+  if (!/^[0-9a-f]+$/i.test(receivedHex) || receivedHex.length % 2 !== 0) return false
+
   const encoder = new TextEncoder()
   const keyData = encoder.encode(appSecret)
-  
-  const bodyData = typeof rawBody === 'string' 
-    ? encoder.encode(rawBody) 
+
+  const bodyData = typeof rawBody === 'string'
+    ? encoder.encode(rawBody)
     : new Uint8Array(rawBody)
 
   // Import the app secret as an HMAC-SHA256 key
@@ -32,8 +53,6 @@ export async function verifyWebhookSignature(
   // Compute the expected signature
   const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, bodyData)
 
-  // Convert the received hex signature to bytes
-  const receivedHex = parts[1]
   const receivedBytes = new Uint8Array(
     receivedHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
   )

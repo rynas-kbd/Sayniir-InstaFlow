@@ -32,9 +32,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/accounts?error=missing_code`)
   }
 
+  // Must reject when either side is missing, not only on mismatch — see
+  // app/api/auth/callback/route.ts for the same fix and rationale.
   const storedState = request.cookies.get('messenger_oauth_state')?.value
-  if (state && storedState && state !== storedState) {
-    return NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
+  if (!state || !storedState || state !== storedState) {
+    const rejected = NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
+    rejected.cookies.delete('messenger_oauth_state')
+    return rejected
   }
 
   try {

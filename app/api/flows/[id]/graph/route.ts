@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { quickUrlShapeCheck } from '@/lib/security/url-guard'
+import { jsonError } from '@/lib/api/errors'
 
 interface NodeInput {
   node_key: string
@@ -22,7 +24,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { data: flow } = await supabase.from('flows').select('id, channel_account_id').eq('id', id).single()
+  const { data: flow } = await supabase
+    .from('flows')
+    .select('id, channel_account_id, channel_accounts!inner(user_id)')
+    .eq('id', id)
+    .eq('channel_accounts.user_id', user.id)
+    .single()
   if (!flow) return NextResponse.json({ error: 'Flow not found' }, { status: 404 })
 
   const body = await request.json()
@@ -31,6 +38,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!nodes.some((n) => n.type === 'trigger')) {
     return NextResponse.json({ error: 'Un flow doit avoir exactement un nœud de déclenchement' }, { status: 400 })
+  }
+
+  // Save-time SSRF sanity check for external_request nodes — cheap shape
+  // check only (no DNS lookup); execution time re-validates authoritatively
+  // via assertSafeOutboundUrl since DNS answers can change between save and run.
+  for (const node of nodes) {
+    if (node.type === 'external_request' && typeof node.config?.url === 'string' && node.config.url) {
+      const shapeError = quickUrlShapeCheck(node.config.url)
+      if (shapeError) {
+        return NextResponse.json({ error: `URL invalide dans le nœud "${node.node_key}": ${shapeError}` }, { status: 400 })
+      }
+    }
   }
 
   const { error: rpcError } = await supabase.rpc('replace_flow_graph', {
@@ -49,7 +68,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })),
     p_graph_snapshot: body,
   })
-  if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 })
+  if (rpcError) return jsonError(500, 'Impossible d\'enregistrer le flow', rpcError)
 
   return NextResponse.json({ success: true })
 }

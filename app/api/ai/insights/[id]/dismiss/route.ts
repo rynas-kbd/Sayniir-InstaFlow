@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .select('id')
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   if (!data) return NextResponse.json({ error: 'Insight not found' }, { status: 404 })
 
   return NextResponse.json({ success: true })

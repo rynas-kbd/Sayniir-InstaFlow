@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // GET /api/tags?accountId=...
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: tags, error } = await supabase.from('tags').select('*').eq('channel_account_id', accountId).order('name')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(tags ?? [])
 }
 
@@ -42,6 +43,6 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(tag, { status: 201 })
 }

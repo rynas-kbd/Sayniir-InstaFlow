@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // POST /api/contacts/[id]/tags — { tag_id, channel_account_id }
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .from('contact_tags')
     .upsert({ contact_id: id, tag_id, channel_account_id }, { onConflict: 'contact_id,tag_id' })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json({ success: true })
 }
 
@@ -36,6 +37,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (!tagId) return NextResponse.json({ error: 'tagId required' }, { status: 400 })
 
   const { error } = await supabase.from('contact_tags').delete().eq('contact_id', id).eq('tag_id', tagId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json({ success: true })
 }

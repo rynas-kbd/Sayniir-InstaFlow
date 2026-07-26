@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { randomBytes } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!flowId) return NextResponse.json({ error: 'flowId required' }, { status: 400 })
 
   const { data: links, error } = await supabase.from('growth_links').select('*').eq('flow_id', flowId).order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(links ?? [])
 }
 
@@ -43,6 +44,6 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(link, { status: 201 })
 }

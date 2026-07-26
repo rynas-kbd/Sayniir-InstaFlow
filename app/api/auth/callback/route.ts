@@ -32,10 +32,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/accounts?error=missing_code`)
   }
 
-  // CSRF: Validate state
+  // CSRF: Validate state — must reject when either side is missing, not
+  // only on mismatch. The initiator route (app/api/auth/facebook) always
+  // sets the oauth_state cookie, so a request missing `state` or the cookie
+  // is not a legitimate callback.
   const storedState = request.cookies.get('oauth_state')?.value
-  if (state && storedState && state !== storedState) {
-    return NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
+  if (!state || !storedState || state !== storedState) {
+    const rejected = NextResponse.redirect(`${appUrl}/accounts?error=invalid_state`)
+    rejected.cookies.delete('oauth_state')
+    return rejected
   }
 
   try {

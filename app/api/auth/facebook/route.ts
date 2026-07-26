@@ -7,7 +7,9 @@ import { getLoginUrl } from '@/lib/meta/oauth'
  * Uses a random `state` param to prevent CSRF attacks.
  */
 export async function GET() {
-  const state = Math.random().toString(36).substring(2, 15)
+  // crypto.randomUUID() — Math.random() is not cryptographically random and
+  // is unsuitable for a CSRF state token (predictable given enough samples).
+  const state = crypto.randomUUID()
   const loginUrl = getLoginUrl(state)
 
   const response = NextResponse.redirect(loginUrl)

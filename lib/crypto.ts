@@ -5,7 +5,7 @@
 
 /** Helper: convert a hex string (64 chars) to a Uint8Array of 32 bytes */
 function hexToBytes(hex: string): Uint8Array {
-  if (hex.length !== 64) {
+  if (hex.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(hex)) {
     throw new Error('SETTINGS_ENCRYPTION_KEY must be a 64‑character hex string (256‑bit)');
   }
   const bytes = new Uint8Array(32);
@@ -68,17 +68,25 @@ export async function decryptApiKey(enc: string): Promise<string> {
   return decoder.decode(plainBuffer);
 }
 
-/** Simple heuristic to decide if a stored value is already encrypted */
+const BASE64_RE = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/**
+ * Heuristic to decide if a stored value is already encrypted.
+ *
+ * Buffer.from(str, 'base64') never throws in Node — invalid characters are
+ * silently dropped — so the previous version's try/catch around it was dead
+ * code and this returned true for any string containing exactly one colon.
+ * This checks the base64 charset explicitly and additionally verifies the
+ * IV segment decodes to exactly 12 bytes (AES-GCM's fixed IV length here —
+ * see encryptApiKey), which a plaintext value with a stray colon won't
+ * coincidentally satisfy.
+ */
 export function isEncrypted(value: string): boolean {
   if (!value) return false;
   const parts = value.split(':');
   if (parts.length !== 2) return false;
-  try {
-    // Verify both parts are valid base64 strings
-    base64Decode(parts[0]);
-    base64Decode(parts[1]);
-    return true;
-  } catch {
-    return false;
-  }
+  const [ivB64, cipherB64] = parts;
+  if (!BASE64_RE.test(ivB64) || !BASE64_RE.test(cipherB64)) return false;
+  if (ivB64.length % 4 !== 0 || cipherB64.length % 4 !== 0) return false;
+  return base64Decode(ivB64).length === 12;
 }

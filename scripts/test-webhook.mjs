@@ -1,10 +1,18 @@
 import crypto from 'crypto';
 
-// Configuration - Vérifiez que ces valeurs correspondent à votre .env.local
-const APP_SECRET = '30e95006ee11b183d4b08890154e90e6'; // META_APP_SECRET
-const VERIFY_TOKEN = 'instaflow_super_secret_token_123'; // META_WEBHOOK_VERIFY_TOKEN
-const PAGE_ID = '17841441738471901'; // L'ID que vous avez mis dans Supabase
-const WEBHOOK_URL = 'http://localhost:3000/api/webhook/instagram';
+// Configuration — lue depuis l'environnement, jamais en dur (un ancien secret
+// codé en dur ici a fini dans l'historique git — voir docs/SECURITY_AUDIT.md).
+// Lancer avec : node --env-file=.env.local scripts/test-webhook.mjs
+const APP_SECRET = process.env.META_APP_SECRET;
+const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN;
+const PAGE_ID = process.env.TEST_WEBHOOK_PAGE_ID ?? '17841441738471901'; // L'ID que vous avez mis dans Supabase
+const WEBHOOK_URL = process.env.TEST_WEBHOOK_URL ?? 'http://localhost:3000/api/webhook/instagram';
+
+if (!APP_SECRET || !VERIFY_TOKEN) {
+  console.error('❌ META_APP_SECRET et META_WEBHOOK_VERIFY_TOKEN doivent être définis dans l\'environnement.');
+  console.error('   Lancer avec : node --env-file=.env.local scripts/test-webhook.mjs');
+  process.exit(1);
+}
 
 /**
  * Simule un payload de message Instagram venant de Meta

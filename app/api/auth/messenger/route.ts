@@ -12,7 +12,9 @@ export async function GET() {
     return NextResponse.redirect(`${appUrl}/accounts?error=config_missing`)
   }
 
-  const state = Math.random().toString(36).substring(2, 15)
+  // crypto.randomUUID() — Math.random() is not cryptographically random and
+  // is unsuitable for a CSRF state token.
+  const state = crypto.randomUUID()
   const loginUrl = getLoginUrl(state)
 
   const response = NextResponse.redirect(loginUrl)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { encryptApiKey, decryptApiKey, isEncrypted } from '@/lib/crypto'
 import { createClient } from '@/lib/supabase/server'
 
@@ -139,7 +140,7 @@ export async function PATCH(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
 
   const responseData = { ...settings };
   // Decrypt before masking for internal use if needed

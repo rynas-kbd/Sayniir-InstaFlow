@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidShopifyDomain } from '@/lib/security/shopify-domain'
+import { jsonError } from '@/lib/api/errors'
 
 // POST /api/shopify/connect
 // Body: { accountId, shopDomain, accessToken } — accessToken is a Shopify custom-app Admin API token.
@@ -23,7 +25,13 @@ export async function POST(request: NextRequest) {
     .single()
   if (!account) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const domain = shopDomain.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const domain = shopDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+  // SSRF guard — without this, `domain` is an attacker-controlled host that
+  // the server fetches with a caller-supplied bearer token attached.
+  if (!isValidShopifyDomain(domain)) {
+    return NextResponse.json({ error: 'Domaine Shopify invalide. Attendu : votre-boutique.myshopify.com' }, { status: 400 })
+  }
 
   const verifyRes = await fetch(`https://${domain}/admin/api/2024-01/shop.json`, {
     headers: { 'X-Shopify-Access-Token': accessToken },
@@ -41,7 +49,7 @@ export async function POST(request: NextRequest) {
     },
     { onConflict: 'channel_account_id' }
   )
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Impossible d\'enregistrer la connexion Shopify', error)
 
   return NextResponse.json({ connected: true, shopDomain: domain })
 }

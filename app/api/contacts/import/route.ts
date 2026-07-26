@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const KNOWN_COLUMNS = new Set(['full_name', 'username', 'phone', 'email', 'tags'])
+const MAX_ROWS = 2000
+const MAX_CUSTOM_FIELD_KEYS = 50
+const MAX_CUSTOM_FIELD_VALUE_LENGTH = 1000
 
 // POST /api/contacts/import — { channel_account_id, rows: Record<string,string>[] }
 // Matches existing contacts by phone or email; unmatched rows are skipped
@@ -18,6 +21,9 @@ export async function POST(request: NextRequest) {
   const { channel_account_id, rows } = body as { channel_account_id: string; rows: Record<string, string>[] }
   if (!channel_account_id || !Array.isArray(rows)) {
     return NextResponse.json({ error: 'channel_account_id et rows sont requis' }, { status: 400 })
+  }
+  if (rows.length > MAX_ROWS) {
+    return NextResponse.json({ error: `Maximum ${MAX_ROWS} lignes par import` }, { status: 400 })
   }
 
   const { data: account } = await supabase.from('channel_accounts').select('id').eq('id', channel_account_id).eq('user_id', user.id).single()
@@ -48,7 +54,9 @@ export async function POST(request: NextRequest) {
 
     const customFields: Record<string, string> = { ...(contact.custom_fields ?? {}) }
     for (const [key, value] of Object.entries(row)) {
-      if (!KNOWN_COLUMNS.has(key) && value) customFields[key] = value
+      if (KNOWN_COLUMNS.has(key) || !value) continue
+      if (Object.keys(customFields).length >= MAX_CUSTOM_FIELD_KEYS && !(key in customFields)) continue
+      customFields[key] = String(value).slice(0, MAX_CUSTOM_FIELD_VALUE_LENGTH)
     }
 
     const updates: Record<string, unknown> = { custom_fields: customFields }

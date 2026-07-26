@@ -2,9 +2,32 @@ import { createAdminClient } from '../supabase/admin'
 import { callAgentLLM } from '../agent/engine'
 import { addTag, removeTag, getContact } from '../contacts/service'
 import { renderTemplate } from '../personalization'
+import { assertSafeOutboundUrl, UnsafeUrlError } from '../security/url-guard'
 import type { FlowNode, NodeExecContext, NodeResult } from './types'
 import type { ChannelButton } from '../channels/types'
 import type { Contact } from '../contacts/types'
+
+const EXTERNAL_REQUEST_MAX_RESPONSE_BYTES = 64 * 1024
+
+/** Reads at most `maxBytes` of a response body, discarding the rest. */
+async function readCapped(res: Response, maxBytes: number): Promise<string> {
+  const reader = res.body?.getReader()
+  if (!reader) return ''
+  const decoder = new TextDecoder()
+  let result = ''
+  let total = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {})
+      break
+    }
+    result += decoder.decode(value, { stream: true })
+  }
+  return result
+}
 
 interface CardButtonConfig {
   type?: 'postback' | 'web_url'
@@ -120,18 +143,25 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
 
       if (url) {
         try {
+          // SSRF guard — url is set by the merchant in the flow builder, so it
+          // must never be trusted as a safe fetch target (private IPs, cloud
+          // metadata endpoints, etc). See lib/security/url-guard.ts.
+          const safeUrl = await assertSafeOutboundUrl(url)
           const contact = ctx.run.contact_id ? await getContact(ctx.account.id, ctx.run.contact_id) : null
           const controller = new AbortController()
           const timeout = setTimeout(() => controller.abort(), 8000)
-          const res = await fetch(url, {
+          const res = await fetch(safeUrl, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: method === 'GET' ? undefined : renderTemplate(bodyTemplate, contact) || undefined,
             signal: controller.signal,
+            redirect: 'manual', // following redirects could land on a blocked address the guard already rejected
           }).finally(() => clearTimeout(timeout))
 
-          if (saveAs) {
-            const text = await res.text().catch(() => '')
+          if (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400)) {
+            console.error('[flows:external_request] Refused to follow redirect from', safeUrl.hostname)
+          } else if (saveAs) {
+            const text = await readCapped(res, EXTERNAL_REQUEST_MAX_RESPONSE_BYTES)
             let parsed: unknown = text
             try {
               parsed = JSON.parse(text)
@@ -145,7 +175,11 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
               .eq('id', ctx.run.id)
           }
         } catch (err) {
-          console.error('[flows:external_request] Request failed:', err)
+          if (err instanceof UnsafeUrlError) {
+            console.error('[flows:external_request] Blocked unsafe URL:', err.message)
+          } else {
+            console.error('[flows:external_request] Request failed:', err)
+          }
         }
       }
       return { type: 'continue', handle: 'default' }

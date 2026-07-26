@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { jsonError } from '@/lib/api/errors'
+
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+const MAX_ROWS = 5000
 
 // POST /api/products/import
 // Body: multipart/form-data with "file" (CSV or JSON) and "accountId"
@@ -15,6 +19,9 @@ export async function POST(request: NextRequest) {
 
   if (!file || !accountId) {
     return NextResponse.json({ error: 'file et accountId requis' }, { status: 400 })
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return NextResponse.json({ error: 'Fichier trop volumineux (5 Mo maximum)' }, { status: 400 })
   }
 
   // Parse custom column mapping if provided
@@ -59,6 +66,9 @@ export async function POST(request: NextRequest) {
   if (rows.length === 0) {
     return NextResponse.json({ error: 'Aucune donnée trouvée dans le fichier.' }, { status: 400 })
   }
+  if (rows.length > MAX_ROWS) {
+    return NextResponse.json({ error: `Maximum ${MAX_ROWS} lignes par import` }, { status: 400 })
+  }
 
   // Normalize rows into product records
   const products = rows.map((row) => normalizeRow(row, accountId, customMapping)).filter(
@@ -74,7 +84,7 @@ export async function POST(request: NextRequest) {
     .insert(products)
     .select()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, "Impossible d'importer les produits", error)
   return NextResponse.json({ imported: inserted?.length ?? 0, products: inserted })
 }
 
@@ -119,17 +129,20 @@ function splitCSVLine(line: string): string[] {
 function normalizeRow(row: Record<string, string>, accountId: string, customMapping?: Record<string, string>) {
   // Helper to get value from row using custom mapping or fallback patterns
   const getValue = (field: string, fallbacks: string[]): string => {
+    // Coerce defensively — a raw JSON import can put any type in a "row"
+    // (e.g. `[{name: {}, price: 1}]`), and .trim() on a non-string throws.
+    const asString = (v: unknown): string => (typeof v === 'string' ? v.trim() : v != null ? String(v).trim() : '')
     // Check if there's a custom mapping for this field
     if (customMapping) {
       const mappedColumn = Object.entries(customMapping).find(([, targetField]) => targetField === field)?.[0]
       if (mappedColumn && row[mappedColumn] !== undefined) {
-        return row[mappedColumn].trim()
+        return asString(row[mappedColumn])
       }
     }
     // Fall back to automatic detection
     const lowerRow = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
     for (const key of fallbacks) {
-      if (lowerRow[key]) return lowerRow[key].trim()
+      if (lowerRow[key]) return asString(lowerRow[key])
     }
     return ''
   }

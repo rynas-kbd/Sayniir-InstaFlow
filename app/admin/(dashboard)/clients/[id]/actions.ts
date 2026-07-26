@@ -1,10 +1,18 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/require-admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { PlanKey } from '@/lib/plans'
 import type { AdminUserAttributes } from '@supabase/supabase-js'
+
+// SECURITY: every exported action in this file uses the service-role client
+// (bypasses RLS) and is reachable directly via a `Next-Action` POST to any
+// route the caller can hit — proxy.ts's /admin role gate only protects page
+// renders, not Server Action invocations. requireAdmin() is the only thing
+// standing between a logged-in free-tier user and full admin control. Do not
+// remove it as "redundant" with proxy.ts — it is not redundant.
 
 /**
  * Mettre à jour l'abonnement d'un client (plan, dates, montant, notes).
@@ -19,6 +27,7 @@ export async function updateSubscription(
     payment_notes: string | null
   }
 ) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { data: existingSub } = await supabase
@@ -81,6 +90,7 @@ export async function addKeyword(
   keyword: string,
   replyText: string
 ) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase.from('automation_rules').insert({
@@ -100,6 +110,7 @@ export async function addKeyword(
  * Supprimer une règle d'automatisation.
  */
 export async function deleteKeyword(ruleId: string, userId: string) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -115,6 +126,7 @@ export async function deleteKeyword(ruleId: string, userId: string) {
  * Basculer l'état actif/inactif d'une règle.
  */
 export async function toggleKeyword(ruleId: string, isActive: boolean, userId: string) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -130,8 +142,9 @@ export async function toggleKeyword(ruleId: string, isActive: boolean, userId: s
  * Mettre à jour le profil (Nom, Email, Mot de passe)
  */
 export async function updateProfile(userId: string, data: { full_name: string; email: string; new_password?: string }) {
+  await requireAdmin()
   const supabase = createAdminClient()
-  
+
   if (data.email || data.new_password) {
     const updateData: AdminUserAttributes = {}
     if (data.email) updateData.email = data.email
@@ -159,6 +172,7 @@ export async function updateProfile(userId: string, data: { full_name: string; e
  * Changer le rôle d'un utilisateur (client ↔ admin).
  */
 export async function changeRole(userId: string, role: 'client' | 'admin') {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -176,6 +190,7 @@ export async function changeRole(userId: string, role: 'client' | 'admin') {
  * Sauvegarder les notes privées de l'admin sur un profil.
  */
 export async function saveAdminNotes(userId: string, notes: string) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -192,8 +207,9 @@ export async function saveAdminNotes(userId: string, notes: string) {
  * Supprimer complètement un client
  */
 export async function deleteClient(userId: string) {
+  await requireAdmin()
   const supabase = createAdminClient()
-  
+
   const { error } = await supabase.auth.admin.deleteUser(userId)
   
   if (error) {

@@ -7,6 +7,7 @@ import { getAdapter } from '../registry'
 import { findChannelAccountByExternalId } from './lookup'
 import { upsertContact, getContact } from '../../contacts/service'
 import { renderTemplate } from '../../personalization'
+import { safeEqualStr } from '../../security/compare'
 import {
   runFlowsForInbound,
   runFlowsForInboundComment,
@@ -794,7 +795,7 @@ export function createWebhookRoute(platform: Platform) {
     const challenge = url.searchParams.get('hub.challenge')
     const verifyToken = process.env[VERIFY_TOKEN_ENV[platform]]
 
-    if (mode === 'subscribe' && token === verifyToken) {
+    if (mode === 'subscribe' && safeEqualStr(token, verifyToken)) {
       return new NextResponse(challenge, { status: 200 })
     }
     return new NextResponse('Forbidden', { status: 403 })
@@ -803,8 +804,16 @@ export function createWebhookRoute(platform: Platform) {
   async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get('x-hub-signature-256')
-    const appSecret = process.env[APP_SECRET_ENV[platform]] ?? ''
+    const appSecret = process.env[APP_SECRET_ENV[platform]]
     const adapter = getAdapter(platform)
+
+    // Fail closed when the app secret isn't configured — computing the HMAC
+    // with an empty-string key (the previous `?? ''` fallback) means anyone
+    // can compute a "valid" signature for a forged payload.
+    if (!appSecret) {
+      console.error(`[webhook:${platform}] ${APP_SECRET_ENV[platform]} is not configured`)
+      return new NextResponse('Service Unavailable', { status: 503 })
+    }
 
     if (!adapter.verifyWebhookSignature(rawBody, signature, appSecret)) {
       return new NextResponse('Unauthorized', { status: 401 })

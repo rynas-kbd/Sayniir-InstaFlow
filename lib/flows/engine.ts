@@ -3,6 +3,7 @@ import { getAdapter } from '../channels/registry'
 import { matchesMessageTrigger, matchesCommentTrigger } from './matcher'
 import { executeNode } from './nodes'
 import { getContact, setContactFields } from '../contacts/service'
+import { resolveAccessToken } from '../channels/shared/tokens'
 import type { ChannelAccountRef, Platform } from '../channels/types'
 import type { FlowNode, FlowEdge, FlowRun, NodeExecContext } from './types'
 
@@ -61,7 +62,13 @@ async function continueRun(
     console.error(`[flows:continueRun] ❌ externalId is EMPTY for account=${account.id} — messages will fail!`)
   }
 
-  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
+  // account.access_token may arrive either already-decrypted (webhook path,
+  // via lib/channels/shared/lookup.ts) or still AES-GCM encrypted (cron path,
+  // app/api/admin/flow-runs/route.ts reads the raw DB column). resolveAccessToken
+  // is a no-op on an already-plaintext value, so this is safe for both callers.
+  // See docs/SECURITY_AUDIT.md P1-4 — without this, the cron path sends
+  // ciphertext to Graph API, which gets rejected and deactivates the account.
+  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: await resolveAccessToken(account.access_token) }
   const ctx: NodeExecContext = { account, ref, adapter, run, agentArgs }
 
   // The node at current_node_key has already "fired" — either it's the

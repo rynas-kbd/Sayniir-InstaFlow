@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // GET /api/shopify?accountId=... — connection status for a channel account.
@@ -49,7 +50,7 @@ export async function DELETE(request: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { error } = await supabase.from('shopify_connections').delete().eq('channel_account_id', accountId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
 
   return NextResponse.json({ disconnected: true })
 }

@@ -1,5 +1,6 @@
 import {
   verifyWebhookSignature,
+  safeEqualStr,
   parseWebhookMessaging,
   parseWebhookComments,
   type WebhookPayload,
@@ -19,7 +20,7 @@ Deno.serve(async (req) => {
     const challenge = url.searchParams.get('hub.challenge')
     const verifyToken = Deno.env.get('META_WEBHOOK_VERIFY_TOKEN')
 
-    if (mode === 'subscribe' && token === verifyToken) {
+    if (mode === 'subscribe' && safeEqualStr(token, verifyToken)) {
       console.log('[Webhook] ✅ Verification successful')
       return new Response(challenge, { status: 200 })
     }
@@ -34,7 +35,16 @@ Deno.serve(async (req) => {
   if (req.method === 'POST') {
     const rawBody = await req.text()
     const signature = req.headers.get('x-hub-signature-256')
-    const appSecret = Deno.env.get('META_INSTAGRAM_APP_SECRET') ?? ''
+    const appSecret = Deno.env.get('META_INSTAGRAM_APP_SECRET')
+
+    // Fail closed when the app secret isn't configured — the previous
+    // `?? ''` fallback computed the HMAC with an empty-string key, which
+    // anyone can also compute, turning "verification enabled" into
+    // "verification forgeable".
+    if (!appSecret) {
+      console.error('[Webhook] META_INSTAGRAM_APP_SECRET is not configured')
+      return new Response('Service Unavailable', { status: 503 })
+    }
 
     // Verify HMAC-SHA256 signature (now async using Web Crypto API)
     const isValid = await verifyWebhookSignature(rawBody, signature, appSecret)

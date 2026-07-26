@@ -3,6 +3,7 @@ import { getAdapter } from '../channels/registry'
 import { resolveAudience, resolveSegment } from '../contacts/service'
 import { TokenExpiredError } from '../meta/messaging'
 import { renderTemplate } from '../personalization'
+import { resolveAccessToken } from '../channels/shared/tokens'
 import type { ChannelAccountRef, Platform } from '../channels/types'
 import type { Contact } from '../contacts/types'
 
@@ -56,7 +57,11 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
     .limit(limit)
 
   const adapter = getAdapter(account.platform as Platform)
-  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: account.access_token }
+  // access_token is stored AES-GCM encrypted (see lib/channels/shared/tokens.ts)
+  // — must be resolved before use or Graph API rejects it as invalid,
+  // which the error handler below interprets as "revoked" and deactivates
+  // the account. See docs/SECURITY_AUDIT.md P1-4.
+  const ref: ChannelAccountRef = { id: account.id, externalId, accessToken: await resolveAccessToken(account.access_token) }
 
   const MESSAGING_WINDOW_MS = 24 * 60 * 60 * 1000
 

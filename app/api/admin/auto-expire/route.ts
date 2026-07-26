@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { safeEqualStr } from '@/lib/security/compare'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !safeEqualStr(authHeader, `Bearer ${cronSecret}`)) {
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[AutoExpire] Error fetching subscriptions:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return jsonError(500, 'Une erreur est survenue', error)
   }
 
   if (!expiredSubs || expiredSubs.length === 0) {

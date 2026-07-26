@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resumeRun } from '@/lib/flows/engine'
 import { enqueueRecipients, sendBatch } from '@/lib/campaigns/service'
 import { isEncrypted, decryptApiKey } from '@/lib/crypto'
 import { refreshAllAccountFindings } from '@/lib/ai/lint/run'
+import { safeEqualStr } from '@/lib/security/compare'
 import type { Platform } from '@/lib/channels/types'
 
 export const runtime = 'nodejs'
@@ -20,7 +22,7 @@ const BATCH_LIMIT = 50
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !safeEqualStr(authHeader, `Bearer ${cronSecret}`)) {
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
     .lte('resume_at', now)
     .limit(BATCH_LIMIT)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
 
   let resumed = 0
   if (dueRuns && dueRuns.length > 0) {

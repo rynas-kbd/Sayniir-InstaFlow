@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // GET /api/flows/[id] — flow + nodes + edges
@@ -38,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   updates.updated_at = new Date().toISOString()
 
   const { data: flow, error } = await supabase.from('flows').update(updates).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json(flow)
 }
 
@@ -52,6 +53,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   const { id } = await params
   const { error } = await supabase.from('flows').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json({ success: true })
 }

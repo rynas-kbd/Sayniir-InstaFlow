@@ -1,15 +1,23 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/require-admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
+// SECURITY: uses the service-role client (bypasses RLS) and is reachable
+// directly via a `Next-Action` POST — proxy.ts's /admin role gate only
+// protects page renders, not Server Action invocations. requireAdmin() is
+// the only thing standing between a logged-in free-tier user and creating
+// arbitrary accounts (including admin ones). Do not remove it as
+// "redundant" with proxy.ts — it is not redundant.
 export async function createUser(data: {
   full_name: string
   email: string
   password: string
   role: 'client' | 'admin'
 }) {
+  await requireAdmin()
   const supabase = createAdminClient()
 
   const {

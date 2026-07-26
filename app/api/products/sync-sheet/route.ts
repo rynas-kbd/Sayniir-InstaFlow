@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // POST /api/products/sync-sheet
@@ -69,14 +70,14 @@ export async function POST(request: NextRequest) {
     .delete()
     .eq('channel_account_id', accountId)
 
-  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  if (deleteError) return jsonError(500, 'Une erreur est survenue', deleteError)
 
   const { data: inserted, error } = await supabase
     .from('products')
     .insert(products)
     .select()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
   return NextResponse.json({ synced: inserted?.length ?? 0, products: inserted })
 }
 
