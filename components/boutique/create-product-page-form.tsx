@@ -1,7 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ProductFormFields } from './product-form-fields'
+import { Card, CardContent } from '@/components/ui/card'
+import { useProductForm } from './product-form/use-product-form'
+import { ProductFormBody } from './product-form/product-form-body'
+import { ProductFormFooter } from './product-form/product-form-footer'
+import { ProductLivePreview } from './product-form/product-live-preview'
 import type { Product } from './types'
 
 export function CreateProductPageForm({ channelAccountId }: { channelAccountId: string }) {
@@ -16,5 +20,21 @@ export function CreateProductPageForm({ channelAccountId }: { channelAccountId: 
     if (!res.ok) throw new Error('Erreur')
   }
 
-  return <ProductFormFields channelAccountId={channelAccountId} onSave={handleCreate} onSaved={() => router.push('/boutique')} submitLabel="Créer" />
+  const api = useProductForm({ channelAccountId, onSave: handleCreate, onSaved: () => router.push('/boutique') })
+
+  return (
+    <form onSubmit={api.submit} noValidate className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex min-w-0 flex-col gap-4 lg:max-w-2xl">
+        <Card>
+          <CardContent className="pt-2">
+            <ProductFormBody api={api} autoFocusName />
+          </CardContent>
+        </Card>
+        <ProductFormFooter saving={api.saving} submitLabel="Créer" onCancel={() => router.push('/boutique')} className="justify-end" />
+      </div>
+      <aside className="lg:sticky lg:top-6 lg:self-start">
+        <ProductLivePreview form={api.form} />
+      </aside>
+    </form>
+  )
 }

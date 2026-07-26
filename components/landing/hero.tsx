@@ -1,10 +1,46 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CHANNELS } from '@/lib/landing-content'
 
 const ROTATE_INTERVAL_MS = 2600
+
+/** Renders one rotating channel name, shrinking it just enough to always fit on a single
+ *  line — never wraps, never overflows, never clips — instead of a fixed font-size that
+ *  works for short phrases but cuts off longer ones like "WhatsApp chats". */
+function RotatingChannel({ text }: { text: string }) {
+  const containerRef = useRef<HTMLSpanElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [scale, setScale] = useState(1)
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const el = textRef.current
+    if (!container || !el) return
+    const available = container.clientWidth
+    const needed = el.scrollWidth
+    setScale(needed > available ? available / needed : 1)
+  }, [text])
+
+  return (
+    <span ref={containerRef} className="block h-[1.04em] overflow-hidden">
+      <span
+        ref={textRef}
+        className="inline-block"
+        style={{
+          color: 'var(--organic-terracotta-700)',
+          whiteSpace: 'nowrap',
+          transform: `scale(${scale})`,
+          transformOrigin: 'left center',
+          animation: 'popIn .5s cubic-bezier(.16,1,.3,1) both',
+        }}
+      >
+        {text}
+      </span>
+    </span>
+  )
+}
 
 export function Hero() {
   const [channelIndex, setChannelIndex] = useState(0)
@@ -61,15 +97,7 @@ export function Hero() {
             style={{ marginLeft: '-0.028em', animation: 'fadeUp .6s .04s ease both' }}
           >
             <span className="block">Sell in the</span>
-            <span className="block h-[1.04em] overflow-hidden">
-              <span
-                key={channelIndex}
-                className="inline-block"
-                style={{ color: 'var(--organic-terracotta-700)', whiteSpace: 'nowrap', animation: 'popIn .5s cubic-bezier(.16,1,.3,1) both' }}
-              >
-                {CHANNELS[channelIndex]}
-              </span>
-            </span>
+            <RotatingChannel key={channelIndex} text={CHANNELS[channelIndex]} />
             <span className="block">while you sleep.</span>
           </h1>
 

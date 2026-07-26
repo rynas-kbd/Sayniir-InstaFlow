@@ -96,7 +96,11 @@ export interface PricingTier {
   tone: 'neutral' | 'a' | 's'
   priceMonthly: string
   priceAnnual: string
+  /** Undiscounted annual total (priceMonthly × 12), shown struck through next to priceAnnual. */
+  priceAnnualCrossedOut?: string
   period: string
+  /** Variant of `period` shown when the annual toggle is active — omit if identical to `period`. */
+  periodAnnual?: string
   features: string[]
   cta: string
   highlighted?: boolean
@@ -109,6 +113,7 @@ export const PRICING_TIERS: PricingTier[] = [
     priceMonthly: '$0',
     priceAnnual: '$0',
     period: 'forever · 1 channel',
+    periodAnnual: 'forever · 1 channel',
     features: ['1,000 contacts', 'Visual flow builder', 'Basic AI replies (100/mo)', 'Lead capture'],
     cta: 'Start free',
   },
@@ -117,7 +122,9 @@ export const PRICING_TIERS: PricingTier[] = [
     tone: 'a',
     priceMonthly: '$29',
     priceAnnual: '$290',
+    priceAnnualCrossedOut: '$348',
     period: 'per month · all 3 channels',
+    periodAnnual: 'per year · all 3 channels',
     features: ['10,000 contacts', 'Unlimited flows & broadcasts', 'Full AI replies, trained on your brand', 'CRM sync + integrations', 'Free migration from legacy tools'],
     cta: 'Start free trial',
     highlighted: true,
@@ -127,7 +134,9 @@ export const PRICING_TIERS: PricingTier[] = [
     tone: 's',
     priceMonthly: '$79',
     priceAnnual: '$790',
+    priceAnnualCrossedOut: '$948',
     period: 'per month · teams & agencies',
+    periodAnnual: 'per year · teams & agencies',
     features: ['Unlimited contacts', 'Shared team inbox, 10 seats', 'Agency workspaces & client reports', 'Priority support & onboarding'],
     cta: 'Book a demo',
   },

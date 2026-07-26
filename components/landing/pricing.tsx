@@ -50,16 +50,13 @@ export function Pricing() {
             className="relative z-10 rounded-full border-none px-4 py-2 text-[13.5px] font-bold transition-colors duration-300"
             style={{ color: billing === 'annual' ? 'var(--organic-terracotta-100)' : 'var(--organic-text)' }}
           >
-            Annual −20%
+            Annual −17%
           </button>
         </div>
       </div>
 
       <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-stretch gap-5">
         {PRICING_TIERS.map((tier) => {
-          // Detect if pricing is actually 0
-          const isFree = tier.priceMonthly === '$0'
-
           return (
             <div
               key={tier.tag}
@@ -84,7 +81,7 @@ export function Pricing() {
               </span>
 
               {/* Smooth transition container for price display */}
-              <div className="relative h-[56px] overflow-hidden">
+              <div className="relative h-[84px] overflow-hidden">
                 <div
                   className="flex flex-col transition-transform duration-300 ease-out"
                   style={{
@@ -93,24 +90,25 @@ export function Pricing() {
                   }}
                 >
                   {/* Monthly pricing view */}
-                  <div className="flex h-1/2 items-baseline gap-2">
+                  <div className="flex h-1/2 items-center gap-2">
                     <span className="font-heading text-[44px] leading-none">
                       {tier.priceMonthly}
                     </span>
                   </div>
 
-                  {/* Annual pricing view with strikethrough original monthly price + new discounted price */}
-                  <div className="flex h-1/2 items-baseline gap-2">
+                  {/* Annual pricing view: yearly total, undiscounted total + badge stacked below
+                      (not inline) so they never overflow the card on narrow widths */}
+                  <div className="flex h-1/2 flex-col justify-center gap-1">
                     <span className="font-heading text-[44px] leading-none">
                       {tier.priceAnnual}
                     </span>
-                    {!isFree && (
-                      <div className="flex items-baseline gap-1">
+                    {tier.priceAnnualCrossedOut && (
+                      <div className="flex flex-wrap items-baseline gap-1.5">
                         <span className="text-sm text-muted-foreground/60 line-through decoration-destructive/60">
-                          {tier.priceMonthly}
+                          {tier.priceAnnualCrossedOut}
                         </span>
                         <span className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-bold text-success">
-                          -20%
+                          -17%
                         </span>
                       </div>
                     )}
@@ -119,7 +117,7 @@ export function Pricing() {
               </div>
 
               <p className="mt-1.5 mb-5 text-[13.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
-                {tier.period}
+                {billing === 'annual' ? (tier.periodAnnual ?? tier.period) : tier.period}
               </p>
               <ul className="mb-6 flex flex-col gap-2.5 text-[14.5px]" style={{ listStyle: 'none', padding: 0 }}>
                 {tier.features.map((f) => (
