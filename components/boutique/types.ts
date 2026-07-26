@@ -1,9 +1,31 @@
+export type ProductKind = 'physical' | 'service' | 'digital' | 'subscription' | 'event'
+
+/** Per-kind free-form fields — see supabase/migrations/20260813_generalize_products.sql for the convention. */
+export interface ProductMetadata {
+  // service
+  duration_minutes?: number
+  location?: string
+  // digital
+  file_url?: string
+  download_limit?: number
+  // subscription
+  billing_period?: 'monthly' | 'yearly'
+  // event
+  event_date?: string
+  capacity?: number
+  remaining?: number
+}
+
 export interface Product {
   id: string
   channel_account_id: string
   name: string
   description: string | null
   price: number
+  currency: string
+  kind: ProductKind
+  metadata: ProductMetadata
+  /** physical-only — meaningful only when kind === 'physical' */
   sizes: string[]
   colors: string[]
   image_url: string | null

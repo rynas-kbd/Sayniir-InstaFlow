@@ -7,6 +7,9 @@ export interface AnalyticsSummary {
   totalAccounts: number
   responseRate: number
   newContacts: number
+  uniqueConversations: number
+  totalOutgoing: number
+  peakHour: number
 }
 
 export interface DayPoint {
@@ -26,7 +29,7 @@ export async function getAnalyticsSummary(userId: string, from: Date, to: Date):
   const accountIds = await getAccountIds(userId)
   const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
 
-  const [{ data: accounts }, { count: messagesReceived }, { count: autoReplies }, { count: newContacts }] = await Promise.all([
+  const [{ data: accounts }, { count: messagesReceived }, { count: autoReplies }, { count: newContacts }, { data: logs }] = await Promise.all([
     supabase.from('channel_accounts').select('id, is_active').in('id', safeIds),
     supabase
       .from('message_logs')
@@ -48,12 +51,31 @@ export async function getAnalyticsSummary(userId: string, from: Date, to: Date):
       .in('channel_account_id', safeIds)
       .gte('first_seen_at', from.toISOString())
       .lte('first_seen_at', to.toISOString()),
+    supabase
+      .from('message_logs')
+      .select('direction, created_at, contact_id')
+      .in('channel_account_id', safeIds)
+      .gte('created_at', from.toISOString())
+      .lte('created_at', to.toISOString()),
   ])
 
   const totalAccounts = accounts?.length ?? 0
   const activeAccounts = (accounts ?? []).filter((a) => a.is_active).length
   const received = messagesReceived ?? 0
   const replied = autoReplies ?? 0
+
+  const hourCounts = new Array(24).fill(0)
+  const uniqueContacts = new Set<string>()
+  let outgoing = 0
+
+  for (const log of logs ?? []) {
+    if (log.direction === 'outgoing') outgoing++
+    if (log.contact_id) uniqueContacts.add(log.contact_id)
+    const hour = new Date(log.created_at).getUTCHours()
+    hourCounts[hour]++
+  }
+
+  const peakHour = hourCounts.indexOf(Math.max(...hourCounts))
 
   return {
     messagesReceived: received,
@@ -62,6 +84,9 @@ export async function getAnalyticsSummary(userId: string, from: Date, to: Date):
     totalAccounts,
     responseRate: received > 0 ? Math.round((replied / received) * 100) : 0,
     newContacts: newContacts ?? 0,
+    uniqueConversations: uniqueContacts.size,
+    totalOutgoing: outgoing,
+    peakHour,
   }
 }
 

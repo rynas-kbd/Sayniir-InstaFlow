@@ -125,11 +125,16 @@ CREATE TABLE IF NOT EXISTS public.products (
   name TEXT NOT NULL,
   description TEXT,
   price DECIMAL(10, 2) NOT NULL,
+  -- physical-only fields — meaningful only when kind='physical'
   sizes TEXT[] DEFAULT '{}',
   colors TEXT[] DEFAULT '{}',
-  image_url TEXT,
   stock_quantity INT DEFAULT 0,
+  image_url TEXT,
   is_active BOOLEAN DEFAULT TRUE,
+  -- kind discriminator + free-form bag for non-physical kinds (see 20260813_generalize_products.sql)
+  kind TEXT NOT NULL DEFAULT 'physical' CHECK (kind IN ('physical', 'service', 'digital', 'subscription', 'event')),
+  metadata JSONB NOT NULL DEFAULT '{}',
+  currency TEXT NOT NULL DEFAULT 'DZD',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -165,7 +170,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   customer_phone TEXT NOT NULL,
   wilaya TEXT,
   delivery_mode TEXT,
-  shipping_address TEXT NOT NULL,
+  shipping_address TEXT, -- nullable: only required for kind='physical', enforced in lib/agent/ecommerce/state.ts
   product_name TEXT NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
   size TEXT,

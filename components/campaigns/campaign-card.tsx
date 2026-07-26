@@ -55,10 +55,12 @@ const STATUS_CONFIG = {
 export function CampaignCard({
   campaign: initialCampaign,
   sendCounts,
+  accountName,
   insights = [],
 }: {
   campaign: Campaign
   sendCounts: { sent: number; pending: number; failed: number }
+  accountName?: string | null
   insights?: AiInsight[]
 }) {
   const [campaign, setCampaign] = useState(initialCampaign)
@@ -200,7 +202,12 @@ export function CampaignCard({
           {/* Title */}
           <div>
             <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{campaign.name}</h3>
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+            {accountName && (
+              <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground/80">
+                {accountName}
+              </span>
+            )}
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
               <Users className="size-3 shrink-0" />
               {campaign.audience_tag_ids && campaign.audience_tag_ids.length > 0
                 ? `${campaign.audience_tag_ids.length} tag(s) d'audience`

@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Zap, Plus, MessageSquare, Hash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui/empty-state'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RuleFormDialog } from './rule-form-dialog'
@@ -23,6 +22,7 @@ export function AutomationClient({
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>(undefined)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'dm' | 'comment'>('dm')
+  const [, startTabTransition] = useTransition()
 
   const accountMap = Object.fromEntries(accounts.map((a) => [a.id, a]))
 
@@ -101,17 +101,43 @@ export function AutomationClient({
         <StatCard title="Commentaires" value={commentCount} />
       </div>
 
+      {/* Tab switcher */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dm' | 'comment')}>
-          <TabsList className="bg-muted/60 p-0.5 border border-border/40">
-            <TabsTrigger value="dm" className="px-4 py-1.5 text-xs font-medium">
-              Messages privés ({dmCount})
-            </TabsTrigger>
-            <TabsTrigger value="comment" className="px-4 py-1.5 text-xs font-medium">
-              Commentaires ({commentCount})
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="relative flex rounded-xl border border-border/40 bg-muted/50 p-0.5">
+          {/* Animated sliding indicator */}
+          <div
+            className="absolute top-0.5 bottom-0.5 rounded-lg bg-background shadow-sm transition-all duration-300 ease-out"
+            style={{
+              width: 'calc(50% - 2px)',
+              left: activeTab === 'dm' ? '2px' : 'calc(50%)',
+            }}
+          />
+          {[
+            { key: 'dm' as const, label: `Messages privés`, count: dmCount, icon: MessageSquare },
+            { key: 'comment' as const, label: `Commentaires`, count: commentCount, icon: Hash },
+          ].map(({ key, label, count, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => startTabTransition(() => setActiveTab(key))}
+              className="relative z-10 flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors duration-200"
+              style={{
+                color: activeTab === key ? 'var(--foreground)' : 'color-mix(in srgb, var(--foreground) 45%, transparent)',
+              }}
+            >
+              <Icon className="size-3.5" />
+              {label}
+              <span
+                className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
+                style={{
+                  background: activeTab === key ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)' : 'var(--muted)',
+                  color: activeTab === key ? 'var(--color-primary)' : 'color-mix(in srgb, var(--foreground) 40%, transparent)',
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
         {accounts.length > 0 && (
           <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
             <Plus className="size-4" /> Nouvelle règle
@@ -119,50 +145,56 @@ export function AutomationClient({
         )}
       </div>
 
-      {accounts.length === 0 ? (
-        <EmptyState
-          icon={Zap}
-          title="Aucun compte connecté"
-          description="Connectez d'abord un compte pour créer des règles d'automatisation."
-        />
-      ) : filteredRules.length === 0 ? (
-        <EmptyState
-          icon={activeTab === 'dm' ? MessageSquare : Hash}
-          title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
-          description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
-          action={
-            <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
-              <Plus className="size-4" /> Créer ma première règle
-            </Button>
-          }
-        />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredRules.map((rule) => (
-            <RuleCard
-              key={rule.id}
-              rule={rule}
-              account={accountMap[rule.channel_account_id]}
-              isToggling={busyId === rule.id}
-              isDeleting={busyId === `${rule.id}_del`}
-              onToggle={() => handleToggle(rule)}
-              onEdit={() => setEditingRule(rule)}
-              onDelete={() => handleDelete(rule.id)}
-            />
-          ))}
+      {/* Animated content area — key forces remount + CSS animation on tab switch */}
+      <div
+        key={activeTab}
+        className="animate-in fade-in slide-in-from-bottom-2 duration-200"
+      >
+        {accounts.length === 0 ? (
+          <EmptyState
+            icon={Zap}
+            title="Aucun compte connecté"
+            description="Connectez d'abord un compte pour créer des règles d'automatisation."
+          />
+        ) : filteredRules.length === 0 ? (
+          <EmptyState
+            icon={activeTab === 'dm' ? MessageSquare : Hash}
+            title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
+            description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
+            action={
+              <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
+                <Plus className="size-4" /> Créer ma première règle
+              </Button>
+            }
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredRules.map((rule) => (
+              <RuleCard
+                key={rule.id}
+                rule={rule}
+                account={accountMap[rule.channel_account_id]}
+                isToggling={busyId === rule.id}
+                isDeleting={busyId === `${rule.id}_del`}
+                onToggle={() => handleToggle(rule)}
+                onEdit={() => setEditingRule(rule)}
+                onDelete={() => handleDelete(rule.id)}
+              />
+            ))}
 
-          {/* Create new rule card button in the grid */}
-          <Link
-            href={`/automation/new?tab=${activeTab}`}
-            className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
-          >
-            <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
-              <Plus className="size-5" />
-            </div>
-            <span className="text-sm font-medium">Nouvelle règle</span>
-          </Link>
-        </div>
-      )}
+            {/* Create new rule card button in the grid */}
+            <Link
+              href={`/automation/new?tab=${activeTab}`}
+              className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+            >
+              <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+                <Plus className="size-5" />
+              </div>
+              <span className="text-sm font-medium">Nouvelle règle</span>
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

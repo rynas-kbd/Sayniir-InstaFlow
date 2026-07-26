@@ -17,11 +17,16 @@ export default async function FlowsPage() {
 
   const { data: accounts } = await supabase
     .from('channel_accounts')
-    .select('id')
+    .select('id, instagram_username, page_name, phone_number, platform')
     .eq('user_id', user!.id)
     .order('connected_at', { ascending: true })
 
   const account = accounts?.[0]
+  const accountName = account
+    ? account.platform === 'whatsapp'
+      ? account.phone_number ?? null
+      : `@${account.instagram_username ?? account.page_name ?? 'Compte'}`
+    : null
 
   if (!account) {
     return (
@@ -103,7 +108,7 @@ export default async function FlowsPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {safeFlows.map((flow) => (
-                <FlowCard key={flow.id} flow={flow} insights={insightsByFlowId.get(flow.id) ?? []} />
+                <FlowCard key={flow.id} flow={flow} accountName={accountName} insights={insightsByFlowId.get(flow.id) ?? []} />
               ))}
               {/* Add new card */}
               <Link

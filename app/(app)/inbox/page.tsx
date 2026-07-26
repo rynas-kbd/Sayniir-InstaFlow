@@ -1,17 +1,12 @@
-import Link from 'next/link'
 import { MessageSquare, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import { ConversationList } from '@/components/inbox/conversation-list'
 import { ConversationThread } from '@/components/inbox/conversation-thread'
+import { InboxFilterBar } from '@/components/inbox/inbox-filter-bar'
 import type { Conversation, MessageItem } from '@/components/inbox/types'
 
-const FILTERS = [
-  { key: 'all', label: 'Tous' },
-  { key: 'incoming', label: 'Reçus' },
-  { key: 'replied', label: 'Répondus' },
-  { key: 'unreplied', label: 'Sans réponse' },
-]
+
 
 export default async function InboxPage({
   searchParams,
@@ -175,40 +170,8 @@ export default async function InboxPage({
             )}
           </div>
 
-          {/* Filter pills */}
-          <div
-            className="flex gap-1 rounded-xl p-1 flex-row flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden select-none"
-            style={{
-              background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--organic-sand-400) 20%, transparent)',
-            }}
-          >
-            {FILTERS.map(({ key, label }) => {
-              const params = new URLSearchParams()
-              if (key !== 'all') params.set('filter', key)
-              if (activeConvId) params.set('conv', activeConvId)
-              const href = `/inbox${params.toString() ? `?${params.toString()}` : ''}`
-              const isActive = activeFilter === key
-              return (
-                <Link
-                  key={key}
-                  href={href}
-                  className="flex-1 rounded-lg px-1.5 py-1.5 text-center text-[10.5px] font-medium transition-all duration-150 whitespace-nowrap"
-                  style={
-                    isActive
-                      ? {
-                          background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
-                          color: 'var(--organic-terracotta-700)',
-                          boxShadow: '0 1px 3px color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
-                        }
-                      : { color: 'color-mix(in srgb, var(--foreground) 50%, transparent)' }
-                  }
-                >
-                  {label}
-                </Link>
-              )
-            })}
-          </div>
+          {/* Filter pills — client component for smooth transitions */}
+          <InboxFilterBar activeFilter={activeFilter} activeConvId={activeConvId} />
         </div>
 
         {/* Conversation list */}

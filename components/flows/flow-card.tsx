@@ -47,7 +47,7 @@ const NODE_ICONS: Partial<Record<FlowNodeType, React.ElementType>> = {
   remove_tag: Tag,
 }
 
-export function FlowCard({ flow: initialFlow, insights = [] }: { flow: FlowSummary; insights?: AiInsight[] }) {
+export function FlowCard({ flow: initialFlow, accountName, insights = [] }: { flow: FlowSummary; accountName?: string | null; insights?: AiInsight[] }) {
   const [flow, setFlow] = useState(initialFlow)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toggling, setToggling] = useState(false)
@@ -123,6 +123,13 @@ export function FlowCard({ flow: initialFlow, insights = [] }: { flow: FlowSumma
               <Zap className="size-3 shrink-0" />
               {getTriggerLabel(flow)}
             </p>
+            {accountName && (
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 font-medium">
+                  {accountName}
+                </span>
+              </p>
+            )}
           </div>
 
           {/* Date */}
