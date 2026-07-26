@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Zap, Plus, MessageSquare, Hash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,6 @@ export function AutomationClient({
   initialRules: AutomationRule[]
 }) {
   const [rules, setRules] = useState<AutomationRule[]>(initialRules)
-  const [showModal, setShowModal] = useState(false)
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>(undefined)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'dm' | 'comment'>('dm')
@@ -29,17 +29,6 @@ export function AutomationClient({
   const filteredRules = rules.filter((r) =>
     activeTab === 'dm' ? ['any_message', 'keyword'].includes(r.trigger_type) : ['any_comment', 'comment_keyword'].includes(r.trigger_type)
   )
-
-  async function handleCreate(data: RuleFormPayload) {
-    const res = await fetch('/api/rules', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) throw new Error('Erreur')
-    const newRule: AutomationRule = await res.json()
-    setRules((prev) => [newRule, ...prev])
-  }
 
   async function handleUpdate(data: RuleFormPayload) {
     if (!editingRule) return
@@ -93,17 +82,14 @@ export function AutomationClient({
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 pb-16 sm:p-6">
-      {(showModal || editingRule) && (
+      {editingRule && (
         <RuleFormDialog
           open
           accounts={accounts}
           rule={editingRule}
           defaultTab={activeTab}
-          onSave={editingRule ? handleUpdate : handleCreate}
-          onClose={() => {
-            setShowModal(false)
-            setEditingRule(undefined)
-          }}
+          onSave={handleUpdate}
+          onClose={() => setEditingRule(undefined)}
         />
       )}
 
@@ -127,7 +113,7 @@ export function AutomationClient({
           </TabsList>
         </Tabs>
         {accounts.length > 0 && (
-          <Button onClick={() => setShowModal(true)}>
+          <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
             <Plus className="size-4" /> Nouvelle règle
           </Button>
         )}
@@ -145,7 +131,7 @@ export function AutomationClient({
           title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
           description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
           action={
-            <Button onClick={() => setShowModal(true)}>
+            <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
               <Plus className="size-4" /> Créer ma première règle
             </Button>
           }
@@ -166,15 +152,15 @@ export function AutomationClient({
           ))}
 
           {/* Create new rule card button in the grid */}
-          <button
-            onClick={() => setShowModal(true)}
+          <Link
+            href={`/automation/new?tab=${activeTab}`}
             className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
           >
             <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
               <Plus className="size-5" />
             </div>
             <span className="text-sm font-medium">Nouvelle règle</span>
-          </button>
+          </Link>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit2, Trash2, Loader2, MessageSquare, Hash, Sparkles, ImageIcon, Zap } from 'lucide-react'
+import { Edit2, Trash2, Loader2, MessageSquare, Hash, Sparkles, ImageIcon, Zap, ArrowDown } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -59,29 +59,40 @@ export function RuleCard({
   return (
     <>
       <div
-        className={`group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 ${
-          rule.is_active ? '' : 'border-border/60 opacity-75'
+        className={`group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 ${
+          rule.is_active 
+            ? 'border-[color-mix(in_srgb,var(--organic-terracotta)_20%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_15%,var(--card))] shadow-sm hover:shadow-md hover:border-[color-mix(in_srgb,var(--organic-terracotta)_40%,transparent)]' 
+            : 'border-border/50 bg-card/60 opacity-80 hover:opacity-100 hover:border-border'
         }`}
       >
-        {/* Active indicator bar */}
+        {/* Glow effect when active */}
         {rule.is_active && (
-          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
+          <div 
+            className="absolute -right-16 -top-16 size-32 rounded-full blur-2xl opacity-10 pointer-events-none transition-all duration-300 group-hover:opacity-15"
+            style={{ background: 'var(--organic-terracotta)' }}
+          />
         )}
 
-        <div className="flex flex-1 flex-col gap-3.5 p-4">
-          {/* Top row: account avatar + name + toggle */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex flex-1 flex-col gap-3.5 p-4 md:p-5">
+          {/* Header row: Account & Switch */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <div
-                className={`flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-[11px] font-bold shadow-sm transition-transform duration-300 group-hover:scale-105 ${
                   account ? getAvatarColor(account.id) : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {account ? getInitials(accountLabel ?? account.id) : <Zap className="size-4" strokeWidth={1.75} />}
+                {account ? getInitials(accountLabel ?? account.id) : <Zap className="size-4" strokeWidth={2} />}
               </div>
               <div className="min-w-0">
-                <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{rule.name}</h3>
-                {accountLabel && <p className="truncate text-xs text-muted-foreground">{accountLabel}</p>}
+                <h3 className="line-clamp-1 text-[13.5px] font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                  {rule.name}
+                </h3>
+                {accountLabel && (
+                  <p className="truncate text-[11px] text-muted-foreground/80 mt-0.5">
+                    {accountLabel}
+                  </p>
+                )}
               </div>
             </div>
             <Switch
@@ -89,91 +100,106 @@ export function RuleCard({
               onCheckedChange={onToggle}
               disabled={isToggling}
               aria-label="Activer/désactiver la règle"
-              className="shrink-0"
+              className="shrink-0 data-[state=checked]:bg-primary"
             />
           </div>
 
-          <span
-            className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
-              rule.is_active
-                ? 'border-success/20 bg-success/10 text-success'
-                : 'border-border bg-muted text-muted-foreground'
-            }`}
-          >
-            <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
-            {rule.is_active ? 'Active' : 'Désactivée'}
-          </span>
-
-          {/* Trigger display */}
-          <div className="flex flex-col gap-1.5 rounded-lg border border-border/40 bg-muted/30 p-2.5">
-            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-              <Zap className="size-3" /> Déclencheur
+          {/* Status Badge */}
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${
+                rule.is_active
+                  ? 'border-success/20 bg-success/8 text-success'
+                  : 'border-border bg-muted text-muted-foreground'
+              }`}
+            >
+              <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
+              {rule.is_active ? 'Active' : 'Désactivée'}
             </span>
-            <div className="flex flex-wrap gap-1">
-              {rule.trigger_type === 'any_message' || rule.trigger_type === 'any_comment' ? (
-                <Badge variant="secondary" className="text-xs">
-                  {triggerLabel}
-                </Badge>
-              ) : (
-                <>
-                  {rule.trigger_keywords?.slice(0, 3).map((kw) => (
-                    <Badge key={kw} variant="outline" className="border-primary/20 bg-primary/8 text-primary text-xs max-w-[120px] truncate">
-                      {kw}
-                    </Badge>
-                  ))}
-                  {hasMoreKeywords && (
-                    <Badge variant="outline" className="text-xs">
-                      +{extraKeywordsCount}
-                    </Badge>
-                  )}
-                </>
-              )}
-            </div>
           </div>
 
-          {/* Response preview */}
-          <div className="flex flex-1 flex-col justify-end gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-                {rule.response_type === 'card' ? <ImageIcon className="size-3" /> : <Sparkles className="size-3" />}
-                Réponse automatique
+          {/* Interactive Flow Diagram */}
+          <div className="flex flex-col gap-2 relative mt-1">
+            
+            {/* Step 1: Trigger */}
+            <div className="flex flex-col gap-1.5 rounded-xl border border-border/30 bg-muted/20 p-3">
+              <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <Zap className="size-3 text-primary/70" /> Si le client écrit
               </span>
-              {rule.response_type === 'card' && (
-                <Badge variant="outline" className="border-primary/25 bg-primary/8 text-[10px] text-primary">
-                  Carte
-                </Badge>
-              )}
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {rule.trigger_type === 'any_message' || rule.trigger_type === 'any_comment' ? (
+                  <Badge variant="secondary" className="text-[11px] font-medium px-2 py-0.5 bg-muted-foreground/10 text-foreground border-0">
+                    {triggerLabel}
+                  </Badge>
+                ) : (
+                  <>
+                    {rule.trigger_keywords?.slice(0, 3).map((kw) => (
+                      <Badge key={kw} variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[11px] font-medium max-w-[120px] truncate px-2 py-0.5">
+                        {kw}
+                      </Badge>
+                    ))}
+                    {hasMoreKeywords && (
+                      <Badge variant="outline" className="text-[11px] font-medium border-border/80 text-muted-foreground px-1.5">
+                        +{extraKeywordsCount}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex min-h-[52px] flex-col justify-between rounded-lg border border-border/40 bg-gradient-to-br from-muted/50 to-muted/20 p-2.5 text-xs text-foreground/90">
-              {rule.response_type === 'card' ? (
-                <p className="line-clamp-2 italic leading-relaxed">&ldquo;{rule.card_title || 'Sans titre'}&rdquo;</p>
-              ) : (
-                <p className="line-clamp-2 italic leading-relaxed">&ldquo;{rule.response_text}&rdquo;</p>
-              )}
 
-              {/* Extra comment specific tags inside the card preview */}
+            {/* Visual connector */}
+            <div className="flex justify-center -my-1 z-10 pointer-events-none">
+              <div className="flex size-5 items-center justify-center rounded-full border border-border/40 bg-card shadow-sm text-muted-foreground/60">
+                <ArrowDown className="size-3" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            {/* Step 2: Response */}
+            <div className="flex flex-col gap-1.5 rounded-xl border border-border/30 bg-[color-mix(in_srgb,var(--organic-terracotta)_3%,var(--card))] p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  {rule.response_type === 'card' ? <ImageIcon className="size-3" /> : <Sparkles className="size-3" />}
+                  Alors l&apos;IA répond
+                </span>
+                {rule.response_type === 'card' && (
+                  <Badge variant="outline" className="border-primary/20 bg-primary/5 text-[9px] font-semibold text-primary py-0">
+                    Carte
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-1 text-[12px] text-foreground/80 leading-relaxed font-serif italic border-l-2 border-primary/20 pl-2.5 py-0.5">
+                {rule.response_type === 'card' ? (
+                  <p className="line-clamp-2">&ldquo;{rule.card_title || 'Sans titre'}&rdquo;</p>
+                ) : (
+                  <p className="line-clamp-2">&ldquo;{rule.response_text}&rdquo;</p>
+                )}
+              </div>
+
+              {/* Extras */}
               {isComment && (
-                <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
+                <div className="mt-2.5 flex items-center justify-between border-t border-border/30 pt-2 text-[10px] text-muted-foreground/80">
                   <span className="flex items-center gap-1">
-                    <MessageSquare className="size-3" /> {replyLabel}
+                    <MessageSquare className="size-2.5" /> {replyLabel}
                   </span>
                   {rule.target_post_ids && rule.target_post_ids.length > 0 && (
-                    <span className="flex items-center gap-1 font-medium">
-                      <Hash className="size-3" /> {rule.target_post_ids.length} post(s)
+                    <span className="flex items-center gap-1 font-semibold text-[10px]">
+                      <Hash className="size-2.5" /> {rule.target_post_ids.length} post(s)
                     </span>
                   )}
                 </div>
               )}
             </div>
+
           </div>
         </div>
 
-        {/* Footer actions */}
-        <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/20 px-4 py-2.5">
+        {/* Action Bar */}
+        <div className="flex items-center justify-between gap-2 border-t border-border/30 bg-muted/10 px-4 py-2.5 transition-colors group-hover:bg-muted/15">
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={isDeleting}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-destructive/8 hover:text-destructive active:scale-95 transition-all disabled:opacity-50"
             aria-label="Supprimer"
           >
             {isDeleting ? (
@@ -186,7 +212,7 @@ export function RuleCard({
 
           <button
             onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-md bg-primary/8 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15"
+            className="flex items-center gap-1.5 rounded-lg bg-primary/8 hover:bg-primary/14 px-3.5 py-1.5 text-[11px] font-bold text-primary active:scale-95 transition-all"
             aria-label="Modifier"
           >
             <Edit2 className="size-3.5" />
@@ -196,21 +222,21 @@ export function RuleCard({
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border-0 shadow-2xl bg-[color-mix(in_srgb,var(--organic-bg)_85%,var(--card))] backdrop-blur-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer « {rule.name} » ?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-heading text-lg font-normal">Supprimer « {rule.name} » ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               Cette action est irréversible. L&apos;automatisation associée sera définitivement supprimée.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setConfirmOpen(false)
                 onDelete()
               }}
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-white hover:bg-destructive/90 rounded-xl"
             >
               Supprimer
             </AlertDialogAction>

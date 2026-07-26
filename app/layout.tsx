@@ -40,11 +40,21 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Instaflow',
   description: "Automatisation conversationnelle multi-canal pilotée par l'IA.",
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5ead8' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1714' },
+  ],
 }
 
 export default function RootLayout({

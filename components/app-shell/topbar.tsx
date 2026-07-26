@@ -16,7 +16,7 @@ export function Topbar({
   notificationCounts: NotificationCounts
 }) {
   return (
-    <header className="relative flex h-14 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-3 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:px-4">
+    <header className="relative flex min-h-14 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-3 pt-safe pb-1.5 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
       {/* Bottom border — terracotta gradient line */}
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-px"
@@ -32,7 +32,10 @@ export function Topbar({
       />
 
       <div className="relative flex min-w-0 items-center gap-3">
-        <MobileNav businessType={businessType} />
+        {/* Hide MobileNav drawer toggle because we have bottom bar now */}
+        <div className="hidden">
+          <MobileNav businessType={businessType} />
+        </div>
         <Breadcrumb businessType={businessType} />
       </div>
 

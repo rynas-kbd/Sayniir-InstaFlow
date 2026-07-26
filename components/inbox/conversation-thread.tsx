@@ -233,10 +233,11 @@ export function ConversationThread({
         {backHref && (
           <Link
             href={backHref}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:hidden"
-            style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)' }}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-muted-foreground transition-colors hover:text-foreground md:hidden"
+            style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--organic-sand-400) 18%, transparent)' }}
           >
             <ChevronLeft className="size-4" />
+            <span className="text-[12px] font-medium">Retour</span>
           </Link>
         )}
 
@@ -300,7 +301,7 @@ export function ConversationThread({
               type="button"
               onClick={togglePause}
               disabled={togglingPause}
-              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
+              className="hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 disabled:opacity-50 sm:flex"
               style={
                 botPaused
                   ? {
@@ -338,7 +339,7 @@ export function ConversationThread({
       {/* ─── Messages ─── */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 pt-6 pb-8 md:px-6 scroll-smooth"
+        className="flex-1 overflow-y-auto px-3 pt-4 pb-6 md:px-6 md:pt-6 md:pb-8 scroll-smooth"
         style={{ background: 'color-mix(in srgb, var(--organic-bg) 35%, transparent)' }}
       >
         {groups.map((group) => (
@@ -376,7 +377,7 @@ export function ConversationThread({
                   key={msg.id}
                   className={`flex ${isIncoming ? 'justify-start' : 'justify-end'} ${sameDirectionAsPrev ? 'mt-1' : 'mt-4'}`}
                 >
-                  <div className={`flex max-w-[68%] flex-col gap-1 ${isIncoming ? 'items-start' : 'items-end'}`}>
+                  <div className={`flex max-w-[82%] flex-col gap-1 md:max-w-[68%] ${isIncoming ? 'items-start' : 'items-end'}`}>
                     {/* Auto-reply label */}
                     {isAutoReply && (
                       <span
@@ -454,6 +455,7 @@ export function ConversationThread({
           background: 'color-mix(in srgb, var(--organic-bg) 65%, transparent)',
           backdropFilter: 'blur(24px)',
           borderTop: '1px solid color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
         }}
       >
         {/* Snippets popover */}

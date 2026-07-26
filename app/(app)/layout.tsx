@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AppSidebar } from '@/components/app-shell/sidebar'
 import { Topbar } from '@/components/app-shell/topbar'
+import { MobileBottomNav } from '@/components/app-shell/mobile-bottom-nav'
 import type { BusinessType } from '@/components/app-shell/nav-config'
 import { PageTransitionWrapper } from '@/components/app-shell/page-transition'
 import { CopilotProvider } from '@/components/ai/copilot-provider'
@@ -81,10 +82,11 @@ export default async function AppLayout({
         </div>
 
         <Topbar businessType={businessType} email={user.email ?? null} notificationCounts={notificationCounts} />
-        <main className="relative z-10 flex-1 overflow-hidden">
+        <main className="relative z-10 flex-1 overflow-hidden pb-16 md:pb-0">
           <PageTransitionWrapper>{children}</PageTransitionWrapper>
         </main>
       </div>
+      <MobileBottomNav businessType={businessType} unrepliedCount={notificationCounts.unrepliedMessages} />
     </div>
     </CopilotProvider>
   )

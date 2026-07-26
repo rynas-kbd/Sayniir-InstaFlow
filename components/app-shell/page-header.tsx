@@ -10,7 +10,7 @@ export function PageHeader({
   actions?: ReactNode
 }) {
   return (
-    <div className="relative flex flex-col gap-3 border-b border-[color-mix(in_srgb,var(--organic-terracotta)_12%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_50%,transparent)] px-4 py-4 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_40%,transparent)] dark:border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)] sm:flex-row sm:items-center sm:justify-between md:px-6">
+    <div className="relative flex flex-col gap-3 border-b border-[color-mix(in_srgb,var(--organic-terracotta)_12%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_50%,transparent)] px-4 py-3 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_40%,transparent)] dark:border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)] sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
       {/* Subtle terracotta aurora — top right */}
       <div
         className="pointer-events-none absolute right-0 top-0 h-full w-48 opacity-[0.06]"
@@ -26,10 +26,10 @@ export function PageHeader({
           style={{ background: 'linear-gradient(to bottom, var(--organic-terracotta), color-mix(in srgb, var(--organic-sage) 80%, transparent))' }}
         />
         <div>
-          <h1 className="text-[15px] font-bold tracking-tight text-foreground">{title}</h1>
+          <h1 className="text-[15px] font-bold tracking-tight text-foreground md:text-[15px]">{title}</h1>
           {description && (
             <p
-              className="mt-0.5 text-[12.5px]"
+              className="mt-0.5 text-[12px] md:text-[12.5px]"
               style={{ color: 'color-mix(in srgb, var(--organic-text, var(--foreground)) 55%, transparent)' }}
             >
               {description}

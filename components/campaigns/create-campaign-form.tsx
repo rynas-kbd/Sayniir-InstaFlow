@@ -1,0 +1,187 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Type, ImageIcon, Users, CalendarClock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { FormSection } from '@/components/shared/form-section'
+import { ManageSegmentsDialog, type Segment } from './manage-segments-dialog'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import type { Tag } from '@/components/contacts/types'
+import type { CardButton } from '@/components/flows/types'
+
+export function CreateCampaignForm({
+  channelAccountId,
+  tags,
+  segments: initialSegments,
+}: {
+  channelAccountId: string
+  tags: Tag[]
+  segments: Segment[]
+}) {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [message, setMessage] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [responseType, setResponseType] = useState<'text' | 'card'>('text')
+  const [cardTitle, setCardTitle] = useState('')
+  const [cardSubtitle, setCardSubtitle] = useState('')
+  const [cardImageUrl, setCardImageUrl] = useState('')
+  const [cardButtons, setCardButtons] = useState<CardButton[]>([])
+  const [segments, setSegments] = useState(initialSegments)
+  const [segmentId, setSegmentId] = useState<string>('')
+
+  function toggleTag(tagId: string) {
+    setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]))
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim() || !message.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel_account_id: channelAccountId,
+          name: name.trim(),
+          message_template: message.trim(),
+          audience_tag_ids: selectedTags,
+          segment_id: segmentId || null,
+          scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+          response_type: responseType,
+          card_title: cardTitle,
+          card_subtitle: cardSubtitle,
+          card_image_url: cardImageUrl,
+          card_buttons: cardButtons,
+        }),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      toast.success('Campagne créée')
+      router.push('/campaigns')
+    } catch {
+      toast.error('Impossible de créer la campagne')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleCreate} className="flex flex-col gap-4">
+      <FormSection icon={Type} label="Contenu">
+        <div className="space-y-1.5">
+          <Label htmlFor="campaign-name">Nom</Label>
+          <Input
+            id="campaign-name"
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ex : Promo Ramadan"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="campaign-message">Message</Label>
+          <Textarea
+            id="campaign-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Bonjour ! Nouvelle offre disponible…"
+            rows={4}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection icon={ImageIcon} label="Réponse">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setResponseType('text')}
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors ${
+              responseType === 'text' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Type className="size-3.5" /> Texte
+          </button>
+          <button
+            type="button"
+            onClick={() => setResponseType('card')}
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-medium transition-colors ${
+              responseType === 'card' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ImageIcon className="size-3.5" /> Carte
+          </button>
+        </div>
+
+        {responseType === 'card' && (
+          <CardFieldsEditor
+            title={cardTitle}
+            subtitle={cardSubtitle}
+            imageUrl={cardImageUrl}
+            buttons={cardButtons}
+            onTitleChange={setCardTitle}
+            onSubtitleChange={setCardSubtitle}
+            onImageUrlChange={setCardImageUrl}
+            onButtonsChange={setCardButtons}
+          />
+        )}
+      </FormSection>
+
+      <FormSection icon={Users} label="Audience">
+        <div className="flex items-center justify-between">
+          <Label>Cible</Label>
+          <ManageSegmentsDialog channelAccountId={channelAccountId} tags={tags} segments={segments} onChange={setSegments} />
+        </div>
+        <Select value={segmentId || 'none'} onValueChange={(v) => setSegmentId(v === 'none' ? '' : (v ?? ''))}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Tags (ci-dessous)</SelectItem>
+            {segments.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                Segment : {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {!segmentId && (
+          <div className="flex flex-wrap gap-3 pt-1">
+            {tags.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Aucun tag créé — vide = tous les contacts abonnés.</p>
+            ) : (
+              tags.map((tag) => (
+                <label key={tag.id} className="flex items-center gap-1.5 text-sm">
+                  <Checkbox checked={selectedTags.includes(tag.id)} onCheckedChange={() => toggleTag(tag.id)} />
+                  {tag.name}
+                </label>
+              ))
+            )}
+          </div>
+        )}
+      </FormSection>
+
+      <FormSection icon={CalendarClock} label="Planification">
+        <div className="space-y-1.5">
+          <Label htmlFor="campaign-schedule">Envoyer plus tard (optionnel)</Label>
+          <Input id="campaign-schedule" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+        </div>
+      </FormSection>
+
+      <div className="flex justify-end gap-2 border-t border-border pt-4">
+        <Button type="submit" disabled={saving || !name.trim() || !message.trim()}>
+          {saving ? 'Création…' : scheduledAt ? 'Planifier' : 'Créer en brouillon'}
+        </Button>
+      </div>
+    </form>
+  )
+}

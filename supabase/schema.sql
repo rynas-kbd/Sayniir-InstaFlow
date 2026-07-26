@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS public.agent_settings (
   is_order_taking_active BOOLEAN DEFAULT false,
   instructions TEXT[] DEFAULT '{}',
   infos_to_collect TEXT[] DEFAULT '{}',
-  ai_provider TEXT DEFAULT 'gemini',
+  ai_provider TEXT DEFAULT 'groq',
   ai_api_key TEXT DEFAULT NULL,
   ai_model TEXT DEFAULT 'gemini-2.0-flash',
   default_message_enabled BOOLEAN DEFAULT TRUE,

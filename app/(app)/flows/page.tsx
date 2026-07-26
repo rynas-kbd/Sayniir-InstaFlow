@@ -1,7 +1,8 @@
+import Link from 'next/link'
 import { Workflow, Zap, TrendingUp, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
-import { CreateFlowDialog } from '@/components/flows/create-flow-dialog'
+import { Button } from '@/components/ui/button'
 import { FlowCard } from '@/components/flows/flow-card'
 import { FlowsEnabledToggle } from '@/components/flows/flows-enabled-toggle'
 import type { FlowSummary } from '@/components/flows/types'
@@ -73,7 +74,10 @@ export default async function FlowsPage() {
               Automatisez vos conversations avec des flux visuels intelligents.
             </p>
           </div>
-          <CreateFlowDialog channelAccountId={account.id} />
+          <Button render={<Link href="/flows/new" />}>
+            <Plus className="size-4" />
+            Nouveau flow
+          </Button>
         </div>
 
         {/* Stats row */}
@@ -95,14 +99,22 @@ export default async function FlowsPage() {
 
         <div className="mt-5">
           {safeFlows.length === 0 ? (
-            <FlowsEmptyState channelAccountId={account.id} />
+            <FlowsEmptyState />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {safeFlows.map((flow) => (
                 <FlowCard key={flow.id} flow={flow} insights={insightsByFlowId.get(flow.id) ?? []} />
               ))}
               {/* Add new card */}
-              <CreateFlowDialog channelAccountId={account.id} asCard />
+              <Link
+                href="/flows/new"
+                className="group flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+              >
+                <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+                  <Plus className="size-5" />
+                </div>
+                <span className="text-sm font-medium">Nouveau flow</span>
+              </Link>
             </div>
           )}
         </div>
@@ -137,7 +149,7 @@ function StatPill({
   )
 }
 
-function FlowsEmptyState({ channelAccountId }: { channelAccountId: string }) {
+function FlowsEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 px-8 py-16 text-center">
       <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10">
@@ -149,7 +161,10 @@ function FlowsEmptyState({ channelAccountId }: { channelAccountId: string }) {
         messages, conditions, délais et bien plus.
       </p>
       <div className="mt-6">
-        <CreateFlowDialog channelAccountId={channelAccountId} />
+        <Button render={<Link href="/flows/new" />}>
+          <Plus className="size-4" />
+          Nouveau flow
+        </Button>
       </div>
       {/* Tips */}
       <div className="mt-8 grid max-w-lg gap-3 text-left sm:grid-cols-3">

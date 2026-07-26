@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { Package, Plus, Edit2, Trash2, Box, Layers, Archive } from 'lucide-react'
+import { Package, Plus, Edit2, Trash2, Box, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -21,20 +22,8 @@ import type { Product } from './types'
 
 export function ProductTable({ channelAccountId, initialProducts }: { channelAccountId: string; initialProducts: Product[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
-  const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Product | undefined>(undefined)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  async function handleCreate(data: Partial<Product> & { channel_account_id: string }) {
-    const res = await fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) throw new Error('Erreur')
-    const created: Product = await res.json()
-    setProducts((prev) => [created, ...prev])
-  }
 
   async function handleUpdate(data: Partial<Product> & { channel_account_id: string }) {
     if (!editing) return
@@ -64,16 +53,13 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
 
   return (
     <div className="pt-4">
-      {(showForm || editing) && (
+      {editing && (
         <ProductFormDialog
           open
           channelAccountId={channelAccountId}
           product={editing}
-          onSave={editing ? handleUpdate : handleCreate}
-          onClose={() => {
-            setShowForm(false)
-            setEditing(undefined)
-          }}
+          onSave={handleUpdate}
+          onClose={() => setEditing(undefined)}
         />
       )}
 
@@ -83,13 +69,13 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           title="Aucun produit dans le catalogue"
           description="Créez votre premier produit pour que l'IA puisse le proposer à vos clients dans le chat."
           action={
-            <Button onClick={() => setShowForm(true)}>
+            <Button render={<Link href="/boutique/products/new" />}>
               <Plus className="size-4" /> Ajouter mon premier produit
             </Button>
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
             const hasStock = product.stock_quantity > 0
             const hasVariations = product.sizes.length > 0 || product.colors.length > 0
@@ -97,21 +83,26 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
             return (
               <div
                 key={product.id}
-                className="group relative flex flex-col rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
+                className="group relative flex flex-col rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 overflow-hidden"
               >
-                {/* Covers/Icons */}
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Box className="size-5" />
+                {/* Accent Top Bar */}
+                {hasStock && (
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-success/50 via-success to-success/50" />
+                )}
+
+                {/* Covers/Icons Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-primary/8 text-primary shadow-inner transition-transform duration-300 group-hover:scale-105">
+                    <Box className="size-5.5" strokeWidth={1.75} />
                   </div>
                   
                   {/* Stock status badge */}
                   <Badge
                     variant={hasStock ? 'secondary' : 'destructive'}
-                    className={`text-[10px] font-medium py-0 px-2.5 rounded-full border ${
+                    className={`text-[10px] font-bold py-0.5 px-3 rounded-full border transition-all ${
                       hasStock
-                        ? 'bg-success/10 text-success border-success/20'
-                        : 'bg-destructive/10 text-destructive border-destructive/20'
+                        ? 'bg-success/8 text-success border-success/15'
+                        : 'bg-destructive/8 text-destructive border-destructive/15'
                     }`}
                   >
                     {hasStock ? `${product.stock_quantity} en stock` : 'Rupture'}
@@ -119,17 +110,24 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                 </div>
 
                 {/* Details */}
-                <div>
-                  <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{product.name}</h3>
-                  <p className="mt-1 text-base font-bold text-foreground">
+                <div className="flex-1 flex flex-col gap-1.5 min-h-[60px]">
+                  <h3 className="line-clamp-1 text-sm font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  {product.description && (
+                    <p className="line-clamp-2 text-[11.5px] text-muted-foreground leading-relaxed">
+                      {product.description}
+                    </p>
+                  )}
+                  <p className="mt-auto pt-1 text-[15px] font-extrabold text-[var(--organic-terracotta-700)] dark:text-[var(--organic-terracotta-600)] tracking-tight">
                     {product.price.toLocaleString('fr-FR')} DZD
                   </p>
                 </div>
 
                 {/* Variations */}
-                <div className="mt-3.5 flex-1 flex flex-col justify-end gap-1 border-t border-border/40 pt-3">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1">
-                    <Layers className="size-3" /> Variantes
+                <div className="mt-4 flex flex-col justify-end gap-1.5 border-t border-border/30 pt-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/75 flex items-center gap-1.5">
+                    <Layers className="size-3" /> Options
                   </span>
                   <div className="flex flex-wrap gap-1 mt-1 min-h-[22px]">
                     {hasVariations ? (
@@ -138,28 +136,28 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                           <Badge
                             key={i}
                             variant="outline"
-                            className="text-[9px] py-0 px-1.5 font-normal text-muted-foreground border-border/60"
+                            className="text-[10px] py-0 px-2 font-medium text-muted-foreground/90 border-border/80 bg-muted/10 rounded-md"
                           >
                             {variant}
                           </Badge>
                         ))}
                         {[...product.sizes, ...product.colors].length > 4 && (
-                          <Badge variant="outline" className="text-[9px] py-0 px-1 text-muted-foreground border-border/60">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-medium text-muted-foreground/80 border-border/80 bg-muted/10 rounded-md">
                             +{[...product.sizes, ...product.colors].length - 4}
                           </Badge>
                         )}
                       </>
                     ) : (
-                      <span className="text-xs text-muted-foreground/60 italic">— Aucune</span>
+                      <span className="text-[11px] text-muted-foreground/50 italic pl-1">— Standard</span>
                     )}
                   </div>
                 </div>
 
                 {/* Card hover controls */}
-                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/40 pt-3">
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/30 pt-3 bg-card">
                   <button
                     onClick={() => setDeletingId(product.id)}
-                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-destructive/8 hover:text-destructive transition-all active:scale-95"
                     aria-label="Supprimer produit"
                   >
                     <Trash2 className="size-3.5" />
@@ -168,7 +166,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
 
                   <button
                     onClick={() => setEditing(product)}
-                    className="flex items-center gap-1 rounded-md bg-primary/8 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
+                    className="flex items-center gap-1.5 rounded-lg bg-primary/8 hover:bg-primary/14 px-3.5 py-1.5 text-[11px] font-bold text-primary transition-all active:scale-95"
                     aria-label="Modifier produit"
                   >
                     <Edit2 className="size-3.5" />
@@ -180,15 +178,15 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           })}
 
           {/* Add product card tile inside the grid */}
-          <button
-            onClick={() => setShowForm(true)}
-            className="group flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+          <Link
+            href="/boutique/products/new"
+            className="group flex min-h-[210px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/60 bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-[0.98]"
           >
-            <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+            <div className="flex size-11 items-center justify-center rounded-xl border border-dashed border-current/30 transition-all group-hover:border-primary/40 group-hover:bg-primary/8">
               <Plus className="size-5" />
             </div>
-            <span className="text-sm font-medium">Nouveau produit</span>
-          </button>
+            <span className="text-xs font-bold tracking-tight">Nouveau produit</span>
+          </Link>
         </div>
       )}
 

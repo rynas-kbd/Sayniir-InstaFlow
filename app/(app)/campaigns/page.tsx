@@ -1,8 +1,9 @@
-import { Megaphone, Rocket, CheckCircle, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
+import { Megaphone, Rocket, CheckCircle, AlertTriangle, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
-import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dialog'
+import { Button } from '@/components/ui/button'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
 import { StatCard } from '@/components/dashboard/stat-card'
 import type { Campaign } from '@/components/campaigns/types'
@@ -37,10 +38,8 @@ export default async function CampaignsPage() {
     )
   }
 
-  const [{ data: campaigns }, { data: tags }, { data: segments }, { data: insightRows }] = await Promise.all([
+  const [{ data: campaigns }, { data: insightRows }] = await Promise.all([
     supabase.from('campaigns').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
-    supabase.from('tags').select('*').eq('channel_account_id', account.id).order('name'),
-    supabase.from('segments').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     supabase
       .from('ai_insights')
       .select('id, rule_id, scope, subject_id, severity, title, detail, fix_tool_name, fix_tool_input')
@@ -88,7 +87,12 @@ export default async function CampaignsPage() {
       <PageHeader
         title="Campagnes"
         description="Diffusions ciblées vers vos contacts et segments."
-        actions={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} />}
+        actions={
+          <Button render={<Link href="/campaigns/new" />}>
+            <Plus className="size-4" />
+            Nouvelle campagne
+          </Button>
+        }
       />
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
@@ -105,7 +109,12 @@ export default async function CampaignsPage() {
             icon={Megaphone}
             title="Aucune campagne"
             description="Créez votre première diffusion ciblée pour envoyer des messages de masse à vos segments."
-            action={<CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} />}
+            action={
+              <Button render={<Link href="/campaigns/new" />}>
+                <Plus className="size-4" />
+                Nouvelle campagne
+              </Button>
+            }
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -119,7 +128,15 @@ export default async function CampaignsPage() {
             ))}
             
             {/* Create new campaign card button in the grid */}
-            <CreateCampaignDialog channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} asCard />
+            <Link
+              href="/campaigns/new"
+              className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/4 hover:text-primary"
+            >
+              <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
+                <Plus className="size-5" />
+              </div>
+              <span className="text-sm font-medium">Nouvelle campagne</span>
+            </Link>
           </div>
         )}
       </div>

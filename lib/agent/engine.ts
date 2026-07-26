@@ -124,7 +124,7 @@ export async function callAgentLLM<T>(
   aiApiKey?: string | null,
   aiModel?: string | null
 ): Promise<T> {
-  const provider = aiProvider || 'gemini'
+  const provider = aiProvider || 'groq'
   const apiKey =
     aiApiKey || (provider === 'gemini' ? process.env.GEMINI_API_KEY : provider === 'groq' ? process.env.GROQ_API_KEY : null)
   const model = aiModel || (provider === 'gemini' ? 'gemini-2.0-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : '')
@@ -135,6 +135,11 @@ export async function callAgentLLM<T>(
     }
     if (provider === 'groq' && process.env.GROQ_API_KEY) {
       return callLLMWithGroq<T>(prompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
+    }
+    // Last-resort safety net, in provider-preference order matching the new default.
+    const systemGroq = process.env.GROQ_API_KEY
+    if (systemGroq) {
+      return callLLMWithGroq<T>(prompt, systemGroq, 'llama-3.3-70b-versatile')
     }
     const systemGemini = process.env.GEMINI_API_KEY
     if (systemGemini) {

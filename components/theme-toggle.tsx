@@ -6,11 +6,25 @@ import { Moon, Sun } from 'lucide-react'
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
 
+  const handleToggle = () => {
+    const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
+
+    // Fallback if View Transitions API is not supported
+    if (!document.startViewTransition) {
+      setTheme(nextTheme)
+      return
+    }
+
+    document.startViewTransition(() => {
+      setTheme(nextTheme)
+    })
+  }
+
   return (
     <button
       type="button"
       aria-label="Changer de thème"
-      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      onClick={handleToggle}
       className="flex size-8 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
       style={{
         background: 'color-mix(in srgb, var(--organic-sand-300) 0%, transparent)',
