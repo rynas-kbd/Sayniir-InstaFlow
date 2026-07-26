@@ -1,13 +1,27 @@
 import type { Template } from './templates'
 
-/** Order-session slot-filling state machine — ported verbatim from the live Deno ecommerce.ts. */
+/** Order-session slot-filling state machine — ported verbatim from the live Deno ecommerce.ts,
+ *  generalized in Phase 1 to cover non-physical product kinds. */
+
+export type ProductKind = 'physical' | 'service' | 'digital' | 'subscription' | 'event'
 
 export interface Product {
   id: string
   name: string
+  description?: string | null
   price: number
+  currency?: string
+  kind?: ProductKind
   sizes?: string[]
   colors?: string[]
+  image_url?: string | null
+  metadata?: { remaining?: number; [key: string]: unknown }
+}
+
+/** Kind-specific free-text field collected via extra_data, in addition to the shared core fields. */
+const KIND_EXTRA_FIELDS: Partial<Record<ProductKind, string>> = {
+  service: 'créneau souhaité',
+  event: 'nombre de places',
 }
 
 export interface OrderSessionState {
@@ -51,16 +65,27 @@ export function isCancellationMessage(text: string): boolean {
 
 export function getMissingFields(session: OrderSessionState, products: Product[], customInfos: string[]): string[] {
   const product = products.find((p) => p.id === session.product_id)
+  const kind: ProductKind = product?.kind ?? 'physical'
   const missing: string[] = []
 
   if (!session.product_id) missing.push('produit')
-  if (product?.sizes?.length && !session.selected_size) missing.push('taille')
-  if (product?.colors?.length && !session.selected_color) missing.push('couleur')
+
+  if (kind === 'physical') {
+    if (product?.sizes?.length && !session.selected_size) missing.push('taille')
+    if (product?.colors?.length && !session.selected_color) missing.push('couleur')
+  }
+
   if (!session.customer_name) missing.push('nom complet')
   if (!session.customer_phone) missing.push('téléphone')
-  if (!session.wilaya) missing.push('wilaya')
-  if (!session.delivery_mode) missing.push('mode de livraison')
-  if (session.delivery_mode && !session.shipping_address) missing.push('adresse complète')
+
+  if (kind === 'physical') {
+    if (!session.wilaya) missing.push('wilaya')
+    if (!session.delivery_mode) missing.push('mode de livraison')
+    if (session.delivery_mode && !session.shipping_address) missing.push('adresse complète')
+  }
+
+  const kindExtraField = KIND_EXTRA_FIELDS[kind]
+  if (kindExtraField && !session.extra_data?.[kindExtraField]) missing.push(kindExtraField)
 
   for (const info of customInfos) {
     const key = info.toLowerCase().trim()
@@ -130,6 +155,12 @@ export function getNextQuestion(
       }
     case 'adresse complète':
       return { text: session.delivery_mode === 'point_retrait' ? t.askAddressRelay : t.askAddressHome }
+
+    case 'créneau souhaité':
+      return { text: t.askSlot }
+
+    case 'nombre de places':
+      return { text: t.askSeats(product?.metadata?.remaining) }
 
     default:
       return { text: t.askExtra(missingField) }

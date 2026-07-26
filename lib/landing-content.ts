@@ -116,7 +116,7 @@ export const PRICING_TIERS: PricingTier[] = [
     tag: 'Pro',
     tone: 'a',
     priceMonthly: '$29',
-    priceAnnual: '$24',
+    priceAnnual: '$290',
     period: 'per month · all 3 channels',
     features: ['10,000 contacts', 'Unlimited flows & broadcasts', 'Full AI replies, trained on your brand', 'CRM sync + integrations', 'Free migration from legacy tools'],
     cta: 'Start free trial',
@@ -126,7 +126,7 @@ export const PRICING_TIERS: PricingTier[] = [
     tag: 'Premium',
     tone: 's',
     priceMonthly: '$79',
-    priceAnnual: '$65',
+    priceAnnual: '$790',
     period: 'per month · teams & agencies',
     features: ['Unlimited contacts', 'Shared team inbox, 10 seats', 'Agency workspaces & client reports', 'Priority support & onboarding'],
     cta: 'Book a demo',
@@ -134,7 +134,7 @@ export const PRICING_TIERS: PricingTier[] = [
 ]
 
 export const FAQ_ITEMS = [
-  {
+{
     q: 'How is this different from ManyChat-style tools?',
     a: 'Legacy tools make you script every branch with keywords. Instaflow starts from an AI that already understands your business — flows steer it, they don\'t replace it. You build in minutes and it handles the questions you never scripted.',
   },

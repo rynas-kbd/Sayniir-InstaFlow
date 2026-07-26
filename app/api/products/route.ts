@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { channel_account_id, name, description, price, sizes, colors, image_url, stock_quantity } = body
+  const { channel_account_id, name, description, price, currency, kind, metadata, sizes, colors, image_url, stock_quantity } = body
 
   if (!channel_account_id || !name || price === undefined) {
     return NextResponse.json({ error: 'channel_account_id, name et price sont requis' }, { status: 400 })
@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
       name,
       description: description || null,
       price: parseFloat(price),
+      currency: currency || 'DZD',
+      kind: kind || 'physical',
+      metadata: metadata ?? {},
       sizes: sizes || [],
       colors: colors || [],
       image_url: image_url || null,

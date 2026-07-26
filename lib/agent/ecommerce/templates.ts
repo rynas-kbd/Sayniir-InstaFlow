@@ -12,6 +12,8 @@ export interface Template {
   askDelivery: string
   askAddressHome: string
   askAddressRelay: string
+  askSlot: string
+  askSeats: (remaining?: number) => string
   askExtra: (field: string) => string
   recap: string
   recapConfirm: string
@@ -43,6 +45,9 @@ export const TEMPLATES: Record<string, Template> = {
     askDelivery: 'Vous préférez la livraison à domicile ou en point de retrait ?',
     askAddressHome: 'Parfait ! Quelle est votre adresse complète ? (rue, quartier et commune)',
     askAddressRelay: "D'accord ! Quelle est la ville et la commune de votre bureau de retrait ?",
+    askSlot: 'Quel créneau vous conviendrait ? (ex : lundi matin, jeudi 14h...)',
+    askSeats: (remaining) =>
+      remaining != null ? `Combien de places souhaitez-vous ? (${remaining} restantes)` : 'Combien de places souhaitez-vous ?',
     askExtra: (field) => `Pouvez-vous me donner votre ${field} ?`,
     recap: '✅ Voici le récapitulatif de votre commande :',
     recapConfirm: 'Est-ce que tout est correct ? Répondez "oui" pour confirmer ou "non" pour annuler.',
@@ -72,6 +77,8 @@ export const TEMPLATES: Record<string, Template> = {
     askDelivery: 'هل تفضل التوصيل للمنزل أم نقطة الاستلام؟',
     askAddressHome: 'ممتاز! ما عنوانك الكامل؟ (الشارع، الحي والبلدية)',
     askAddressRelay: 'حسناً! ما هي مدينة وبلدية مكتب الاستلام؟',
+    askSlot: 'ما هو الموعد الذي يناسبك؟ (مثلاً: الاثنين صباحاً)',
+    askSeats: (remaining) => (remaining != null ? `كم عدد الأماكن التي تريدها؟ (متبقي ${remaining})` : 'كم عدد الأماكن التي تريدها؟'),
     askExtra: (field) => `هل يمكنك إعطائي ${field}؟`,
     recap: '✅ ملخص طلبك :',
     recapConfirm: 'هل كل شيء صحيح؟ أجب بـ "نعم" للتأكيد أو "لا" للإلغاء.',
@@ -101,6 +108,8 @@ export const TEMPLATES: Record<string, Template> = {
     askDelivery: 'تحب التوصيل للدار ولا نقطة استلام؟',
     askAddressHome: 'واخا! شنو عنوانك الكامل؟ (الزنقة، الحومة والبلدية)',
     askAddressRelay: 'واخا! شنو هي المدينة والبلدية ديال نقطة الاستلام؟',
+    askSlot: 'أشمن وقت يناسبك؟ (مثلاً: الاثنين الصباح)',
+    askSeats: (remaining) => (remaining != null ? `شحال بغيتي بلاصة؟ (باقي ${remaining})` : 'شحال بغيتي بلاصة؟'),
     askExtra: (field) => `واش تقدر تعطيني ${field}؟`,
     recap: '✅ هاذا ملخص الطلب ديالك :',
     recapConfirm: 'كلشي صح؟ جاوب بـ "واه" باش تأكد ولا "لا" باش تلغي.',
@@ -130,6 +139,8 @@ export const TEMPLATES: Record<string, Template> = {
     askDelivery: 'Do you prefer home delivery or pickup point?',
     askAddressHome: 'Great! What is your full address? (street, neighborhood and municipality)',
     askAddressRelay: 'Got it! What is the city and municipality of your pickup point?',
+    askSlot: 'What time slot works for you? (e.g. Monday morning, Thursday 2pm...)',
+    askSeats: (remaining) => (remaining != null ? `How many seats would you like? (${remaining} remaining)` : 'How many seats would you like?'),
     askExtra: (field) => `Can you give me your ${field}?`,
     recap: '✅ Here is your order summary:',
     recapConfirm: 'Is everything correct? Reply "yes" to confirm or "no" to cancel.',

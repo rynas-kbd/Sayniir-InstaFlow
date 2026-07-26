@@ -1,5 +1,5 @@
 import { createAdminClient } from '../../supabase/admin'
-import { sendReply, TokenExpiredError } from '../../meta/messaging'
+import { sendReply, sendCardReply, TokenExpiredError } from '../../meta/messaging'
 import { callAgentLLM } from '../engine'
 import { getTemplate } from './templates'
 import {
@@ -11,6 +11,7 @@ import {
   normalizeDeliveryMode,
   type Product,
 } from './state'
+import { selectRelevantProducts, toPromptCatalogEntry } from './search'
 import { transcribeVoiceForEcommerce } from './voice'
 
 /**
@@ -68,7 +69,8 @@ export async function handleQaMessage({
   aiApiKey?: string | null
   aiModel?: string | null
 }): Promise<{ hasPurchaseIntent: boolean }> {
-  const productList = products
+  const { products: qaRelevantProducts, wasFiltered: qaCatalogFiltered } = selectRelevantProducts(products, messageText)
+  const productList = qaRelevantProducts
     .map((p) => {
       const extras = [
         `${p.price} DA`,
@@ -78,6 +80,9 @@ export async function handleQaMessage({
       return `• ${p.name} (${extras})`
     })
     .join('\n')
+  const qaCatalogNote = qaCatalogFiltered
+    ? `\n(Catalogue complet plus large — si le client cherche autre chose, propose de vérifier plutôt que d'inventer.)\n`
+    : ''
 
   const orderHint = isOrderTakingActive
     ? `Si le client veut commander (ex: "je veux commander", "comment commander"), mets hasPurchaseIntent = true.`
@@ -98,8 +103,7 @@ Tu ne prends pas de commandes.
 ${customInstructions.length ? `=== INSTRUCTIONS ===\n${customInstructions.map((i) => '- ' + i).join('\n')}\n` : ''}
 ${faqBlock}
 === CATALOGUE ===
-${productList || 'Aucun produit actif.'}
-
+${productList || 'Aucun produit actif.'}${qaCatalogNote}
 === MESSAGE ===
 "${messageText}"
 
@@ -142,6 +146,8 @@ export async function handleEcommerceMessage({
   accessToken,
   customInstructions = [],
   infosToCollect = [],
+  faqs = [],
+  persona,
   aiProvider,
   aiApiKey,
   aiModel,
@@ -153,6 +159,8 @@ export async function handleEcommerceMessage({
   accessToken: string
   customInstructions?: string[]
   infosToCollect?: string[]
+  faqs?: Array<{ question: string; answer: string }>
+  persona?: string
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
@@ -282,16 +290,28 @@ export async function handleEcommerceMessage({
         2
       )}`
 
+  const personaBlock = persona ? `=== TON RÔLE & PERSONNALITÉ ===\n${persona}\n` : "Tu es l'agent de vente d'une boutique e-commerce algérienne.\n"
+  const faqBlock = faqs.length
+    ? `=== BASE DE CONNAISSANCES (utilise-la si le client pose une question pendant la commande) ===\n${faqs.map((f) => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n')}\n`
+    : ''
+
+  const { products: orderRelevantProducts, wasFiltered: orderCatalogFiltered } = selectRelevantProducts(products ?? [], messageText, {
+    mustInclude: session.product_id,
+  })
+  const orderCatalogNote = orderCatalogFiltered
+    ? '\n(Catalogue complet plus large — si le produit voulu ne figure pas ci-dessus, mets product_id à null plutôt que de deviner.)\n'
+    : ''
+
   const prompt = `
-Tu es l'agent de vente d'une boutique e-commerce algérienne.
+${personaBlock}
 
 === CONTEXTE SESSION ===
 ${sessionContext}
 
 ${customInstructions.length ? `=== INSTRUCTIONS ===\n${customInstructions.map((i) => '- ' + i).join('\n')}\n` : ''}
-
+${faqBlock}
 === CATALOGUE ===
-${JSON.stringify(products, null, 2)}
+${JSON.stringify(orderRelevantProducts.map(toPromptCatalogEntry), null, 2)}${orderCatalogNote}
 
 === MESSAGE CLIENT ===
 "${messageText}"
@@ -383,6 +403,12 @@ JSON uniquement (sans backticks) :
   const missing = getMissingFields(updated, products ?? [], customInfos)
   const allDone = missing.length === 0
 
+  // Product just got selected this turn (not merely re-confirmed on every message) → show its photo once.
+  const newlySelectedProduct =
+    extracted.product_id && extracted.product_id !== session.product_id
+      ? (products ?? []).find((p) => p.id === extracted.product_id)
+      : null
+
   let replyText: string
   let newStatus: string
   let quickReplies: Array<{ title: string; payload: string }> | undefined
@@ -454,18 +480,19 @@ JSON uniquement (sans backticks) :
   await supabase.from('order_sessions').update(updates).eq('id', session.id)
 
   if (newStatus === 'confirmed') {
-    const { data: finalSession } = await supabase.from('order_sessions').select('*, products(name, price)').eq('id', session.id).single()
+    const { data: finalSession } = await supabase.from('order_sessions').select('*, products(name, price, kind)').eq('id', session.id).single()
 
     if (finalSession?.products) {
       const qty = finalSession.quantity || 1
+      const isPhysical = (finalSession.products.kind ?? 'physical') === 'physical'
       const { error: insertError } = await supabase.from('orders').insert({
         channel_account_id: finalSession.channel_account_id,
         order_session_id: finalSession.id,
         customer_name: finalSession.customer_name ?? 'Inconnu',
         customer_phone: finalSession.customer_phone ?? 'Inconnu',
-        wilaya: finalSession.wilaya ?? 'Inconnue',
-        delivery_mode: finalSession.delivery_mode ?? 'Inconnu',
-        shipping_address: finalSession.shipping_address ?? '',
+        wilaya: isPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
+        delivery_mode: isPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
+        shipping_address: isPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
         product_name: finalSession.products.name,
         price: finalSession.products.price,
         size: finalSession.selected_size,
@@ -485,6 +512,16 @@ JSON uniquement (sans backticks) :
   }
 
   try {
+    if (newlySelectedProduct?.image_url) {
+      await sendCardReply(
+        pageId,
+        accessToken,
+        senderId,
+        newlySelectedProduct.name,
+        `${newlySelectedProduct.price} ${newlySelectedProduct.currency ?? 'DA'}`,
+        newlySelectedProduct.image_url
+      )
+    }
     await sendReply(pageId, accessToken, senderId, replyText, quickReplies)
   } catch (err) {
     if (err instanceof TokenExpiredError) {
@@ -503,6 +540,8 @@ export async function handleEcommerceVoice({
   accessToken,
   customInstructions = [],
   infosToCollect = [],
+  faqs = [],
+  persona,
   aiProvider,
   aiApiKey,
   aiModel,
@@ -515,6 +554,8 @@ export async function handleEcommerceVoice({
   accessToken: string
   customInstructions?: string[]
   infosToCollect?: string[]
+  faqs?: Array<{ question: string; answer: string }>
+  persona?: string
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
@@ -535,6 +576,8 @@ export async function handleEcommerceVoice({
     accessToken,
     customInstructions,
     infosToCollect,
+    faqs,
+    persona,
     aiProvider,
     aiApiKey,
     aiModel,

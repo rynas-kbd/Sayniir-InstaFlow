@@ -35,10 +35,11 @@ export async function resolveAiContext(
       return await resolveContactsContext(supabase, channelAccountId)
     case 'campaigns':
       return await resolveCampaignsContext(supabase, channelAccountId)
+    case 'boutique':
+      return await resolveBoutiqueContext(supabase, channelAccountId)
     case 'dashboard':
     case 'analytics':
     case 'automation':
-    case 'boutique':
     case 'settings':
       // Not yet implemented — falls back to the account summary rather than an empty block.
       return await resolveNoneContext(supabase, channelAccountId)
@@ -130,4 +131,44 @@ async function resolveCampaignsContext(supabase: SupabaseClient, channelAccountI
     .limit(10)
   const lines = (campaigns ?? []).map((c) => `${c.id} "${c.name}" [${c.status}]`)
   return truncate(['CAMPAIGNS', ...lines].join('\n'))
+}
+
+async function resolveBoutiqueContext(supabase: SupabaseClient, channelAccountId: string): Promise<string> {
+  const [{ data: products }, { data: recentOrders }, { data: agentSettings }] = await Promise.all([
+    supabase.from('products').select('kind, is_active, stock_quantity').eq('channel_account_id', channelAccountId),
+    supabase
+      .from('orders')
+      .select('id, product_name, total_amount, payment_status, shipping_status, created_at')
+      .eq('channel_account_id', channelAccountId)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase
+      .from('agent_settings')
+      .select('is_qa_active, is_order_taking_active, vertical_config')
+      .eq('channel_account_id', channelAccountId)
+      .maybeSingle(),
+  ])
+
+  const byKind: Record<string, number> = {}
+  let outOfStock = 0
+  for (const p of products ?? []) {
+    const kind = p.kind ?? 'physical'
+    byKind[kind] = (byKind[kind] ?? 0) + 1
+    if (kind === 'physical' && p.is_active && (p.stock_quantity ?? 0) <= 0) outOfStock++
+  }
+  const kindSummary =
+    Object.entries(byKind)
+      .map(([k, n]) => `${k}=${n}`)
+      .join(', ') || 'aucun produit'
+
+  const orderLines = (recentOrders ?? []).map(
+    (o) => `${o.id} "${o.product_name}" ${o.total_amount} [paiement:${o.payment_status}, livraison:${o.shipping_status}]`
+  )
+
+  const verticalConfig = (agentSettings?.vertical_config ?? {}) as { faqs?: unknown[]; persona?: string }
+  const settingsLine = `IA: qa_active=${agentSettings?.is_qa_active ?? false} order_taking_active=${agentSettings?.is_order_taking_active ?? false} persona=${verticalConfig.persona ? 'défini' : 'aucun'} faqs=${verticalConfig.faqs?.length ?? 0}`
+
+  return truncate(
+    ['BOUTIQUE', `Produits: ${kindSummary} (dont ${outOfStock} en rupture)`, settingsLine, 'Commandes récentes:', ...orderLines].join('\n')
+  )
 }

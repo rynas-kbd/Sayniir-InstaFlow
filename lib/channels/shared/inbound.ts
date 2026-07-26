@@ -281,6 +281,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     const VOICE_MIME = 'audio/mp4'
 
     if (isOrderTakingActive) {
+      const voiceVerticalConfig = agentSettings?.vertical_config ?? {}
       const transcription = await handleEcommerceVoice({
         accountId: account.id,
         pageId,
@@ -290,6 +291,8 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
         accessToken: account.access_token,
         customInstructions: agentSettings?.instructions || [],
         infosToCollect: agentSettings?.infos_to_collect || [],
+        faqs: (voiceVerticalConfig as { faqs?: Array<{ question: string; answer: string }> })?.faqs || [],
+        persona: (voiceVerticalConfig as { persona?: string })?.persona || undefined,
         aiProvider: agentSettings?.ai_provider || null,
         aiApiKey: resolvedApiKey,
         aiModel: agentSettings?.ai_model || null,

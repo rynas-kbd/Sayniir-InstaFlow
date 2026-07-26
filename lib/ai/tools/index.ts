@@ -17,6 +17,11 @@ import { scheduleCampaignTool } from './schedule-campaign'
 import { setContactBotPausedTool } from './set-contact-bot-paused'
 import { updateAgentSettingsTool } from './update-agent-settings'
 import { deleteFlowNodeTool } from './delete-flow-node'
+import { listProductsTool } from './list-products'
+import { createProductTool } from './create-product'
+import { updateProductTool } from './update-product'
+import { listOrdersTool } from './list-orders'
+import { updateOrderStatusTool } from './update-order-status'
 import type { AiTool } from './types'
 
 // Sorted by name and kept in this stable order across turns — the tool block is the first
@@ -43,6 +48,11 @@ export const AI_TOOLS: AiTool<never, unknown>[] = (
     setContactBotPausedTool,
     updateAgentSettingsTool,
     deleteFlowNodeTool,
+    listProductsTool,
+    createProductTool,
+    updateProductTool,
+    listOrdersTool,
+    updateOrderStatusTool,
   ] as AiTool<never, unknown>[]
 ).sort((a, b) => a.name.localeCompare(b.name))
 
