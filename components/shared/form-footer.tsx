@@ -4,9 +4,11 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-/** Cancel + submit row, placement-agnostic: the create page passes `justify-end` for an inline
- * footer, the edit dialog passes its sticky-footer chrome. Same component either way. */
-export function ProductFormFooter({
+/** Cancel + submit row, placement-agnostic: an inline create page passes `justify-end`, an edit
+ * dialog passes its sticky-footer chrome. Same component either way. Promoted from the boutique
+ * product form (`ProductFormFooter`) — it never had any product-specific logic, so campaigns and
+ * automation rules import this directly rather than each growing their own copy. */
+export function FormFooter({
   saving,
   submitLabel,
   onCancel,

@@ -10,15 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components/ui/dialog'
 import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import type { Tag } from '@/components/contacts/types'
-
-export interface Segment {
-  id: string
-  name: string
-  tag_ids: string[]
-  custom_field_key: string | null
-  custom_field_value: string | null
-  min_days_since_last_inbound: number | null
-}
+import type { Segment } from './types'
 
 export function ManageSegmentsDialog({
   channelAccountId,

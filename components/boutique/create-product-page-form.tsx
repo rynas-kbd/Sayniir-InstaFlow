@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { useProductForm } from './product-form/use-product-form'
 import { ProductFormBody } from './product-form/product-form-body'
-import { ProductFormFooter } from './product-form/product-form-footer'
+import { FormFooter } from '@/components/shared/form-footer'
 import { ProductLivePreview } from './product-form/product-live-preview'
 import type { Product } from './types'
 
@@ -30,7 +30,7 @@ export function CreateProductPageForm({ channelAccountId }: { channelAccountId: 
             <ProductFormBody api={api} autoFocusName />
           </CardContent>
         </Card>
-        <ProductFormFooter saving={api.saving} submitLabel="Créer" onCancel={() => router.push('/boutique')} className="justify-end" />
+        <FormFooter saving={api.saving} submitLabel="Créer" onCancel={() => router.push('/boutique')} className="justify-end" />
       </div>
       <aside className="lg:sticky lg:top-6 lg:self-start">
         <ProductLivePreview form={api.form} />

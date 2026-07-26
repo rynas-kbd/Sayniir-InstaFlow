@@ -1,5 +1,14 @@
 import type { RuleCardButton } from '@/components/automation/types'
 
+export interface Segment {
+  id: string
+  name: string
+  tag_ids: string[]
+  custom_field_key: string | null
+  custom_field_value: string | null
+  min_days_since_last_inbound: number | null
+}
+
 export interface Campaign {
   id: string
   name: string

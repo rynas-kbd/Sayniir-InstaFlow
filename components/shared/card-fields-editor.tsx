@@ -1,6 +1,7 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { ImageUploadField } from '@/components/shared/image-upload-field'
 import type { CardButton } from '@/components/flows/types'
 
 export function CardFieldsEditor({
@@ -13,6 +14,8 @@ export function CardFieldsEditor({
   onImageUrlChange,
   onButtonsChange,
   allowPostbackButtons = false,
+  channelAccountId,
+  folder,
 }: {
   title: string
   subtitle: string
@@ -23,6 +26,11 @@ export function CardFieldsEditor({
   onImageUrlChange: (v: string) => void
   onButtonsChange: (v: CardButton[]) => void
   allowPostbackButtons?: boolean
+  /** Optional — when provided (with `folder`), the image field gains an upload button via
+   * ImageUploadField instead of a bare URL input. Left undefined by node-inspector.tsx, which
+   * keeps the plain input; making this required would break that caller. */
+  channelAccountId?: string
+  folder?: string
 }) {
   return (
     <div className="space-y-3.5">
@@ -41,8 +49,12 @@ export function CardFieldsEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label>URL de l&apos;image (optionnel)</Label>
-        <Input value={imageUrl} onChange={(e) => onImageUrlChange(e.target.value)} placeholder="https://..." />
+        <Label>Image (optionnel)</Label>
+        {channelAccountId && folder ? (
+          <ImageUploadField value={imageUrl} onChange={onImageUrlChange} channelAccountId={channelAccountId} folder={folder} />
+        ) : (
+          <Input value={imageUrl} onChange={(e) => onImageUrlChange(e.target.value)} placeholder="https://..." />
+        )}
       </div>
 
       <div className="space-y-2 border-t border-border pt-3">

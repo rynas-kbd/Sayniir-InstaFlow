@@ -12,11 +12,13 @@ export interface RuleCardButton {
   url?: string
 }
 
+export type TriggerType = 'any_message' | 'keyword' | 'story_reply' | 'story_mention' | 'any_comment' | 'comment_keyword'
+
 export interface AutomationRule {
   id: string
   channel_account_id: string
   name: string
-  trigger_type: string
+  trigger_type: TriggerType
   trigger_keywords?: string[] | null
   target_post_ids?: string[] | null
   reply_method: 'comment' | 'dm' | 'both'
@@ -33,7 +35,7 @@ export interface AutomationRule {
 export interface RuleFormPayload {
   channel_account_id: string
   name: string
-  trigger_type: string
+  trigger_type: TriggerType
   trigger_keywords: string[] | null
   target_post_ids: string[] | null
   reply_method: 'comment' | 'dm' | 'both'

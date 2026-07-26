@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Trash2, Rocket, Ban, Users, Loader2, RotateCcw } from 'lucide-react'
+import { Trash2, Rocket, Ban, Users, Loader2, RotateCcw, Edit2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -14,9 +15,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import type { Campaign } from './types'
+import { CampaignFormDialog } from './campaign-form-dialog'
+import type { Campaign, Segment } from './types'
+import type { Tag } from '@/components/contacts/types'
 import { InsightBadge } from '@/components/ai/insight-badge'
 import type { AiInsight } from '@/components/ai/types'
+
+// Editing content (name/message/audience/schedule/card) doesn't make sense once a campaign is
+// already dispatching or has finished — only these statuses expose the "Modifier" action.
+const EDITABLE_STATUSES: Campaign['status'][] = ['draft', 'scheduled', 'cancelled', 'failed']
 
 // Status styling config
 const STATUS_CONFIG = {
@@ -56,17 +63,38 @@ export function CampaignCard({
   campaign: initialCampaign,
   sendCounts,
   accountName,
+  channelAccountId,
+  tags,
+  segments: initialSegments,
   insights = [],
 }: {
   campaign: Campaign
   sendCounts: { sent: number; pending: number; failed: number }
   accountName?: string | null
+  channelAccountId: string
+  tags: Tag[]
+  segments: Segment[]
   insights?: AiInsight[]
 }) {
+  const router = useRouter()
   const [campaign, setCampaign] = useState(initialCampaign)
+  const [segments, setSegments] = useState(initialSegments)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [relaunchOpen, setRelaunchOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  async function handleUpdate(data: Partial<Campaign> & { channel_account_id: string }) {
+    const res = await fetch(`/api/campaigns/${campaign.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error('Erreur')
+    const updated: Campaign = await res.json()
+    setCampaign(updated)
+    router.refresh()
+  }
 
   const cfg = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.draft
 
@@ -255,7 +283,19 @@ export function CampaignCard({
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-end border-t border-border px-4 py-2">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2">
+          {EDITABLE_STATUSES.includes(campaign.status) ? (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10"
+              aria-label="Modifier"
+            >
+              <Edit2 className="size-3.5" />
+              Modifier
+            </button>
+          ) : (
+            <span />
+          )}
           <button
             onClick={() => setConfirmOpen(true)}
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
@@ -266,6 +306,19 @@ export function CampaignCard({
           </button>
         </div>
       </div>
+
+      {editing && (
+        <CampaignFormDialog
+          open
+          channelAccountId={channelAccountId}
+          campaign={campaign}
+          tags={tags}
+          segments={segments}
+          onSegmentsChange={setSegments}
+          onSave={handleUpdate}
+          onClose={() => setEditing(false)}
+        />
+      )}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

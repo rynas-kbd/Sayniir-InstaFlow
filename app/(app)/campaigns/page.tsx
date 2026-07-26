@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Megaphone, Rocket, CheckCircle, AlertTriangle, Plus } from 'lucide-react'
+import { Megaphone, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
@@ -43,7 +43,7 @@ export default async function CampaignsPage() {
     )
   }
 
-  const [{ data: campaigns }, { data: insightRows }] = await Promise.all([
+  const [{ data: campaigns }, { data: insightRows }, { data: tags }, { data: segments }] = await Promise.all([
     supabase.from('campaigns').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     supabase
       .from('ai_insights')
@@ -51,6 +51,8 @@ export default async function CampaignsPage() {
       .eq('channel_account_id', account.id)
       .eq('scope', 'campaign')
       .is('dismissed_at', null),
+    supabase.from('tags').select('*').eq('channel_account_id', account.id).order('name'),
+    supabase.from('segments').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
   ])
 
   const safeCampaigns = (campaigns ?? []) as Campaign[]
@@ -128,6 +130,9 @@ export default async function CampaignsPage() {
                 key={campaign.id}
                 campaign={campaign}
                 accountName={accountName}
+                channelAccountId={account.id}
+                tags={tags ?? []}
+                segments={segments ?? []}
                 sendCounts={sendCountsByCampaign.get(campaign.id) ?? { sent: 0, pending: 0, failed: 0 }}
                 insights={insightsByCampaignId.get(campaign.id) ?? []}
               />
