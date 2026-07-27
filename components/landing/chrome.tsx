@@ -49,21 +49,29 @@ export function LandingFooter() {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
-        <Link href="/politique-de-confidentialite" className="no-underline hover:text-[var(--organic-terracotta)]">
-          Politique de confidentialité
-        </Link>
-        <Link href="/conditions-utilisation" className="no-underline hover:text-[var(--organic-terracotta)]">
-          Conditions d'utilisation
-        </Link>
-        <Link href="/suppression-donnees" className="no-underline hover:text-[var(--organic-terracotta)]">
-          Suppression de données
-        </Link>
-      </div>
+      <div className="flex flex-col items-center text-center gap-3">
+        <div 
+          className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[13px]" 
+          style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
+        >
+          <Link href="/politique-de-confidentialite" className="no-underline hover:text-[var(--organic-terracotta)]">
+            Politique de confidentialité
+          </Link>
+          <Link href="/conditions-utilisation" className="no-underline hover:text-[var(--organic-terracotta)]">
+            Conditions d'utilisation
+          </Link>
+          <Link href="/suppression-donnees" className="no-underline hover:text-[var(--organic-terracotta)]">
+            Suppression de données
+          </Link>
+        </div>
 
-      <span className="block text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
-        © 2026 Instaflow. Every DM answered.
-      </span>
+        <span 
+          className="block text-center text-[13px]" 
+          style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
+        >
+          © 2026 Instaflow. Every DM answered.
+        </span>
+      </div>
     </footer>
   )
 }
