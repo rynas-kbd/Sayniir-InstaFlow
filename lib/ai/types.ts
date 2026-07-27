@@ -6,6 +6,8 @@ export type AiStreamEvent =
   | { t: 'credits'; used: number; limit: number }
   | { t: 'done'; conversationId: string }
   | { t: 'error'; message: string }
+  | { t: 'progress'; step: string; detail?: string }
+  | { t: 'thinking'; active: boolean }
 
 export interface AiTurnInput {
   conversationId: string

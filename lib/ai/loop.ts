@@ -11,6 +11,41 @@ import type { AiStreamEvent, AiTurnInput } from './types'
 
 const CONFIRM_TTL_MS = 15 * 60 * 1000
 
+/**
+ * Returns a user-friendly progress message for a given tool name.
+ * Used to display progress indicators in the UI during tool execution.
+ */
+function getToolProgressMessage(toolName: string): string | null {
+  const progressMessages: Record<string, string> = {
+    'create_flow_draft': 'Création du workflow...',
+    'add_flow_node': 'Ajout du nœud au workflow...',
+    'connect_flow_nodes': 'Connexion des nœuds...',
+    'delete_flow_node': 'Suppression du nœud...',
+    'set_flow_status': 'Mise à jour du statut du workflow...',
+    'get_flow_digest': 'Analyse du workflow...',
+    'list_flows': 'Récupération des workflows...',
+    'create_product': 'Création du produit...',
+    'update_product': 'Mise à jour du produit...',
+    'list_products': 'Récupération des produits...',
+    'create_segment': 'Création du segment...',
+    'create_tag': 'Création du tag...',
+    'tag_contact': 'Application du tag...',
+    'untag_contact': 'Retrait du tag...',
+    'search_contacts': 'Recherche de contacts...',
+    'set_contact_bot_paused': 'Mise en pause du bot...',
+    'create_snippet': 'Création du snippet...',
+    'schedule_campaign': 'Programmation de la campagne...',
+    'get_analytics_summary': 'Analyse des statistiques...',
+    'list_orders': 'Récupération des commandes...',
+    'update_order_status': 'Mise à jour de la commande...',
+    'get_lint_findings': 'Analyse des problèmes...',
+    'write_memory': 'Enregistrement en mémoire...',
+    'update_agent_settings': 'Mise à jour des paramètres...',
+  }
+
+  return progressMessages[toolName] ?? null
+}
+
 interface DbMessageRow {
   role: 'user' | 'assistant' | 'tool'
   content: unknown
@@ -80,6 +115,9 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
     let toolCallCount = 0
 
     for (let iteration = 0; iteration < maxIterations; iteration++) {
+      // Emit thinking event at the start of each iteration
+      push({ t: 'thinking', active: true })
+
       // A plain object rather than several `let`s — TS's control-flow narrowing collapses
       // primitive `let`s reassigned only inside a callback back to their initializer's literal
       // type, which produced bogus `never`/no-overlap errors below. Object property reads don't
@@ -95,14 +133,18 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         { apiKey: provider.apiKey, model: provider.model, system, tools: providerTools, messages, maxTokens: COPILOT_MAX_TOKENS },
         (event) => {
           if (event.type === 'text_delta') {
+            // Stop thinking when text starts streaming
+            push({ t: 'thinking', active: false })
             push({ t: 'text', delta: event.delta })
           } else if (event.type === 'message_done') {
+            push({ t: 'thinking', active: false })
             turnResult.content = event.content
             turnResult.stopReason = event.stopReason
             inputTokens += event.usage.inputTokens
             outputTokens += event.usage.outputTokens
             cacheReadTokens += event.usage.cacheReadTokens
           } else if (event.type === 'error') {
+            push({ t: 'thinking', active: false })
             turnResult.hadError = true
             push({ t: 'error', message: event.message })
           }
@@ -167,6 +209,12 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         if (toolCallCount > maxToolCalls) {
           resultBlocks.push({ type: 'tool_result', toolUseId: block.id, content: "Limite d'outils atteinte pour ce tour.", isError: true })
           continue
+        }
+
+        // Emit progress event before executing the tool
+        const progressMessage = getToolProgressMessage(tool.name)
+        if (progressMessage) {
+          push({ t: 'progress', step: progressMessage })
         }
 
         push({ t: 'tool_start', id: block.id, name: tool.name })

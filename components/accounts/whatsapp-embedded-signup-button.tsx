@@ -16,25 +16,33 @@ import { useFacebookSDK } from '@/hooks/use-facebook-sdk'
  * pieces are required before the server-side exchange (POST /api/accounts/whatsapp)
  * can complete.
  */
+// connect.facebook.net est massivement présent sur les listes de blocage
+// (bloqueurs de pub, protection anti-pistage des navigateurs) — c'est le cas
+// le plus fréquent en pratique, distinct d'un vrai problème de config.
+const SDK_ERROR_MESSAGES: Record<'network-error' | 'timeout', string> = {
+  'network-error':
+    "Votre navigateur bloque le SDK Facebook (bloqueur de publicités ou protection anti-pistage), requis par Meta pour connecter WhatsApp. Autorisez connect.facebook.net pour ce site, ou essayez un autre navigateur, puis réessayez.",
+  timeout:
+    "Le SDK Facebook n'a pas répondu à temps — souvent le signe d'un bloqueur de publicités ou d'une protection anti-pistage qui bloque connect.facebook.net. Autorisez ce domaine pour ce site, ou essayez un autre navigateur, puis réessayez.",
+}
+
 export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: string | null; configId: string | null }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const signupData = useRef<{ phoneNumberId?: string; wabaId?: string }>({})
-  
-  // Utiliser le hook pour gérer le chargement du SDK
-  const sdkStatus = useFacebookSDK(appId)
 
-  // Afficher un message d'erreur explicite si le SDK échoue à charger
+  // Utiliser le hook pour gérer le chargement du SDK
+  const { status: sdkStatus, reason: sdkErrorReason, retry: retrySdk } = useFacebookSDK(appId)
+
+  // Afficher un message d'erreur explicite et actionnable si le SDK échoue à charger
   useEffect(() => {
-    if (sdkStatus === 'error') {
-      toast.error(
-        'Impossible de charger le SDK Facebook. Vérifiez votre connexion internet ou désactivez les bloqueurs de publicités.',
-        {
-          duration: 6000, // Afficher plus longtemps pour que l'utilisateur puisse lire
-        }
-      )
+    if (sdkStatus !== 'error') return
+    if (sdkErrorReason === 'missing-config') {
+      toast.error("WhatsApp Embedded Signup n'est pas configuré (variables d'environnement manquantes)", { duration: 6000 })
+      return
     }
-  }, [sdkStatus])
+    toast.error(SDK_ERROR_MESSAGES[sdkErrorReason ?? 'network-error'], { duration: 8000 })
+  }, [sdkStatus, sdkErrorReason])
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -120,22 +128,38 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
     )
   }
 
+  // Un échec réseau/timeout est récupérable sans recharger la page (l'utilisateur
+  // corrige son navigateur puis clique "Réessayer") — contrairement à une config
+  // manquante, qui ne se répare pas côté client.
+  const isRecoverableError = sdkStatus === 'error' && sdkErrorReason !== 'missing-config'
+  const isMissingConfig = sdkStatus === 'error' && sdkErrorReason === 'missing-config'
+
   // Déterminer le texte du bouton selon l'état
   function getButtonText() {
     if (loading) return 'Connexion…'
     if (sdkStatus === 'loading') return 'Chargement du SDK…'
-    if (sdkStatus === 'error') return 'WhatsApp indisponible'
+    if (isMissingConfig) return 'WhatsApp indisponible'
+    if (isRecoverableError) return 'Réessayer'
     return 'Connecter WhatsApp'
   }
 
   // Le bouton est désactivé si:
-  // - Le SDK n'est pas prêt (loading ou error)
+  // - Le SDK est en cours de chargement
   // - Une connexion est en cours
-  // - Les configs sont manquantes
-  const isDisabled = sdkStatus !== 'ready' || loading || !appId || !configId
+  // - Les configs sont manquantes (rien à réessayer côté client)
+  // Un échec réseau/timeout reste cliquable — le clic relance le chargement.
+  const isDisabled = sdkStatus === 'loading' || loading || isMissingConfig || !appId || !configId
+
+  function handleClick() {
+    if (isRecoverableError) {
+      retrySdk()
+      return
+    }
+    void connect()
+  }
 
   return (
-    <Button variant="outline" onClick={connect} disabled={isDisabled}>
+    <Button variant="outline" onClick={handleClick} disabled={isDisabled}>
       <Phone className="size-4" />
       {getButtonText()}
     </Button>

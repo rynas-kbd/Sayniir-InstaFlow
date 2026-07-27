@@ -22,6 +22,7 @@ import { createProductTool } from './create-product'
 import { updateProductTool } from './update-product'
 import { listOrdersTool } from './list-orders'
 import { updateOrderStatusTool } from './update-order-status'
+import { updateFlowTriggerTool } from './update-flow-trigger'
 import type { AiTool } from './types'
 
 // Sorted by name and kept in this stable order across turns — the tool block is the first

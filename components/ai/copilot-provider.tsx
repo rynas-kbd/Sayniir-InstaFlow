@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { CopilotPanel } from './copilot-panel'
+import { CopilotFAB } from './copilot-fab'
 import type { AiContext } from '@/lib/ai/context/types'
 
 interface CopilotContextValue {
@@ -34,7 +35,8 @@ export function CopilotProvider({
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'i' && (e.metaKey || e.ctrlKey)) {
+      // Support both Ctrl+I and Ctrl+K
+      if ((e.key === 'i' || e.key === 'k') && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         setOpen((prev) => !prev)
       }
@@ -47,13 +49,16 @@ export function CopilotProvider({
     <CopilotContext.Provider value={{ openCopilot }}>
       {children}
       {channelAccountId && (
-        <CopilotPanel
-          channelAccountId={channelAccountId}
-          open={open}
-          onOpenChange={setOpen}
-          initialMessage={pendingPrompt}
-          onInitialMessageSent={() => setPendingPrompt(undefined)}
-        />
+        <>
+          <CopilotFAB onClick={() => setOpen((prev) => !prev)} />
+          <CopilotPanel
+            channelAccountId={channelAccountId}
+            open={open}
+            onOpenChange={setOpen}
+            initialMessage={pendingPrompt}
+            onInitialMessageSent={() => setPendingPrompt(undefined)}
+          />
+        </>
       )}
     </CopilotContext.Provider>
   )

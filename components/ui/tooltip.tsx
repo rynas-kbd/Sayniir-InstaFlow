@@ -21,8 +21,15 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+function TooltipTrigger({ asChild, ...props }: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
+  // Some tooltip primitive libs expose an `asChild` prop to render the trigger as the
+  // provided child element. The upstream typing in TooltipPrimitive.Trigger.Props in
+  // this project doesn't include it, so forward it with a narrow any-cast to avoid
+  // a type error while preserving runtime behavior.
+  return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...(props as any)} {...(asChild ? ({ asChild: true } as any) : {})} />
+  )
 }
 
 function TooltipContent({

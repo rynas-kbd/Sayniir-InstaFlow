@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Send, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { ProgressIndicator, ThinkingIndicator } from './progress-indicator'
 import { cn } from '@/lib/utils'
 import type { AiStreamEvent } from '@/lib/ai/types'
 import type { AiContext } from '@/lib/ai/context/types'
@@ -59,12 +60,14 @@ export function CopilotPanel({
   const [sending, setSending] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [input, setInput] = useState('')
+  const [progressStep, setProgressStep] = useState<{ step: string; detail?: string } | null>(null)
+  const [isThinking, setIsThinking] = useState(false)
   const conversationIdRef = useRef<string | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, pendingConfirm])
+  }, [messages, pendingConfirm, progressStep, isThinking])
 
   useEffect(() => {
     if (open && initialMessage) {
@@ -83,10 +86,34 @@ export function CopilotPanel({
   function applyEvent(event: AiStreamEvent, assistantId: string) {
     if (event.t === 'text') {
       setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text + event.delta } : m)))
+      // Clear progress indicators when text starts streaming
+      setProgressStep(null)
+      setIsThinking(false)
     } else if (event.t === 'error') {
       setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || event.message } : m)))
+      // Clear indicators on error
+      setProgressStep(null)
+      setIsThinking(false)
     } else if (event.t === 'confirm') {
       setPendingConfirm({ id: event.id, name: event.name, preview: event.preview })
+      // Clear indicators when confirmation is requested
+      setProgressStep(null)
+      setIsThinking(false)
+    } else if (event.t === 'progress') {
+      // Update progress step
+      setProgressStep({ step: event.step, detail: event.detail })
+      setIsThinking(false)
+    } else if (event.t === 'thinking') {
+      // Update thinking state
+      setIsThinking(event.active)
+      if (event.active) {
+        // Clear progress step when thinking starts
+        setProgressStep(null)
+      }
+    } else if (event.t === 'done') {
+      // Clear all indicators when done
+      setProgressStep(null)
+      setIsThinking(false)
     }
     // tool_start / tool_result stay silent for read/write_reversible tools by design (§1.2); credits update the settings-page meter on next load.
   }
@@ -97,6 +124,8 @@ export function CopilotPanel({
     setInput('')
     setSending(true)
     setPendingConfirm(null)
+    setProgressStep(null)
+    setIsThinking(false)
 
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', text: trimmed }])
     const assistantId = newAssistantBubble()
@@ -114,6 +143,8 @@ export function CopilotPanel({
       setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || 'Une erreur est survenue.' } : m)))
     } finally {
       setSending(false)
+      setProgressStep(null)
+      setIsThinking(false)
     }
   }
 
@@ -128,6 +159,8 @@ export function CopilotPanel({
     }
 
     setConfirming(true)
+    setProgressStep(null)
+    setIsThinking(false)
     const assistantId = newAssistantBubble()
     try {
       const res = await fetch('/api/ai/confirm', {
@@ -140,6 +173,8 @@ export function CopilotPanel({
       setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || 'Une erreur est survenue.' } : m)))
     } finally {
       setConfirming(false)
+      setProgressStep(null)
+      setIsThinking(false)
     }
   }
 
@@ -167,6 +202,20 @@ export function CopilotPanel({
                   {m.text || (sending && m.role === 'assistant' ? <Loader2 className="size-3.5 animate-spin" /> : '')}
                 </div>
               ))}
+
+              {/* Progress indicator - shown when a tool is being executed */}
+              {progressStep && (
+                <div className="mr-8">
+                  <ProgressIndicator step={progressStep.step} detail={progressStep.detail} />
+                </div>
+              )}
+
+              {/* Thinking indicator - shown when waiting for LLM response */}
+              {isThinking && !progressStep && (
+                <div className="mr-8">
+                  <ThinkingIndicator />
+                </div>
+              )}
 
               {pendingConfirm && (
                 <div className="mr-8 rounded-lg border border-primary/30 bg-card p-3 shadow-sm ring-1 ring-primary/20">
