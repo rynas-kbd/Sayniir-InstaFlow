@@ -12,6 +12,14 @@ Every finding below has been fixed in code except the two items that require act
 
 **Fixed in code:** P0-1, P1-1 through P1-4, all of P2 (1–10), all of P3, plus the P0-2 file scrub.
 
+**Note on Facebook SDK CSP configuration (2026-07-27):** 
+The CSP has been adjusted to support the WhatsApp Embedded Signup flow, which requires loading the Facebook JavaScript SDK. The SDK loads additional scripts dynamically and creates inline scripts that need special handling:
+
+- Added `'unsafe-inline'` to `script-src` — required for the SDK's inline initialization scripts. With `'strict-dynamic'` present, modern browsers ignore `'unsafe-inline'`, but it's necessary as a fallback for the SDK's behavior.
+- Extended allowed domains to `https://*.facebook.com` and `https://*.facebook.net` in `script-src`, `connect-src`, and `frame-src` to support the full SDK lifecycle and popup authentication flow.
+- This represents a measured security tradeoff: the SDK must run client-side (WhatsApp Embedded Signup has no server-side OAuth alternative), and Meta's SDK architecture requires these CSP relaxations. The alternative would be no WhatsApp connectivity at all.
+- The policy remains Report-Only for monitoring before enforcement.
+
 **Requires manual action from you (cannot be done from this session):**
 1. **Rotate `META_WEBHOOK_VERIFY_TOKEN` and the burned Meta app secret** — see P0-2 below for the exact values and rotation steps. `scripts/test-webhook.mjs` has been scrubbed to read from environment variables instead.
 2. **Git history rewrite** to purge the burned secret from commit `ceb1772` onward — runbook is under P0-2. Not run automatically; it rewrites all 88 commits and requires a coordinated force-push (every clone must be re-cloned afterward).
