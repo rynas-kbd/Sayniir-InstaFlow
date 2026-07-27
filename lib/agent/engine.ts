@@ -124,6 +124,18 @@ export async function callAgentLLM<T>(
   aiApiKey?: string | null,
   aiModel?: string | null
 ): Promise<T> {
+  // Sanitize prompt globally before sending to any provider
+  let safePrompt = prompt
+  try {
+    // dynamic import so server/bundle size is minimal
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { sanitizeForByteString } = await import('../encoding/sanitize')
+    safePrompt = sanitizeForByteString(prompt)
+  } catch (err) {
+    // If sanitizer fails, fall back to raw prompt but log for debugging
+    console.warn('[LLM] sanitizeForByteString failed, using raw prompt', err)
+    safePrompt = prompt
+  }
   const provider = aiProvider || 'openrouter'
   const apiKey =
     aiApiKey ||
@@ -146,39 +158,39 @@ export async function callAgentLLM<T>(
 
   if (!apiKey) {
     if (provider === 'openrouter' && process.env.OPENROUTER_API_KEY) {
-      return callLLMWithOpenRouter<T>(prompt, process.env.OPENROUTER_API_KEY, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+      return callLLMWithOpenRouter<T>(safePrompt, process.env.OPENROUTER_API_KEY, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     }
     if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
-      return callLLMWithGemini<T>(prompt, process.env.GEMINI_API_KEY, model || 'gemini-2.0-flash')
+      return callLLMWithGemini<T>(safePrompt, process.env.GEMINI_API_KEY, model || 'gemini-2.0-flash')
     }
     if (provider === 'groq' && process.env.GROQ_API_KEY) {
-      return callLLMWithGroq<T>(prompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
+      return callLLMWithGroq<T>(safePrompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
     }
     // Last-resort safety net, in provider-preference order matching the new default.
     const systemOpenRouter = process.env.OPENROUTER_API_KEY
     if (systemOpenRouter) {
-      return callLLMWithOpenRouter<T>(prompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+      return callLLMWithOpenRouter<T>(safePrompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     }
     const systemGroq = process.env.GROQ_API_KEY
     if (systemGroq) {
-      return callLLMWithGroq<T>(prompt, systemGroq, 'llama-3.3-70b-versatile')
+      return callLLMWithGroq<T>(safePrompt, systemGroq, 'llama-3.3-70b-versatile')
     }
     const systemGemini = process.env.GEMINI_API_KEY
     if (systemGemini) {
-      return callLLMWithGemini<T>(prompt, systemGemini, 'gemini-2.0-flash')
+      return callLLMWithGemini<T>(safePrompt, systemGemini, 'gemini-2.0-flash')
     }
     throw new Error(`Aucune clé API disponible pour le fournisseur: ${provider}`)
   }
 
   switch (provider) {
     case 'gemini':
-      return callLLMWithGemini<T>(prompt, apiKey, model || 'gemini-2.0-flash')
+      return callLLMWithGemini<T>(safePrompt, apiKey, model || 'gemini-2.0-flash')
     case 'groq':
-      return callLLMWithGroq<T>(prompt, apiKey, model || 'llama-3.3-70b-versatile')
+      return callLLMWithGroq<T>(safePrompt, apiKey, model || 'llama-3.3-70b-versatile')
     case 'openai':
-      return callLLMWithOpenAI<T>(prompt, apiKey, model || 'gpt-4o-mini')
+      return callLLMWithOpenAI<T>(safePrompt, apiKey, model || 'gpt-4o-mini')
     case 'anthropic':
-      return callLLMWithAnthropic<T>(prompt, apiKey, model || 'claude-3-5-sonnet-20241022')
+      return callLLMWithAnthropic<T>(safePrompt, apiKey, model || 'claude-3-5-sonnet-20241022')
     case 'openrouter':
       return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     default:
