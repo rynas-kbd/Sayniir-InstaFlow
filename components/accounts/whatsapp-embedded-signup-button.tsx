@@ -5,21 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-declare global {
-  interface Window {
-    FB?: {
-      init: (params: { appId: string; version: string }) => void
-      login: (
-        callback: (response: { authResponse?: { code?: string } }) => void,
-        params: { config_id: string; response_type: string; override_default_response_type: boolean }
-      ) => void
-    }
-    fbAsyncInit?: () => void
-  }
-}
-
-const SDK_SRC = 'https://connect.facebook.net/en_US/sdk.js'
+import { useFacebookSDK } from '@/hooks/use-facebook-sdk'
 
 /**
  * WhatsApp Embedded Signup — unlike Instagram/Messenger's server redirect,
@@ -34,26 +20,23 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const signupData = useRef<{ phoneNumberId?: string; wabaId?: string }>({})
+  
+  // Utiliser le hook pour gérer le chargement du SDK
+  const sdkStatus = useFacebookSDK(appId)
+
+  // Afficher un message d'erreur explicite si le SDK échoue à charger
+  useEffect(() => {
+    if (sdkStatus === 'error') {
+      toast.error(
+        'Impossible de charger le SDK Facebook. Vérifiez votre connexion internet ou désactivez les bloqueurs de publicités.',
+        {
+          duration: 6000, // Afficher plus longtemps pour que l'utilisateur puisse lire
+        }
+      )
+    }
+  }, [sdkStatus])
 
   useEffect(() => {
-    if (!appId) return
-
-    function initSdk() {
-      window.FB?.init({ appId: appId!, version: 'v21.0' })
-    }
-
-    if (window.FB) {
-      initSdk()
-    } else if (!document.getElementById('facebook-jssdk')) {
-      window.fbAsyncInit = initSdk
-      const script = document.createElement('script')
-      script.id = 'facebook-jssdk'
-      script.src = SDK_SRC
-      script.async = true
-      script.defer = true
-      document.body.appendChild(script)
-    }
-
     function onMessage(event: MessageEvent) {
       if (event.origin !== 'https://www.facebook.com') return
       try {
@@ -71,15 +54,15 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [appId])
+  }, [])
 
   async function connect() {
     if (!appId || !configId) {
       toast.error("WhatsApp Embedded Signup n'est pas configuré (variables d'environnement manquantes)")
       return
     }
-    if (!window.FB) {
-      toast.error('Le SDK Facebook n\'a pas encore chargé — réessayez dans un instant')
+    if (sdkStatus !== 'ready') {
+      toast.error('Le SDK Facebook n\'est pas encore prêt — veuillez patienter')
       return
     }
 
@@ -129,7 +112,7 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
       }
     }
 
-    window.FB.login(
+    window.FB!.login(
       (response) => {
         void handleLoginResponse(response)
       },
@@ -137,10 +120,24 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
     )
   }
 
+  // Déterminer le texte du bouton selon l'état
+  function getButtonText() {
+    if (loading) return 'Connexion…'
+    if (sdkStatus === 'loading') return 'Chargement du SDK…'
+    if (sdkStatus === 'error') return 'WhatsApp indisponible'
+    return 'Connecter WhatsApp'
+  }
+
+  // Le bouton est désactivé si:
+  // - Le SDK n'est pas prêt (loading ou error)
+  // - Une connexion est en cours
+  // - Les configs sont manquantes
+  const isDisabled = sdkStatus !== 'ready' || loading || !appId || !configId
+
   return (
-    <Button variant="outline" onClick={connect} disabled={loading || !appId || !configId}>
+    <Button variant="outline" onClick={connect} disabled={isDisabled}>
       <Phone className="size-4" />
-      {loading ? 'Connexion…' : 'Connecter WhatsApp'}
+      {getButtonText()}
     </Button>
   )
 }
