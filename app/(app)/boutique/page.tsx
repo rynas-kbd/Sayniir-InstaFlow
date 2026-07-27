@@ -1,36 +1,20 @@
-import { Store } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { decryptApiKey, isEncrypted } from '@/lib/crypto'
-import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { BoutiqueClient } from '@/components/boutique/boutique-client'
 import type { AgentSettings } from '@/components/boutique/types'
 
 export default async function BoutiquePage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
+  const { active: account } = await resolveActiveAccount()
 
   if (!account) {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Boutique" description="Catalogue produits et commandes." />
-        <div className="p-4 md:p-6">
-          <EmptyState
-            icon={Store}
-            title="Aucun compte connecté"
-            description="Connectez un compte pour commencer à gérer votre boutique."
-          />
-        </div>
+        <NoAccountState description="Connectez un compte pour commencer à gérer votre boutique." />
       </div>
     )
   }

@@ -1,5 +1,6 @@
 import { Mail, AtSign, Calendar, Hash, ShieldAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { SignOutButton } from '@/components/settings/sign-out-button'
@@ -41,7 +42,7 @@ export default async function SettingsPage() {
   const instagramUsername = user!.user_metadata?.instagram_username
   const displayName = instagramUsername ? `@${instagramUsername}` : (user!.email ?? 'Utilisateur')
 
-  const { data: account } = await supabase.from('channel_accounts').select('id').eq('user_id', user!.id).order('connected_at').limit(1).maybeSingle()
+  const { active: account } = await resolveActiveAccount()
   const { data: teamMembers } = account
     ? await supabase.from('team_members').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false })
     : { data: [] }

@@ -1,23 +1,12 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { CreateProductPageForm } from '@/components/boutique/create-product-page-form'
 
 export default async function NewProductPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
+  const { active: account } = await resolveActiveAccount()
   if (!account) redirect('/boutique')
 
   return (

@@ -2,11 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
-// GET /api/rules — list rules for the current user
-export async function GET() {
+// GET /api/rules — list rules for the current user, or ?accountId=... to scope to a single account
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const accountId = request.nextUrl.searchParams.get('accountId')
+
+  if (accountId) {
+    const { data: account } = await supabase.from('channel_accounts').select('id').eq('id', accountId).eq('user_id', user.id).single()
+    if (!account) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { data: rules } = await supabase
+      .from('automation_rules')
+      .select('*')
+      .eq('channel_account_id', accountId)
+      .order('created_at', { ascending: false })
+
+    return NextResponse.json(rules ?? [])
+  }
 
   const { data: accounts } = await supabase
     .from('channel_accounts')

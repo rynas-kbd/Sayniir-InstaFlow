@@ -2,22 +2,13 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { CreateCampaignForm } from '@/components/campaigns/create-campaign-form'
 
 export default async function NewCampaignPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
+  const { active: account } = await resolveActiveAccount()
   if (!account) redirect('/campaigns')
 
   const [{ data: tags }, { data: segments }] = await Promise.all([

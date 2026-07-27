@@ -4,16 +4,22 @@ import { CommandMenu } from './command-menu'
 import { NotificationsMenu, type NotificationCounts } from './notifications-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from './user-menu'
+import { AccountSwitcher } from './account-switcher'
 import type { BusinessType } from './nav-config'
+import type { ActiveAccount } from '@/lib/accounts/active-account'
 
 export function Topbar({
   businessType,
   email,
   notificationCounts,
+  accounts,
+  activeAccountId,
 }: {
   businessType: BusinessType
   email: string | null
   notificationCounts: NotificationCounts
+  accounts: ActiveAccount[]
+  activeAccountId: string | null
 }) {
   return (
     <header className="relative flex min-h-14 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-3 pt-safe pb-1.5 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
@@ -36,6 +42,12 @@ export function Topbar({
         <div className="hidden">
           <MobileNav businessType={businessType} />
         </div>
+        {activeAccountId && accounts.length > 1 && (
+          <>
+            <AccountSwitcher accounts={accounts} activeId={activeAccountId} />
+            <div className="mx-0.5 hidden h-5 w-px bg-[color-mix(in_srgb,var(--organic-sand-400)_40%,transparent)] md:block" />
+          </>
+        )}
         <Breadcrumb businessType={businessType} />
       </div>
 

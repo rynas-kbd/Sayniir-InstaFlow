@@ -3,8 +3,6 @@ import { createClient } from '../supabase/server'
 export interface AnalyticsSummary {
   messagesReceived: number
   autoReplies: number
-  activeAccounts: number
-  totalAccounts: number
   responseRate: number
   newContacts: number
   uniqueConversations: number
@@ -18,49 +16,44 @@ export interface DayPoint {
   replies: number
 }
 
-async function getAccountIds(userId: string): Promise<string[]> {
+/**
+ * Scoped to a single channel account — the one active in the account
+ * switcher — rather than the user's full account list. A user with several
+ * accounts otherwise gets numbers blended across channels with no way to
+ * tell them apart.
+ */
+export async function getAnalyticsSummary(accountId: string, from: Date, to: Date): Promise<AnalyticsSummary> {
   const supabase = await createClient()
-  const { data } = await supabase.from('channel_accounts').select('id').eq('user_id', userId)
-  return (data ?? []).map((a) => a.id)
-}
 
-export async function getAnalyticsSummary(userId: string, from: Date, to: Date): Promise<AnalyticsSummary> {
-  const supabase = await createClient()
-  const accountIds = await getAccountIds(userId)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
-
-  const [{ data: accounts }, { count: messagesReceived }, { count: autoReplies }, { count: newContacts }, { data: logs }] = await Promise.all([
-    supabase.from('channel_accounts').select('id, is_active').in('id', safeIds),
+  const [{ count: messagesReceived }, { count: autoReplies }, { count: newContacts }, { data: logs }] = await Promise.all([
     supabase
       .from('message_logs')
       .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
+      .eq('channel_account_id', accountId)
       .eq('direction', 'incoming')
       .gte('created_at', from.toISOString())
       .lte('created_at', to.toISOString()),
     supabase
       .from('message_logs')
       .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
+      .eq('channel_account_id', accountId)
       .eq('auto_reply_sent', true)
       .gte('created_at', from.toISOString())
       .lte('created_at', to.toISOString()),
     supabase
       .from('contacts')
       .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
+      .eq('channel_account_id', accountId)
       .gte('first_seen_at', from.toISOString())
       .lte('first_seen_at', to.toISOString()),
     supabase
       .from('message_logs')
       .select('direction, created_at, contact_id')
-      .in('channel_account_id', safeIds)
+      .eq('channel_account_id', accountId)
       .gte('created_at', from.toISOString())
       .lte('created_at', to.toISOString()),
   ])
 
-  const totalAccounts = accounts?.length ?? 0
-  const activeAccounts = (accounts ?? []).filter((a) => a.is_active).length
   const received = messagesReceived ?? 0
   const replied = autoReplies ?? 0
 
@@ -80,8 +73,6 @@ export async function getAnalyticsSummary(userId: string, from: Date, to: Date):
   return {
     messagesReceived: received,
     autoReplies: replied,
-    activeAccounts,
-    totalAccounts,
     responseRate: received > 0 ? Math.round((replied / received) * 100) : 0,
     newContacts: newContacts ?? 0,
     uniqueConversations: uniqueContacts.size,
@@ -90,15 +81,13 @@ export async function getAnalyticsSummary(userId: string, from: Date, to: Date):
   }
 }
 
-export async function getMessagesTimeseries(userId: string, from: Date, to: Date): Promise<DayPoint[]> {
+export async function getMessagesTimeseries(accountId: string, from: Date, to: Date): Promise<DayPoint[]> {
   const supabase = await createClient()
-  const accountIds = await getAccountIds(userId)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
 
   const { data } = await supabase
     .from('message_logs')
     .select('created_at, direction, auto_reply_sent')
-    .in('channel_account_id', safeIds)
+    .eq('channel_account_id', accountId)
     .gte('created_at', from.toISOString())
     .lte('created_at', to.toISOString())
 

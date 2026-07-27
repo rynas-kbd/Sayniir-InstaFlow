@@ -1,5 +1,6 @@
 import { Target, Users, CheckCircle2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -7,19 +8,11 @@ import { LeadRow, type Lead } from '@/components/workspace/lead-row'
 
 export default async function LeadsPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { active } = await resolveActiveAccount()
 
-  const { data: accounts } = await supabase.from('channel_accounts').select('id').eq('user_id', user!.id)
-  const accountIds = (accounts ?? []).map((a) => a.id)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
-
-  const { data: leads } = await supabase
-    .from('leads')
-    .select('*')
-    .in('channel_account_id', safeIds)
-    .order('created_at', { ascending: false })
+  const { data: leads } = active
+    ? await supabase.from('leads').select('*').eq('channel_account_id', active.id).order('created_at', { ascending: false })
+    : { data: [] }
 
   const safeLeads = (leads ?? []) as Lead[]
   const qualifyingCount = safeLeads.filter((l) => l.qualification_status === 'qualifying').length

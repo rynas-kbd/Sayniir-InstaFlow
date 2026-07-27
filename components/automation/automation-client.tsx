@@ -24,8 +24,6 @@ export function AutomationClient({
   const [activeTab, setActiveTab] = useState<'dm' | 'comment'>('dm')
   const [, startTabTransition] = useTransition()
 
-  const accountMap = Object.fromEntries(accounts.map((a) => [a.id, a]))
-
   const filteredRules = rules.filter((r) =>
     activeTab === 'dm' ? ['any_message', 'keyword'].includes(r.trigger_type) : ['any_comment', 'comment_keyword'].includes(r.trigger_type)
   )
@@ -173,7 +171,6 @@ export function AutomationClient({
               <RuleCard
                 key={rule.id}
                 rule={rule}
-                account={accountMap[rule.channel_account_id]}
                 isToggling={busyId === rule.id}
                 isDeleting={busyId === `${rule.id}_del`}
                 onToggle={() => handleToggle(rule)}

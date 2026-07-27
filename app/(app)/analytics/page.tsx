@@ -1,7 +1,8 @@
 import { MessageSquare, Zap, TrendingUp, Users, Sparkles, BarChart3, ArrowUpRight, Clock, MessagesSquare, SendHorizontal } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import { getAnalyticsSummary, getMessagesTimeseries } from '@/lib/analytics/queries'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { getAnalyticsSummary, getMessagesTimeseries, type AnalyticsSummary, type DayPoint } from '@/lib/analytics/queries'
 import { PageHeader } from '@/components/app-shell/page-header'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { MessagesChart } from '@/components/analytics/messages-chart'
 
@@ -38,17 +39,23 @@ function formatHour(h: number) {
 }
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { active: account } = await resolveActiveAccount()
+
+  if (!account) {
+    return (
+      <div className="flex h-full flex-col">
+        <PageHeader title="Analytics" description="Performances et statistiques des 14 derniers jours." />
+        <NoAccountState description="Connectez un compte pour voir vos statistiques." />
+      </div>
+    )
+  }
 
   const to = new Date()
   const from = new Date(to.getTime() - 13 * 86400000)
 
-  const [summary, points] = await Promise.all([
-    getAnalyticsSummary(user!.id, from, to),
-    getMessagesTimeseries(user!.id, from, to),
+  const [summary, points]: [AnalyticsSummary, DayPoint[]] = await Promise.all([
+    getAnalyticsSummary(account.id, from, to),
+    getMessagesTimeseries(account.id, from, to),
   ])
 
   const totalMessages = summary.messagesReceived + summary.totalOutgoing

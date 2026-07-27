@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { Workflow, Zap, TrendingUp, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { EmptyState } from '@/components/ui/empty-state'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { getAccountLabel } from '@/lib/channels/labels'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { Button } from '@/components/ui/button'
 import { FlowCard } from '@/components/flows/flow-card'
 import { FlowsEnabledToggle } from '@/components/flows/flows-enabled-toggle'
@@ -11,35 +13,11 @@ import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function FlowsPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id, instagram_username, page_name, phone_number, platform')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
-  const accountName = account
-    ? account.platform === 'whatsapp'
-      ? account.phone_number ?? null
-      : `@${account.instagram_username ?? account.page_name ?? 'Compte'}`
-    : null
+  const { active: account } = await resolveActiveAccount()
+  const accountName = account ? getAccountLabel(account) : null
 
   if (!account) {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <EmptyState
-            icon={Workflow}
-            title="Aucun compte connecté"
-            description="Connectez un compte Instagram pour créer des flows."
-          />
-        </div>
-      </div>
-    )
+    return <NoAccountState description="Connectez un compte Instagram, Messenger ou WhatsApp pour créer des flows." />
   }
 
   const [{ data: flows }, { data: settings }, { data: runsData }, { data: insightRows }] = await Promise.all([

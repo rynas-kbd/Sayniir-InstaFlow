@@ -1,5 +1,6 @@
 import { CalendarClock, Clock, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -7,19 +8,11 @@ import { AppointmentRow, type Appointment } from '@/components/workspace/appoint
 
 export default async function RdvPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { active } = await resolveActiveAccount()
 
-  const { data: accounts } = await supabase.from('channel_accounts').select('id').eq('user_id', user!.id)
-  const accountIds = (accounts ?? []).map((a) => a.id)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
-
-  const { data: appointments } = await supabase
-    .from('appointments')
-    .select('*')
-    .in('channel_account_id', safeIds)
-    .order('scheduled_at', { ascending: true })
+  const { data: appointments } = active
+    ? await supabase.from('appointments').select('*').eq('channel_account_id', active.id).order('scheduled_at', { ascending: true })
+    : { data: [] }
 
   const safeAppointments = (appointments ?? []) as Appointment[]
   const pendingCount = safeAppointments.filter((a) => a.status === 'pending').length

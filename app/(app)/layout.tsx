@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { AppSidebar } from '@/components/app-shell/sidebar'
 import { Topbar } from '@/components/app-shell/topbar'
 import { MobileBottomNav } from '@/components/app-shell/mobile-bottom-nav'
@@ -21,44 +22,43 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const [{ data: profile }, { data: accounts }] = await Promise.all([
+  const [{ data: profile }, { accounts, active }] = await Promise.all([
     supabase.from('profiles').select('business_type').eq('id', user.id).single(),
-    supabase.from('channel_accounts').select('id').eq('user_id', user.id),
+    resolveActiveAccount(),
   ])
 
   const businessType = (profile?.business_type as BusinessType | undefined) ?? 'ecommerce'
-  const accountIds = (accounts ?? []).map((a) => a.id)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
 
-  const [{ count: unrepliedMessages }, { count: pendingLeads }, { count: pendingAppointments }] = await Promise.all([
-    supabase
-      .from('message_logs')
-      .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
-      .eq('direction', 'incoming')
-      .eq('auto_reply_sent', false),
-    supabase
-      .from('leads')
-      .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
-      .eq('qualification_status', 'qualifying'),
-    supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .in('channel_account_id', safeIds)
-      .eq('status', 'pending'),
-  ])
-
-  const notificationCounts = {
-    unrepliedMessages: unrepliedMessages ?? 0,
-    pendingLeads: pendingLeads ?? 0,
-    pendingAppointments: pendingAppointments ?? 0,
-  }
-
-  const primaryAccountId = accountIds[0] ?? null
+  const notificationCounts = active
+    ? await (async () => {
+        const [{ count: unrepliedMessages }, { count: pendingLeads }, { count: pendingAppointments }] = await Promise.all([
+          supabase
+            .from('message_logs')
+            .select('*', { count: 'exact', head: true })
+            .eq('channel_account_id', active.id)
+            .eq('direction', 'incoming')
+            .eq('auto_reply_sent', false),
+          supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('channel_account_id', active.id)
+            .eq('qualification_status', 'qualifying'),
+          supabase
+            .from('appointments')
+            .select('*', { count: 'exact', head: true })
+            .eq('channel_account_id', active.id)
+            .eq('status', 'pending'),
+        ])
+        return {
+          unrepliedMessages: unrepliedMessages ?? 0,
+          pendingLeads: pendingLeads ?? 0,
+          pendingAppointments: pendingAppointments ?? 0,
+        }
+      })()
+    : { unrepliedMessages: 0, pendingLeads: 0, pendingAppointments: 0 }
 
   return (
-    <CopilotProvider channelAccountId={primaryAccountId}>
+    <CopilotProvider channelAccountId={active?.id ?? null}>
     <div className="flex h-screen overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
       <div className="relative flex min-w-0 flex-1 flex-col">
@@ -81,7 +81,13 @@ export default async function AppLayout({
           />
         </div>
 
-        <Topbar businessType={businessType} email={user.email ?? null} notificationCounts={notificationCounts} />
+        <Topbar
+          businessType={businessType}
+          email={user.email ?? null}
+          notificationCounts={notificationCounts}
+          accounts={accounts}
+          activeAccountId={active?.id ?? null}
+        />
         <main className="relative z-10 flex-1 overflow-hidden pb-16 md:pb-0">
           <PageTransitionWrapper>{children}</PageTransitionWrapper>
         </main>

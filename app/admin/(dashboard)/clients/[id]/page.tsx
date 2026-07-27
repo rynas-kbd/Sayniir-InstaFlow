@@ -51,17 +51,23 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
   const supabase = createAdminClient()
   const { id: userId } = await params
 
-  const [{ data: profile }, { data: subscription }, { data: igAccount }] = await Promise.all([
+  const [{ data: profile }, { data: subscription }, { data: channelAccounts }] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, role, admin_notes, created_at').eq('id', userId).single(),
     supabase.from('subscriptions').select('*').eq('user_id', userId).maybeSingle(),
+    // A user can have several accounts (1 free / 3 pro / unlimited premium — see
+    // lib/plans/restrictions.ts) — .maybeSingle() here used to throw PGRST116 for
+    // any client with more than one. This picks the first for the header/keyword
+    // panels below; a fuller multi-account admin view is future work.
     supabase
       .from('channel_accounts')
       .select('id, instagram_username, page_picture_url, is_active, connected_at')
       .eq('user_id', userId)
-      .maybeSingle(),
+      .order('connected_at', { ascending: true }),
   ])
 
   if (!profile) notFound()
+
+  const igAccount = channelAccounts?.[0] ?? null
 
   const { data: rules } = await supabase
     .from('automation_rules')

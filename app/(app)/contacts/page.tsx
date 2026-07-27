@@ -1,6 +1,7 @@
-import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { PageHeader } from '@/components/app-shell/page-header'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { ContactTable } from '@/components/contacts/contact-table'
 import { ManageTagsDialog } from '@/components/contacts/manage-tags-dialog'
 import { ContactsCsvActions } from '@/components/contacts/contacts-csv-actions'
@@ -8,27 +9,13 @@ import type { Contact, Tag } from '@/components/contacts/types'
 
 export default async function ContactsPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
+  const { active: account } = await resolveActiveAccount()
 
   if (!account) {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Contacts" description="Votre CRM : contacts, tags et historique." />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <Users className="size-8 text-muted-foreground/50" strokeWidth={1} />
-          <p className="text-sm font-medium text-foreground">Aucun compte connecté</p>
-          <p className="max-w-sm text-sm text-muted-foreground">Connectez un compte pour commencer à recevoir des contacts.</p>
-        </div>
+        <NoAccountState description="Connectez un compte pour commencer à recevoir des contacts." />
       </div>
     )
   }

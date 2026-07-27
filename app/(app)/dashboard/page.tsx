@@ -14,6 +14,7 @@ import {
   User,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -49,32 +50,31 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id, platform, page_name, instagram_username, is_active')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: false })
-
-  const safeAccounts = accounts ?? []
-  const accountIds = safeAccounts.map((a) => a.id)
-  const safeIds = accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000']
+  // "Comptes liés" widget deliberately lists every connected account — it's
+  // an account-management summary, not per-account data — while the stats
+  // and lists below scope to whichever account is active.
+  const { accounts: safeAccounts, active } = await resolveActiveAccount()
 
   const [{ data: messages, count: totalMessages }, { data: subscription }, { data: rules }] =
     await Promise.all([
-      supabase
-        .from('message_logs')
-        .select('id, sender_id, sender_username, message_text, auto_reply_sent, created_at', { count: 'exact' })
-        .in('channel_account_id', safeIds)
-        .eq('direction', 'incoming')
-        .order('created_at', { ascending: false })
-        .limit(6),
+      active
+        ? supabase
+            .from('message_logs')
+            .select('id, sender_id, sender_username, message_text, auto_reply_sent, created_at', { count: 'exact' })
+            .eq('channel_account_id', active.id)
+            .eq('direction', 'incoming')
+            .order('created_at', { ascending: false })
+            .limit(6)
+        : Promise.resolve({ data: [], count: 0 }),
       supabase.from('subscriptions').select('status, expires_at').eq('user_id', user!.id).maybeSingle(),
-      supabase
-        .from('automation_rules')
-        .select('id, name, trigger_type, trigger_keywords, response_text, is_active')
-        .in('channel_account_id', safeIds)
-        .order('created_at', { ascending: false })
-        .limit(3),
+      active
+        ? supabase
+            .from('automation_rules')
+            .select('id, name, trigger_type, trigger_keywords, response_text, is_active')
+            .eq('channel_account_id', active.id)
+            .order('created_at', { ascending: false })
+            .limit(3)
+        : Promise.resolve({ data: [] }),
     ])
 
   const safeMessages = messages ?? []

@@ -14,12 +14,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { getAvatarColor, getInitials } from '@/lib/avatar-color'
-import type { AutomationRule, ChannelAccountLite } from './types'
+import type { AutomationRule } from './types'
 
 export function RuleCard({
   rule,
-  account,
   isToggling,
   isDeleting,
   onToggle,
@@ -27,7 +25,6 @@ export function RuleCard({
   onDelete,
 }: {
   rule: AutomationRule
-  account?: ChannelAccountLite
   isToggling: boolean
   isDeleting: boolean
   onToggle: () => void
@@ -54,7 +51,6 @@ export function RuleCard({
         : 'Commentaire uniquement'
 
   const isComment = rule.trigger_type.includes('comment')
-  const accountLabel = account ? (account.platform === 'whatsapp' ? account.phone_number : `@${account.instagram_username ?? account.page_name}`) : null
 
   return (
     <>
@@ -77,22 +73,13 @@ export function RuleCard({
           {/* Header row: Account & Switch */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div
-                className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-[11px] font-bold shadow-sm transition-transform duration-300 group-hover:scale-105 ${
-                  account ? getAvatarColor(account.id) : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {account ? getInitials(accountLabel ?? account.id) : <Zap className="size-4" strokeWidth={2} />}
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground shadow-sm transition-transform duration-300 group-hover:scale-105">
+                <Zap className="size-4" strokeWidth={2} />
               </div>
               <div className="min-w-0">
                 <h3 className="line-clamp-1 text-[13.5px] font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
                   {rule.name}
                 </h3>
-                {accountLabel && (
-                  <p className="truncate text-[11px] text-muted-foreground/80 mt-0.5">
-                    {accountLabel}
-                  </p>
-                )}
               </div>
             </div>
             <Switch

@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { Megaphone, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { getAccountLabel } from '@/lib/channels/labels'
 import { EmptyState } from '@/components/ui/empty-state'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { Button } from '@/components/ui/button'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
@@ -11,34 +14,14 @@ import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function CampaignsPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id, instagram_username, page_name, phone_number, platform')
-    .eq('user_id', user!.id)
-    .order('connected_at', { ascending: true })
-
-  const account = accounts?.[0]
-  const accountName = account
-    ? account.platform === 'whatsapp'
-      ? account.phone_number ?? null
-      : `@${account.instagram_username ?? account.page_name ?? 'Compte'}`
-    : null
+  const { active: account } = await resolveActiveAccount()
+  const accountName = account ? getAccountLabel(account) : null
 
   if (!account) {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Campagnes" description="Diffusions ciblées vers vos contacts et segments." />
-        <div className="p-4 md:p-6">
-          <EmptyState
-            icon={Megaphone}
-            title="Aucun compte connecté"
-            description="Connectez un compte pour lancer des campagnes."
-          />
-        </div>
+        <NoAccountState description="Connectez un compte pour lancer des campagnes." />
       </div>
     )
   }

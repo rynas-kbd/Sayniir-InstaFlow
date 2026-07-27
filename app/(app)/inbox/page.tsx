@@ -1,6 +1,8 @@
-import { MessageSquare, Inbox } from 'lucide-react'
+import { Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { cn } from '@/lib/utils'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { ConversationList } from '@/components/inbox/conversation-list'
 import { ConversationThread } from '@/components/inbox/conversation-thread'
 import { InboxFilterBar } from '@/components/inbox/inbox-filter-bar'
@@ -14,27 +16,20 @@ export default async function InboxPage({
   searchParams: Promise<{ filter?: string; conv?: string }>
 }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { active: account } = await resolveActiveAccount()
 
   const { filter, conv } = await searchParams
   const activeFilter = filter ?? 'all'
   const activeConvId = conv ?? null
 
-  const { data: accounts } = await supabase
-    .from('channel_accounts')
-    .select('id, instagram_username, page_picture_url')
-    .eq('user_id', user!.id)
-
-  const safeAccounts = accounts ?? []
-  const accountIds = safeAccounts.map((a) => a.id)
-  const accountMap = Object.fromEntries(safeAccounts.map((a) => [a.id, a]))
+  if (!account) {
+    return <NoAccountState description="Connectez un compte pour voir vos conversations." />
+  }
 
   let query = supabase
     .from('message_logs')
     .select('*')
-    .in('channel_account_id', accountIds.length ? accountIds : ['00000000-0000-0000-0000-000000000000'])
+    .eq('channel_account_id', account.id)
     .order('created_at', { ascending: false })
     .limit(500)
 
@@ -59,10 +54,9 @@ export default async function InboxPage({
   for (const msg of allMessages ?? []) {
     const key = msg.sender_id
     if (!convMap.has(key)) {
-      const acc = accountMap[msg.channel_account_id]
       convMap.set(key, {
         msgs: [],
-        accountUsername: acc?.instagram_username ?? null,
+        accountUsername: account.instagram_username ?? null,
         senderUsername: msg.sender_username ?? null,
         senderFullName: msg.sender_full_name ?? null,
         senderProfilePic: msg.sender_profile_pic ?? null,
