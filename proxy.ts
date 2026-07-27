@@ -8,16 +8,22 @@ import { NextResponse, type NextRequest } from 'next/server'
  * committing to an enforcing policy on a codebase this size. Flip to
  * `Content-Security-Policy` (drop `-Report-Only`) once a normal pass through
  * the app shows no unexpected violations.
+ * 
+ * Note on Facebook SDK: The FB SDK dynamically loads additional scripts and
+ * creates inline scripts. With 'strict-dynamic', those fail to load unless
+ * we also add 'unsafe-inline' as a fallback for older browsers (which is
+ * ignored by browsers that support 'strict-dynamic', but required here for
+ * the SDK's inline scripts). See: https://developers.facebook.com/docs/javascript/quickstart
  */
 function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://connect.facebook.net`,
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'strict-dynamic' https://connect.facebook.net https://*.facebook.com https://*.facebook.net`,
     `style-src 'self' 'unsafe-inline'`, // Tailwind/CSS-in-JS inline styles — documented tradeoff
     `img-src 'self' blob: data: https:`,
     `font-src 'self' data:`,
-    `connect-src 'self' https://*.supabase.co https://graph.instagram.com https://graph.facebook.com https://connect.facebook.net`,
-    `frame-src 'self' https://www.facebook.com`, // Pour la popup de connexion WhatsApp Embedded Signup
+    `connect-src 'self' https://*.supabase.co https://graph.instagram.com https://graph.facebook.com https://connect.facebook.net https://*.facebook.com`,
+    `frame-src 'self' https://www.facebook.com https://*.facebook.com`, // Pour la popup de connexion WhatsApp Embedded Signup
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
