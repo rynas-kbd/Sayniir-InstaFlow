@@ -214,6 +214,9 @@ Renvoie UNIQUEMENT un objet JSON respectant précisément le schéma suivant :
 }
 `
 
+      const { sanitizeForByteString } = await import('./encoding/sanitize')
+      const safePrompt = sanitizeForByteString(groqPrompt)
+
       const LLM_URL = 'https://api.groq.com/openai/v1/chat/completions'
       const llmRes = await fetch(LLM_URL, {
         method: 'POST',
@@ -223,7 +226,7 @@ Renvoie UNIQUEMENT un objet JSON respectant précisément le schéma suivant :
         },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: groqPrompt }],
+          messages: [{ role: 'user', content: safePrompt }],
           response_format: { type: 'json_object' },
           temperature: 0.1,
         }),
