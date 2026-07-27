@@ -12,11 +12,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://connect.facebook.net`,
     `style-src 'self' 'unsafe-inline'`, // Tailwind/CSS-in-JS inline styles — documented tradeoff
     `img-src 'self' blob: data: https:`,
     `font-src 'self' data:`,
-    `connect-src 'self' https://*.supabase.co https://graph.instagram.com https://graph.facebook.com`,
+    `connect-src 'self' https://*.supabase.co https://graph.instagram.com https://graph.facebook.com https://connect.facebook.net`,
+    `frame-src 'self' https://www.facebook.com`, // Pour la popup de connexion WhatsApp Embedded Signup
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
