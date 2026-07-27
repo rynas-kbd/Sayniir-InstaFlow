@@ -37,10 +37,11 @@ async function callGeminiVoice(
   apiKey: string
 ): Promise<GeminiResponse> {
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+  const safePrompt = sanitizeForByteStringLocal(prompt)
   const requestBody = JSON.stringify({
     contents: [{
       parts: [
-        { text: prompt },
+        { text: safePrompt },
         { inlineData: { mimeType: cleanMimeType || 'audio/mp4', data: base64Data } },
       ],
     }],
@@ -75,6 +76,16 @@ const WHISPER_PROMPT =
   'Exemples de mots courants : wesh, rahi, zebi, sahbi, bezzaf, chkoun, kifah, ' +
   'labas, mzyan, khoya, wlah, nta, ana, makanch, daba, hna, rak, chhal, ' +
   'ndir, ngoul, rani, wahed, zwin, galou, kima, hak, bali, fhemtni.'
+
+// Local sanitizer for Deno runtime (same rules as Node util) 
+function sanitizeForByteStringLocal(input: string): string {
+  if (!input) return input
+  try { input = input.normalize('NFC') } catch (e) {}
+  input = input.replace(/[\u2022\u2023\u25E6\u2043]/g, '-')
+  input = input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+  input = input.split('\n').map(line => line.trimEnd()).join('\n')
+  return input
+}
 
 function buildLlmPrompt(transcription: string, rules: unknown[]): string {
   return `
@@ -190,7 +201,7 @@ export async function processVoiceWithGemini(
         },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: buildLlmPrompt(transcription, rules) }],
+          messages: [{ role: 'user', content: sanitizeForByteStringLocal(buildLlmPrompt(transcription, rules)) }],
           response_format: { type: 'json_object' },
           temperature: 0.1,
         }),
