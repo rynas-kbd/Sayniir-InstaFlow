@@ -5,6 +5,32 @@
  * This is the single call site every lib/agent/* prompt handler should use.
  */
 
+function parseJsonObject<T>(content: unknown): T {
+  if (typeof content === 'object' && content !== null) {
+    return content as T
+  }
+  if (typeof content !== 'string') {
+    throw new Error(`Unexpected response type: ${typeof content}`)
+  }
+
+  let text = content.trim()
+  if (text.startsWith('```json')) {
+    text = text.slice(7).trim()
+    if (text.endsWith('```')) text = text.slice(0, -3).trim()
+  } else if (text.startsWith('```')) {
+    text = text.slice(3).trim()
+    if (text.endsWith('```')) text = text.slice(0, -3).trim()
+  }
+
+  try {
+    return JSON.parse(text) as T
+  } catch (err: unknown) {
+    throw new Error(
+      `Failed to parse JSON response: ${err instanceof Error ? err.message : String(err)}. Raw response: ${text}`
+    )
+  }
+}
+
 async function callLLMWithGemini<T>(prompt: string, apiKey: string, model: string): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const res = await fetch(
@@ -34,7 +60,10 @@ async function callLLMWithGemini<T>(prompt: string, apiKey: string, model: strin
 async function callLLMWithGroq<T>(prompt: string, apiKey: string, model: string): Promise<T> {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       model: model || 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
@@ -44,15 +73,18 @@ async function callLLMWithGroq<T>(prompt: string, apiKey: string, model: string)
   })
   if (!res.ok) throw new Error(`Groq ${res.status}: ${await res.text()}`)
   const data = await res.json()
-  const text = data.choices?.[0]?.message?.content
-  if (!text) throw new Error('Groq: empty response')
-  return JSON.parse(text) as T
+  const content = data.choices?.[0]?.message?.content
+  if (content === undefined || content === null) throw new Error('Groq: empty response')
+  return parseJsonObject<T>(content)
 }
 
 async function callLLMWithOpenAI<T>(prompt: string, apiKey: string, model: string): Promise<T> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       model: model || 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
@@ -62,9 +94,9 @@ async function callLLMWithOpenAI<T>(prompt: string, apiKey: string, model: strin
   })
   if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`)
   const data = await res.json()
-  const text = data.choices?.[0]?.message?.content
-  if (!text) throw new Error('OpenAI: empty response')
-  return JSON.parse(text) as T
+  const content = data.choices?.[0]?.message?.content
+  if (content === undefined || content === null) throw new Error('OpenAI: empty response')
+  return parseJsonObject<T>(content)
 }
 
 async function callLLMWithAnthropic<T>(prompt: string, apiKey: string, model: string): Promise<T> {
@@ -88,9 +120,11 @@ async function callLLMWithAnthropic<T>(prompt: string, apiKey: string, model: st
   if (!text) throw new Error('Anthropic: empty response')
   let cleanText = text.trim()
   if (cleanText.startsWith('```json')) {
-    cleanText = cleanText.substring(7, cleanText.length - 3).trim()
+    cleanText = cleanText.substring(7).trim()
+    if (cleanText.endsWith('```')) cleanText = cleanText.slice(0, -3).trim()
   } else if (cleanText.startsWith('```')) {
-    cleanText = cleanText.substring(3, cleanText.length - 3).trim()
+    cleanText = cleanText.substring(3).trim()
+    if (cleanText.endsWith('```')) cleanText = cleanText.slice(0, -3).trim()
   }
   return JSON.parse(cleanText) as T
 }
@@ -113,9 +147,9 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
   })
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${await res.text()}`)
   const data = await res.json()
-  const text = data.choices?.[0]?.message?.content
-  if (!text) throw new Error('OpenRouter: empty response')
-  return JSON.parse(text) as T
+  const content = data.choices?.[0]?.message?.content
+  if (content === undefined || content === null) throw new Error('OpenRouter: empty response')
+  return parseJsonObject<T>(content)
 }
 
 export async function callAgentLLM<T>(
@@ -124,7 +158,6 @@ export async function callAgentLLM<T>(
   aiApiKey?: string | null,
   aiModel?: string | null
 ): Promise<T> {
-  // Sanitize prompt globally before sending to any provider
   let safePrompt = prompt
   try {
     // dynamic import so server/bundle size is minimal
@@ -132,10 +165,10 @@ export async function callAgentLLM<T>(
     const { sanitizeForByteString } = await import('../encoding/sanitize')
     safePrompt = sanitizeForByteString(prompt)
   } catch (err) {
-    // If sanitizer fails, fall back to raw prompt but log for debugging
     console.warn('[LLM] sanitizeForByteString failed, using raw prompt', err)
     safePrompt = prompt
   }
+
   const provider = aiProvider || 'openrouter'
   const apiKey =
     aiApiKey ||
@@ -166,7 +199,6 @@ export async function callAgentLLM<T>(
     if (provider === 'groq' && process.env.GROQ_API_KEY) {
       return callLLMWithGroq<T>(safePrompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
     }
-    // Last-resort safety net, in provider-preference order matching the new default.
     const systemOpenRouter = process.env.OPENROUTER_API_KEY
     if (systemOpenRouter) {
       return callLLMWithOpenRouter<T>(safePrompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
@@ -192,7 +224,7 @@ export async function callAgentLLM<T>(
     case 'anthropic':
       return callLLMWithAnthropic<T>(safePrompt, apiKey, model || 'claude-3-5-sonnet-20241022')
     case 'openrouter':
-      return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+      return callLLMWithOpenRouter<T>(safePrompt, apiKey, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     default:
       throw new Error(`Fournisseur d'IA non supporté: ${provider}`)
   }

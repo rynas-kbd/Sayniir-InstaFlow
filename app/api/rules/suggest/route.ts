@@ -4,6 +4,26 @@ import { callAgentLLM } from '@/lib/agent/engine'
 
 // POST /api/rules/suggest
 // Body: { intent: string, channel_account_id?: string }
+function parseMaybeJson<T>(payload: unknown): T {
+  if (typeof payload === 'object' && payload !== null) {
+    return payload as T
+  }
+  if (typeof payload !== 'string') {
+    throw new Error(`Unexpected suggestion payload type: ${typeof payload}`)
+  }
+
+  let text = payload.trim()
+  if (text.startsWith('```json')) {
+    text = text.slice(7).trim()
+    if (text.endsWith('```')) text = text.slice(0, -3).trim()
+  } else if (text.startsWith('```')) {
+    text = text.slice(3).trim()
+    if (text.endsWith('```')) text = text.slice(0, -3).trim()
+  }
+
+  return JSON.parse(text) as T
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -41,8 +61,9 @@ Règles:
 
 Donne uniquement le JSON demandé.`
 
-    const result = await callAgentLLM<any>(prompt)
-    return NextResponse.json(result)
+    const result = await callAgentLLM<unknown>(prompt)
+    const suggestion = parseMaybeJson<any>(result)
+    return NextResponse.json(suggestion)
   } catch (err: any) {
     console.error('[SuggestRule] Error:', err)
     return jsonError(500, 'Impossible de générer la suggestion de règle', err)

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { FormFooter } from '@/components/shared/form-footer'
 import { useRuleForm } from './rule-form/use-rule-form'
 import { RuleFormBody } from './rule-form/rule-form-body'
 import { RuleLivePreview } from './rule-form/rule-live-preview'
+import SuggestedRulePreview from './suggested-rule-preview'
 import type { ChannelAccountLite, RuleFormPayload } from './types'
 
 export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[] }) {
@@ -127,6 +129,4 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
     </form>
   )
 }
-
-import SuggestedRulePreview from './suggested-rule-preview'
 
