@@ -36,17 +36,32 @@ export function LandingNav() {
 export function LandingFooter() {
   return (
     <footer
-      className="flex flex-wrap items-baseline justify-between gap-5 py-8"
+      className="py-8 space-y-6"
       style={{ borderTop: '2px solid var(--organic-sand-300)' }}
     >
-      <span className="font-heading text-lg">Instaflow</span>
-      <div className="flex flex-wrap gap-6 text-[13.5px]">
-        <a href="#product" className="no-underline">Product</a>
-        <a href="#features" className="no-underline">Features</a>
-        <a href="#pricing" className="no-underline">Pricing</a>
-        <a href="#faq" className="no-underline">FAQ</a>
+      <div className="flex flex-wrap items-baseline justify-between gap-5">
+        <span className="font-heading text-lg">Instaflow</span>
+        <div className="flex flex-wrap gap-6 text-[13.5px]">
+          <a href="#product" className="no-underline">Product</a>
+          <a href="#features" className="no-underline">Features</a>
+          <a href="#pricing" className="no-underline">Pricing</a>
+          <a href="#faq" className="no-underline">FAQ</a>
+        </div>
       </div>
-      <span className="text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+      
+      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
+        <Link href="/politique-de-confidentialite" className="no-underline hover:text-[var(--organic-terracotta)]">
+          Politique de confidentialité
+        </Link>
+        <Link href="/conditions-utilisation" className="no-underline hover:text-[var(--organic-terracotta)]">
+          Conditions d'utilisation
+        </Link>
+        <Link href="/suppression-donnees" className="no-underline hover:text-[var(--organic-terracotta)]">
+          Suppression de données
+        </Link>
+      </div>
+
+      <span className="block text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
         © 2026 Instaflow. Every DM answered.
       </span>
     </footer>
