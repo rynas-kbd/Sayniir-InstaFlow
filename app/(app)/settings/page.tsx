@@ -111,7 +111,7 @@ export default async function SettingsPage() {
             <CopilotSettingsCard
               channelAccountId={account.id}
               initialSettings={{
-                copilot_provider: (copilotSettings?.copilot_provider ?? 'groq') as CopilotProviderKind,
+                copilot_provider: (copilotSettings?.copilot_provider ?? 'openrouter') as CopilotProviderKind,
                 copilot_api_key: copilotSettings?.copilot_api_key ? '••••••••••••' : '',
                 copilot_model: copilotSettings?.copilot_model ?? '',
                 copilot_enabled: copilotSettings?.copilot_enabled ?? false,

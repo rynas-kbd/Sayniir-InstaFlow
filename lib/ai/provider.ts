@@ -12,25 +12,35 @@ export interface CopilotProviderResolution {
 const VALID_PROVIDER_KINDS = new Set<CopilotProviderKind>(Object.keys(PROVIDER_CONFIG) as CopilotProviderKind[])
 
 /**
- * Picks one of the platform's Groq keys at random. Deliberately not a shared round-robin
- * counter: on Vercel (serverless) no state reliably survives between invocations, so a random
- * draw per request distributes load across keys just as well without depending on shared state.
+ * Picks one of the platform's OpenRouter or Groq keys at random. OpenRouter is
+ * preferred when configured, with Groq as a backward-compatible fallback.
  */
-function pickGroqApiKey(): string | null {
-  const raw = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY
-  if (!raw) return null
-  const keys = raw
-    .split(',')
-    .map((k) => k.trim())
-    .filter(Boolean)
-  if (keys.length === 0) return null
-  return keys[Math.floor(Math.random() * keys.length)]
+function pickPlatformApiKey(): { kind: CopilotProviderKind; apiKey: string } | null {
+  const rawOpenRouter = process.env.OPENROUTER_API_KEYS || process.env.OPENROUTER_API_KEY
+  const rawGroq = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY
+
+  function chooseRandomKey(raw: string): string | null {
+    const keys = raw
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean)
+    if (keys.length === 0) return null
+    return keys[Math.floor(Math.random() * keys.length)]
+  }
+
+  const openRouterKey = rawOpenRouter ? chooseRandomKey(rawOpenRouter) : null
+  if (openRouterKey) return { kind: 'openrouter', apiKey: openRouterKey }
+
+  const groqKey = rawGroq ? chooseRandomKey(rawGroq) : null
+  if (groqKey) return { kind: 'groq', apiKey: groqKey }
+
+  return null
 }
 
 /**
  * Resolves the copilot's provider for a channel account. BYOK (agent_settings.copilot_*) if the
  * plan allows it and a key is configured — any of the 6 providers in PROVIDER_CONFIG. Otherwise
- * the platform default: Groq, one key drawn from the rotation pool. A broken/expired BYOK key
+ * the platform default: OpenRouter, one key drawn from the rotation pool. A broken/expired BYOK key
  * falls back to the platform default rather than failing the turn outright.
  */
 export async function resolveCopilotProvider(
@@ -53,7 +63,7 @@ export async function resolveCopilotProvider(
         const kind =
           settings.copilot_provider && VALID_PROVIDER_KINDS.has(settings.copilot_provider as CopilotProviderKind)
             ? (settings.copilot_provider as CopilotProviderKind)
-            : 'groq'
+            : 'openrouter'
         if (key) {
           return { kind, apiKey: key, model: settings.copilot_model || PROVIDER_CONFIG[kind].defaultModel, byok: true }
         }
@@ -63,7 +73,7 @@ export async function resolveCopilotProvider(
     }
   }
 
-  const platformKey = pickGroqApiKey()
-  if (!platformKey) throw new Error('GROQ_API_KEYS (ou GROQ_API_KEY) non configurée')
-  return { kind: 'groq', apiKey: platformKey, model: PROVIDER_CONFIG.groq.defaultModel, byok: false }
+  const platform = pickPlatformApiKey()
+  if (!platform) throw new Error('OPENROUTER_API_KEYS/OPENROUTER_API_KEY or GROQ_API_KEYS/GROQ_API_KEY non configurée')
+  return { kind: platform.kind, apiKey: platform.apiKey, model: PROVIDER_CONFIG[platform.kind].defaultModel, byok: false }
 }
