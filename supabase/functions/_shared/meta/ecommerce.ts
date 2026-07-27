@@ -336,7 +336,7 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
       "X-Title": "Instaflow"
     },
     body: JSON.stringify({
-      model: model || "meta-llama/llama-3.3-70b-instruct",
+      model: model || "nvidia/nemotron-3-ultra-550b-a55b:free",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
       temperature: 0.1,
@@ -355,16 +355,23 @@ async function callLLM<T>(
   aiApiKey?: string | null,
   aiModel?: string | null
 ): Promise<T> {
-  const provider = aiProvider || 'gemini';
-  const apiKey = aiApiKey || (provider === 'gemini' ? Deno.env.get("GEMINI_API_KEY") : provider === 'groq' ? Deno.env.get("GROQ_API_KEY") : null);
-  const model = aiModel || (provider === 'gemini' ? 'gemini-1.5-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : '');
+  const provider = aiProvider || 'openrouter';
+  const apiKey = aiApiKey || (provider === 'gemini' ? Deno.env.get("GEMINI_API_KEY") : provider === 'groq' ? Deno.env.get("GROQ_API_KEY") : provider === 'openrouter' ? Deno.env.get("OPENROUTER_API_KEY") : null);
+  const model = aiModel || (provider === 'gemini' ? 'gemini-1.5-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : provider === 'openrouter' ? 'nvidia/nemotron-3-ultra-550b-a55b:free' : '');
 
   if (!apiKey) {
+    if (provider === 'openrouter' && Deno.env.get("OPENROUTER_API_KEY")) {
+      return callLLMWithOpenRouter<T>(prompt, Deno.env.get("OPENROUTER_API_KEY")!, model || 'nvidia/nemotron-3-ultra-550b-a55b:free');
+    }
     if (provider === 'gemini' && Deno.env.get("GEMINI_API_KEY")) {
       return callLLMWithGemini<T>(prompt, Deno.env.get("GEMINI_API_KEY")!, model || 'gemini-1.5-flash');
     }
     if (provider === 'groq' && Deno.env.get("GROQ_API_KEY")) {
       return callLLMWithGroq<T>(prompt, Deno.env.get("GROQ_API_KEY")!, model || 'llama-3.3-70b-versatile');
+    }
+    const systemOpenRouter = Deno.env.get("OPENROUTER_API_KEY");
+    if (systemOpenRouter) {
+      return callLLMWithOpenRouter<T>(prompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free');
     }
     const systemGemini = Deno.env.get("GEMINI_API_KEY");
     if (systemGemini) {
@@ -383,7 +390,7 @@ async function callLLM<T>(
     case 'anthropic':
       return callLLMWithAnthropic<T>(prompt, apiKey, model || 'claude-3-5-sonnet-20241022');
     case 'openrouter':
-      return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'meta-llama/llama-3.3-70b-instruct');
+      return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'nvidia/nemotron-3-ultra-550b-a55b:free');
     default:
       throw new Error(`Fournisseur d'IA non supporté: ${provider}`);
   }

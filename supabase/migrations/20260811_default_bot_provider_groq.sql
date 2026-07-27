@@ -1,9 +1,9 @@
 -- =============================================
--- Migration: default the customer bot's AI provider to Groq
+-- Migration: default the customer bot's AI provider to OpenRouter
 -- Date: 2026-08-11
 -- Depends on: 20260609_add_ai_credentials_to_settings.sql
 --
--- lib/agent/engine.ts::callAgentLLM now defaults to Groq instead of Gemini
+-- lib/agent/engine.ts::callAgentLLM now defaults to OpenRouter instead of Gemini
 -- when agent_settings.ai_provider is unset. This only affects the column
 -- DEFAULT for newly inserted rows — every existing row already has the
 -- literal string 'gemini' materialized (Postgres backfills a constant
@@ -17,6 +17,6 @@
 BEGIN;
 
 ALTER TABLE public.agent_settings
-  ALTER COLUMN ai_provider SET DEFAULT 'groq';
+  ALTER COLUMN ai_provider SET DEFAULT 'openrouter';
 
 COMMIT;

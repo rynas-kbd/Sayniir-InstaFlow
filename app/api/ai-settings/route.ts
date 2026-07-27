@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   return NextResponse.json({
-    copilot_provider: data?.copilot_provider ?? 'groq',
+    copilot_provider: data?.copilot_provider ?? 'openrouter',
     copilot_api_key: data?.copilot_api_key ? MASK : '',
     copilot_model: data?.copilot_model ?? '',
     copilot_enabled: data?.copilot_enabled ?? false,
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest) {
   if (error || !updated) return NextResponse.json({ error: error?.message ?? 'Échec de la sauvegarde' }, { status: 500 })
 
   return NextResponse.json({
-    copilot_provider: updated.copilot_provider ?? 'groq',
+    copilot_provider: updated.copilot_provider ?? 'openrouter',
     copilot_api_key: updated.copilot_api_key ? MASK : '',
     copilot_model: updated.copilot_model ?? '',
     copilot_enabled: updated.copilot_enabled ?? false,

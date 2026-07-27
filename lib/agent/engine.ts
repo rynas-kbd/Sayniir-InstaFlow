@@ -105,7 +105,7 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
       'X-Title': 'Instaflow',
     },
     body: JSON.stringify({
-      model: model || 'meta-llama/llama-3.3-70b-instruct',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -124,12 +124,30 @@ export async function callAgentLLM<T>(
   aiApiKey?: string | null,
   aiModel?: string | null
 ): Promise<T> {
-  const provider = aiProvider || 'groq'
+  const provider = aiProvider || 'openrouter'
   const apiKey =
-    aiApiKey || (provider === 'gemini' ? process.env.GEMINI_API_KEY : provider === 'groq' ? process.env.GROQ_API_KEY : null)
-  const model = aiModel || (provider === 'gemini' ? 'gemini-2.0-flash' : provider === 'groq' ? 'llama-3.3-70b-versatile' : '')
+    aiApiKey ||
+    (provider === 'gemini'
+      ? process.env.GEMINI_API_KEY
+      : provider === 'groq'
+      ? process.env.GROQ_API_KEY
+      : provider === 'openrouter'
+      ? process.env.OPENROUTER_API_KEY
+      : null)
+  const model =
+    aiModel ||
+    (provider === 'gemini'
+      ? 'gemini-2.0-flash'
+      : provider === 'groq'
+      ? 'llama-3.3-70b-versatile'
+      : provider === 'openrouter'
+      ? 'nvidia/nemotron-3-ultra-550b-a55b:free'
+      : '')
 
   if (!apiKey) {
+    if (provider === 'openrouter' && process.env.OPENROUTER_API_KEY) {
+      return callLLMWithOpenRouter<T>(prompt, process.env.OPENROUTER_API_KEY, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+    }
     if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
       return callLLMWithGemini<T>(prompt, process.env.GEMINI_API_KEY, model || 'gemini-2.0-flash')
     }
@@ -137,6 +155,10 @@ export async function callAgentLLM<T>(
       return callLLMWithGroq<T>(prompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
     }
     // Last-resort safety net, in provider-preference order matching the new default.
+    const systemOpenRouter = process.env.OPENROUTER_API_KEY
+    if (systemOpenRouter) {
+      return callLLMWithOpenRouter<T>(prompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+    }
     const systemGroq = process.env.GROQ_API_KEY
     if (systemGroq) {
       return callLLMWithGroq<T>(prompt, systemGroq, 'llama-3.3-70b-versatile')
@@ -158,7 +180,7 @@ export async function callAgentLLM<T>(
     case 'anthropic':
       return callLLMWithAnthropic<T>(prompt, apiKey, model || 'claude-3-5-sonnet-20241022')
     case 'openrouter':
-      return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'meta-llama/llama-3.3-70b-instruct')
+      return callLLMWithOpenRouter<T>(prompt, apiKey, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     default:
       throw new Error(`Fournisseur d'IA non supporté: ${provider}`)
   }

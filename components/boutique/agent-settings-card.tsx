@@ -39,7 +39,7 @@ const PROVIDER_META: Record<string, { color: string; badge: string; defaultModel
   groq:       { color: 'text-sage-600',        badge: 'bg-sage-50 text-sage-700 border-sage-200',                    defaultModel: 'llama3-70b-8192' },
   openai:     { color: 'text-emerald-600',     badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',           defaultModel: 'gpt-4o-mini' },
   anthropic:  { color: 'text-terracotta-700',  badge: 'bg-terracotta-50 text-terracotta-700 border-terracotta-300', defaultModel: 'claude-3-haiku-20240307' },
-  openrouter: { color: 'text-sand-600',        badge: 'bg-sand-50 text-sand-700 border-sand-200',                    defaultModel: 'openai/gpt-4o-mini' },
+  openrouter: { color: 'text-sand-600',        badge: 'bg-sand-50 text-sand-700 border-sand-200',                    defaultModel: 'nvidia/nemotron-3-ultra-550b-a55b:free' },
 }
 
 const DEFAULT_INFOS = ['Nom', 'Téléphone', 'Adresse', 'Wilaya']
@@ -248,7 +248,7 @@ export function AgentSettingsCard({
     setFaqs(next)
   }
 
-  function saveFaq(idx: number) {
+  function saveFaq() {
     save({ vertical_config: { ...settings.vertical_config, faqs } })
     setEditingFaqIdx(null)
   }
@@ -372,7 +372,7 @@ export function AgentSettingsCard({
               ]}
             />
             <p className="text-[11px] text-muted-foreground/70">
-              Règles que l'IA doit toujours respecter — séparées par Entrée.
+              Règles que l&apos;IA doit toujours respecter — séparées par Entrée.
             </p>
           </div>
         </div>
@@ -395,7 +395,7 @@ export function AgentSettingsCard({
             <div className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground">
               <BookOpen className="size-8 opacity-30" />
               <p className="text-sm font-medium">Aucune connaissance ajoutée</p>
-              <p className="text-xs opacity-70">Ajoutez des Q&amp;R pour que l'IA réponde précisément.</p>
+              <p className="text-xs opacity-70">Ajoutez des Q&amp;R pour que l&apos;IA réponde précisément.</p>
             </div>
           )}
 
@@ -420,7 +420,7 @@ export function AgentSettingsCard({
                     <Button variant="ghost" size="sm" onClick={() => setEditingFaqIdx(null)}>
                       Annuler
                     </Button>
-                    <Button size="sm" onClick={() => saveFaq(idx)} disabled={saving}>
+                    <Button size="sm" onClick={saveFaq} disabled={saving}>
                       <CheckCircle2 className="size-3.5 mr-1" /> Enregistrer
                     </Button>
                   </div>

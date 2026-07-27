@@ -11,7 +11,7 @@ export const PROVIDER_CONFIG: Record<CopilotProviderKind, ProviderConfigEntry> =
   groq: { label: 'Groq', baseUrl: 'https://api.groq.com/openai/v1/chat/completions', defaultModel: 'llama-3.3-70b-versatile' },
   anthropic: { label: 'Anthropic', defaultModel: 'claude-opus-5' },
   openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1/chat/completions', defaultModel: 'gpt-4o-mini' },
-  openrouter: { label: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1/chat/completions', defaultModel: 'openai/gpt-4o-mini' },
+  openrouter: { label: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1/chat/completions', defaultModel: 'nvidia/nemotron-3-ultra-550b-a55b:free' },
   deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1/chat/completions', defaultModel: 'deepseek-chat' },
   // Google's OpenAI-compatibility endpoint, not the native generateContent API — lets Gemini share
   // the same adapter as the other 4 instead of a bespoke streaming/tool-calling implementation.
@@ -26,7 +26,7 @@ export const COPILOT_MODEL_CATALOG: Record<CopilotProviderKind, { value: string;
     { value: 'claude-sonnet-5', label: 'Claude Sonnet 5' },
   ],
   openai: [{ value: 'gpt-4o-mini', label: 'GPT-4o mini' }],
-  openrouter: [{ value: 'openai/gpt-4o-mini', label: 'GPT-4o mini (OpenRouter)' }],
+  openrouter: [{ value: 'nvidia/nemotron-3-ultra-550b-a55b:free', label: 'NVIDIA Nemotron 3 Ultra 550B' }],
   deepseek: [{ value: 'deepseek-chat', label: 'DeepSeek Chat' }],
   gemini: [{ value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' }],
 }
