@@ -214,7 +214,7 @@ Renvoie UNIQUEMENT un objet JSON respectant précisément le schéma suivant :
 }
 `
 
-      const { sanitizeForByteString } = await import('./encoding/sanitize')
+      const { sanitizeForByteString } = await import('../encoding/sanitize')
       const safePrompt = sanitizeForByteString(groqPrompt)
 
       const LLM_URL = 'https://api.groq.com/openai/v1/chat/completions'
