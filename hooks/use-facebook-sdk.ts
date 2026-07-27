@@ -64,7 +64,7 @@ export function useFacebookSDK(appId: string | null): FacebookSDKStatus {
      * Initialise le SDK Facebook avec l'App ID fourni
      */
     function initSdk() {
-      if (isCleanedUp) return
+      if (isCleanedUp || !appId) return
       
       try {
         window.FB?.init({ 
