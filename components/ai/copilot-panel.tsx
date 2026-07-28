@@ -178,14 +178,39 @@ export function CopilotPanel({
     }
   }
 
+  const isLive = sending || confirming || isThinking
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
-        <SheetHeader className="border-b border-border px-4 py-3">
-          <SheetTitle className="flex items-center gap-2 text-sm">
-            <Sparkles className="size-4 text-primary" /> Copilote
-          </SheetTitle>
-        </SheetHeader>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 border-0 bg-transparent p-0 shadow-none sm:max-w-md">
+        <div className="glass-card flex h-full flex-col gap-0 overflow-hidden rounded-none sm:rounded-l-2xl">
+          <SheetHeader className="border-b border-border/50 px-4 py-3.5">
+            {/* SheetTitle stays text-only (screen readers need an accessible dialog title) —
+                the visual identity block below is a sibling, not nested inside it, since
+                Base UI's Title renders a heading element that shouldn't contain a <div>. */}
+            <SheetTitle className="sr-only">Copilote</SheetTitle>
+            <div className="flex items-center gap-2.5">
+              {/* Mini orb — same layered treatment as the FAB, scaled down */}
+              <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                />
+                <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
+                <span
+                  className={cn(
+                    'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                    isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
+                  )}
+                  aria-hidden="true"
+                />
+              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-semibold text-foreground">Copilote</span>
+                <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+              </div>
+            </div>
+          </SheetHeader>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
           {messages.length === 0 ? (
@@ -197,7 +222,12 @@ export function CopilotPanel({
               {messages.map((m) => (
                 <div
                   key={m.id}
-                  className={cn('rounded-lg px-3 py-2 text-sm text-foreground', m.role === 'user' ? 'ml-8 bg-primary/10' : 'mr-8 bg-muted')}
+                  className={cn(
+                    'max-w-[85%] px-3.5 py-2.5 text-sm leading-relaxed text-foreground',
+                    m.role === 'user'
+                      ? 'ml-auto rounded-2xl rounded-br-[4px] bg-primary/12'
+                      : 'mr-auto rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50'
+                  )}
                 >
                   {m.text || (sending && m.role === 'assistant' ? <Loader2 className="size-3.5 animate-spin" /> : '')}
                 </div>
@@ -205,20 +235,20 @@ export function CopilotPanel({
 
               {/* Progress indicator - shown when a tool is being executed */}
               {progressStep && (
-                <div className="mr-8">
+                <div className="mr-auto max-w-[85%]">
                   <ProgressIndicator step={progressStep.step} detail={progressStep.detail} />
                 </div>
               )}
 
               {/* Thinking indicator - shown when waiting for LLM response */}
               {isThinking && !progressStep && (
-                <div className="mr-8">
+                <div className="mr-auto max-w-[85%] px-1">
                   <ThinkingIndicator />
                 </div>
               )}
 
               {pendingConfirm && (
-                <div className="mr-8 rounded-lg border border-primary/30 bg-card p-3 shadow-sm ring-1 ring-primary/20">
+                <div className="mr-auto max-w-[85%] rounded-2xl border border-primary/30 bg-card p-3 shadow-sm ring-1 ring-primary/20">
                   <div className="flex items-start gap-2">
                     <ShieldAlert className="mt-0.5 size-4 shrink-0 text-primary" />
                     <p className="text-sm text-foreground">{pendingConfirm.preview}</p>
@@ -242,14 +272,14 @@ export function CopilotPanel({
             e.preventDefault()
             void send(input)
           }}
-          className="flex items-center gap-2 border-t border-border p-3"
+          className="flex items-center gap-2 border-t border-border/50 p-3"
         >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Écrire au copilote…"
             disabled={sending || Boolean(pendingConfirm)}
-            className="h-9 flex-1 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary/50"
+            className="h-9 flex-1 rounded-full border border-border bg-background/80 px-3.5 text-sm outline-none transition-colors focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/25"
           />
           <Button
             type="submit"
@@ -261,6 +291,7 @@ export function CopilotPanel({
             <Send className="size-4" />
           </Button>
         </form>
+        </div>
       </SheetContent>
     </Sheet>
   )

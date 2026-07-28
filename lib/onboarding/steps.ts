@@ -39,4 +39,7 @@ export const GOAL_TO_TEMPLATE_ID: Record<string, string> = {
   automate_faq: 'faq_keyword',
   convert_comments: 'comment_funnel',
   qualify_leads: 'ai_qualify_followup',
+  // Boutique-only goal (see welcome-form.tsx) — also activates the ecommerce
+  // sales agent directly, see activation-checklist.tsx's onCreated handler.
+  sell_more: 'sell_more_promo',
 }

@@ -17,6 +17,8 @@ interface ActivationChecklistProps {
   activeAccountId: string | null
   activePlatform: 'instagram' | 'whatsapp' | 'messenger' | null
   templateId: string
+  /** 'sell_more' (boutique-only) also activates the ecommerce sales agent alongside the flow — see CreateFlowForm's enableSalesAgent prop. */
+  primaryGoal: string | null
   whatsappAppId: string | null
   whatsappConfigId: string | null
 }
@@ -28,6 +30,7 @@ export function ActivationChecklist({
   activeAccountId,
   activePlatform,
   templateId,
+  primaryGoal,
   whatsappAppId,
   whatsappConfigId,
 }: ActivationChecklistProps) {
@@ -132,6 +135,7 @@ export function ActivationChecklist({
                                 channelAccountId={activeAccountId}
                                 defaultTemplateId={templateId}
                                 activateOnCreate
+                                enableSalesAgent={primaryGoal === 'sell_more'}
                                 onCreated={() => router.refresh()}
                               />
                             )}

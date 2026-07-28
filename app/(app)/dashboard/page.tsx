@@ -140,6 +140,7 @@ export default async function DashboardPage() {
             activeAccountId={active?.id ?? null}
             activePlatform={active?.platform ?? null}
             templateId={onboarding.primaryGoal ? (GOAL_TO_TEMPLATE_ID[onboarding.primaryGoal] ?? 'blank') : 'blank'}
+            primaryGoal={onboarding.primaryGoal}
             whatsappAppId={process.env.NEXT_PUBLIC_META_WHATSAPP_APP_ID ?? null}
             whatsappConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? null}
           />

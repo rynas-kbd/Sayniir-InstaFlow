@@ -19,7 +19,7 @@ export function ProgressIndicator({ step, detail }: ProgressIndicatorProps) {
           duration: 0.3,
           ease: [0.4, 0, 0.2, 1],
         }}
-        className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 backdrop-blur-sm"
+        className="flex items-start gap-3 rounded-2xl rounded-bl-[4px] border border-primary/25 bg-primary/10 px-4 py-3"
         role="status"
         aria-live="polite"
         aria-busy="true"

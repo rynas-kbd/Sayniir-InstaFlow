@@ -16,6 +16,7 @@ export function CreateFlowForm({
   channelAccountId,
   defaultTemplateId,
   activateOnCreate,
+  enableSalesAgent,
   onCreated,
 }: {
   channelAccountId: string
@@ -23,6 +24,14 @@ export function CreateFlowForm({
   defaultTemplateId?: string
   /** Immediately PATCHes the new flow to status:'active' — used by the onboarding checklist, where "created" must mean "live" for the activation check to pass, not left as a draft the user has to remember to publish. */
   activateOnCreate?: boolean
+  /**
+   * Boutique-only ("Vendre plus" goal): also turns on the ecommerce sales
+   * agent (agent_settings.is_qa_active / is_order_taking_active) — the real
+   * sales-automation engine, which is a settings toggle, not a flow. The
+   * complementary flow this form creates alongside it only covers
+   * keyword-triggered promo relaunches; the agent handles everything else.
+   */
+  enableSalesAgent?: boolean
   /** Called instead of navigating to the flow editor — lets the onboarding checklist stay on /dashboard and advance to the next step inline. */
   onCreated?: (flowId: string) => void
 }) {
@@ -73,6 +82,23 @@ export function CreateFlowForm({
           body: JSON.stringify({ status: 'active' }),
         })
         if (!activateRes.ok) toast.error("Flow créé, mais n'a pas pu être activé — activez-le depuis la liste des flows.")
+
+        // agent_settings.flows_enabled defaults to false (see
+        // 20260717_flows.sql) and is the account-wide switch inbound.ts
+        // checks before ever evaluating a flow trigger — without setting it
+        // here, a flow activated straight from onboarding would never fire,
+        // in the simulator or in production.
+        const settingsPatch: Record<string, unknown> = { channel_account_id: channelAccountId, flows_enabled: true }
+        if (enableSalesAgent) {
+          settingsPatch.is_qa_active = true
+          settingsPatch.is_order_taking_active = true
+        }
+        const settingsRes = await fetch('/api/ecommerce-settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingsPatch),
+        })
+        if (!settingsRes.ok) toast.error('Flow créé, mais les réglages associés n\'ont pas pu être activés.')
       }
 
       if (onCreated) {

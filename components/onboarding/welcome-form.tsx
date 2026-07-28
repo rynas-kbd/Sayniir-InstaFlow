@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingBag,
   CalendarClock,
@@ -11,6 +12,7 @@ import {
   HelpCircle,
   MousePointerClick,
   Bot,
+  TrendingUp,
   User,
   Users,
   UsersRound,
@@ -21,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import { AuthCard } from '@/components/auth/auth-card'
 
 type BusinessType = 'ecommerce' | 'coaching' | 'agency' | 'generic'
-type PrimaryGoal = 'reply_faster' | 'automate_faq' | 'convert_comments' | 'qualify_leads'
+type PrimaryGoal = 'reply_faster' | 'automate_faq' | 'convert_comments' | 'qualify_leads' | 'sell_more'
 type TeamSize = 'solo' | '2-5' | '6-20' | '20+'
 
 const BUSINESS_TYPES: Array<{ value: BusinessType; label: string; icon: typeof ShoppingBag }> = [
@@ -38,6 +40,15 @@ const PRIMARY_GOALS: Array<{ value: PrimaryGoal; label: string; icon: typeof Mes
   { value: 'convert_comments', label: 'Convertir mes commentaires', icon: MousePointerClick },
   { value: 'qualify_leads', label: 'Qualifier mes prospects', icon: Bot },
 ]
+
+// Boutique-only — only makes sense once business_type = 'ecommerce', shown
+// conditionally below. Activates the ecommerce sales agent directly (see
+// activation-checklist.tsx), not just a flow like the other goals.
+const SELL_MORE_GOAL: { value: PrimaryGoal; label: string; icon: typeof TrendingUp } = {
+  value: 'sell_more',
+  label: 'Vendre plus (automatiser mes ventes)',
+  icon: TrendingUp,
+}
 
 const TEAM_SIZES: Array<{ value: TeamSize; label: string; icon: typeof User }> = [
   { value: 'solo', label: 'Solo', icon: User },
@@ -110,6 +121,16 @@ export function WelcomeForm() {
   const [error, setError] = useState<string | null>(null)
 
   const canSubmit = businessType !== null
+  const visibleGoals = businessType === 'ecommerce' ? [...PRIMARY_GOALS, SELL_MORE_GOAL] : PRIMARY_GOALS
+
+  function handleBusinessTypeSelect(value: BusinessType) {
+    setBusinessType(value)
+    // 'sell_more' only exists for boutiques — switching away from ecommerce
+    // must not silently submit a goal that's no longer offered or valid.
+    if (value !== 'ecommerce' && primaryGoal === 'sell_more') {
+      setPrimaryGoal(null)
+    }
+  }
 
   async function handleSubmit() {
     if (!canSubmit) return
@@ -150,16 +171,26 @@ export function WelcomeForm() {
           <QuestionBlock step={1} title="Quelle est votre activité ?">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {BUSINESS_TYPES.map((opt) => (
-                <OptionTile key={opt.value} {...opt} selected={businessType === opt.value} onSelect={setBusinessType} />
+                <OptionTile key={opt.value} {...opt} selected={businessType === opt.value} onSelect={handleBusinessTypeSelect} />
               ))}
             </div>
           </QuestionBlock>
 
           <QuestionBlock step={2} title="Votre objectif principal ?">
             <div className="grid grid-cols-2 gap-2">
-              {PRIMARY_GOALS.map((opt) => (
-                <OptionTile key={opt.value} {...opt} selected={primaryGoal === opt.value} onSelect={setPrimaryGoal} />
-              ))}
+              <AnimatePresence initial={false}>
+                {visibleGoals.map((opt) => (
+                  <motion.div
+                    key={opt.value}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <OptionTile {...opt} selected={primaryGoal === opt.value} onSelect={setPrimaryGoal} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </QuestionBlock>
 

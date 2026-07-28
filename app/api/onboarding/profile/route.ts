@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { jsonError } from '@/lib/api/errors'
 
 const BUSINESS_TYPES = new Set(['ecommerce', 'coaching', 'agency', 'generic'])
-const PRIMARY_GOALS = new Set(['reply_faster', 'automate_faq', 'convert_comments', 'qualify_leads'])
+const PRIMARY_GOALS = new Set(['reply_faster', 'automate_faq', 'convert_comments', 'qualify_leads', 'sell_more'])
 const TEAM_SIZES = new Set(['solo', '2-5', '6-20', '20+'])
 
 /**
@@ -51,6 +51,12 @@ export async function POST(req: NextRequest) {
   }
   if (primary_goal !== undefined && (typeof primary_goal !== 'string' || !PRIMARY_GOALS.has(primary_goal))) {
     return NextResponse.json({ error: 'primary_goal invalide' }, { status: 400 })
+  }
+  // 'sell_more' activates the ecommerce sales agent (see activation-checklist.tsx)
+  // and only makes sense for a boutique — the UI already gates it on
+  // business_type, this is the server-side half of that same rule.
+  if (primary_goal === 'sell_more' && business_type !== 'ecommerce') {
+    return NextResponse.json({ error: "primary_goal 'sell_more' requiert business_type 'ecommerce'" }, { status: 400 })
   }
   if (team_size !== undefined && (typeof team_size !== 'string' || !TEAM_SIZES.has(team_size))) {
     return NextResponse.json({ error: 'team_size invalide' }, { status: 400 })
