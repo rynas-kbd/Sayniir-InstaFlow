@@ -1,19 +1,20 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { Streamdown } from 'streamdown'
 import { Send, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ProgressIndicator, ThinkingIndicator } from './progress-indicator'
+import { ToolResultCard } from './tool-result-card'
+import { appendTextDelta, appendToolResult, type AssistantPart } from '@/lib/ai/copilot-message-parts'
 import { cn } from '@/lib/utils'
 import type { AiStreamEvent } from '@/lib/ai/types'
 import type { AiContext } from '@/lib/ai/context/types'
 
-interface DisplayMessage {
-  id: string
-  role: 'user' | 'assistant'
-  text: string
-}
+type DisplayMessage =
+  | { id: string; role: 'user'; text: string }
+  | { id: string; role: 'assistant'; parts: AssistantPart[] }
 
 interface PendingConfirm {
   id: string
@@ -79,18 +80,26 @@ export function CopilotPanel({
 
   function newAssistantBubble(): string {
     const id = crypto.randomUUID()
-    setMessages((prev) => [...prev, { id, role: 'assistant', text: '' }])
+    setMessages((prev) => [...prev, { id, role: 'assistant', parts: [] }])
     return id
+  }
+
+  function updateAssistantParts(assistantId: string, update: (parts: AssistantPart[]) => AssistantPart[]) {
+    setMessages((prev) => prev.map((m) => (m.id === assistantId && m.role === 'assistant' ? { ...m, parts: update(m.parts) } : m)))
   }
 
   function applyEvent(event: AiStreamEvent, assistantId: string) {
     if (event.t === 'text') {
-      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text + event.delta } : m)))
+      updateAssistantParts(assistantId, (parts) => appendTextDelta(parts, event.delta))
       // Clear progress indicators when text starts streaming
       setProgressStep(null)
       setIsThinking(false)
+    } else if (event.t === 'tool_result' && event.ok && event.output !== undefined) {
+      // Only the handful of read/list tools in DISPLAYABLE_TOOLS (lib/ai/loop.ts) ever carry
+      // `output` — every other tool call stays silent here exactly as before this feature.
+      updateAssistantParts(assistantId, (parts) => appendToolResult(parts, event.name, event.output))
     } else if (event.t === 'error') {
-      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || event.message } : m)))
+      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: event.message }]))
       // Clear indicators on error
       setProgressStep(null)
       setIsThinking(false)
@@ -115,7 +124,7 @@ export function CopilotPanel({
       setProgressStep(null)
       setIsThinking(false)
     }
-    // tool_start / tool_result stay silent for read/write_reversible tools by design (§1.2); credits update the settings-page meter on next load.
+    // tool_start stays silent by design (§1.2); credits update the settings-page meter on next load.
   }
 
   async function send(text: string) {
@@ -140,7 +149,7 @@ export function CopilotPanel({
       if (headerConversationId) conversationIdRef.current = headerConversationId
       await readNdjsonStream(res, (event) => applyEvent(event, assistantId))
     } catch {
-      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || 'Une erreur est survenue.' } : m)))
+      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: 'Une erreur est survenue.' }]))
     } finally {
       setSending(false)
       setProgressStep(null)
@@ -154,7 +163,7 @@ export function CopilotPanel({
     setPendingConfirm(null)
 
     if (!confirmed) {
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', text: 'Action annulée.' }])
+      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', parts: [{ type: 'text', text: 'Action annulée.' }] }])
       return
     }
 
@@ -170,7 +179,7 @@ export function CopilotPanel({
       })
       await readNdjsonStream(res, (event) => applyEvent(event, assistantId))
     } catch {
-      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, text: m.text || 'Une erreur est survenue.' } : m)))
+      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: 'Une erreur est survenue.' }]))
     } finally {
       setConfirming(false)
       setProgressStep(null)
@@ -219,19 +228,49 @@ export function CopilotPanel({
             </p>
           ) : (
             <div className="flex flex-col gap-3">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={cn(
-                    'max-w-[85%] px-3.5 py-2.5 text-sm leading-relaxed text-foreground',
-                    m.role === 'user'
-                      ? 'ml-auto rounded-2xl rounded-br-[4px] bg-primary/12'
-                      : 'mr-auto rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50'
-                  )}
-                >
-                  {m.text || (sending && m.role === 'assistant' ? <Loader2 className="size-3.5 animate-spin" /> : '')}
-                </div>
-              ))}
+              {messages.map((m) => {
+                if (m.role === 'user') {
+                  return (
+                    <div
+                      key={m.id}
+                      className="ml-auto max-w-[85%] rounded-2xl rounded-br-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
+                    >
+                      {m.text}
+                    </div>
+                  )
+                }
+
+                if (m.parts.length === 0) {
+                  // Assistant turn started (bubble created) but no text/card has arrived yet.
+                  return (
+                    <div
+                      key={m.id}
+                      className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground"
+                    >
+                      {sending && <Loader2 className="size-3.5 animate-spin" />}
+                    </div>
+                  )
+                }
+
+                return (
+                  <Fragment key={m.id}>
+                    {m.parts.map((part, i) =>
+                      part.type === 'text' ? (
+                        part.text.trim() && (
+                          <div
+                            key={i}
+                            className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
+                          >
+                            <Streamdown className="copilot-markdown">{part.text}</Streamdown>
+                          </div>
+                        )
+                      ) : (
+                        <ToolResultCard key={i} name={part.name} output={part.output} />
+                      )
+                    )}
+                  </Fragment>
+                )
+              })}
 
               {/* Progress indicator - shown when a tool is being executed */}
               {progressStep && (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -17,6 +17,8 @@ import {
   Users,
   UsersRound,
   Building2,
+  ArrowLeft,
+  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -57,6 +59,10 @@ const TEAM_SIZES: Array<{ value: TeamSize; label: string; icon: typeof User }> =
   { value: '20+', label: '20+', icon: Building2 },
 ]
 
+const AUTO_ADVANCE_DELAY_MS = 320
+const STEP_TITLES = ['Quelle est votre activité ?', 'Votre objectif principal ?', 'Combien êtes-vous ?']
+
+/** Premium selection card — gradient icon chip, selected ring + glow + check badge, hover lift. */
 function OptionTile<T extends string>({
   value,
   label,
@@ -71,57 +77,93 @@ function OptionTile<T extends string>({
   onSelect: (value: T) => void
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={() => onSelect(value)}
       aria-pressed={selected}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
       className={cn(
-        'flex flex-col items-center gap-2 rounded-xl border px-3 py-3.5 text-center transition-all duration-200',
+        'relative flex flex-col items-center gap-2.5 rounded-2xl border px-4 py-5 text-center transition-colors duration-200',
         selected
-          ? 'border-primary bg-primary/8 shadow-sm shadow-primary/10'
+          ? 'border-primary bg-primary/6 shadow-[0_4px_20px_-4px] shadow-primary/25'
           : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
       )}
     >
-      <Icon className={cn('size-4.5', selected ? 'text-primary' : 'text-muted-foreground')} strokeWidth={1.75} />
-      <span className={cn('text-[11.5px] font-semibold leading-tight', selected ? 'text-foreground' : 'text-muted-foreground')}>
+      {selected && (
+        <motion.span
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+          className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+        >
+          <Check className="size-3" strokeWidth={3} />
+        </motion.span>
+      )}
+      <span
+        className="flex size-10 items-center justify-center rounded-full"
+        style={
+          selected
+            ? { background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }
+            : undefined
+        }
+      >
+        <Icon className={cn('size-5', selected ? 'text-primary-foreground' : 'text-muted-foreground')} strokeWidth={1.75} />
+      </span>
+      <span className={cn('text-[12.5px] font-semibold leading-tight', selected ? 'text-foreground' : 'text-muted-foreground')}>
         {label}
       </span>
-    </button>
+    </motion.button>
   )
 }
 
-function QuestionBlock({
-  step,
-  title,
-  children,
-}: {
-  step: number
-  title: string
-  children: React.ReactNode
-}) {
+function ProgressBar({ step, total }: { step: number; total: number }) {
   return (
-    <div>
-      <p className="mb-2.5 flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
-        <span className="flex size-4.5 items-center justify-center rounded-full bg-primary/12 text-[10px] font-bold text-primary">
-          {step}
-        </span>
-        {title}
-      </p>
-      {children}
+    <div className="mb-1 flex gap-1.5">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={cn('h-1 flex-1 rounded-full transition-colors duration-300', i < step ? 'bg-success' : i === step ? 'bg-primary' : 'bg-muted')}
+        />
+      ))}
     </div>
   )
 }
 
 export function WelcomeForm() {
   const router = useRouter()
+  const [step, setStep] = useState(0)
+  const [direction, setDirection] = useState(1)
   const [businessType, setBusinessType] = useState<BusinessType | null>(null)
   const [primaryGoal, setPrimaryGoal] = useState<PrimaryGoal | null>(null)
   const [teamSize, setTeamSize] = useState<TeamSize | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const advanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const canSubmit = businessType !== null
+  useEffect(() => () => {
+    if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
+  }, [])
+
   const visibleGoals = businessType === 'ecommerce' ? [...PRIMARY_GOALS, SELL_MORE_GOAL] : PRIMARY_GOALS
+  const canFinish = businessType !== null && teamSize !== null
+
+  function goTo(nextStep: number, dir: 1 | -1) {
+    if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
+    setDirection(dir)
+    setStep(nextStep)
+  }
+
+  /** Selecting a tile on a non-final step both records the value and, after a
+   * short beat to let the selection register visually, slides to the next
+   * question — the "one question at a time, keeps moving" feel. The last
+   * step never auto-advances: it fires a network request (handleSubmit),
+   * which must stay an explicit action. */
+  function autoAdvance(nextStep: number) {
+    if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
+    advanceTimeout.current = setTimeout(() => goTo(nextStep, 1), AUTO_ADVANCE_DELAY_MS)
+  }
 
   function handleBusinessTypeSelect(value: BusinessType) {
     setBusinessType(value)
@@ -130,10 +172,16 @@ export function WelcomeForm() {
     if (value !== 'ecommerce' && primaryGoal === 'sell_more') {
       setPrimaryGoal(null)
     }
+    autoAdvance(1)
+  }
+
+  function handleGoalSelect(value: PrimaryGoal) {
+    setPrimaryGoal(value)
+    autoAdvance(2)
   }
 
   async function handleSubmit() {
-    if (!canSubmit) return
+    if (!canFinish) return
     setSaving(true)
     setError(null)
     try {
@@ -146,7 +194,7 @@ export function WelcomeForm() {
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError("Une erreur est survenue, réessayez.")
+      setError('Une erreur est survenue, réessayez.')
       setSaving(false)
     }
   }
@@ -167,56 +215,88 @@ export function WelcomeForm() {
 
   return (
     <AuthCard tagline="Personnalisons votre espace en 30 secondes">
-        <div className="flex flex-col gap-6">
-          <QuestionBlock step={1} title="Quelle est votre activité ?">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {BUSINESS_TYPES.map((opt) => (
-                <OptionTile key={opt.value} {...opt} selected={businessType === opt.value} onSelect={handleBusinessTypeSelect} />
-              ))}
-            </div>
-          </QuestionBlock>
-
-          <QuestionBlock step={2} title="Votre objectif principal ?">
-            <div className="grid grid-cols-2 gap-2">
-              <AnimatePresence initial={false}>
-                {visibleGoals.map((opt) => (
-                  <motion.div
-                    key={opt.value}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <OptionTile {...opt} selected={primaryGoal === opt.value} onSelect={setPrimaryGoal} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </QuestionBlock>
-
-          <QuestionBlock step={3} title="Combien êtes-vous ?">
-            <div className="grid grid-cols-4 gap-2">
-              {TEAM_SIZES.map((opt) => (
-                <OptionTile key={opt.value} {...opt} selected={teamSize === opt.value} onSelect={setTeamSize} />
-              ))}
-            </div>
-          </QuestionBlock>
-
-          {error && <p className="text-center text-[13px] text-destructive">{error}</p>}
-
-          <Button size="lg" disabled={!canSubmit || saving} onClick={handleSubmit} className="w-full">
-            {saving ? 'Un instant…' : 'Continuer'}
-          </Button>
-
-          <button
-            type="button"
-            onClick={handleSkip}
-            disabled={saving}
-            className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Passer pour l&apos;instant
-          </button>
+      <div className="flex flex-col gap-5">
+        <div>
+          <ProgressBar step={step} total={3} />
+          <div className="flex items-center justify-between">
+            {step > 0 ? (
+              <button
+                type="button"
+                onClick={() => goTo(step - 1, -1)}
+                className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="size-3" /> Retour
+              </button>
+            ) : (
+              <span />
+            )}
+            <span className="text-[11px] font-medium text-muted-foreground">Étape {step + 1}/3</span>
+          </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: direction * 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -direction * 28 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="mb-3.5 text-center text-[14px] font-semibold text-foreground">{STEP_TITLES[step]}</p>
+
+            {step === 0 && (
+              <div className="grid grid-cols-2 gap-2.5">
+                {BUSINESS_TYPES.map((opt) => (
+                  <OptionTile key={opt.value} {...opt} selected={businessType === opt.value} onSelect={handleBusinessTypeSelect} />
+                ))}
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <AnimatePresence initial={false}>
+                  {visibleGoals.map((opt) => (
+                    <motion.div
+                      key={opt.value}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <OptionTile {...opt} selected={primaryGoal === opt.value} onSelect={handleGoalSelect} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="grid grid-cols-2 gap-2.5">
+                {TEAM_SIZES.map((opt) => (
+                  <OptionTile key={opt.value} {...opt} selected={teamSize === opt.value} onSelect={setTeamSize} />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {error && <p className="text-center text-[13px] text-destructive">{error}</p>}
+
+        {step === 2 && (
+          <Button size="lg" disabled={!canFinish || saving} onClick={handleSubmit} className="w-full">
+            {saving ? 'Un instant…' : 'Terminer'}
+          </Button>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSkip}
+          disabled={saving}
+          className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Passer pour l&apos;instant
+        </button>
+      </div>
     </AuthCard>
   )
 }

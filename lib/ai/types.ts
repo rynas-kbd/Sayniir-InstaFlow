@@ -1,7 +1,7 @@
 export type AiStreamEvent =
   | { t: 'text'; delta: string }
   | { t: 'tool_start'; id: string; name: string }
-  | { t: 'tool_result'; id: string; name: string; ok: boolean; summary?: string }
+  | { t: 'tool_result'; id: string; name: string; ok: boolean; summary?: string; output?: unknown }
   | { t: 'confirm'; id: string; name: string; label: string; preview: string }
   | { t: 'credits'; used: number; limit: number }
   | { t: 'done'; conversationId: string }

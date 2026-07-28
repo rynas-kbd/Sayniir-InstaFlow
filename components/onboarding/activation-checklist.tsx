@@ -97,19 +97,21 @@ export function ActivationChecklist({
                   key={step.id}
                   className={cn(
                     'rounded-xl border transition-all duration-200',
-                    isCurrent ? 'border-primary/30 bg-primary/[0.03]' : 'border-border/40 bg-muted/10'
+                    isCurrent ? 'glass-stat border-primary/30' : 'border-border/40 bg-muted/10',
+                    isLocked && 'opacity-60'
                   )}
                 >
                   <div className="flex items-start gap-3 p-4">
                     <div
                       className={cn(
                         'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
-                        isDone
-                          ? 'bg-success text-white'
-                          : isCurrent
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
+                        isDone ? 'bg-success text-white' : !isCurrent && 'bg-muted text-muted-foreground'
                       )}
+                      style={
+                        isCurrent
+                          ? { background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)', color: 'var(--primary-foreground)' }
+                          : undefined
+                      }
                     >
                       {isDone ? <Check className="size-3" strokeWidth={3} /> : isLocked ? <Lock className="size-2.5" /> : i + 1}
                     </div>
@@ -122,9 +124,10 @@ export function ActivationChecklist({
                       <AnimatePresence>
                         {isCurrent && (
                           <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
+                            initial={{ opacity: 0, height: 0, y: 6 }}
+                            animate={{ opacity: 1, height: 'auto', y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: 6 }}
+                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                             className="mt-3.5 overflow-hidden"
                           >
                             {step.id === 'connect_channel' && (

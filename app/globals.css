@@ -588,6 +588,118 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ─────────────────────────────────────────────
+   .copilot-markdown — Streamdown output inside the
+   Copilot chat bubbles (components/ai/copilot-panel.tsx).
+   Streamdown renders plain semantic HTML (h1-h6, p, ul,
+   code, blockquote, table, ...) with no Tailwind classes
+   of its own, so these are plain element selectors, not
+   overrides of a class Streamdown ships — no dependency
+   on its internal DOM structure beyond standard tags.
+   ───────────────────────────────────────────── */
+
+.copilot-markdown {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.copilot-markdown > *:first-child { margin-top: 0; }
+.copilot-markdown > *:last-child { margin-bottom: 0; }
+
+.copilot-markdown p { margin: 0.5em 0; }
+
+.copilot-markdown h1,
+.copilot-markdown h2,
+.copilot-markdown h3,
+.copilot-markdown h4 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: var(--foreground);
+  margin: 0.9em 0 0.35em;
+  line-height: 1.25;
+}
+.copilot-markdown h1 { font-size: 1.15em; }
+.copilot-markdown h2 { font-size: 1.08em; }
+.copilot-markdown h3,
+.copilot-markdown h4 { font-size: 1em; }
+
+.copilot-markdown ul,
+.copilot-markdown ol {
+  margin: 0.4em 0;
+  padding-left: 1.25em;
+}
+.copilot-markdown ul { list-style: none; }
+.copilot-markdown ul > li { position: relative; }
+.copilot-markdown ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1.1em;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--organic-terracotta) 70%, transparent);
+}
+.copilot-markdown ol { list-style: decimal; }
+.copilot-markdown ol > li::marker { color: color-mix(in srgb, var(--organic-terracotta) 70%, transparent); font-weight: 600; }
+.copilot-markdown li { margin: 0.2em 0; }
+.copilot-markdown li > ul,
+.copilot-markdown li > ol { margin: 0.2em 0; }
+
+.copilot-markdown strong { font-weight: 600; color: var(--foreground); }
+.copilot-markdown em { font-style: italic; }
+
+.copilot-markdown a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.copilot-markdown a:hover { text-decoration-thickness: 2px; }
+
+.copilot-markdown blockquote {
+  margin: 0.5em 0;
+  padding: 0.1em 0 0.1em 0.85em;
+  border-left: 2px solid color-mix(in srgb, var(--organic-terracotta) 45%, transparent);
+  color: var(--muted-foreground);
+}
+
+.copilot-markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.copilot-markdown :not(pre) > code {
+  background: color-mix(in srgb, var(--organic-sand-500) 18%, transparent);
+  border-radius: 5px;
+  padding: 0.15em 0.4em;
+}
+.copilot-markdown pre {
+  margin: 0.6em 0;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.copilot-markdown table {
+  width: 100%;
+  margin: 0.6em 0;
+  font-size: 0.92em;
+  border-collapse: collapse;
+}
+.copilot-markdown th,
+.copilot-markdown td {
+  border: 1px solid color-mix(in srgb, var(--organic-sand-500) 35%, transparent);
+  padding: 0.35em 0.6em;
+  text-align: left;
+}
+.copilot-markdown th {
+  background: color-mix(in srgb, var(--organic-sand-500) 12%, transparent);
+  font-weight: 600;
+}
+
+.copilot-markdown hr {
+  margin: 0.75em 0;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--organic-sand-500) 30%, transparent);
+}
+
+/* ─────────────────────────────────────────────
    Custom scrollbars — Organic style
    8px wide with a 2px transparent border on the
    thumb (background-clip: padding-box) so the

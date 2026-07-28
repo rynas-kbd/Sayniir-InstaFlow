@@ -12,6 +12,17 @@ import type { AiStreamEvent, AiTurnInput } from './types'
 const CONFIRM_TTL_MS = 15 * 60 * 1000
 
 /**
+ * Read-only "list/search" tools whose result is worth rendering as a
+ * structured card in the chat (components/ai/tool-result-card.tsx) instead
+ * of only being narrated in prose by the model. Deliberately narrow: these
+ * outputs are already tenant-scoped data the model receives verbatim (see
+ * executeAiTool below), so handing the same payload to the client opens no
+ * new security surface — but every other tool (writes, single-object
+ * lookups) stays exactly as narration-only as before.
+ */
+const DISPLAYABLE_TOOLS = new Set(['list_flows', 'list_products', 'list_orders', 'search_contacts'])
+
+/**
  * Returns a user-friendly progress message for a given tool name.
  * Used to display progress indicators in the UI during tool execution.
  */
@@ -220,7 +231,13 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         push({ t: 'tool_start', id: block.id, name: tool.name })
         const result = await executeAiTool(tool, block.input as never, ctx, { conversationId: input.conversationId })
         if (result.ok) {
-          push({ t: 'tool_result', id: block.id, name: tool.name, ok: true })
+          push({
+            t: 'tool_result',
+            id: block.id,
+            name: tool.name,
+            ok: true,
+            output: DISPLAYABLE_TOOLS.has(tool.name) ? result.output : undefined,
+          })
           resultBlocks.push({ type: 'tool_result', toolUseId: block.id, content: JSON.stringify(result.output) })
         } else {
           push({ t: 'tool_result', id: block.id, name: tool.name, ok: false, summary: result.error })
