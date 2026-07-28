@@ -15,6 +15,13 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { resolveOnboardingState } from '@/lib/onboarding/state'
+import { GOAL_TO_TEMPLATE_ID } from '@/lib/onboarding/steps'
+import { ActivationChecklist } from '@/components/onboarding/activation-checklist'
+import { InsightRail } from '@/components/ai/insight-rail'
+import { mapAiInsightRow } from '@/components/ai/types'
+import { shouldShowPulseSurvey } from '@/lib/onboarding/pulse'
+import { PulseSurvey } from '@/components/onboarding/pulse-survey'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -54,6 +61,10 @@ export default async function DashboardPage() {
   // an account-management summary, not per-account data — while the stats
   // and lists below scope to whichever account is active.
   const { accounts: safeAccounts, active } = await resolveActiveAccount()
+  const onboarding = await resolveOnboardingState()
+
+  const { data: profileMeta } = await supabase.from('profiles').select('created_at').eq('id', user!.id).single()
+  const showPulseSurvey = onboarding.isActivated && (await shouldShowPulseSurvey(user!.id, profileMeta?.created_at ?? null))
 
   const [{ data: messages, count: totalMessages }, { data: subscription }, { data: rules }] =
     await Promise.all([
@@ -76,6 +87,17 @@ export default async function DashboardPage() {
             .limit(3)
         : Promise.resolve({ data: [] }),
     ])
+
+  const { data: insightRows } = active
+    ? await supabase
+        .from('ai_insights')
+        .select('id, rule_id, scope, subject_id, severity, title, detail, fix_tool_name, fix_tool_input')
+        .eq('channel_account_id', active.id)
+        .is('dismissed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(20)
+    : { data: [] }
+  const insights = (insightRows ?? []).map(mapAiInsightRow)
 
   const safeMessages = messages ?? []
   const safeRules = rules ?? []
@@ -112,6 +134,20 @@ export default async function DashboardPage() {
       />
 
       <DashboardContainer className="flex-1 overflow-y-auto space-y-6 p-4 md:p-6">
+        {!onboarding.isActivated ? (
+          <ActivationChecklist
+            currentStepId={onboarding.currentStepId!}
+            activeAccountId={active?.id ?? null}
+            activePlatform={active?.platform ?? null}
+            templateId={onboarding.primaryGoal ? (GOAL_TO_TEMPLATE_ID[onboarding.primaryGoal] ?? 'blank') : 'blank'}
+            whatsappAppId={process.env.NEXT_PUBLIC_META_WHATSAPP_APP_ID ?? null}
+            whatsappConfigId={process.env.META_WHATSAPP_CONFIG_ID ?? null}
+          />
+        ) : (
+        <>
+        {showPulseSurvey && <PulseSurvey />}
+        {insights.length > 0 && <InsightRail insights={insights} />}
+
         {/* Welcome Premium Banner */}
         <DashboardItem className="glass-banner relative overflow-hidden rounded-2xl px-6 py-6 sm:px-8">
           {/* Inner aurora spots */}
@@ -177,6 +213,8 @@ export default async function DashboardPage() {
             />
           </DashboardItem>
         </div>
+        </>
+        )}
 
         {/* ── Main content grid ── */}
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">

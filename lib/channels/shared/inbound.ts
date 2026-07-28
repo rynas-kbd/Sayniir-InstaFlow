@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '../../supabase/admin'
+import { createDispatchAdminClient } from '../../supabase/dispatch-admin'
 import { handleEcommerceMessage, handleEcommerceVoice, handleQaMessage } from '../../agent/ecommerce/handler'
 import { handleAgentMessage, type BusinessType } from '../../agent/router'
 import { TokenExpiredError } from '../../meta/messaging'
@@ -33,7 +33,7 @@ const APP_SECRET_ENV: Record<Platform, string> = {
 }
 
 async function isSubscriptionValid(userId: string): Promise<boolean> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('status, expires_at')
@@ -48,7 +48,7 @@ async function isSubscriptionValid(userId: string): Promise<boolean> {
 }
 
 async function deactivateAccount(accountId: string): Promise<void> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   await supabase.from('channel_accounts').update({ is_active: false }).eq('id', accountId)
 }
 
@@ -67,7 +67,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   {
     const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
     if (account) {
-      const supabase = createAdminClient()
+      const supabase = createDispatchAdminClient()
       const { data: contact } = await supabase
         .from('contacts')
         .select('id, bot_paused')
@@ -100,7 +100,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   if (msg.referralRef) {
     const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
     if (account && (await isSubscriptionValid(account.user_id))) {
-      const supabase = createAdminClient()
+      const supabase = createDispatchAdminClient()
       const { data: link } = await supabase
         .from('growth_links')
         .select('id, flow_id, clicks')
@@ -144,7 +144,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
     if (!account || !(await isSubscriptionValid(account.user_id))) return
 
-    const supabase = createAdminClient()
+    const supabase = createDispatchAdminClient()
     const { data: agentSettings } = await supabase
       .from('agent_settings')
       .select('ai_provider, ai_api_key, ai_model')
@@ -176,7 +176,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
   if (msg.text) {
     const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
     if (account && (await isSubscriptionValid(account.user_id))) {
-      const supabase = createAdminClient()
+      const supabase = createDispatchAdminClient()
       const { data: agentSettings } = await supabase
         .from('agent_settings')
         .select('ai_provider, ai_api_key, ai_model')
@@ -219,7 +219,7 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
 
   const adapter = getAdapter(msg.platform)
   const ref: ChannelAccountRef = { id: account.id, externalId: msg.channelExternalId, accessToken: account.access_token }
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const pageId = msg.channelExternalId
   const senderProfile = await adapter.fetchSenderProfile?.(msg.senderId, account.access_token)
   const contactId = await upsertContact(account.id, msg.senderId, senderProfile)
@@ -639,7 +639,7 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
   if (!account) return
   if (!(await isSubscriptionValid(account.user_id))) return
 
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const contactId = await upsertContact(account.id, comment.commenterId, { username: comment.commenterUsername })
 
   await supabase.from('comment_logs').upsert(

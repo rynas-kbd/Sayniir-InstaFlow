@@ -3,7 +3,17 @@ import { resolveAudience, resolveSegment } from '../../contacts/service'
 import type { FlowNode, FlowEdge } from '../../flows/types'
 import type { LintFinding } from './types'
 import { computeFlowFindings, computeCampaignAudienceFindings } from './compute'
-import { checkAccountTokenExpiring, checkAccountNoFallback, checkCampaignFailedSends, checkContactsUntagged } from './rules'
+import {
+  checkAccountTokenExpiring,
+  checkAccountNoFallback,
+  checkCampaignFailedSends,
+  checkContactsUntagged,
+  checkOnboardingFlowNeverTested,
+  checkOnboardingFirstContact,
+  checkOnboardingTeamInvite,
+  checkOnboardingSingleChannel,
+  checkOnboardingSecondWave,
+} from './rules'
 
 /** Upserts findings for an account, preserving dismissed_at/explanation on rows that still apply, and removing rows that no longer do. */
 async function upsertFindings(channelAccountId: string, findings: LintFinding[]): Promise<void> {
@@ -48,7 +58,7 @@ export async function refreshAccountFindings(channelAccountId: string): Promise<
 
   const [{ data: account }, { data: agentSettings }, { data: flows }, { data: campaigns }, { data: contacts }, { data: taggedRows }] =
     await Promise.all([
-      supabase.from('channel_accounts').select('id, token_expires_at').eq('id', channelAccountId).single(),
+      supabase.from('channel_accounts').select('id, user_id, token_expires_at, connected_at').eq('id', channelAccountId).single(),
       supabase
         .from('agent_settings')
         .select('flows_enabled, default_message_enabled, ai_api_key')
@@ -102,6 +112,34 @@ export async function refreshAccountFindings(channelAccountId: string): Promise<
 
   findings.push(...checkAccountTokenExpiring(account, activeAutomationCount))
   findings.push(...checkAccountNoFallback(account, agentSettings?.default_message_enabled ?? true, hasGenericFlow))
+
+  // ── Onboarding nudges (Phase 3 of the activation checklist) — everything
+  // here is a behavior trigger (a count crossing a threshold), never a
+  // calendar trigger, per the guide this feature implements. ──────────────
+  {
+    const [{ data: profile }, { count: teamMemberCount }, { count: segmentCount }, { count: incomingMessageCount }, { count: userChannelCount }] =
+      await Promise.all([
+        supabase.from('profiles').select('team_size').eq('id', account.user_id).maybeSingle(),
+        supabase.from('team_members').select('*', { count: 'exact', head: true }).eq('channel_account_id', channelAccountId),
+        supabase.from('segments').select('*', { count: 'exact', head: true }).eq('channel_account_id', channelAccountId),
+        supabase
+          .from('message_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('channel_account_id', channelAccountId)
+          .eq('direction', 'incoming'),
+        supabase.from('channel_accounts').select('*', { count: 'exact', head: true }).eq('user_id', account.user_id),
+      ])
+
+    const hasReceivedRealMessage = (incomingMessageCount ?? 0) > 0
+
+    findings.push(...checkOnboardingFlowNeverTested(account, activeAutomationCount > 0, incomingMessageCount ?? 0))
+    findings.push(...checkOnboardingFirstContact(account, (contacts ?? []).length, segmentCount ?? 0))
+    findings.push(...checkOnboardingTeamInvite(account, profile?.team_size ?? null, teamMemberCount ?? 0))
+    findings.push(...checkOnboardingSingleChannel(account, userChannelCount ?? 0, hasReceivedRealMessage))
+    findings.push(
+      ...checkOnboardingSecondWave({ id: account.id, connectedAt: account.connected_at }, activeAutomationCount)
+    )
+  }
 
   for (const campaign of campaigns ?? []) {
     if (campaign.status === 'scheduled') {

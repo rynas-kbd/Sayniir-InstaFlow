@@ -7,12 +7,21 @@ import { StatCard } from '@/components/dashboard/stat-card'
 import { ConnectPanel } from '@/components/accounts/connect-panel'
 import { ConnectResultToast } from '@/components/accounts/connect-result-toast'
 import { AccountCard, type ChannelAccount } from '@/components/accounts/account-card'
+import { resolveOnboardingState } from '@/lib/onboarding/state'
 
 export default async function AccountsPage() {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Instagram/Messenger OAuth is a full-page redirect that always lands back
+  // on /accounts (app/api/auth/{facebook,messenger}/callback hardcode that
+  // target — there's no `next` param to thread through). When the user
+  // started that redirect from the dashboard's activation checklist, bounce
+  // them back there instead of stranding them on /accounts once the result
+  // toast has fired, so the checklist resumes exactly where they left off.
+  const onboarding = await resolveOnboardingState()
 
   const { data: accounts } = await supabase
     .from('channel_accounts')
@@ -32,7 +41,7 @@ export default async function AccountsPage() {
   return (
     <div className="h-full overflow-y-auto">
       <Suspense fallback={null}>
-        <ConnectResultToast />
+        <ConnectResultToast redirectTo={!onboarding.isActivated ? '/dashboard' : '/accounts'} />
       </Suspense>
       <div className="mx-auto max-w-4xl">
         <PageHeader

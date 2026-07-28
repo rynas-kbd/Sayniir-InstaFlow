@@ -1,4 +1,4 @@
-import { createAdminClient } from '../supabase/admin'
+import { createDispatchAdminClient } from '../supabase/dispatch-admin'
 import { getAdapter } from '../channels/registry'
 import { matchesMessageTrigger, matchesCommentTrigger } from './matcher'
 import { executeNode } from './nodes'
@@ -20,7 +20,7 @@ interface AgentArgs {
 }
 
 async function loadGraph(flowId: string): Promise<{ nodes: FlowNode[]; edges: FlowEdge[] }> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const [{ data: nodes }, { data: edges }] = await Promise.all([
     supabase.from('flow_nodes').select('*').eq('flow_id', flowId),
     supabase.from('flow_edges').select('*').eq('flow_id', flowId),
@@ -39,7 +39,7 @@ async function continueRun(
   agentArgs: AgentArgs,
   startHandle: string = 'default'
 ): Promise<void> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { nodes, edges } = await loadGraph(run.flow_id)
   const adapter = getAdapter(platform)
   const { data: dbAccount } = await supabase
@@ -132,7 +132,7 @@ async function startRun(
   senderId: string,
   agentArgs: AgentArgs
 ): Promise<void> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { nodes } = await loadGraph(flowId)
   const triggerNode = nodes.find((n) => n.type === 'trigger')
   if (!triggerNode) return
@@ -173,7 +173,7 @@ export async function runFlowsForInbound(input: {
   storyEventType?: 'reply' | 'mention'
   agentArgs: AgentArgs
 }): Promise<boolean> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { data: flows } = await supabase
     .from('flows')
     .select('id, trigger_type, trigger_keywords')
@@ -198,7 +198,7 @@ export async function runFlowsForInboundComment(input: {
   mediaId?: string | null
   agentArgs: AgentArgs
 }): Promise<boolean> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { data: flows } = await supabase
     .from('flows')
     .select('id, trigger_type, trigger_keywords, target_post_ids')
@@ -249,7 +249,7 @@ export async function continueRunFromPostback(
   const buttonIndex = Number(buttonIndexStr)
   if (!flowId || !nodeKey || Number.isNaN(buttonIndex)) return false
 
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { data: run } = await supabase
     .from('flow_runs')
     .select('*')
@@ -283,7 +283,7 @@ export async function tryContinueRunFromTextCapture(
   senderId: string,
   agentArgs: AgentArgs
 ): Promise<boolean> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
   const { data: run } = await supabase
     .from('flow_runs')
     .select('*')
@@ -328,7 +328,7 @@ export async function tryContinueRunFromTextCapture(
 
 /** Cron entry point — claims a waiting run optimistically before resuming it. */
 export async function resumeRun(runId: string, platform: Platform, account: DispatchAccount, agentArgs: AgentArgs): Promise<void> {
-  const supabase = createAdminClient()
+  const supabase = createDispatchAdminClient()
 
   // Optimistic claim: only proceed if this run is still 'waiting' — guards
   // against two overlapping cron invocations resuming the same run twice.

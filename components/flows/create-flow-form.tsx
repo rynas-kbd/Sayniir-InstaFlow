@@ -12,10 +12,23 @@ import { FLOW_TEMPLATES, BLANK_TEMPLATE } from '@/lib/flows/templates'
 
 const TEMPLATE_OPTIONS = [BLANK_TEMPLATE, ...FLOW_TEMPLATES]
 
-export function CreateFlowForm({ channelAccountId }: { channelAccountId: string }) {
+export function CreateFlowForm({
+  channelAccountId,
+  defaultTemplateId,
+  activateOnCreate,
+  onCreated,
+}: {
+  channelAccountId: string
+  /** Pre-selects a template (e.g. from the onboarding questionnaire's primary_goal) instead of defaulting to 'blank'. */
+  defaultTemplateId?: string
+  /** Immediately PATCHes the new flow to status:'active' — used by the onboarding checklist, where "created" must mean "live" for the activation check to pass, not left as a draft the user has to remember to publish. */
+  activateOnCreate?: boolean
+  /** Called instead of navigating to the flow editor — lets the onboarding checklist stay on /dashboard and advance to the next step inline. */
+  onCreated?: (flowId: string) => void
+}) {
   const router = useRouter()
   const [name, setName] = useState('')
-  const [templateId, setTemplateId] = useState<string>('blank')
+  const [templateId, setTemplateId] = useState<string>(defaultTemplateId ?? 'blank')
   const [saving, setSaving] = useState(false)
 
   const selectedTemplate = FLOW_TEMPLATES.find((t) => t.id === templateId)
@@ -53,7 +66,20 @@ export function CreateFlowForm({ channelAccountId }: { channelAccountId: string 
         if (!graphRes.ok) toast.error('Flow créé, mais le template n\'a pas pu être chargé')
       }
 
-      router.push(`/flows/${flow.id}`)
+      if (activateOnCreate) {
+        const activateRes = await fetch(`/api/flows/${flow.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'active' }),
+        })
+        if (!activateRes.ok) toast.error("Flow créé, mais n'a pas pu être activé — activez-le depuis la liste des flows.")
+      }
+
+      if (onCreated) {
+        onCreated(flow.id)
+      } else {
+        router.push(`/flows/${flow.id}`)
+      }
     } catch {
       toast.error('Impossible de créer le flow')
       setSaving(false)

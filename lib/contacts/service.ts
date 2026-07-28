@@ -1,16 +1,28 @@
 import { createAdminClient } from '../supabase/admin'
+import { isSandbox } from '../channels/sandbox'
 import type { Contact, SenderProfile } from './types'
+
+/** Fixed placeholder returned in place of a real contact id during an onboarding simulation. */
+const SANDBOX_CONTACT_ID = 'sandbox-simulated-contact'
 
 /**
  * Upserts the contact for an inbound message and stamps last_seen_at /
  * last_inbound_at. Called from the hot webhook path — must never throw
  * into the caller, since a CRM write failure must not block the reply.
+ *
+ * Guarded explicitly (rather than through the dispatch-admin.ts client
+ * proxy) because this function owns its own createAdminClient() call and
+ * short-circuits before any query is built — the fake sender id an
+ * onboarding simulation uses has no real CRM row to look up in the first
+ * place, so skipping straight to a placeholder avoids a pointless read too.
  */
 export async function upsertContact(
   channelAccountId: string,
   senderId: string,
   senderProfile?: SenderProfile | null
 ): Promise<string | null> {
+  if (isSandbox()) return SANDBOX_CONTACT_ID
+
   try {
     const supabase = createAdminClient()
     const now = new Date().toISOString()

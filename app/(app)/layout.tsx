@@ -23,9 +23,20 @@ export default async function AppLayout({
   }
 
   const [{ data: profile }, { accounts, active }] = await Promise.all([
-    supabase.from('profiles').select('business_type').eq('id', user.id).single(),
+    supabase
+      .from('profiles')
+      .select('business_type, onboarding_completed_at, onboarding_skipped_at')
+      .eq('id', user.id)
+      .single(),
     resolveActiveAccount(),
   ])
+
+  // First visit ever — route through the 30-second questionnaire before any
+  // app page. onboarding_skipped_at makes this a one-time gate, not a wall
+  // the user has to click past on every session.
+  if (!profile?.onboarding_completed_at && !profile?.onboarding_skipped_at) {
+    redirect('/welcome')
+  }
 
   const businessType = (profile?.business_type as BusinessType | undefined) ?? 'ecommerce'
 

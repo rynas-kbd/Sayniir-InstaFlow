@@ -25,8 +25,14 @@ const ERROR_MESSAGES: Record<string, string> = {
  * surfaces the result as a toast, then strips the params from the URL so
  * a page refresh doesn't re-fire it. Without this, OAuth failures redirect
  * silently and the user has no way to know a connection didn't go through.
+ *
+ * `redirectTo` defaults to '/accounts' (where the OAuth callbacks always
+ * land — they have no `next` param to thread through). The onboarding
+ * activation checklist passes '/dashboard' instead so a channel connected
+ * from there returns the user to the checklist rather than stranding them
+ * on the accounts page.
  */
-export function ConnectResultToast() {
+export function ConnectResultToast({ redirectTo = '/accounts' }: { redirectTo?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -38,7 +44,7 @@ export function ConnectResultToast() {
     if (connected) {
       const label = PLATFORM_LABELS[connected] ?? connected
       toast.success(`Compte ${label} connecté`)
-      router.replace('/accounts')
+      router.replace(redirectTo)
       return
     }
 
@@ -52,10 +58,10 @@ export function ConnectResultToast() {
       } else {
         toast.error(ERROR_MESSAGES[error] ?? 'Une erreur est survenue pendant la connexion.')
       }
-      router.replace('/accounts')
+      router.replace(redirectTo)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [searchParams, redirectTo])
 
   return null
 }
