@@ -20,7 +20,15 @@ const CONFIRM_TTL_MS = 15 * 60 * 1000
  * new security surface — but every other tool (writes, single-object
  * lookups) stays exactly as narration-only as before.
  */
-const DISPLAYABLE_TOOLS = new Set(['list_flows', 'list_products', 'list_orders', 'search_contacts'])
+const DISPLAYABLE_TOOLS = new Set([
+  'list_flows',
+  'list_products',
+  'list_orders',
+  'search_contacts',
+  'list_automation_rules',
+  'list_campaigns',
+  'list_contacts',
+])
 
 /**
  * Returns a user-friendly progress message for a given tool name.

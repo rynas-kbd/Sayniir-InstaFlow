@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Workflow, Package, ShoppingCart, Users } from 'lucide-react'
+import { Workflow, Package, ShoppingCart, Users, Zap, Megaphone } from 'lucide-react'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { Badge } from '@/components/ui/badge'
 
@@ -38,6 +38,19 @@ interface ContactRow {
   is_subscribed: boolean
 }
 
+interface AutomationRuleRow {
+  id: string
+  name: string
+  trigger_type: string
+  is_active: boolean
+}
+
+interface CampaignRow {
+  id: string
+  name: string
+  status: string
+}
+
 // Mirrors components/flows/flow-row.tsx's status → tone/label mapping.
 const FLOW_STATUS: Record<string, { tone: StatusTone; label: string }> = {
   active: { tone: 'success', label: 'Actif' },
@@ -57,6 +70,15 @@ const SHIPPING_STATUS: Record<string, { tone: StatusTone; label: string }> = {
   shipped: { tone: 'primary', label: 'Expédié' },
   delivered: { tone: 'success', label: 'Livré' },
   cancelled: { tone: 'destructive', label: 'Annulé' },
+}
+
+const CAMPAIGN_STATUS: Record<string, { tone: StatusTone; label: string }> = {
+  draft: { tone: 'neutral', label: 'Brouillon' },
+  scheduled: { tone: 'primary', label: 'Planifiée' },
+  sending: { tone: 'warning', label: 'Envoi en cours' },
+  sent: { tone: 'success', label: 'Envoyée' },
+  cancelled: { tone: 'destructive', label: 'Annulée' },
+  failed: { tone: 'destructive', label: 'Échouée' },
 }
 
 function CardShell({
@@ -186,6 +208,45 @@ function ContactsCard({ output }: { output: unknown }) {
   )
 }
 
+function AutomationRulesCard({ output }: { output: unknown }) {
+  const rules: AutomationRuleRow[] = isRecord(output) && Array.isArray(output.rules) ? (output.rules as AutomationRuleRow[]) : []
+  return (
+    <CardShell icon={Zap} title="Règles d'automatisation" count={rules.length} isEmpty={rules.length === 0} emptyLabel="Aucune règle pour le moment.">
+      {rules.map((rule) => (
+        <Link key={rule.id} href="/automation" className="block">
+          <Row>
+            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{rule.name}</span>
+            <StatusDot
+              tone={rule.is_active ? 'success' : 'neutral'}
+              label={rule.is_active ? 'Active' : 'Inactive'}
+              className="shrink-0"
+            />
+          </Row>
+        </Link>
+      ))}
+    </CardShell>
+  )
+}
+
+function CampaignsCard({ output }: { output: unknown }) {
+  const campaigns: CampaignRow[] = isRecord(output) && Array.isArray(output.campaigns) ? (output.campaigns as CampaignRow[]) : []
+  return (
+    <CardShell icon={Megaphone} title="Campagnes" count={campaigns.length} isEmpty={campaigns.length === 0} emptyLabel="Aucune campagne pour le moment.">
+      {campaigns.map((c) => {
+        const status = CAMPAIGN_STATUS[c.status] ?? CAMPAIGN_STATUS.draft
+        return (
+          <Link key={c.id} href="/campaigns" className="block">
+            <Row>
+              <span className="min-w-0 flex-1 truncate font-medium text-foreground">{c.name}</span>
+              <StatusDot tone={status.tone} label={status.label} className="shrink-0" />
+            </Row>
+          </Link>
+        )
+      })}
+    </CardShell>
+  )
+}
+
 /**
  * Renders a structured card for the handful of read-only "list/search"
  * tools the model can call (see DISPLAYABLE_TOOLS in lib/ai/loop.ts).
@@ -201,7 +262,12 @@ export function ToolResultCard({ name, output }: { name: string; output: unknown
     case 'list_orders':
       return <OrdersCard output={output} />
     case 'search_contacts':
+    case 'list_contacts':
       return <ContactsCard output={output} />
+    case 'list_automation_rules':
+      return <AutomationRulesCard output={output} />
+    case 'list_campaigns':
+      return <CampaignsCard output={output} />
     default:
       return null
   }

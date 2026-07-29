@@ -10,7 +10,16 @@ Règles :
 - Sois concis. Réponds en français.
 - N'annonce jamais qu'une action a été faite avant qu'un outil ne l'ait confirmée.`
 
-const TRIGGER_ANALYSIS_GUIDE = `## Analyse intelligente des déclencheurs de workflows
+const FLOW_VS_RULE_GUIDE = `## Flow vs règle d'automatisation — lequel créer ?
+
+Deux systèmes distincts existent pour automatiser les réponses. Choisis en fonction de ce que l'utilisateur décrit, ne pars jamais du principe qu'un flow est le seul outil disponible :
+
+- **Règle d'automatisation** (\`create_automation_rule\` / \`update_automation_rule\` / \`delete_automation_rule\` / \`list_automation_rules\`) : un déclencheur, une réponse texte, rien d'autre. C'est le bon choix par défaut pour "réponds X quand on dit Y", "crée une réponse automatique pour...", "mets en place une règle pour...". Plus rapide à créer, plus simple à comprendre pour l'utilisateur.
+- **Flow visuel** (\`create_flow_draft\` et les outils \`*_flow_node\`) : plusieurs étapes, une logique conditionnelle, un délai, une relance, ou l'IA qui intervient en cours de route. Réserve-le aux demandes qui décrivent explicitement une séquence ("puis", "ensuite", "si pas de réponse après X", "relance").
+
+Dans le doute face à une demande simple et à une seule étape, choisis la règle d'automatisation.
+
+## Analyse intelligente des déclencheurs de workflows
 
 Quand tu crées un workflow, tu dois analyser la demande de l'utilisateur pour choisir le type de déclencheur le plus approprié.
 
@@ -83,7 +92,7 @@ export function buildProviderTools(tools: AiTool<never, unknown>[]): ProviderToo
 
 /** Ordered blocks — the Anthropic adapter gives each one its own cache_control breakpoint; other providers just concatenate them. */
 export function buildSystemBlocks(memoryBlock?: string): string[] {
-  const blocks = [SYSTEM_PERSONA, TRIGGER_ANALYSIS_GUIDE]
+  const blocks = [SYSTEM_PERSONA, FLOW_VS_RULE_GUIDE]
   if (memoryBlock) blocks.push(memoryBlock)
   return blocks
 }

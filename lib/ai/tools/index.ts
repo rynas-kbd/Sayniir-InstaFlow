@@ -23,6 +23,31 @@ import { updateProductTool } from './update-product'
 import { listOrdersTool } from './list-orders'
 import { updateOrderStatusTool } from './update-order-status'
 import { updateFlowTriggerTool } from './update-flow-trigger'
+import { listAutomationRulesTool } from './list-automation-rules'
+import { createAutomationRuleTool } from './create-automation-rule'
+import { updateAutomationRuleTool } from './update-automation-rule'
+import { deleteAutomationRuleTool } from './delete-automation-rule'
+import { listCampaignsTool } from './list-campaigns'
+import { cancelCampaignTool } from './cancel-campaign'
+import { deleteCampaignTool } from './delete-campaign'
+import { listContactsTool } from './list-contacts'
+import { updateContactTool } from './update-contact'
+import { deleteContactTool } from './delete-contact'
+import { listTeamMembersTool } from './list-team-members'
+import { inviteTeamMemberTool } from './invite-team-member'
+import { removeTeamMemberTool } from './remove-team-member'
+import { listGrowthLinksTool } from './list-growth-links'
+import { createGrowthLinkTool } from './create-growth-link'
+import { deleteGrowthLinkTool } from './delete-growth-link'
+import { listSnippetsTool } from './list-snippets'
+import { updateSnippetTool } from './update-snippet'
+import { deleteSnippetTool } from './delete-snippet'
+import { listSegmentsTool } from './list-segments'
+import { deleteSegmentTool } from './delete-segment'
+import { listTagsTool } from './list-tags'
+import { deleteTagTool } from './delete-tag'
+import { deleteProductTool } from './delete-product'
+import { sendMessageToContactTool } from './send-message-to-contact'
 import type { AiTool } from './types'
 
 // Sorted by name and kept in this stable order across turns — the tool block is the first
@@ -49,11 +74,37 @@ export const AI_TOOLS: AiTool<never, unknown>[] = (
     setContactBotPausedTool,
     updateAgentSettingsTool,
     deleteFlowNodeTool,
+    updateFlowTriggerTool,
     listProductsTool,
     createProductTool,
     updateProductTool,
     listOrdersTool,
     updateOrderStatusTool,
+    listAutomationRulesTool,
+    createAutomationRuleTool,
+    updateAutomationRuleTool,
+    deleteAutomationRuleTool,
+    listCampaignsTool,
+    cancelCampaignTool,
+    deleteCampaignTool,
+    listContactsTool,
+    updateContactTool,
+    deleteContactTool,
+    listTeamMembersTool,
+    inviteTeamMemberTool,
+    removeTeamMemberTool,
+    listGrowthLinksTool,
+    createGrowthLinkTool,
+    deleteGrowthLinkTool,
+    listSnippetsTool,
+    updateSnippetTool,
+    deleteSnippetTool,
+    listSegmentsTool,
+    deleteSegmentTool,
+    listTagsTool,
+    deleteTagTool,
+    deleteProductTool,
+    sendMessageToContactTool,
   ] as AiTool<never, unknown>[]
 ).sort((a, b) => a.name.localeCompare(b.name))
 
