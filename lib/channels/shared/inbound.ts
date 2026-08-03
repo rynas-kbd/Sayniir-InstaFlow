@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createDispatchAdminClient } from '../../supabase/dispatch-admin'
 import { handleEcommerceMessage, handleEcommerceVoice, handleQaMessage } from '../../agent/ecommerce/handler'
 import { handleAgentMessage, type BusinessType } from '../../agent/router'
@@ -16,6 +16,7 @@ import {
   startRunFromGrowthLink,
 } from '../../flows/engine'
 import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
+import { claimInboundEvent, markEventDone, markEventFailed, tryLockConversation, unlockConversation } from './inbound-queue'
 
 const GREETING_RE =
   /^(bonjour|salut|salam|hello|hi|hey|bonsoir|مرحبا|السلام عليكم|وعليكم السلام|كيداير|كيف|wesh|coucou|ola|yo)\b/i
@@ -829,21 +830,55 @@ export function createWebhookRoute(platform: Platform) {
     const messages = adapter.parseWebhookMessages(payload)
     const comments = adapter.parseWebhookComments(payload)
 
+    // Claim each message's Meta `mid` BEFORE doing any real work. This is
+    // the actual fix for "every bot reply sent 2-3 times": Meta redelivers
+    // a message it didn't get a fast 200 for, and dispatchInboundMessage
+    // (1-2 LLM calls + ~10 DB round-trips) routinely took long enough to
+    // trigger exactly that. Claiming is a single fast insert, so it's safe
+    // to do synchronously here; the actual dispatch moves to after() below
+    // so Meta gets its 200 without waiting on the LLM at all. A duplicate
+    // `mid` (redelivery) fails the claim and is silently skipped.
+    const newMessages: typeof messages = []
     for (const msg of messages) {
-      try {
-        await dispatchInboundMessage(msg)
-      } catch (err) {
-        console.error(`[webhook:${platform}] Error handling message ${msg.messageId}:`, err)
-      }
+      const claimed = await claimInboundEvent(msg.messageId, platform, msg)
+      if (claimed) newMessages.push(msg)
     }
 
+    const newComments: typeof comments = []
     for (const comment of comments) {
-      try {
-        await dispatchInboundComment(comment)
-      } catch (err) {
-        console.error(`[webhook:${platform}] Error handling comment ${comment.commentId}:`, err)
-      }
+      const claimed = await claimInboundEvent(`comment:${comment.commentId}`, platform, comment)
+      if (claimed) newComments.push(comment)
     }
+
+    after(async () => {
+      for (const msg of newMessages) {
+        // Serializes turns for the same (channel, sender) pair — this is
+        // what stops two near-simultaneous messages (or a redelivery that
+        // slipped in before the claim above) from racing on the same
+        // order_sessions row and silently overwriting each other's slots.
+        const locked = await tryLockConversation(msg.channelExternalId, msg.senderId, msg.messageId)
+        if (!locked) continue // left 'processing' — the recovery sweep retries it shortly
+        try {
+          await dispatchInboundMessage(msg)
+          await markEventDone(msg.messageId)
+        } catch (err) {
+          console.error(`[webhook:${platform}] Error handling message ${msg.messageId}:`, err)
+          await markEventFailed(msg.messageId, err)
+        } finally {
+          await unlockConversation(msg.channelExternalId, msg.senderId)
+        }
+      }
+
+      for (const comment of newComments) {
+        try {
+          await dispatchInboundComment(comment)
+          await markEventDone(`comment:${comment.commentId}`)
+        } catch (err) {
+          console.error(`[webhook:${platform}] Error handling comment ${comment.commentId}:`, err)
+          await markEventFailed(`comment:${comment.commentId}`, err)
+        }
+      }
+    })
 
     return new NextResponse('EVENT_RECEIVED', { status: 200 })
   }

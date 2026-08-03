@@ -13,6 +13,8 @@ import {
 } from './state'
 import { selectRelevantProducts, toPromptCatalogEntry } from './search'
 import { transcribeVoiceForEcommerce } from './voice'
+import { parseSlot, resolveProduct } from './parse'
+import { detectLanguage, type DetectedLang } from './lang'
 
 /**
  * E-commerce order-taking + Q&A agent — ported verbatim from the live
@@ -133,7 +135,11 @@ JSON uniquement (sans backticks) :
     return { hasPurchaseIntent: llm.hasPurchaseIntent ?? false }
   } catch (err) {
     console.error('[QA] LLM error:', err)
-    await sendReply(pageId, accessToken, senderId, 'Désolé, je rencontre un problème technique. Veuillez réessayer dans quelques instants.')
+    // No customer-facing "problème technique" — the Q&A agent has nothing
+    // to re-ask (unlike the order-taking tunnel), so silence here is safer
+    // than a foreign-language error dump: staying quiet lets a keyword rule
+    // or the default message answer instead on a later fallback pass,
+    // rather than guaranteeing an ugly reply on every transient 429/timeout.
     return { hasPurchaseIntent: false }
   }
 }
@@ -247,6 +253,12 @@ export async function handleEcommerceMessage({
           customer_name: null,
           customer_phone: null,
           extra_data: {},
+          // Previously left out of the reset — a customer whose first-ever
+          // session got its language mis-detected stayed locked into it
+          // across every future order. awaiting_field also resets so the
+          // deterministic parser doesn't try to resolve a stale slot.
+          detected_language: null,
+          awaiting_field: null,
           last_message_at: new Date().toISOString(),
         })
         .eq('id', existing.id)
@@ -267,42 +279,112 @@ export async function handleEcommerceMessage({
     }
   }
 
-  const isConfirmation = isConfirmationMessage(messageText)
-  const isCancellation = isCancellationMessage(messageText)
-  const persistedLang = session.detected_language as string | null
+  // Language: detected fresh every turn (script/keyword based, no LLM call —
+  // see lang.ts). The session's last known language is only a fallback for
+  // ambiguous short replies ("M", "oui"), never a permanent freeze — the
+  // previous design locked in whatever the FIRST message detected and reused
+  // it for every template for the rest of the session, while the LLM's own
+  // prose kept following the CURRENT message's language, producing replies
+  // that were half Arabic, half French.
+  const persistedLang = (session.detected_language as DetectedLang | null) ?? 'fr'
+  const lang = detectLanguage(messageText, persistedLang)
+  const t = getTemplate(lang)
 
-  const extraDataKeys = customInfos.map((i) => i.toLowerCase().trim())
-  const sessionContext = isNewSession
-    ? "C'est le PREMIER message du client. Si c'est une salutation, note-le dans isQuestion."
-    : `La session est EN COURS. État actuel :\n${JSON.stringify(
-        {
-          product_id: session.product_id,
-          selected_size: session.selected_size,
-          selected_color: session.selected_color,
-          customer_name: session.customer_name,
-          customer_phone: session.customer_phone,
-          wilaya: session.wilaya,
-          delivery_mode: session.delivery_mode,
-          shipping_address: session.shipping_address,
-          extra_data: session.extra_data,
-        },
-        null,
-        2
-      )}`
+  const awaitingField = (session.awaiting_field as string | null) ?? null
+  const currentProduct = (products ?? []).find((p) => p.id === session.product_id) ?? null
 
-  const personaBlock = persona ? `=== TON RÔLE & PERSONNALITÉ ===\n${persona}\n` : "Tu es l'agent de vente d'une boutique e-commerce algérienne.\n"
-  const faqBlock = faqs.length
-    ? `=== BASE DE CONNAISSANCES (utilise-la si le client pose une question pendant la commande) ===\n${faqs.map((f) => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n')}\n`
-    : ''
+  const updated = { ...session }
+  let isConfirmation = false
+  let isCancellation = false
+  let deterministicallyResolved = false
 
-  const { products: orderRelevantProducts, wasFiltered: orderCatalogFiltered } = selectRelevantProducts(products ?? [], messageText, {
-    mustInclude: session.product_id,
-  })
-  const orderCatalogNote = orderCatalogFiltered
-    ? '\n(Catalogue complet plus large — si le produit voulu ne figure pas ci-dessus, mets product_id à null plutôt que de deviner.)\n'
-    : ''
+  // ── Deterministic-first slot resolution ────────────────────────────────
+  // The machine always knows the ONE field it just asked for. Resolving
+  // that field with plain matching (catalog lookup, regex, wilaya table)
+  // before ever calling the LLM removes the LLM round-trip from the vast
+  // majority of turns — and removes the failure modes that came with
+  // extracting from free text on every message: a mid-flow question like
+  // "vous livrez le vendredi ?" being silently stored as the shipping
+  // address because it was ≥10 characters, or "non" to a delivery-mode
+  // question being read as "cancel the order" by a confirmation regex that
+  // ran unconditionally regardless of what was actually asked.
+  if (awaitingField === 'produit') {
+    const resolved = resolveProduct(messageText, products ?? [])
+    if (resolved) {
+      updated.product_id = resolved.id
+      deterministicallyResolved = true
+    }
+  } else if (awaitingField) {
+    const slotResult = parseSlot(awaitingField, messageText, currentProduct)
+    if (slotResult.matched) {
+      deterministicallyResolved = true
+      if (awaitingField === 'confirmation') {
+        isConfirmation = !!slotResult.isConfirmation
+        isCancellation = !!slotResult.isCancellation
+      } else if (awaitingField === 'taille') {
+        updated.selected_size = slotResult.value ?? null
+      } else if (awaitingField === 'couleur') {
+        updated.selected_color = slotResult.value ?? null
+      } else if (awaitingField === 'wilaya') {
+        updated.wilaya = slotResult.value ?? null
+      } else if (awaitingField === 'mode de livraison') {
+        updated.delivery_mode = slotResult.value ?? null
+      } else if (awaitingField === 'téléphone') {
+        updated.customer_phone = slotResult.value ?? null
+      } else if (awaitingField === 'nom complet') {
+        updated.customer_name = slotResult.value ?? null
+      } else if (awaitingField === 'adresse complète') {
+        updated.shipping_address = slotResult.value ?? null
+      } else {
+        updated.extra_data = { ...(updated.extra_data ?? {}), [awaitingField.toLowerCase().trim()]: slotResult.value ?? '' }
+      }
+    }
+  }
 
-  const prompt = `
+  let llmResult: EcommerceLlmResult | null = null
+
+  if (!deterministicallyResolved) {
+    // Confirmation/cancellation intent is only ever read from the message
+    // when the recap was actually the last thing shown — never as a bare
+    // unconditional regex over any message (that's what let "non" to a
+    // delivery-mode question cancel an in-progress order).
+    if (awaitingField === 'confirmation') {
+      isConfirmation = isConfirmationMessage(messageText)
+      isCancellation = isCancellationMessage(messageText)
+    }
+
+    const extraDataKeys = customInfos.map((i) => i.toLowerCase().trim())
+    const sessionContext = isNewSession
+      ? "C'est le PREMIER message du client. Si c'est une salutation, note-le dans isQuestion."
+      : `La session est EN COURS. Champ actuellement attendu : "${awaitingField ?? 'aucun'}". État actuel :\n${JSON.stringify(
+          {
+            product_id: session.product_id,
+            selected_size: session.selected_size,
+            selected_color: session.selected_color,
+            customer_name: session.customer_name,
+            customer_phone: session.customer_phone,
+            wilaya: session.wilaya,
+            delivery_mode: session.delivery_mode,
+            shipping_address: session.shipping_address,
+            extra_data: session.extra_data,
+          },
+          null,
+          2
+        )}`
+
+    const personaBlock = persona ? `=== TON RÔLE & PERSONNALITÉ ===\n${persona}\n` : "Tu es l'agent de vente d'une boutique e-commerce algérienne.\n"
+    const faqBlock = faqs.length
+      ? `=== BASE DE CONNAISSANCES (utilise-la si le client pose une question pendant la commande) ===\n${faqs.map((f) => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n')}\n`
+      : ''
+
+    const { products: orderRelevantProducts, wasFiltered: orderCatalogFiltered } = selectRelevantProducts(products ?? [], messageText, {
+      mustInclude: session.product_id,
+    })
+    const orderCatalogNote = orderCatalogFiltered
+      ? '\n(Catalogue complet plus large — si le produit voulu ne figure pas ci-dessus, mets product_id à null plutôt que de deviner.)\n'
+      : ''
+
+    const prompt = `
 ${personaBlock}
 
 === CONTEXTE SESSION ===
@@ -317,13 +399,12 @@ ${JSON.stringify(orderRelevantProducts.map(toPromptCatalogEntry), null, 2)}${ord
 "${messageText}"
 
 === TES TÂCHES ===
-1. Langue du client : "fr", "ar", "darija", "en". Si incertain → "fr".
-2. Extrais toutes les données de commande présentes dans le message.
-3. Détermine isQuestion :
+1. Extrais toutes les données de commande présentes dans le message.
+2. Détermine isQuestion :
    - true UNIQUEMENT si : (a) salutation sur nouvelle session, (b) vraie question sur produits/prix/tailles/livraison
    - false si : le client donne une info de commande (nom, téléphone, adresse, taille, couleur, wilaya, etc.)
    - RÈGLE : session en cours + message interprétable comme donnée → isQuestion = false
-4. Si isQuestion = true → questionReply = réponse dans la langue du client. Sinon null.
+3. Si isQuestion = true → questionReply = réponse en langue "${lang}". Sinon null.
 
 === RÈGLES D'EXTRACTION ===
 - Téléphone algérien : 07/06/05xxxxxxxx ou +213xxxxxxxxx
@@ -344,60 +425,47 @@ JSON uniquement (sans backticks) :
     "extra_data": { ${extraDataKeys.map((k) => `"${k}": "valeur ou null"`).join(', ')} }
   },
   "isQuestion": true | false,
-  "questionReply": "réponse ou null",
-  "detectedLanguage": "fr | ar | darija | en"
+  "questionReply": "réponse ou null"
 }`
 
-  let llmResult: EcommerceLlmResult
-  try {
-    llmResult = await callAgentLLM<EcommerceLlmResult>(prompt, aiProvider, aiApiKey, aiModel)
-  } catch (err) {
-    console.error('[Ecommerce] LLM error:', err)
-    await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-    return
-  }
-
-  const lang = persistedLang ?? llmResult.detectedLanguage ?? 'fr'
-  const t = getTemplate(lang)
-
-  const extracted: ExtractedFields = llmResult.extractedData ?? {}
-
-  extracted.delivery_mode = normalizeDeliveryMode(extracted.delivery_mode, messageText)
-  if (extracted.customer_phone) extracted.customer_phone = normalizeAlgerianPhone(extracted.customer_phone)
-
-  const mergedExtra: Record<string, string> = { ...(session.extra_data ?? {}) }
-  if (extracted.extra_data && typeof extracted.extra_data === 'object') {
-    for (const [key, val] of Object.entries(extracted.extra_data)) {
-      if (val && val !== 'null') mergedExtra[key.toLowerCase().trim()] = val as string
+    try {
+      llmResult = await callAgentLLM<EcommerceLlmResult>(prompt, aiProvider, aiApiKey, aiModel)
+    } catch (err) {
+      // No more generic "problème technique" dead-end: re-ask whatever the
+      // machine was already waiting for. A repeated question is
+      // recoverable for the customer; an error message mid-purchase is not.
+      console.error('[Ecommerce] LLM error:', err)
+      const missingOnError = getMissingFields(updated, products ?? [], customInfos)
+      const fallbackField = missingOnError[0] ?? awaitingField ?? 'produit'
+      const fallbackQuestion = getNextQuestion(fallbackField, updated, products ?? [], t, isNewSession)
+      await supabase
+        .from('order_sessions')
+        .update({ awaiting_field: fallbackField, detected_language: lang, last_message_at: new Date().toISOString() })
+        .eq('id', session.id)
+      await sendReply(pageId, accessToken, senderId, fallbackQuestion.text, fallbackQuestion.quickReplies)
+      return
     }
-  }
 
-  const updated = { ...session }
-  if (extracted.product_id) updated.product_id = extracted.product_id
-  if (extracted.selected_size) updated.selected_size = extracted.selected_size
-  if (extracted.selected_color) updated.selected_color = extracted.selected_color
-  if (extracted.wilaya) updated.wilaya = extracted.wilaya
-  if (extracted.delivery_mode) updated.delivery_mode = extracted.delivery_mode
-  if (extracted.shipping_address) updated.shipping_address = extracted.shipping_address
-  if (extracted.customer_name) updated.customer_name = extracted.customer_name
-  if (extracted.customer_phone) updated.customer_phone = extracted.customer_phone
-  updated.extra_data = mergedExtra
+    const extracted: ExtractedFields = llmResult.extractedData ?? {}
+    extracted.delivery_mode = normalizeDeliveryMode(extracted.delivery_mode, messageText)
+    if (extracted.customer_phone) extracted.customer_phone = normalizeAlgerianPhone(extracted.customer_phone)
 
-  const looksLikeDeliveryChoice =
-    /^(domicile|maison|chez moi|point.?retrait|retrait|relais|bureau|stop|الدار|المنزل|البيت|نقطة|استلام)$/i.test(messageText.trim())
-
-  if (
-    !updated.shipping_address &&
-    !isConfirmation &&
-    !isCancellation &&
-    !looksLikeDeliveryChoice &&
-    updated.delivery_mode &&
-    messageText.trim().length >= 10
-  ) {
-    const missing = getMissingFields(updated, products ?? [], customInfos)
-    if (missing[0] === 'adresse complète') {
-      updated.shipping_address = messageText.trim()
+    const mergedExtra: Record<string, string> = { ...(updated.extra_data ?? {}) }
+    if (extracted.extra_data && typeof extracted.extra_data === 'object') {
+      for (const [key, val] of Object.entries(extracted.extra_data)) {
+        if (val && val !== 'null') mergedExtra[key.toLowerCase().trim()] = val as string
+      }
     }
+
+    if (extracted.product_id) updated.product_id = extracted.product_id
+    if (extracted.selected_size) updated.selected_size = extracted.selected_size
+    if (extracted.selected_color) updated.selected_color = extracted.selected_color
+    if (extracted.wilaya) updated.wilaya = extracted.wilaya
+    if (extracted.delivery_mode) updated.delivery_mode = extracted.delivery_mode
+    if (extracted.shipping_address) updated.shipping_address = extracted.shipping_address
+    if (extracted.customer_name) updated.customer_name = extracted.customer_name
+    if (extracted.customer_phone) updated.customer_phone = extracted.customer_phone
+    updated.extra_data = mergedExtra
   }
 
   const missing = getMissingFields(updated, products ?? [], customInfos)
@@ -405,22 +473,24 @@ JSON uniquement (sans backticks) :
 
   // Product just got selected this turn (not merely re-confirmed on every message) → show its photo once.
   const newlySelectedProduct =
-    extracted.product_id && extracted.product_id !== session.product_id
-      ? (products ?? []).find((p) => p.id === extracted.product_id)
-      : null
+    updated.product_id && updated.product_id !== session.product_id ? (products ?? []).find((p) => p.id === updated.product_id) : null
 
   let replyText: string
   let newStatus: string
+  let newAwaitingField: string | null
   let quickReplies: Array<{ title: string; payload: string }> | undefined
 
   if (isCancellation) {
     replyText = t.cancelled
     newStatus = 'cancelled'
+    newAwaitingField = null
   } else if (isConfirmation && allDone) {
     replyText = t.confirmed
     newStatus = 'confirmed'
+    newAwaitingField = null
   } else if (allDone) {
     const product = (products ?? []).find((p) => p.id === updated.product_id)
+    const isPhysicalKind = (product?.kind ?? 'physical') === 'physical'
     const deliveryLabel = updated.delivery_mode === 'point_retrait' ? t.deliveryRelay : t.deliveryHome
     const extraLines = Object.entries(updated.extra_data ?? {})
       .map(([k, v]) => `• ${k} : ${v}`)
@@ -432,12 +502,15 @@ JSON uniquement (sans backticks) :
       `• ${t.labelProduct} : ${product?.name ?? updated.product_id}`,
       updated.selected_size ? `• ${t.labelSize} : ${updated.selected_size}` : null,
       updated.selected_color ? `• ${t.labelColor} : ${updated.selected_color}` : null,
-      `• ${t.labelPrice} : ${product?.price ?? '?'} DA`,
+      `• ${t.labelPrice} : ${product?.price ?? '?'} ${product?.currency ?? 'DZD'}`,
       `• ${t.labelName} : ${updated.customer_name}`,
       `• ${t.labelPhone} : ${updated.customer_phone}`,
-      `• ${t.labelWilaya} : ${updated.wilaya}`,
-      `• ${t.labelDelivery} : ${deliveryLabel}`,
-      `• ${t.labelAddress} : ${updated.shipping_address}`,
+      // Non-physical kinds (service/digital/subscription/event) never
+      // collect wilaya/delivery/address — showing them here always
+      // rendered as literal "null" for those shops.
+      isPhysicalKind ? `• ${t.labelWilaya} : ${updated.wilaya}` : null,
+      isPhysicalKind ? `• ${t.labelDelivery} : ${deliveryLabel}` : null,
+      isPhysicalKind ? `• ${t.labelAddress} : ${updated.shipping_address}` : null,
       extraLines || null,
       '',
       t.recapConfirm,
@@ -445,6 +518,7 @@ JSON uniquement (sans backticks) :
       .filter((l) => l !== null)
       .join('\n')
     newStatus = 'gathering_info'
+    newAwaitingField = 'confirmation'
 
     quickReplies = [
       { title: lang === 'fr' ? 'Oui' : lang === 'en' ? 'Yes' : lang === 'darija' ? 'واه' : 'نعم', payload: 'oui' },
@@ -452,10 +526,11 @@ JSON uniquement (sans backticks) :
     ]
   } else {
     newStatus = 'gathering_info'
+    newAwaitingField = missing[0] ?? null
     const nextQuestion = getNextQuestion(missing[0], updated, products ?? [], t, isNewSession)
     quickReplies = nextQuestion.quickReplies
 
-    if (llmResult.isQuestion && llmResult.questionReply) {
+    if (llmResult?.isQuestion && llmResult.questionReply) {
       replyText = `${llmResult.questionReply}\n\n${nextQuestion.text}`
     } else {
       replyText = nextQuestion.text
@@ -465,17 +540,18 @@ JSON uniquement (sans backticks) :
   const updates: Record<string, unknown> = {
     status: newStatus,
     detected_language: lang,
+    awaiting_field: newAwaitingField,
     last_message_at: new Date().toISOString(),
-    extra_data: mergedExtra,
+    product_id: updated.product_id ?? null,
+    selected_size: updated.selected_size ?? null,
+    selected_color: updated.selected_color ?? null,
+    wilaya: updated.wilaya ?? null,
+    delivery_mode: updated.delivery_mode ?? null,
+    shipping_address: updated.shipping_address ?? null,
+    customer_name: updated.customer_name ?? null,
+    customer_phone: updated.customer_phone ?? null,
+    extra_data: updated.extra_data ?? {},
   }
-  if (extracted.product_id) updates.product_id = extracted.product_id
-  if (extracted.selected_size) updates.selected_size = extracted.selected_size
-  if (extracted.selected_color) updates.selected_color = extracted.selected_color
-  if (extracted.wilaya) updates.wilaya = extracted.wilaya
-  if (extracted.delivery_mode) updates.delivery_mode = extracted.delivery_mode
-  if (extracted.customer_name) updates.customer_name = extracted.customer_name
-  if (extracted.customer_phone) updates.customer_phone = extracted.customer_phone
-  if (updated.shipping_address) updates.shipping_address = updated.shipping_address
 
   await supabase.from('order_sessions').update(updates).eq('id', session.id)
 
@@ -559,6 +635,12 @@ JSON uniquement (sans backticks) :
 
       if (insertError) {
         console.error('[Ecommerce] Order creation failed:', insertError)
+        // `replyText` was already set to t.confirmed above — the customer
+        // must not see a confirmation for an order that doesn't exist.
+        // Revert the session to "awaiting confirmation" so a retry of
+        // "oui" tries the insert again instead of silently doing nothing.
+        replyText = t.recapConfirm
+        await supabase.from('order_sessions').update({ status: 'gathering_info', awaiting_field: 'confirmation' }).eq('id', finalSession.id)
       } else {
         console.log(`[Ecommerce] Order created for session ${finalSession.id}`)
         await supabase.from('order_sessions').update({ status: 'confirmed' }).eq('id', finalSession.id)

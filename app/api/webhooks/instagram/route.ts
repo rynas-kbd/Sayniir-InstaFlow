@@ -9,5 +9,9 @@ import { createWebhookRoute } from '@/lib/channels/shared/inbound'
  */
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// Real dispatch work now runs in after() following an immediate 200 (see
+// createWebhookRoute) — this bounds that background work, it no longer
+// gates how fast Meta gets acknowledged.
+export const maxDuration = 60
 
 export const { GET, POST } = createWebhookRoute('instagram')

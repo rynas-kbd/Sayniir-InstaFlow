@@ -42,7 +42,11 @@ export function normalizeAlgerianPhone(phone: string | null): string | null {
   if (/^0[5-7]\d{8}$/.test(cleaned)) return cleaned
   if (/^\+213[5-7]\d{8}$/.test(cleaned)) return '0' + cleaned.slice(4)
   if (/^213[5-7]\d{8}$/.test(cleaned)) return '0' + cleaned.slice(3)
-  return phone
+  // No Algerian mobile pattern matched — previously this returned the raw
+  // string, which let garbage ("askjdh", a wilaya name typed too early,
+  // etc.) fill the phone slot and get treated as valid. Returning null
+  // makes the caller re-ask instead.
+  return null
 }
 
 export function normalizeDeliveryMode(raw: string | null | undefined, messageText: string): string | null {
