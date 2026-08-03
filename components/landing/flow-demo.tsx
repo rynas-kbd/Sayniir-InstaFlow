@@ -107,14 +107,14 @@ export function FlowDemo() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'var(--organic-terracotta-700)' }}>
-              Live flow · Fig. 01
+              Flow en direct · Fig. 01
             </span>
             <span className="text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
-              Click a node to inspect it
+              Cliquez sur un nœud pour l'inspecter
             </span>
           </div>
           <button type="button" className="btn btn-secondary" onClick={runFlow}>
-            {running ? 'Running…' : 'Run this flow'}
+            {running ? 'En cours…' : 'Lancer ce flow'}
           </button>
         </div>
 
@@ -126,8 +126,8 @@ export function FlowDemo() {
                 <path d="M320 92 C320 136 320 156 320 200" stroke="var(--organic-terracotta-400)" strokeWidth={2.5} />
                 <path d="M400 236 C432 236 428 176 460 176" stroke="var(--organic-sage-500)" strokeWidth={2.5} />
                 <path d="M400 236 C432 236 428 296 460 296" stroke="var(--organic-sage-500)" strokeWidth={2.5} strokeDasharray="5 5" />
-                <text x={424} y={196} fill="var(--organic-sage-800)" fontSize={11} fontWeight={700} letterSpacing={1}>YES</text>
-                <text x={424} y={290} fill="var(--organic-sage-800)" fontSize={11} fontWeight={700} letterSpacing={1}>NO</text>
+                <text x={424} y={196} fill="var(--organic-sage-800)" fontSize={11} fontWeight={700} letterSpacing={1}>OUI</text>
+                <text x={424} y={290} fill="var(--organic-sage-800)" fontSize={11} fontWeight={700} letterSpacing={1}>NON</text>
               </svg>
               {FLOW_NODES.map((n) => {
                 const isSelected = selected === n.id
@@ -186,7 +186,7 @@ export function FlowDemo() {
               </span>
               <div>
                 <div className="text-[13px] font-bold">Maya · @homefolk</div>
-                <div className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>Instagram DM</div>
+                <div className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>DM Instagram</div>
               </div>
             </div>
             <div ref={chatRef} className="flex h-[300px] flex-col gap-2 overflow-y-auto p-3.5">

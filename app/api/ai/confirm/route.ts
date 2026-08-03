@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createNdjsonStream } from '@/lib/ai/stream'
 import { resolveCopilotProvider } from '@/lib/ai/provider'
+import { jsonError } from '@/lib/api/errors'
 import { checkAiCreditLimit } from '@/lib/ai/credits/meter'
 import { runCopilotTurn } from '@/lib/ai/loop'
 import { executeAiTool } from '@/lib/ai/tools/execute'
 import { AI_TOOLS, getToolByName } from '@/lib/ai/tools'
+import { patchPendingToolResult } from '@/lib/ai/pending-tool-result'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const { data: pending } = await supabase
     .from('ai_tool_calls')
-    .select('id, conversation_id, channel_account_id, tool_use_id, tool_name, input, status, expires_at')
+    .select('id, conversation_id, channel_account_id, tool_use_id, tool_name, input, status, expires_at, result_message_id')
     .eq('id', toolCallId)
     .maybeSingle()
 
@@ -36,6 +38,10 @@ export async function POST(request: NextRequest) {
   }
   if (new Date(pending.expires_at).getTime() < Date.now()) {
     await supabase.from('ai_tool_calls').update({ status: 'expired', resolved_at: new Date().toISOString() }).eq('id', toolCallId)
+    await patchPendingToolResult(supabase, pending.result_message_id, pending.tool_use_id, {
+      content: 'Cette action a expiré sans confirmation.',
+      isError: true,
+    })
     return NextResponse.json({ error: 'Cette action a expiré, redemandez-la au copilote' }, { status: 410 })
   }
 
@@ -60,25 +66,37 @@ export async function POST(request: NextRequest) {
     })
     .eq('id', toolCallId)
 
-  await supabase.from('ai_messages').insert({
-    conversation_id: pending.conversation_id,
-    role: 'tool',
-    content: [
-      {
-        type: 'tool_result',
-        toolUseId: pending.tool_use_id,
-        content: result.ok ? JSON.stringify(result.output) : result.error,
-        ...(result.ok ? {} : { isError: true }),
-      },
-    ],
+  // Patches the placeholder written when the turn paused, rather than
+  // inserting a second tool_result for the same tool_use id — see
+  // lib/ai/pending-tool-result.ts.
+  await patchPendingToolResult(supabase, pending.result_message_id, pending.tool_use_id, {
+    content: result.ok ? JSON.stringify(result.output) : result.error,
+    isError: !result.ok,
   })
 
   const credits = await checkAiCreditLimit(user.id)
+  if (!credits.allowed) {
+    // The confirmed action already ran and its result is persisted above —
+    // only the follow-up agentic turn (which costs more tokens) is blocked.
+    // Without this check a user at 100% quota could keep confirming actions
+    // to drive unlimited unmetered turns (chat/route.ts already blocks this
+    // on the initial message; this closes the same gap on the resume path).
+    const { stream, push, close } = createNdjsonStream()
+    push({ t: 'tool_result', id: pending.tool_use_id, name: tool.name, ok: result.ok, summary: result.ok ? undefined : result.error })
+    push({ t: 'error', message: 'Quota IA mensuel atteint. Passez à un plan supérieur ou ajoutez votre propre clé API.' })
+    push({ t: 'done', conversationId: pending.conversation_id })
+    close()
+    return new NextResponse(stream, {
+      status: 200,
+      headers: { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache, no-transform', 'X-Conversation-Id': pending.conversation_id },
+    })
+  }
+
   let provider: Awaited<ReturnType<typeof resolveCopilotProvider>>
   try {
     provider = await resolveCopilotProvider(pending.channel_account_id, credits.limits.byokAllowed)
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Copilote indisponible' }, { status: 503 })
+    return jsonError(503, 'Copilote indisponible', err)
   }
 
   const { stream, push, close } = createNdjsonStream()

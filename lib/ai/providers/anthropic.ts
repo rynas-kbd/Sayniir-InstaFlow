@@ -58,7 +58,13 @@ export async function streamAnthropicTurn(params: ProviderTurnParams, onEvent: (
     content: fromAnthropicContent(message.content),
     stopReason: mapStopReason(message.stop_reason),
     usage: {
-      inputTokens: message.usage.input_tokens,
+      // Anthropic's `input_tokens` excludes cache-write tokens — a turn that
+      // establishes a new ephemeral cache breakpoint (system/tools cache_control
+      // above) was silently under-billed against the user's quota, since
+      // recordAiUsage sums inputTokens + outputTokens as billableTokens
+      // (lib/ai/credits/meter.ts). Folding cache_creation_input_tokens in here
+      // keeps that formula correct without touching its call sites.
+      inputTokens: message.usage.input_tokens + (message.usage.cache_creation_input_tokens ?? 0),
       outputTokens: message.usage.output_tokens,
       cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
     },

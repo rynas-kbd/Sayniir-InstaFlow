@@ -3,6 +3,7 @@ import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { getAnalyticsSummary, getMessagesTimeseries, type AnalyticsSummary, type DayPoint } from '@/lib/analytics/queries'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { NoAccountState } from '@/components/accounts/no-account-state'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { MessagesChart } from '@/components/analytics/messages-chart'
 
@@ -88,6 +89,14 @@ export default async function AnalyticsPage() {
           </div>
         </div>
 
+        {totalMessages === 0 && (
+          <EmptyState
+            icon={BarChart3}
+            title="Pas encore de données"
+            description="Les statistiques apparaîtront ici dès que votre compte recevra ses premiers messages."
+          />
+        )}
+
         {/* ── Stat grid ── */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatBadge
@@ -157,10 +166,12 @@ export default async function AnalyticsPage() {
                 <CardTitle className="text-sm font-semibold">Volume de messagerie</CardTitle>
                 <CardDescription className="mt-0.5 text-xs">Messages reçus vs réponses automatiques par jour</CardDescription>
               </div>
-              <div className="flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-[10px] text-muted-foreground border border-border/30">
-                <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                Live
-              </div>
+              {totalMessages > 0 && (
+                <div className="flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-[10px] text-muted-foreground border border-border/30">
+                  <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Live
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent className="pt-5">

@@ -101,7 +101,7 @@ export function RuleCard({
               }`}
             >
               <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
-              {rule.is_active ? 'Active' : 'Désactivée'}
+              {rule.is_active ? 'Active' : 'Inactive'}
             </span>
           </div>
 

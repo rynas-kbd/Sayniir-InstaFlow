@@ -21,8 +21,25 @@ export default async function AdminLayout({
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <aside className="flex w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-4 pb-3">
+    <div className="flex h-screen flex-col overflow-hidden bg-background md:flex-row">
+      {/* Below md: the 232px fixed sidebar left ~140px for content on a 375px
+          viewport, and a 6-column table inside that. Only 2 nav items exist
+          today (see AdminNav), so a horizontal top bar covers it without a
+          drawer/sheet component. */}
+      <div className="flex items-center justify-between gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 md:hidden">
+        <Link href="/admin" className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground">
+          Instaflow
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Admin</span>
+        </Link>
+        <nav className="flex items-center gap-1">
+          <AdminNav />
+        </nav>
+        <Link href="/dashboard" className="flex items-center gap-1 text-[12px] text-sidebar-foreground/65" aria-label="Retour à mon dashboard">
+          <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+        </Link>
+      </div>
+
+      <aside className="hidden w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-4 pb-3 md:flex">
         <Link
           href="/admin"
           className="mb-5 flex h-8 items-center gap-2 rounded-md px-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground hover:bg-sidebar-accent/60"

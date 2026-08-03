@@ -1,5 +1,6 @@
 'use client'
 
+import { useId, isValidElement, cloneElement, type ReactElement } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -50,11 +51,26 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
   )
 }
 
+/**
+ * Auto-wires htmlFor/id when the field's single child is a plain Input or
+ * Textarea, so clicking the label focuses the control and screen readers
+ * announce the association — 15 of the ~18 Field call sites in this file
+ * previously had a decorative-only Label. Left unwired for Select and
+ * multi-element children (several call sites wrap an Input in a flex div,
+ * or use Select's own trigger button) rather than mis-cloning an id onto a
+ * compound component that wouldn't forward it to the right DOM node.
+ */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  const generatedId = useId()
+  const canWireId = isValidElement(children) && (children.type === Input || children.type === Textarea)
+  const existingId = canWireId ? (children as ReactElement<{ id?: string }>).props.id : undefined
+  const fieldId = canWireId ? existingId ?? generatedId : undefined
+  const child = canWireId && !existingId ? cloneElement(children as ReactElement<{ id?: string }>, { id: fieldId }) : children
+
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-foreground/80">{label}</Label>
-      {children}
+      <Label htmlFor={fieldId} className="text-xs font-semibold text-foreground/80">{label}</Label>
+      {child}
       {hint && <p className="text-[11px] leading-relaxed text-muted-foreground/70">{hint}</p>}
     </div>
   )

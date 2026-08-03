@@ -1,20 +1,10 @@
-import type { AiTool } from './types'
+import { listByAccountTool } from './list-by-account'
 
-interface Output {
-  snippets: Array<{ id: string; shortcut: string; text: string }>
-}
-
-export const listSnippetsTool: AiTool<Record<string, never>, Output> = {
+export const listSnippetsTool = listByAccountTool({
   name: 'list_snippets',
   description: "Liste les réponses enregistrées (raccourci → texte) de l'inbox.",
-  risk: 'read',
-  inputSchema: { type: 'object', properties: {}, required: [], additionalProperties: false },
-  run: async (_input, ctx) => {
-    const { data } = await ctx.supabase
-      .from('snippets')
-      .select('id, shortcut, text')
-      .eq('channel_account_id', ctx.channelAccountId)
-      .order('created_at', { ascending: false })
-    return { snippets: data ?? [] }
-  },
-}
+  table: 'snippets',
+  columns: 'id, shortcut, text',
+  orderBy: { column: 'created_at', ascending: false },
+  resultKey: 'snippets',
+})

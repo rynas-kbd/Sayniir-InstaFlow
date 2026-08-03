@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAdapter } from '@/lib/channels/registry'
 import type { ChannelAccountRef, Platform } from '@/lib/channels/types'
+import { checkRateLimit } from '@/lib/api/rate-limit'
+import { jsonError } from '@/lib/api/errors'
+
+const MAX_TEXT_LENGTH = 4000
 
 // POST /api/inbox/send — manually send a message from the inbox (human reply)
 export async function POST(request: NextRequest) {
@@ -11,10 +15,18 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
+  // Each call places one real outbound message via Meta/WhatsApp — bound the
+  // rate so a scripted client can't use this as a spam relay.
+  const rl = checkRateLimit(`inbox:send:${user.id}`, 30, 60_000)
+  if (!rl.allowed) return jsonError(429, 'Trop de messages envoyés, réessayez dans une minute')
+
+  const body = await request.json().catch(() => ({}))
   const { channel_account_id, sender_id, text } = body
   if (!channel_account_id || !sender_id || !text?.trim()) {
     return NextResponse.json({ error: 'channel_account_id, sender_id et text sont requis' }, { status: 400 })
+  }
+  if (text.length > MAX_TEXT_LENGTH) {
+    return NextResponse.json({ error: `Message trop long (max ${MAX_TEXT_LENGTH} caractères)` }, { status: 400 })
   }
 
   const { data: account } = await supabase

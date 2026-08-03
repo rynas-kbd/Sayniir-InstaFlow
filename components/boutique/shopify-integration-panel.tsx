@@ -13,20 +13,28 @@ interface ShopifyConnection {
   last_synced_at: string | null
 }
 
-// Fully functional Shopify catalog sync panel. Not currently linked from the
-// Boutique tab navigation — see ShopifyComingSoon, which is what renders there.
 export function ShopifyIntegrationPanel({ channelAccountId }: { channelAccountId: string }) {
   const [connection, setConnection] = useState<ShopifyConnection | null>(null)
+  const [loadingConnection, setLoadingConnection] = useState(true)
   const [domain, setDomain] = useState('')
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
   const loadConnection = useCallback(async () => {
-    const res = await fetch(`/api/shopify?accountId=${channelAccountId}`)
-    if (res.ok) {
+    setLoadingConnection(true)
+    try {
+      const res = await fetch(`/api/shopify?accountId=${channelAccountId}`)
+      if (!res.ok) throw new Error()
       const data = await res.json()
       setConnection(data.connection)
+    } catch {
+      // A failed fetch previously left the panel silently showing "not
+      // connected" even if a connection actually exists — tell the user
+      // instead of presenting a false empty state.
+      toast.error('Impossible de charger le statut de la connexion Shopify.')
+    } finally {
+      setLoadingConnection(false)
     }
   }, [channelAccountId])
 
@@ -89,7 +97,9 @@ export function ShopifyIntegrationPanel({ channelAccountId }: { channelAccountId
         <CardDescription>Synchronisez votre catalogue Shopify avec Instaflow.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {connection ? (
+        {loadingConnection ? (
+          <p className="text-xs text-muted-foreground">Chargement…</p>
+        ) : connection ? (
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
               Connecté à <span className="font-medium text-foreground">{connection.shop_domain}</span>

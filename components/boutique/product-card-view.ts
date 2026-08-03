@@ -14,6 +14,8 @@ export interface ProductCardView {
   imageUrl: string | null
   stockQuantity: number
   optionBadges: string[]
+  /** Writable via the API since day one but never surfaced in the grid — an inactive product looked identical to an active one. */
+  isActive: boolean
 }
 
 interface OptionBadgeInput {
@@ -60,6 +62,7 @@ export function productToCardView(p: Product): ProductCardView {
     currency: p.currency,
     imageUrl: p.image_url,
     stockQuantity: p.stock_quantity,
+    isActive: p.is_active,
     optionBadges: deriveOptionBadges({
       kind: p.kind,
       sizes: p.kind === 'physical' ? p.sizes : [],
@@ -81,6 +84,7 @@ export function formToCardView(f: ProductFormState, product?: Product): ProductC
     currency: f.currency || 'DZD',
     imageUrl: f.image_url.trim() || null,
     stockQuantity: Number.parseInt(f.stock_quantity, 10) || 0,
+    isActive: product?.is_active ?? true,
     optionBadges: deriveOptionBadges({
       kind: f.kind,
       sizes: f.kind === 'physical' ? f.sizes : [],

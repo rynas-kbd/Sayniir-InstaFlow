@@ -13,6 +13,8 @@ export interface ProductFormState {
   sizes: string[]
   colors: string[]
   image_url: string
+  images: string[]
+  category: string
   duration_minutes: string
   location: string
   file_url: string

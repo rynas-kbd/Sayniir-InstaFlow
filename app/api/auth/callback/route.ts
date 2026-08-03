@@ -113,8 +113,10 @@ export async function GET(request: NextRequest) {
       )
 
     if (upsertError) {
+      // Never put raw Postgres error text into a redirect URL — it lands in
+      // browser history, the Referer header, and access logs.
       console.error('[OAuth Callback] Upsert error:', upsertError)
-      return NextResponse.redirect(`${appUrl}/accounts?error=db_error&reason=${encodeURIComponent(upsertError.message)}`)
+      return NextResponse.redirect(`${appUrl}/accounts?error=db_error`)
     }
 
     // Step 5: Get the channel_account ID for subscription linking

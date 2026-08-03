@@ -33,7 +33,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { is_active } = await request.json()
+  const { is_active } = await request.json().catch(() => ({}))
 
   const { data, error } = await supabase
     .from('channel_accounts')

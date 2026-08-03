@@ -21,7 +21,7 @@ interface Input {
 export const createAutomationRuleTool: AiTool<Input, { ruleId: string }> = {
   name: 'create_automation_rule',
   description:
-    "Crée une règle d'automatisation simple (mot-clé → réponse texte unique), pour un commentaire ou un message direct. Pour une automatisation à plusieurs étapes, utilise create_flow_draft à la place.",
+    "Crée une règle d'automatisation simple (mot-clé → réponse texte unique), pour un commentaire ou un message direct. La règle est créée désactivée — utilise set_automation_rule_active pour l'activer une fois validée avec l'utilisateur. Pour une automatisation à plusieurs étapes, utilise create_flow_draft à la place.",
   risk: 'write_reversible',
   inputSchema: {
     type: 'object',
@@ -55,7 +55,12 @@ export const createAutomationRuleTool: AiTool<Input, { ruleId: string }> = {
         response_text: input.responseText.trim(),
         reply_method: input.replyMethod ?? 'comment',
         response_text_dm: input.responseTextDm?.trim() || null,
-        is_active: true,
+        // Always created inactive — activating it is what makes it start
+        // auto-replying to real customers, so that step goes through
+        // set_automation_rule_active (write_live) instead of happening here
+        // unconfirmed. Same split as flows: create_flow_draft vs
+        // set_flow_status.
+        is_active: false,
       })
       .select('id')
       .single()

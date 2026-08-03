@@ -11,7 +11,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
 
   // First verify the order belongs to an account owned by this user
   const { data: order, error: orderError } = await supabase
@@ -33,26 +33,39 @@ export async function PATCH(
 
   if (!account) return NextResponse.json({ error: 'Unauthorized to edit this order' }, { status: 403 })
 
+  // Mass-assignment guard — only these columns are writable from the client.
+  // total_amount is deliberately excluded: it is always derived below, never
+  // taken from the request body, or a caller could set it directly.
+  //
+  // Was previously ['status', 'price', 'quantity', 'notes', 'shipping_address',
+  // 'contact_id'] — 'status', 'notes' and 'contact_id' don't exist as columns
+  // on `orders` (the real status fields are payment_status/shipping_status).
+  // This is the route order-table.tsx actually calls (PATCH /api/orders/{id}),
+  // so the payment/shipping status dropdowns silently didn't persist.
+  const allowed = ['payment_status', 'shipping_status', 'price', 'quantity', 'shipping_address']
+  const updates: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (key in body) updates[key] = body[key]
+  }
+
   // Ensure total_amount is recalculated if price or quantity changed
-  let total_amount = body.total_amount;
-  if (body.price !== undefined || body.quantity !== undefined) {
-    const p = body.price !== undefined ? parseFloat(body.price) : undefined;
-    const q = body.quantity !== undefined ? parseInt(body.quantity, 10) : undefined;
+  if (updates.price !== undefined || updates.quantity !== undefined) {
+    const p = updates.price !== undefined ? parseFloat(updates.price as string) : undefined;
+    const q = updates.quantity !== undefined ? parseInt(updates.quantity as string, 10) : undefined;
     if (p !== undefined && q !== undefined) {
-      total_amount = p * q;
+      updates.total_amount = p * q;
     } else {
       // Need to fetch current order to calculate
       const { data: currentOrder } = await supabase.from('orders').select('price, quantity').eq('id', id).single();
       const finalP = p !== undefined ? p : (currentOrder?.price || 0);
       const finalQ = q !== undefined ? q : (currentOrder?.quantity || 0);
-      total_amount = finalP * finalQ;
+      updates.total_amount = finalP * finalQ;
     }
-    body.total_amount = total_amount;
   }
 
   const { data: updatedOrder, error } = await supabase
     .from('orders')
-    .update(body)
+    .update(updates)
     .eq('id', id)
     .select()
     .single()

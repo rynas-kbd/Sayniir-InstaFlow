@@ -2,6 +2,7 @@ import { CalendarClock, Clock, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { EmptyState } from '@/components/ui/empty-state'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { AppointmentRow, type Appointment } from '@/components/workspace/appointment-row'
@@ -10,9 +11,16 @@ export default async function RdvPage() {
   const supabase = await createClient()
   const { active } = await resolveActiveAccount()
 
-  const { data: appointments } = active
-    ? await supabase.from('appointments').select('*').eq('channel_account_id', active.id).order('scheduled_at', { ascending: true })
-    : { data: [] }
+  if (!active) {
+    return <NoAccountState description="Connectez un compte Instagram, Messenger ou WhatsApp pour que l'IA prenne des rendez-vous." />
+  }
+
+  const { data: appointments, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('channel_account_id', active.id)
+    .order('scheduled_at', { ascending: true })
+  if (error) throw new Error('Impossible de charger les rendez-vous')
 
   const safeAppointments = (appointments ?? []) as Appointment[]
   const pendingCount = safeAppointments.filter((a) => a.status === 'pending').length

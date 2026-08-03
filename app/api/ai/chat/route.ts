@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createNdjsonStream } from '@/lib/ai/stream'
 import { resolveCopilotProvider } from '@/lib/ai/provider'
+import { jsonError } from '@/lib/api/errors'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 import { resolveAiContext } from '@/lib/ai/context/resolve'
 import { getVolatileMemoryBlock } from '@/lib/ai/memory/service'
 import { checkAiCreditLimit } from '@/lib/ai/credits/meter'
@@ -30,6 +32,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'channelAccountId et message sont requis' }, { status: 400 })
   }
 
+  // Per-minute burst cap independent of the monthly credit quota below — BYOK
+  // turns bypass that quota entirely (lib/ai/credits/meter.ts), so this is
+  // the only limit that applies to them.
+  const rl = checkRateLimit(`ai:chat:${user.id}`, 20, 60_000)
+  if (!rl.allowed) return jsonError(429, 'Trop de messages envoyés au copilote, réessayez dans une minute')
+
   // Explicit ownership check for defense in depth, matching every other
   // per-resource route — RLS alone would still block a cross-tenant read
   // today, but this doesn't rely on that being the only line of defense.
@@ -37,7 +45,16 @@ export async function POST(request: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Compte introuvable' }, { status: 404 })
 
   if (conversationId) {
-    const { data: conversation } = await supabase.from('ai_conversations').select('id').eq('id', conversationId).maybeSingle()
+    // Scope to channelAccountId too — an id-only lookup would let a user with
+    // two channel accounts pass account B's channelAccountId with account
+    // A's conversationId, running tools against B while history/messages
+    // stay attached to A.
+    const { data: conversation } = await supabase
+      .from('ai_conversations')
+      .select('id')
+      .eq('id', conversationId)
+      .eq('channel_account_id', channelAccountId)
+      .maybeSingle()
     if (!conversation) return NextResponse.json({ error: 'Conversation introuvable' }, { status: 404 })
   } else {
     const { data: conversation, error } = await supabase
@@ -60,7 +77,7 @@ export async function POST(request: NextRequest) {
   try {
     provider = await resolveCopilotProvider(channelAccountId, credits.limits.byokAllowed)
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Copilote indisponible' }, { status: 503 })
+    return jsonError(503, 'Copilote indisponible', err)
   }
 
   const [pageContextText, volatileMemory] = await Promise.all([

@@ -16,6 +16,8 @@ function product(overrides: Partial<Product> = {}): Product {
     sizes: [],
     colors: [],
     image_url: null,
+    images: [],
+    category: null,
     stock_quantity: 0,
     is_active: true,
     ...overrides,

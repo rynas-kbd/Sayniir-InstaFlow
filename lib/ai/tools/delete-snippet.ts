@@ -1,27 +1,10 @@
-import type { AiTool } from './types'
+import { deleteByIdTool } from './delete-by-id'
 
-interface Input {
-  snippetId: string
-}
-
-export const deleteSnippetTool: AiTool<Input, { deleted: boolean }> = {
+export const deleteSnippetTool = deleteByIdTool({
   name: 'delete_snippet',
-  description: 'Supprime une réponse enregistrée.',
-  risk: 'write_reversible',
-  inputSchema: {
-    type: 'object',
-    properties: { snippetId: { type: 'string' } },
-    required: ['snippetId'],
-    additionalProperties: false,
-  },
-  resourceRefs: (input) => [{ table: 'snippets', id: input.snippetId }],
-  run: async (input, ctx) => {
-    const { error } = await ctx.supabase
-      .from('snippets')
-      .delete()
-      .eq('id', input.snippetId)
-      .eq('channel_account_id', ctx.channelAccountId)
-    if (error) throw new Error(error.message)
-    return { deleted: true }
-  },
-}
+  description: 'Supprime une réponse enregistrée. Irréversible.',
+  table: 'snippets',
+  idField: 'snippetId',
+  resultKey: 'deleted',
+  notFoundMessage: 'Snippet introuvable',
+})

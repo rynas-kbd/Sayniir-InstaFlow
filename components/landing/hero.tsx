@@ -86,9 +86,9 @@ export function Hero() {
                 style={{ background: 'var(--organic-sage-600)', animation: 'pulseRing 2.4s ease-out infinite' }}
               />
             </span>
-            <span data-count>1,482</span>
+            <span data-count>1 482</span>
             <span className="font-semibold" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>
-              DMs answered in the last hour
+              DM traités dans la dernière heure
             </span>
           </span>
 
@@ -96,22 +96,22 @@ export function Hero() {
             className="mt-[22px] font-heading text-[clamp(42px,5.4vw,72px)] leading-[1.04]"
             style={{ marginLeft: '-0.028em', animation: 'fadeUp .6s .04s ease both' }}
           >
-            <span className="block">Sell in the</span>
+            <span className="block">Vendez sur</span>
             <RotatingChannel key={channelIndex} text={CHANNELS[channelIndex]} />
-            <span className="block">while you sleep.</span>
+            <span className="block">pendant que vous dormez.</span>
           </h1>
 
           <p className="mt-[26px] max-w-[50ch] text-[18px] leading-[1.65]" style={{ animation: 'fadeUp .6s .12s ease both' }}>
-            An AI trained on your brand answers every message in your voice, qualifies the buyer, and files
-            the lead in your CRM — across Instagram, WhatsApp and Messenger.
+            Une IA formée sur votre marque répond à chaque message avec votre voix, qualifie l'acheteur et classe
+            le lead dans votre CRM — sur Instagram, WhatsApp et Messenger.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3" style={{ animation: 'fadeUp .6s .2s ease both' }}>
-            <Link href="/register" className="btn btn-primary h-[45px] w-[124px]">
-              Book a demo
+            <Link href="/register" className="btn btn-primary h-[45px] px-[22px] w-auto">
+              Essai gratuit
             </Link>
             <a href="#product" className="btn btn-secondary h-[45px] px-[22px]">
-              See it run
+              Voir la démo
             </a>
           </div>
 
@@ -137,7 +137,7 @@ export function Hero() {
               </span>
             </span>
             <span className="text-[13.5px] leading-[1.4]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-              Free forever plan · no card · live in 10 minutes
+              Plan gratuit à vie · sans carte · en ligne en 10 minutes
             </span>
           </div>
         </div>
@@ -150,16 +150,16 @@ export function Hero() {
             <span className="mb-1 block text-[10.5px] font-bold tracking-[.09em] uppercase" style={{ color: 'var(--organic-terracotta-700)' }}>
               Instagram · @maya
             </span>
-            Do you ship to Canada by the 14th?
+            Vous livrez au Canada avant le 14 ?
           </div>
           <div
             className="lp-float absolute top-[124px] right-0 max-w-[88%] rounded-[20px] rounded-br-[6px] p-[12px_15px] text-sm leading-[1.5]"
             style={{ background: 'var(--organic-terracotta-700)', color: 'var(--organic-terracotta-100)', boxShadow: 'var(--organic-shadow-lg)', animation: 'floatSlow 16s ease-in-out -4s infinite' }}
           >
             <span className="mb-1 block text-[10.5px] font-bold tracking-[.09em] uppercase" style={{ color: 'var(--organic-terracotta-300)' }}>
-              Instaflow AI · 1.9s
+              Instaflow IA · 1.9s
             </span>
-            Yes — 3–5 days, so it lands in time. Want the link?
+            Oui — 3 à 5 jours, ça arrivera à temps. Je vous envoie le lien ?
           </div>
           <div
             className="lp-float absolute top-[250px] left-[8%] inline-flex items-center gap-2 rounded-full px-4 py-[9px] text-[12.5px] font-bold"
@@ -168,7 +168,7 @@ export function Hero() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.75} strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
             </svg>
-            Lead captured → HubSpot
+            Lead capturé → HubSpot
           </div>
           <div
             className="lp-float absolute top-[322px] right-[4%] rounded-[20px] border-[1.5px] px-[18px] py-[14px]"
@@ -176,7 +176,7 @@ export function Hero() {
           >
             <div className="font-heading text-[26px] leading-none">+38%</div>
             <div className="mt-0.5 text-[11px] font-bold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
-              Conversion lift
+              Hausse de conversion
             </div>
           </div>
         </div>

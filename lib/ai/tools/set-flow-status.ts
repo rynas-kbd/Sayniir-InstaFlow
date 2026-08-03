@@ -17,8 +17,14 @@ export const setFlowStatusTool: AiTool<Input, { status: string }> = {
   },
   resourceRefs: (input) => [{ table: 'flows', id: input.flowId }],
   run: async (input, ctx) => {
-    const { error } = await ctx.supabase.from('flows').update({ status: input.status, updated_at: new Date().toISOString() }).eq('id', input.flowId)
+    const { data, error } = await ctx.supabase
+      .from('flows')
+      .update({ status: input.status, updated_at: new Date().toISOString() })
+      .eq('id', input.flowId)
+      .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
+    if (!data || data.length === 0) throw new Error('Flow introuvable')
     return { status: input.status }
   },
 }

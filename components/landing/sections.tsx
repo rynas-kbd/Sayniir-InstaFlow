@@ -37,7 +37,7 @@ export function LogoMarquee() {
   return (
     <section className="pb-16">
       <p className="mb-5 text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
-        Trusted by 12,000+ teams that live in their DMs
+        Adopté par plus de 12 000 équipes qui vivent dans leurs DM
       </p>
       <div className="lp-marquee">
         <div className="flex w-max items-baseline gap-[clamp(24px,4vw,56px)]" style={{ animation: 'marquee 36s linear infinite' }}>
@@ -77,9 +77,9 @@ export function MetricsBand() {
 export function FeaturesGrid() {
   return (
     <section id="features" className="pb-[88px]">
-      <SectionHeader kicker="01 — Why it wins" note="Built for people who sell in chat" />
+      <SectionHeader kicker="01 — Pourquoi ça gagne" note="Conçu pour ceux qui vendent en message" />
       <h2 data-reveal className="mb-10 max-w-[20ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
-        Not a chatbot. A closer.
+        Pas un chatbot. Un closer.
       </h2>
       <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
         {FEATURES.map((f) => (
@@ -104,9 +104,9 @@ export function FeaturesGrid() {
 export function Channels() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="02 — Channels" note="Native APIs · no gray-zone hacks" />
+      <SectionHeader kicker="02 — Canaux" note="API natives · pas de bricolage en zone grise" />
       <h2 data-reveal className="mb-10 max-w-[22ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
-        Where your customers already are.
+        Là où vos clients sont déjà.
       </h2>
       <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
         {CHANNEL_INFO.map((c) => (
@@ -135,13 +135,13 @@ export function Channels() {
 export function InboxShowcase() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="03 — The inbox" note="Fig. 02 · shared team inbox" />
+      <SectionHeader kicker="03 — L'inbox" note="Fig. 02 · boîte d'équipe partagée" />
       <h2 data-reveal className="mb-3 max-w-[22ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
-        The AI drafts. You approve. It learns.
+        L'IA rédige. Vous validez. Elle apprend.
       </h2>
       <p className="mb-9 max-w-[56ch] text-base leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 78%, transparent)' }}>
-        Every conversation the AI isn&apos;t sure about lands here with a suggested reply and a confidence score.
-        Approve it, edit it, or take over — either way, it gets smarter.
+        Chaque conversation dont l&apos;IA n&apos;est pas sûre arrive ici avec une réponse suggérée et un score de confiance.
+        Validez-la, modifiez-la, ou reprenez la main — dans tous les cas, elle progresse.
       </p>
       <div
         data-reveal
@@ -153,12 +153,12 @@ export function InboxShowcase() {
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sage-300)' }} />
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sand-300)' }} />
           <span className="ml-3 text-[13px] font-bold tracking-[.04em]">Instaflow · Inbox</span>
-          <span className="tag ml-auto" style={{ background: 'var(--organic-sage-100)', color: 'var(--organic-sage-800)' }}>3 need review</span>
+          <span className="tag ml-auto" style={{ background: 'var(--organic-sage-100)', color: 'var(--organic-sage-800)' }}>3 à traiter</span>
         </div>
         <div className="lp-inbox-grid grid min-h-[380px] grid-cols-[300px_minmax(0,1fr)]">
           <div className="border-r-[1.5px] p-3" style={{ borderColor: 'var(--organic-sand-200)' }}>
             <div className="mb-3 flex flex-wrap gap-1.5">
-              <span className="tag" style={{ background: 'var(--organic-terracotta-100)', color: 'var(--organic-terracotta-800)' }}>All · 47</span>
+              <span className="tag" style={{ background: 'var(--organic-terracotta-100)', color: 'var(--organic-terracotta-800)' }}>Tout · 47</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>Instagram</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>WhatsApp</span>
             </div>
@@ -168,7 +168,7 @@ export function InboxShowcase() {
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>2m</span>
               </div>
               <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Do you ship to Canada? I need it by…
+                Vous livrez au Canada ? Il me le faut avant…
               </div>
             </div>
             <div className="mb-2 rounded-2xl p-3.5">
@@ -177,7 +177,7 @@ export function InboxShowcase() {
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>11m</span>
               </div>
               <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Handled by AI · order status → resolved
+                Traité par l&apos;IA · statut de commande → résolu
               </div>
             </div>
             <div className="rounded-2xl p-3.5">
@@ -186,13 +186,13 @@ export function InboxShowcase() {
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>24m</span>
               </div>
               <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Handled by AI · lead captured → CRM
+                Traité par l&apos;IA · lead capturé → CRM
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-3 p-5">
             <div className="max-w-[70%] self-start rounded-[16px] rounded-bl-[4px] px-3.5 py-2.5 text-sm" style={{ background: 'var(--organic-sand-200)' }}>
-              Do you ship to Canada? I need it by the 14th for a wedding
+              Vous livrez au Canada ? Il me le faut avant le 14 pour un mariage
             </div>
             <div
               className="mt-auto rounded-[var(--radius-lg)] border-[1.5px] p-4"
@@ -200,17 +200,17 @@ export function InboxShowcase() {
             >
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[11px] font-bold tracking-[.1em] uppercase" style={{ color: 'var(--organic-terracotta-700)' }}>
-                  AI suggested reply
+                  Réponse suggérée par l&apos;IA
                 </span>
-                <span className="tag" style={{ background: 'var(--organic-terracotta-200)', color: 'var(--organic-terracotta-800)' }}>94% confident</span>
+                <span className="tag" style={{ background: 'var(--organic-terracotta-200)', color: 'var(--organic-terracotta-800)' }}>94% de confiance</span>
               </div>
               <p className="mb-3 text-sm leading-[1.6]">
-                Yes! We ship to Canada in 3–5 business days — order by Thursday and it lands well before the
-                14th. Want me to hold a gift note slot for you?
+                Oui ! On livre au Canada en 3 à 5 jours ouvrés — commandez avant jeudi et ça arrivera bien avant le
+                14. Je vous réserve un mot cadeau ?
               </p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn btn-primary">Approve &amp; send</button>
-                <button type="button" className="btn btn-ghost">Edit</button>
+                <button type="button" className="btn btn-primary">Valider &amp; envoyer</button>
+                <button type="button" className="btn btn-ghost">Modifier</button>
               </div>
             </div>
           </div>
@@ -223,7 +223,7 @@ export function InboxShowcase() {
 export function Testimonials() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="04 — Proof" note="Agencies · e-commerce · creators" />
+      <SectionHeader kicker="04 — Preuves" note="Agences · e-commerce · créateurs" />
       <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
         {TESTIMONIALS.map((t) => (
           <figure key={t.name} data-reveal className="lp-card card lp-figure m-0">
@@ -253,9 +253,9 @@ export function Testimonials() {
 export function ComparisonTable() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="05 — The switch" note="Free migration on every paid plan" />
+      <SectionHeader kicker="05 — Le changement" note="Migration gratuite sur tout plan payant" />
       <h2 data-reveal className="mb-9 max-w-[24ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
-        Legacy chatbot tools were built for 2019.
+        Les outils chatbot historiques datent de 2019.
       </h2>
       <div data-reveal className="overflow-x-auto">
         <table className="table" style={{ minWidth: 640 }}>
@@ -263,7 +263,7 @@ export function ComparisonTable() {
             <tr>
               <th style={{ width: '30%' }} />
               <th style={{ color: 'var(--organic-terracotta-700)' }}>Instaflow</th>
-              <th>Legacy chatbot tools</th>
+              <th>Outils chatbot historiques</th>
             </tr>
           </thead>
           <tbody>
@@ -292,7 +292,7 @@ export function Faq() {
     <section id="faq" className="pb-[88px]">
       <SectionHeader kicker="07 — Questions" note="" />
       <div className="lp-faq-grid grid grid-cols-[minmax(0,380px)_minmax(0,1fr)] gap-x-[clamp(24px,5vw,80px)] gap-y-7">
-        <h2 className="font-heading text-[clamp(30px,3.4vw,42px)] leading-[1.1]">Asked before every demo.</h2>
+        <h2 className="font-heading text-[clamp(30px,3.4vw,42px)] leading-[1.1]">Les questions qu'on nous pose le plus.</h2>
         <div data-reveal-group className="lp-stagger flex flex-col">
           {FAQ_ITEMS.map((item, i) => {
             const isOpen = openIndex === i
@@ -370,24 +370,24 @@ export function ClosingCta() {
           style={{ background: 'var(--organic-terracotta-700)' }}
         />
         <span className="text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'var(--organic-terracotta-300)' }}>
-          08 — Start
+          08 — Démarrer
         </span>
         <h2
           className="relative mt-5 max-w-[18ch] font-heading text-[clamp(34px,4.6vw,60px)] leading-[1.08]"
           style={{ color: 'var(--organic-terracotta-100)' }}
         >
-          Your next customer is typing right now.
+          Votre prochain client est en train d'écrire, là, maintenant.
         </h2>
         <p className="relative mt-5 max-w-[52ch] text-[16.5px] leading-[1.65]" style={{ color: 'var(--organic-terracotta-200)' }}>
-          A 20-minute demo with your real account, your real DMs. If it doesn&apos;t pay for itself in a
-          month, we&apos;ll help you switch back.
+          Un essai gratuit sur votre vrai compte, vos vrais DM. Si ça ne se rentabilise pas en un mois,
+          on vous aide à repasser à votre ancien outil.
         </p>
         <div className="relative mt-8 flex flex-wrap gap-3">
           <Link href="/register" className="btn rounded-full" style={{ background: 'var(--organic-bg)', color: 'var(--organic-text)' }}>
-            Book a demo
+            Essai gratuit
           </Link>
           <Link href="/register" className="btn btn-ghost" style={{ color: 'var(--organic-terracotta-100)', borderColor: 'var(--organic-terracotta-400)' }}>
-            Start free instead
+            Commencer gratuitement
           </Link>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { parseIntParam } from '@/lib/api/validate'
 
 /**
  * GET /api/messages
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get('page') ?? '1', 10)
-  const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 100)
+  const page = parseIntParam(searchParams.get('page'), { min: 1, default: 1 })
+  const limit = parseIntParam(searchParams.get('limit'), { min: 1, max: 100, default: 20 })
   const offset = (page - 1) * limit
 
   // Get accounts owned by this user first

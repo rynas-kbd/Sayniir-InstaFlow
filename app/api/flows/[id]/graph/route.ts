@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { quickUrlShapeCheck } from '@/lib/security/url-guard'
-import { jsonError } from '@/lib/api/errors'
+import { jsonError, badRequest } from '@/lib/api/errors'
+
+const MAX_NODES = 200
+const MAX_EDGES = 400
 
 interface NodeInput {
   node_key: string
@@ -32,11 +35,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .single()
   if (!flow) return NextResponse.json({ error: 'Flow not found' }, { status: 404 })
 
-  const body = await request.json()
-  const nodes = (body.nodes ?? []) as NodeInput[]
-  const edges = (body.edges ?? []) as EdgeInput[]
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object') return badRequest('Corps de requête invalide')
 
-  if (!nodes.some((n) => n.type === 'trigger')) {
+  const rawNodes = (body as { nodes?: unknown }).nodes ?? []
+  const rawEdges = (body as { edges?: unknown }).edges ?? []
+  if (!Array.isArray(rawNodes) || !Array.isArray(rawEdges)) {
+    return badRequest('"nodes" et "edges" doivent être des tableaux')
+  }
+  if (rawNodes.length > MAX_NODES) return badRequest(`Un flow ne peut pas dépasser ${MAX_NODES} nœuds`)
+  if (rawEdges.length > MAX_EDGES) return badRequest(`Un flow ne peut pas dépasser ${MAX_EDGES} connexions`)
+
+  const nodes = rawNodes as NodeInput[]
+  const edges = rawEdges as EdgeInput[]
+
+  if (!nodes.some((n) => n && typeof n === 'object' && n.type === 'trigger')) {
     return NextResponse.json({ error: 'Un flow doit avoir exactement un nœud de déclenchement' }, { status: 400 })
   }
 

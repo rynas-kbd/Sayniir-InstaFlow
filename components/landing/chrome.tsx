@@ -1,9 +1,9 @@
 import Link from 'next/link'
 
 const NAV_LINKS = [
-  { href: '#product', label: 'Product' },
-  { href: '#features', label: 'Features' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '#product', label: 'Produit' },
+  { href: '#features', label: 'Fonctionnalités' },
+  { href: '#pricing', label: 'Tarifs' },
   { href: '#faq', label: 'FAQ' },
 ]
 
@@ -27,7 +27,7 @@ export function LandingNav() {
         ))}
       </div>
       <Link href="/register" className="btn btn-primary">
-        Book a demo
+        Essai gratuit
       </Link>
     </nav>
   )
@@ -42,9 +42,9 @@ export function LandingFooter() {
       <div className="flex flex-wrap items-baseline justify-between gap-5">
         <span className="font-heading text-lg">Instaflow</span>
         <div className="flex flex-wrap gap-6 text-[13.5px]">
-          <a href="#product" className="no-underline">Product</a>
-          <a href="#features" className="no-underline">Features</a>
-          <a href="#pricing" className="no-underline">Pricing</a>
+          <a href="#product" className="no-underline">Produit</a>
+          <a href="#features" className="no-underline">Fonctionnalités</a>
+          <a href="#pricing" className="no-underline">Tarifs</a>
           <a href="#faq" className="no-underline">FAQ</a>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function LandingFooter() {
           className="block text-center text-[13px]" 
           style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
         >
-          © 2026 Instaflow. Every DM answered.
+          © 2026 Instaflow. Chaque DM a une réponse.
         </span>
       </div>
     </footer>

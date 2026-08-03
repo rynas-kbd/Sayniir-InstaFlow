@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const allowed = ['name', 'status', 'trigger_type', 'trigger_keywords', 'target_post_ids', 'priority']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {

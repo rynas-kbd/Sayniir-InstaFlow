@@ -21,11 +21,14 @@ export const scheduleCampaignTool: AiTool<Input, { scheduled: boolean; scheduled
   resourceRefs: (input) => [{ table: 'campaigns', id: input.campaignId }],
   run: async (input, ctx) => {
     const scheduledAt = input.scheduledAt ?? new Date().toISOString()
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('campaigns')
       .update({ status: 'scheduled', scheduled_at: scheduledAt })
       .eq('id', input.campaignId)
+      .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
+    if (!data || data.length === 0) throw new Error('Campagne introuvable')
     return { scheduled: true, scheduledAt }
   },
 }

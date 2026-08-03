@@ -54,6 +54,10 @@ export const PRICING_TIERS = [
     name: 'Starter',
     price: '4 900',
     period: 'DZD/mois',
+    // -20% annual discount: 4 900 × 12 = 58 800 undiscounted → 47 040.
+    priceAnnual: '47 040',
+    priceAnnualCrossedOut: '58 800',
+    periodAnnual: 'DZD/an',
     description: 'Pour démarrer et automatiser votre premier compte.',
     features: [
       '1 compte connecté (Instagram, Messenger ou WhatsApp)',
@@ -67,6 +71,10 @@ export const PRICING_TIERS = [
     name: 'Pro',
     price: '12 900',
     period: 'DZD/mois',
+    // -20% annual discount: 12 900 × 12 = 154 800 undiscounted → 123 840.
+    priceAnnual: '123 840',
+    priceAnnualCrossedOut: '154 800',
+    periodAnnual: 'DZD/an',
     description: "Pour les boutiques et créateurs actifs qui veulent l'IA.",
     features: [
       '3 comptes connectés',
@@ -81,6 +89,10 @@ export const PRICING_TIERS = [
     name: 'Business',
     price: 'Sur devis',
     period: '',
+    // No fixed price to discount — quote-based regardless of billing period.
+    priceAnnual: 'Sur devis',
+    priceAnnualCrossedOut: undefined,
+    periodAnnual: '',
     description: 'Pour les agences et comptes multiples.',
     features: [
       'Comptes illimités',

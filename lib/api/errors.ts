@@ -19,3 +19,23 @@ export function jsonError(status: number, publicMessage: string, err?: unknown):
   }
   return NextResponse.json({ error: publicMessage, ref }, { status })
 }
+
+/** 401 — no authenticated user. Always paired with a `ref` so responses are shape-consistent with jsonError. */
+export function unauthorized(): NextResponse {
+  return jsonError(401, 'Authentification requise')
+}
+
+/** 403 — authenticated, but the resource does not belong to this user. */
+export function forbidden(): NextResponse {
+  return jsonError(403, 'Accès refusé')
+}
+
+/** 400 — malformed or missing request input. `publicMessage` should stay specific (e.g. "channel_account_id requis"). */
+export function badRequest(publicMessage: string): NextResponse {
+  return jsonError(400, publicMessage)
+}
+
+/** 404 — resource not found (or not visible to this user, which should read the same from the outside). */
+export function notFound(publicMessage: string): NextResponse {
+  return jsonError(404, publicMessage)
+}

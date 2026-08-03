@@ -36,12 +36,13 @@ export const updateProductTool: AiTool<Input, { updated: boolean }> = {
     if (input.isActive !== undefined) patch.is_active = input.isActive
     if (Object.keys(patch).length === 0) return { updated: false }
 
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('products')
       .update(patch)
       .eq('id', input.productId)
       .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
-    return { updated: true }
+    return { updated: (data?.length ?? 0) > 0 }
   },
 }

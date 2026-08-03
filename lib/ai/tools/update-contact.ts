@@ -30,12 +30,13 @@ export const updateContactTool: AiTool<Input, { updated: boolean }> = {
     if (input.email !== undefined) patch.email = input.email.trim()
     if (Object.keys(patch).length === 0) return { updated: false }
 
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('contacts')
       .update(patch)
       .eq('id', input.contactId)
       .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
-    return { updated: true }
+    return { updated: (data?.length ?? 0) > 0 }
   },
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isValidShopifyDomain } from '@/lib/security/shopify-domain'
 import { jsonError } from '@/lib/api/errors'
+import { decryptApiKey, isEncrypted } from '@/lib/crypto'
 
 interface ShopifyVariant {
   price: string
@@ -12,6 +13,7 @@ interface ShopifyOption {
   values: string[]
 }
 interface ShopifyProduct {
+  id: number
   title: string
   body_html: string | null
   variants: ShopifyVariant[]
@@ -20,8 +22,10 @@ interface ShopifyProduct {
 }
 
 // POST /api/shopify/sync — Body: { accountId } — pulls the store's product catalog
-// into the app's own `products` table (replace-all strategy, same pattern used
-// by the Google Sheets sync at /api/products/sync-sheet).
+// into the app's own `products` table. Upserts on (channel_account_id,
+// shopify_product_id) instead of the previous delete-then-insert, which wiped
+// every manually-added product and reset kind/metadata/currency (never set
+// by this sync) on every single run.
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const {
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { accountId } = await request.json()
+  const { accountId } = await request.json().catch(() => ({}))
   if (!accountId) return NextResponse.json({ error: 'accountId requis' }, { status: 400 })
 
   const { data: account } = await supabase
@@ -53,8 +57,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Domaine Shopify enregistré invalide. Reconnectez la boutique.' }, { status: 400 })
   }
 
+  // Rows written before encryption was introduced are still plaintext —
+  // isEncrypted only unwraps values that actually carry the encrypted
+  // envelope, same backward-compat convention as resolveAccessToken.
+  const shopifyToken = isEncrypted(connection.access_token)
+    ? await decryptApiKey(connection.access_token)
+    : connection.access_token
+
   const res = await fetch(`https://${connection.shop_domain}/admin/api/2024-01/products.json?limit=250`, {
-    headers: { 'X-Shopify-Access-Token': connection.access_token },
+    headers: { 'X-Shopify-Access-Token': shopifyToken },
   })
   if (!res.ok) {
     return NextResponse.json({ error: 'Impossible de récupérer les produits Shopify.' }, { status: 502 })
@@ -63,11 +74,8 @@ export async function POST(request: NextRequest) {
 
   const mapped = shopifyProducts.map((p) => normalizeShopifyProduct(p, accountId))
 
-  const { error: deleteError } = await supabase.from('products').delete().eq('channel_account_id', accountId)
-  if (deleteError) return jsonError(500, 'Impossible de supprimer les anciens produits', deleteError)
-
   const { data: inserted, error } = mapped.length
-    ? await supabase.from('products').insert(mapped).select()
+    ? await supabase.from('products').upsert(mapped, { onConflict: 'channel_account_id,shopify_product_id' }).select()
     : { data: [], error: null }
   if (error) return jsonError(500, "Impossible d'importer les produits Shopify", error)
 
@@ -87,6 +95,7 @@ function normalizeShopifyProduct(p: ShopifyProduct, accountId: string) {
 
   return {
     channel_account_id: accountId,
+    shopify_product_id: String(p.id),
     name: p.title,
     description: p.body_html ? p.body_html.replace(/<[^>]*>/g, '').trim() || null : null,
     price: firstVariant ? parseFloat(firstVariant.price) : 0,

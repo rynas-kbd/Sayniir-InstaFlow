@@ -19,7 +19,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
 
   if (!isAllowedStatus(body.qualification_status)) {
     return NextResponse.json(

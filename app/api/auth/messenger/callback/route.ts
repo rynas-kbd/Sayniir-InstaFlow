@@ -112,8 +112,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (savedCount === 0) {
-      const reason = lastErrorMessage ?? 'Unknown error'
-      return NextResponse.redirect(`${appUrl}/accounts?error=db_error&reason=${encodeURIComponent(reason)}`)
+      // Never put raw Postgres error text into a redirect URL — see the same
+      // fix in app/api/auth/callback/route.ts. lastErrorMessage is still
+      // logged server-side above at the point of failure.
+      return NextResponse.redirect(`${appUrl}/accounts?error=db_error`)
     }
 
     const { data: existingSub } = await adminSupabase.from('subscriptions').select('id').eq('user_id', user.id).single()

@@ -480,26 +480,81 @@ JSON uniquement (sans backticks) :
   await supabase.from('order_sessions').update(updates).eq('id', session.id)
 
   if (newStatus === 'confirmed') {
-    const { data: finalSession } = await supabase.from('order_sessions').select('*, products(name, price, kind)').eq('id', session.id).single()
+    const { data: finalSession } = await supabase.from('order_sessions').select('*, products(name, price, kind, currency)').eq('id', session.id).single()
 
     if (finalSession?.products) {
       const qty = finalSession.quantity || 1
       const isPhysical = (finalSession.products.kind ?? 'physical') === 'physical'
+
+      // orders previously had no link back to contacts — just a denormalized
+      // name/phone pair, unusable for anything purchase-aware (segments,
+      // LTV, post-purchase flows). upsertContact already ran earlier in the
+      // inbound pipeline for this sender_id, so the contact row exists.
+      const { data: linkedContact } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('channel_account_id', finalSession.channel_account_id)
+        .eq('sender_id', finalSession.sender_id)
+        .maybeSingle()
+
+      // sizes/colors on `products` were flat display tags with no per-combination
+      // price/stock (see migration 20260822) — resolve a matching variant, if any,
+      // and use its price/stock instead of the base product's.
+      let unitPrice = finalSession.products.price
+      let variantId: string | null = null
+      if (finalSession.selected_size || finalSession.selected_color) {
+        const { data: variant } = await supabase
+          .from('product_variants')
+          .select('id, price_override, stock_quantity')
+          .eq('product_id', finalSession.product_id)
+          .eq('size', finalSession.selected_size ?? null)
+          .eq('color', finalSession.selected_color ?? null)
+          .maybeSingle()
+        if (variant) {
+          variantId = variant.id
+          if (variant.price_override !== null) unitPrice = variant.price_override
+        }
+      }
+
+      // Promo codes have no dedicated extraction slot — they ride the generic
+      // infos_to_collect → extra_data mechanism, so this checks the handful of
+      // key spellings a merchant is likely to configure. Not exhaustive: a
+      // custom field named something else won't be picked up here.
+      const PROMO_KEYS = ['promo_code', 'code_promo', 'code promo', 'coupon', 'code de réduction', 'code réduction']
+      const rawPromoCode = PROMO_KEYS.map((k) => finalSession.extra_data?.[k]).find(Boolean)
+      let discountAmount = 0
+      let appliedCode: string | null = null
+      if (rawPromoCode) {
+        const { data: redeemed } = await supabase.rpc('redeem_discount_code', {
+          p_channel_account_id: finalSession.channel_account_id,
+          p_code: String(rawPromoCode).trim().toUpperCase(),
+        })
+        if (redeemed) {
+          const subtotal = unitPrice * qty
+          discountAmount = redeemed.percent_off ? (subtotal * redeemed.percent_off) / 100 : (redeemed.amount_off ?? 0)
+          appliedCode = redeemed.code
+        }
+      }
+
+      const totalAmount = Math.max(unitPrice * qty - discountAmount, 0)
+
       const { error: insertError } = await supabase.from('orders').insert({
         channel_account_id: finalSession.channel_account_id,
         order_session_id: finalSession.id,
+        contact_id: linkedContact?.id ?? null,
         customer_name: finalSession.customer_name ?? 'Inconnu',
         customer_phone: finalSession.customer_phone ?? 'Inconnu',
         wilaya: isPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
         delivery_mode: isPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
         shipping_address: isPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
         product_name: finalSession.products.name,
-        price: finalSession.products.price,
+        currency: finalSession.products.currency ?? 'DZD',
+        price: unitPrice,
         size: finalSession.selected_size,
         color: finalSession.selected_color,
         quantity: qty,
-        total_amount: finalSession.products.price * qty,
-        extra_data: finalSession.extra_data ?? {},
+        total_amount: totalAmount,
+        extra_data: { ...(finalSession.extra_data ?? {}), ...(appliedCode ? { applied_discount_code: appliedCode } : {}) },
       })
 
       if (insertError) {
@@ -507,6 +562,22 @@ JSON uniquement (sans backticks) :
       } else {
         console.log(`[Ecommerce] Order created for session ${finalSession.id}`)
         await supabase.from('order_sessions').update({ status: 'confirmed' }).eq('id', finalSession.id)
+
+        // Stock was never decremented anywhere — confirmed orders left
+        // stock_quantity untouched, making "out of stock" badges decorative.
+        // Atomic RPC (see migration 20260820) avoids a race between two
+        // near-simultaneous orders on the same product. Non-physical kinds
+        // (service/digital/subscription/event) don't track stock this way.
+        if (isPhysical && variantId) {
+          const { error: stockError } = await supabase.rpc('decrement_variant_stock', { p_variant_id: variantId, p_quantity: qty })
+          if (stockError) console.error('[Ecommerce] Variant stock decrement failed:', stockError)
+        } else if (isPhysical && finalSession.product_id) {
+          const { error: stockError } = await supabase.rpc('decrement_product_stock', {
+            p_product_id: finalSession.product_id,
+            p_quantity: qty,
+          })
+          if (stockError) console.error('[Ecommerce] Stock decrement failed:', stockError)
+        }
       }
     }
   }

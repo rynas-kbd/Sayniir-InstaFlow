@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const { channel_account_id, sender_id, full_name, phone, email } = body
   if (!channel_account_id || !sender_id) {
     return NextResponse.json({ error: 'channel_account_id et sender_id sont requis' }, { status: 400 })

@@ -23,12 +23,13 @@ export const updateSnippetTool: AiTool<Input, { updated: boolean }> = {
     if (input.text !== undefined) patch.text = input.text.trim()
     if (Object.keys(patch).length === 0) return { updated: false }
 
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('snippets')
       .update(patch)
       .eq('id', input.snippetId)
       .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
-    return { updated: true }
+    return { updated: (data?.length ?? 0) > 0 }
   },
 }

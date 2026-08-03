@@ -2,6 +2,7 @@ import { Target, Users, CheckCircle2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { EmptyState } from '@/components/ui/empty-state'
+import { NoAccountState } from '@/components/accounts/no-account-state'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { LeadRow, type Lead } from '@/components/workspace/lead-row'
@@ -10,9 +11,18 @@ export default async function LeadsPage() {
   const supabase = await createClient()
   const { active } = await resolveActiveAccount()
 
-  const { data: leads } = active
-    ? await supabase.from('leads').select('*').eq('channel_account_id', active.id).order('created_at', { ascending: false })
-    : { data: [] }
+  if (!active) {
+    return <NoAccountState description="Connectez un compte Instagram, Messenger ou WhatsApp pour que l'IA qualifie vos prospects." />
+  }
+
+  const { data: leads, error } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('channel_account_id', active.id)
+    .order('created_at', { ascending: false })
+  // Thrown, not swallowed — app/(app)/error.tsx now catches this and shows a
+  // real error state instead of an indistinguishable "no leads yet" empty state.
+  if (error) throw new Error('Impossible de charger les leads')
 
   const safeLeads = (leads ?? []) as Lead[]
   const qualifyingCount = safeLeads.filter((l) => l.qualification_status === 'qualifying').length

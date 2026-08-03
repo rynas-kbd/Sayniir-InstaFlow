@@ -13,6 +13,8 @@ export const FIELD_IDS: Record<keyof ProductFormState, string> = {
   sizes: 'p-sizes',
   colors: 'p-colors',
   image_url: 'p-image',
+  images: 'p-images',
+  category: 'p-category',
   duration_minutes: 'p-duration',
   location: 'p-location',
   file_url: 'p-file',
@@ -33,6 +35,8 @@ export function emptyForm(product?: Product): ProductFormState {
     sizes: product?.sizes ?? [],
     colors: product?.colors ?? [],
     image_url: product?.image_url ?? '',
+    images: product?.images ?? [],
+    category: product?.category ?? '',
     duration_minutes: product?.metadata?.duration_minutes?.toString() ?? '',
     location: product?.metadata?.location ?? '',
     file_url: product?.metadata?.file_url ?? '',
@@ -151,6 +155,8 @@ export function buildProductPayload(
     sizes: f.kind === 'physical' ? f.sizes : [],
     colors: f.kind === 'physical' ? f.colors : [],
     image_url: f.image_url.trim() || null,
+    images: f.images.filter(Boolean),
+    category: f.category.trim() || null,
     metadata: buildMetadata(f, product),
   }
 }

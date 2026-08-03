@@ -27,6 +27,7 @@ import { listAutomationRulesTool } from './list-automation-rules'
 import { createAutomationRuleTool } from './create-automation-rule'
 import { updateAutomationRuleTool } from './update-automation-rule'
 import { deleteAutomationRuleTool } from './delete-automation-rule'
+import { setAutomationRuleActiveTool } from './set-automation-rule-active'
 import { listCampaignsTool } from './list-campaigns'
 import { cancelCampaignTool } from './cancel-campaign'
 import { deleteCampaignTool } from './delete-campaign'
@@ -84,6 +85,7 @@ export const AI_TOOLS: AiTool<never, unknown>[] = (
     createAutomationRuleTool,
     updateAutomationRuleTool,
     deleteAutomationRuleTool,
+    setAutomationRuleActiveTool,
     listCampaignsTool,
     cancelCampaignTool,
     deleteCampaignTool,

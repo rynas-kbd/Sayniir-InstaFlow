@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const { accountId, sheetUrl } = body
 
   if (!accountId || !sheetUrl) {
@@ -63,22 +63,37 @@ export async function POST(request: NextRequest) {
     }, { status: 400 })
   }
 
-  // Upsert: delete existing products for this account and re-insert
-  // (simple sync strategy: replace all)
-  const { error: deleteError } = await supabase
-    .from('products')
-    .delete()
-    .eq('channel_account_id', accountId)
+  // A Google Sheet row has no stable id to upsert against (unlike Shopify's
+  // product id), so we match by name instead: a product whose name already
+  // exists for this account gets updated in place, everything else is
+  // inserted. This used to delete every existing product for the account
+  // before re-inserting — a re-sync after manually editing a product in the
+  // app (or one whose row was temporarily removed from the sheet) silently
+  // destroyed it. Products no longer present in the sheet are left alone
+  // rather than deleted — safer default, consistent with the CSV importer
+  // (app/api/products/import/route.ts), which never deletes either.
+  const { data: existing } = await supabase.from('products').select('id, name').eq('channel_account_id', accountId)
+  const existingByName = new Map((existing ?? []).map((p) => [p.name.trim().toLowerCase(), p.id]))
 
-  if (deleteError) return jsonError(500, 'Une erreur est survenue', deleteError)
+  const toInsert = products.filter((p) => !existingByName.has(p.name.trim().toLowerCase()))
+  const toUpdate = products.filter((p) => existingByName.has(p.name.trim().toLowerCase()))
 
-  const { data: inserted, error } = await supabase
-    .from('products')
-    .insert(products)
-    .select()
+  const results: unknown[] = []
 
-  if (error) return jsonError(500, 'Une erreur est survenue', error)
-  return NextResponse.json({ synced: inserted?.length ?? 0, products: inserted })
+  if (toInsert.length > 0) {
+    const { data: inserted, error } = await supabase.from('products').insert(toInsert).select()
+    if (error) return jsonError(500, 'Une erreur est survenue', error)
+    results.push(...(inserted ?? []))
+  }
+
+  for (const p of toUpdate) {
+    const id = existingByName.get(p.name.trim().toLowerCase())!
+    const { data: updated, error } = await supabase.from('products').update(p).eq('id', id).select().single()
+    if (error) return jsonError(500, 'Une erreur est survenue', error)
+    if (updated) results.push(updated)
+  }
+
+  return NextResponse.json({ synced: results.length, products: results })
 }
 
 // --- Helpers ---

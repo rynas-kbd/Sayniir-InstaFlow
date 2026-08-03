@@ -7,6 +7,28 @@ export interface ToolCallLogContext {
 
 export type ToolExecutionResult<TOutput> = { ok: true; output: TOutput } | { ok: false; error: string }
 
+// Most tools throw `new Error(error.message)` straight from a Supabase call,
+// so raw PostgREST text (constraint/column/schema names) routinely reaches
+// both the model's tool_result and, via ai_messages history, the end user in
+// the chat transcript. Tools that want a friendly message already throw one
+// (e.g. "Règle introuvable") — those don't match these DB-error shapes and
+// pass through unchanged; only the common raw-DB-error patterns are masked.
+const DB_ERROR_PATTERNS = [
+  /violates .*constraint/i,
+  /duplicate key value/i,
+  /relation ".*" does not exist/i,
+  /column ".*" (does not exist|of relation)/i,
+  /permission denied for/i,
+  /new row violates row-level security/i,
+]
+
+function sanitizeToolError(message: string): string {
+  if (DB_ERROR_PATTERNS.some((p) => p.test(message))) {
+    return "Une erreur est survenue lors de l'exécution de cette action."
+  }
+  return message
+}
+
 /**
  * Verifies every declared resourceRef belongs to the account, using the admin client for the
  * check itself only — the tool's own run() still gets the RLS-scoped client. This is the one
@@ -59,6 +81,7 @@ export async function executeAiTool<TInput, TOutput>(
     const output = await tool.run(input, ctx)
     return { ok: true, output }
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Erreur inconnue' }
+    const message = err instanceof Error ? err.message : 'Erreur inconnue'
+    return { ok: false, error: sanitizeToolError(message) }
   }
 }

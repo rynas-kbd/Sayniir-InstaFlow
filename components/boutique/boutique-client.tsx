@@ -1,17 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { Package, ShoppingCart, Bot, Sparkles, Plug } from 'lucide-react'
+import { Package, ShoppingCart, Bot, Sparkles, Plug, Clock3, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductTable } from './product-table'
 import { OrderTable } from './order-table'
 import { AgentSettingsCard } from './agent-settings-card'
-import { ShopifyComingSoon } from './shopify-coming-soon'
-import type { Product, Order, AgentSettings } from './types'
+import { ShopifyIntegrationPanel } from './shopify-integration-panel'
+import { BoutiqueStatsStrip, type BoutiqueStats } from './boutique-stats'
+import { AbandonedSessionsList } from './abandoned-sessions-list'
+import { DiscountCodesManager, type DiscountCode } from './discount-codes-manager'
+import type { Product, Order, AgentSettings, AbandonedSession } from './types'
 
 const TABS = [
   { key: 'products', label: 'Produits',   icon: Package },
   { key: 'orders',   label: 'Commandes',  icon: ShoppingCart },
+  { key: 'abandoned', label: 'Paniers abandonnés', icon: Clock3 },
+  { key: 'promos',   label: 'Codes promo', icon: Tag },
   { key: 'ai',       label: 'Config IA',  icon: Bot },
   { key: 'integrations', label: 'Intégrations', icon: Plug },
 ] as const
@@ -23,17 +28,24 @@ export function BoutiqueClient({
   products,
   orders,
   agentSettings,
+  stats,
+  abandonedSessions,
+  discountCodes,
 }: {
   channelAccountId: string
   products: Product[]
   orders: Order[]
   agentSettings: AgentSettings
+  stats: BoutiqueStats
+  abandonedSessions: AbandonedSession[]
+  discountCodes: DiscountCode[]
 }) {
   const [tab, setTab] = useState<TabKey>('products')
 
   const counts: Partial<Record<TabKey, number>> = {
     products: products.length,
     orders: orders.length,
+    abandoned: abandonedSessions.length,
   }
 
   return (
@@ -72,6 +84,8 @@ export function BoutiqueClient({
         </div>
       </div>
 
+      <BoutiqueStatsStrip stats={stats} />
+
       {/* ── Tab Navigation ── */}
       <div>
         <div className="flex items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
@@ -83,7 +97,7 @@ export function BoutiqueClient({
                 key={key}
                 onClick={() => setTab(key)}
                 className={cn(
-                  'relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
+                  'relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
                   isActive
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -116,10 +130,18 @@ export function BoutiqueClient({
           {tab === 'orders' && (
             <OrderTable initialOrders={orders} />
           )}
+          {tab === 'abandoned' && (
+            <div className="pt-4">
+              <AbandonedSessionsList sessions={abandonedSessions} />
+            </div>
+          )}
+          {tab === 'promos' && (
+            <DiscountCodesManager channelAccountId={channelAccountId} initialCodes={discountCodes} />
+          )}
           {tab === 'ai' && (
             <AgentSettingsCard channelAccountId={channelAccountId} initialSettings={agentSettings} />
           )}
-          {tab === 'integrations' && <ShopifyComingSoon />}
+          {tab === 'integrations' && <ShopifyIntegrationPanel channelAccountId={channelAccountId} />}
         </div>
       </div>
     </div>

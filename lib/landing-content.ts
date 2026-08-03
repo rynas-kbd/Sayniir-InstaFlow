@@ -1,4 +1,4 @@
-export const CHANNELS = ['Instagram DMs', 'WhatsApp chats', 'Messenger inbox'] as const
+export const CHANNELS = ['DM Instagram', 'Discussions WhatsApp', 'Messagerie Messenger'] as const
 
 export interface FlowNode {
   id: string
@@ -11,11 +11,11 @@ export interface FlowNode {
 }
 
 export const FLOW_NODES: FlowNode[] = [
-  { id: 'trigger', label: 'Trigger', sub: 'DM shows buying intent', x: 20, y: 60, tone: 'a', desc: 'Fires when a new Instagram DM matches your intent — no keyword lists, the AI reads meaning.' },
-  { id: 'ai', label: 'AI reply', sub: 'Trained on your brand', x: 240, y: 20, tone: 'a', desc: 'Answers in your voice with live product data. You approve the tone once; it holds it.' },
-  { id: 'qualify', label: 'Qualify', sub: 'Ready to buy?', x: 240, y: 200, tone: 's', desc: 'Scores the conversation. High intent moves on to capture; anything unusual goes to a human.' },
-  { id: 'capture', label: 'Capture lead', sub: 'Email → CRM', x: 460, y: 140, tone: 'a', desc: 'Asks naturally for the email and syncs it to your CRM with the full transcript attached.' },
-  { id: 'handoff', label: 'Handoff', sub: 'To shared inbox', x: 460, y: 296, tone: 's', desc: 'One tap moves the thread to your team inbox with AI-drafted context waiting.' },
+  { id: 'trigger', label: 'Déclencheur', sub: 'Le DM montre une intention d\'achat', x: 20, y: 60, tone: 'a', desc: 'Se déclenche quand un nouveau DM Instagram correspond à l\'intention visée — pas de liste de mots-clés, l\'IA comprend le sens.' },
+  { id: 'ai', label: 'Réponse IA', sub: 'Formée sur votre marque', x: 240, y: 20, tone: 'a', desc: 'Répond avec votre voix et les données produit en temps réel. Vous validez le ton une fois ; il le garde.' },
+  { id: 'qualify', label: 'Qualifier', sub: 'Prêt à acheter ?', x: 240, y: 200, tone: 's', desc: 'Note la conversation. Une forte intention passe à la capture ; tout ce qui sort de l\'ordinaire part vers un humain.' },
+  { id: 'capture', label: 'Capturer le lead', sub: 'Email → CRM', x: 460, y: 140, tone: 'a', desc: 'Demande l\'email naturellement et le synchronise vers votre CRM avec la transcription complète.' },
+  { id: 'handoff', label: 'Relais humain', sub: 'Vers la boîte partagée', x: 460, y: 296, tone: 's', desc: 'Un clic transfère la conversation vers l\'inbox de votre équipe avec un contexte déjà rédigé par l\'IA.' },
 ]
 
 export interface FlowStep {
@@ -25,21 +25,21 @@ export interface FlowStep {
 }
 
 export const FLOW_STEPS: FlowStep[] = [
-  { node: 'trigger', kind: 'in', text: 'Hi! Price for the ceramic mug set?' },
-  { node: 'ai', kind: 'out', text: 'Hey Maya — the set of four is $48, free shipping this week. Want the link?' },
-  { node: 'qualify', kind: 'in', text: 'Yes please!' },
-  { node: 'capture', kind: 'out', text: 'Sent! Want a 10% code for your next order? Just drop your email.' },
+  { node: 'trigger', kind: 'in', text: 'Salut ! C\'est combien le set de mugs en céramique ?' },
+  { node: 'ai', kind: 'out', text: 'Coucou Maya — le lot de quatre est à 44€, livraison offerte cette semaine. Je vous envoie le lien ?' },
+  { node: 'qualify', kind: 'in', text: 'Oui avec plaisir !' },
+  { node: 'capture', kind: 'out', text: 'Envoyé ! Vous voulez un code -10% pour votre prochaine commande ? Donnez-moi juste votre email.' },
   { node: 'capture', kind: 'in', text: 'maya@homefolk.co' },
-  { node: 'capture', kind: 'sys', text: 'Lead captured · synced to CRM' },
+  { node: 'capture', kind: 'sys', text: 'Lead capturé · synchronisé au CRM' },
 ]
 
 export const LOGO_STRIP = ['Homefolk', 'Sundial', 'Kettle&Co', 'RELAY SOCIAL', 'Moonrise', 'Fable', 'Petal & Stem']
 
 export const METRICS = [
-  { value: '480M', label: 'Messages automated' },
-  { value: '+38%', label: 'Average conversion lift' },
-  { value: '2.1s', label: 'Median reply time' },
-  { value: '82%', label: 'Resolved without a human' },
+  { value: '480M', label: 'Messages automatisés' },
+  { value: '+38%', label: 'Hausse moyenne de conversion' },
+  { value: '2.1s', label: 'Temps de réponse médian' },
+  { value: '82%', label: 'Résolus sans humain' },
 ]
 
 export interface Feature {
@@ -49,12 +49,12 @@ export interface Feature {
 }
 
 export const FEATURES: Feature[] = [
-  { title: 'AI that sounds like you', tone: 'a', body: "Train it on your site, your FAQ and your last hundred conversations. It answers with your prices, your policies, your jokes — not chatbot filler." },
-  { title: 'Flows you draw, not code', tone: 's', body: 'Drag five nodes, connect them, go live. What takes an afternoon in legacy tools takes minutes here — and the AI fills the gaps between your branches.' },
-  { title: 'Leads that file themselves', tone: 'a', body: 'Emails, phone numbers and buying intent get captured mid-conversation and synced to your CRM with the full transcript. Nothing to export, ever.' },
-  { title: 'Broadcasts that re-engage', tone: 's', body: 'Win-back messages, drop announcements and abandoned-cart nudges — sent inside policy windows so your account stays safe and your open rates stay at 80%+.' },
-  { title: 'One inbox for the team', tone: 'a', body: 'Every channel lands in one shared inbox. When the AI hands off, your teammate gets the thread with context already drafted — no "as I mentioned above."' },
-  { title: 'Analytics in revenue, not clicks', tone: 's', body: 'See which flow made money, which reply lost the sale, and what your audience keeps asking for. Reports your client actually wants to read.' },
+  { title: 'Une IA qui vous ressemble', tone: 'a', body: "Formez-la sur votre site, votre FAQ et vos cent dernières conversations. Elle répond avec vos prix, vos politiques, vos blagues — pas du remplissage de chatbot." },
+  { title: 'Des flows à dessiner, pas à coder', tone: 's', body: 'Glissez cinq nœuds, connectez-les, publiez. Ce qui prend un après-midi dans les outils historiques prend quelques minutes ici — et l\'IA comble les trous entre vos branches.' },
+  { title: 'Des leads qui se classent tout seuls', tone: 'a', body: 'Emails, numéros de téléphone et intention d\'achat sont capturés en pleine conversation et synchronisés vers votre CRM avec la transcription complète. Rien à exporter, jamais.' },
+  { title: 'Des campagnes qui réengagent', tone: 's', body: 'Messages de relance, annonces de nouveautés et rappels de panier abandonné — envoyés dans les fenêtres autorisées pour que votre compte reste en sécurité et vos taux d\'ouverture au-dessus de 80%.' },
+  { title: 'Une seule boîte pour l\'équipe', tone: 'a', body: 'Chaque canal arrive dans une inbox partagée unique. Quand l\'IA passe la main, votre collègue récupère la conversation avec le contexte déjà rédigé — plus de "comme je le disais plus haut".' },
+  { title: 'Des analyses en revenus, pas en clics', tone: 's', body: 'Voyez quel flow a rapporté de l\'argent, quelle réponse a fait perdre une vente, et ce que votre audience demande sans arrêt. Des rapports que votre client a vraiment envie de lire.' },
 ]
 
 export interface ChannelInfo {
@@ -64,9 +64,9 @@ export interface ChannelInfo {
 }
 
 export const CHANNEL_INFO: ChannelInfo[] = [
-  { title: 'Instagram DM', tone: 'a', body: 'Story replies, comment triggers, DM automation — the whole funnel from a post to a purchase without leaving the app.' },
-  { title: 'WhatsApp', tone: 's', body: 'Official Business API — verified sender, catalogs, payments and broadcast templates approved and managed for you.' },
-  { title: 'Messenger', tone: 'a', body: 'Page inbox, ad click-to-message and recurring notifications — the quiet workhorse channel your competitors forgot about.' },
+  { title: 'DM Instagram', tone: 'a', body: 'Réponses aux stories, déclencheurs sur commentaires, automatisation des DM — tout l\'entonnoir d\'un post jusqu\'à l\'achat, sans quitter l\'app.' },
+  { title: 'WhatsApp', tone: 's', body: 'API Business officielle — expéditeur vérifié, catalogues, paiements et modèles de diffusion approuvés et gérés pour vous.' },
+  { title: 'Messenger', tone: 'a', body: 'Boîte de la page, clic-to-message publicitaire et notifications récurrentes — le canal discret et efficace que vos concurrents ont oublié.' },
 ]
 
 export interface Testimonial {
@@ -78,89 +78,44 @@ export interface Testimonial {
 }
 
 export const TESTIMONIALS: Testimonial[] = [
-  { quote: 'We moved 14 client accounts over in a week. Reply time went from hours to seconds, and our retainers renew themselves now.', initials: 'DK', name: 'Dana K.', role: 'Founder, Relay Social — agency', tone: 'a' },
-  { quote: "The AI answered 82% of our DMs during the holiday drop. We didn't hire a single seasonal rep — and sales were up 41%.", initials: 'TR', name: 'Tomás R.', role: 'Co-founder, Sundial Goods — e-commerce', tone: 's' },
-  { quote: "I post, I sleep, my DMs sell the course. It genuinely sounds like me — my audience can't tell, and honestly neither can I.", initials: 'PS', name: 'Priya S.', role: 'Creator, 890k followers', tone: 'a' },
+  { quote: 'On a basculé 14 comptes clients en une semaine. Le temps de réponse est passé d\'heures à secondes, et nos contrats se renouvellent tout seuls maintenant.', initials: 'DK', name: 'Dana K.', role: 'Fondatrice, Relay Social — agence', tone: 'a' },
+  { quote: "L'IA a répondu à 82% de nos DM pendant les fêtes. On n'a embauché aucun saisonnier — et les ventes ont grimpé de 41%.", initials: 'TR', name: 'Tomás R.', role: 'Co-fondateur, Sundial Goods — e-commerce', tone: 's' },
+  { quote: "Je publie, je dors, mes DM vendent ma formation. Ça sonne vraiment comme moi — mon audience ne fait pas la différence, et honnêtement moi non plus.", initials: 'PS', name: 'Priya S.', role: 'Créatrice, 890k abonnés', tone: 'a' },
 ]
 
 export const COMPARISON_ROWS: [string, string, string][] = [
-  ['Replies', 'AI-native, in your brand voice', 'Keyword triggers and canned menus'],
-  ['Building a flow', 'Draw it in minutes; AI fills the gaps', 'Hours of branching for every edge case'],
-  ['Lead capture', 'Automatic, synced to CRM with transcript', 'Manual tags and CSV exports'],
-  ['When the bot is stuck', 'Confident handoff to a shared team inbox', '"Sorry, I didn\'t understand that."'],
-  ['Pricing', 'Flat plans, predictable', 'Per-contact fees that creep every month'],
+  ['Réponses', 'IA native, avec votre ton de marque', 'Déclencheurs par mots-clés et menus figés'],
+  ['Créer un flow', 'Dessiné en quelques minutes ; l\'IA comble les trous', 'Des heures de branchements pour chaque cas particulier'],
+  ['Capture de leads', 'Automatique, synchronisée au CRM avec transcription', 'Tags manuels et exports CSV'],
+  ['Quand le bot bloque', 'Relais confiant vers une boîte d\'équipe partagée', '"Désolé, je n\'ai pas compris."'],
+  ['Tarification', 'Forfaits fixes, prévisibles', 'Frais par contact qui grimpent chaque mois'],
 ]
 
-export interface PricingTier {
-  tag: string
-  tone: 'neutral' | 'a' | 's'
-  priceMonthly: string
-  priceAnnual: string
-  /** Undiscounted annual total (priceMonthly × 12), shown struck through next to priceAnnual. */
-  priceAnnualCrossedOut?: string
-  period: string
-  /** Variant of `period` shown when the annual toggle is active — omit if identical to `period`. */
-  periodAnnual?: string
-  features: string[]
-  cta: string
-  highlighted?: boolean
-}
-
-export const PRICING_TIERS: PricingTier[] = [
-  {
-    tag: 'Free',
-    tone: 'neutral',
-    priceMonthly: '$0',
-    priceAnnual: '$0',
-    period: 'forever · 1 channel',
-    periodAnnual: 'forever · 1 channel',
-    features: ['1,000 contacts', 'Visual flow builder', 'Basic AI replies (100/mo)', 'Lead capture'],
-    cta: 'Start free',
-  },
-  {
-    tag: 'Pro',
-    tone: 'a',
-    priceMonthly: '$29',
-    priceAnnual: '$290',
-    priceAnnualCrossedOut: '$348',
-    period: 'per month · all 3 channels',
-    periodAnnual: 'per year · all 3 channels',
-    features: ['10,000 contacts', 'Unlimited flows & broadcasts', 'Full AI replies, trained on your brand', 'CRM sync + integrations', 'Free migration from legacy tools'],
-    cta: 'Start free trial',
-    highlighted: true,
-  },
-  {
-    tag: 'Premium',
-    tone: 's',
-    priceMonthly: '$79',
-    priceAnnual: '$790',
-    priceAnnualCrossedOut: '$948',
-    period: 'per month · teams & agencies',
-    periodAnnual: 'per year · teams & agencies',
-    features: ['Unlimited contacts', 'Shared team inbox, 10 seats', 'Agency workspaces & client reports', 'Priority support & onboarding'],
-    cta: 'Book a demo',
-  },
-]
+// PRICING_TIERS previously lived here as a second, fictional pricing model
+// (Gratuit/29€/79€) that contradicted the real tarification shown on
+// app/(marketing)/pricing/page.tsx (Starter/Pro/Business, DZD). Removed —
+// components/landing/pricing.tsx now imports the real tiers from
+// lib/marketing-content.ts, the single source of truth for pricing.
 
 export const FAQ_ITEMS = [
 {
-    q: 'How is this different from ManyChat-style tools?',
-    a: 'Legacy tools make you script every branch with keywords. Instaflow starts from an AI that already understands your business — flows steer it, they don\'t replace it. You build in minutes and it handles the questions you never scripted.',
+    q: 'En quoi est-ce différent des outils type ManyChat ?',
+    a: 'Les outils historiques vous obligent à scripter chaque branche avec des mots-clés. Instaflow part d\'une IA qui comprend déjà votre activité — les flows la guident, ils ne la remplacent pas. Vous construisez en quelques minutes et elle gère les questions que vous n\'avez jamais scriptées.',
   },
   {
-    q: 'Will the AI actually sound like my brand?',
-    a: 'You connect your site, FAQ and past conversations, then approve a handful of sample replies. From there it holds your tone — and every edit you make in the inbox trains it further.',
+    q: 'L\'IA va-t-elle vraiment parler comme ma marque ?',
+    a: 'Vous connectez votre site, votre FAQ et vos anciennes conversations, puis vous validez quelques exemples de réponses. Ensuite, elle garde votre ton — et chaque modification que vous faites dans l\'inbox l\'entraîne davantage.',
   },
   {
-    q: "What happens when the AI can't answer?",
-    a: 'It never bluffs. Below its confidence threshold, the thread moves to your shared inbox with a drafted reply and full context. Customers get a human; you get a head start.',
+    q: "Que se passe-t-il quand l'IA ne peut pas répondre ?",
+    a: 'Elle ne bluffe jamais. En dessous de son seuil de confiance, la conversation part vers votre boîte partagée avec une réponse déjà rédigée et tout le contexte. Vos clients obtiennent un humain ; vous obtenez une longueur d\'avance.',
   },
   {
-    q: 'Is it compliant with Meta and WhatsApp policies?',
-    a: "Yes — we're built on the official APIs only. Messaging windows, template approvals and opt-in rules are enforced by the platform automatically, so your account never gets flagged.",
+    q: 'Est-ce conforme aux règles Meta et WhatsApp ?',
+    a: "Oui — nous sommes construits uniquement sur les API officielles. Fenêtres de messagerie, approbation des modèles et règles de consentement sont appliquées automatiquement par la plateforme, donc votre compte n'est jamais signalé.",
   },
   {
-    q: 'Can I migrate my existing flows?',
-    a: 'On any paid plan we migrate them for you — flows, contacts, tags and automations — usually within two business days. Your old bot keeps running until the switch is live.',
+    q: 'Puis-je migrer mes flows existants ?',
+    a: 'Sur tout plan payant, nous les migrons pour vous — flows, contacts, tags et automatisations — généralement sous deux jours ouvrés. Votre ancien bot continue de tourner jusqu\'à ce que la bascule soit effective.',
   },
 ]

@@ -287,7 +287,7 @@ export function CampaignCard({
           {EDITABLE_STATUSES.includes(campaign.status) ? (
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               aria-label="Modifier"
             >
               <Edit2 className="size-3.5" />
@@ -298,7 +298,7 @@ export function CampaignCard({
           )}
           <button
             onClick={() => setConfirmOpen(true)}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             aria-label="Supprimer"
           >
             <Trash2 className="size-3.5" />

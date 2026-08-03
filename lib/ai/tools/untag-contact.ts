@@ -20,8 +20,14 @@ export const untagContactTool: AiTool<Input, { untagged: boolean }> = {
     { table: 'tags', id: input.tagId },
   ],
   run: async (input, ctx) => {
-    const { error } = await ctx.supabase.from('contact_tags').delete().eq('contact_id', input.contactId).eq('tag_id', input.tagId)
+    const { data, error } = await ctx.supabase
+      .from('contact_tags')
+      .delete()
+      .eq('contact_id', input.contactId)
+      .eq('tag_id', input.tagId)
+      .eq('channel_account_id', ctx.channelAccountId)
+      .select('contact_id')
     if (error) throw new Error(error.message)
-    return { untagged: true }
+    return { untagged: (data?.length ?? 0) > 0 }
   },
 }

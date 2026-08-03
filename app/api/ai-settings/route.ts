@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { encryptApiKey } from '@/lib/crypto'
 import { PROVIDER_CONFIG, type CopilotProviderKind } from '@/lib/ai/models'
+import { jsonError } from '@/lib/api/errors'
 
 const MASK = '••••••••••••'
 const VALID_PROVIDER_KINDS = new Set<CopilotProviderKind>(Object.keys(PROVIDER_CONFIG) as CopilotProviderKind[])
@@ -69,7 +70,8 @@ export async function PATCH(request: NextRequest) {
     .select('copilot_provider, copilot_api_key, copilot_model, copilot_enabled')
     .single()
 
-  if (error || !updated) return NextResponse.json({ error: error?.message ?? 'Échec de la sauvegarde' }, { status: 500 })
+  if (error) return jsonError(500, 'Échec de la sauvegarde', error)
+  if (!updated) return jsonError(500, 'Échec de la sauvegarde')
 
   return NextResponse.json({
     copilot_provider: updated.copilot_provider ?? 'openrouter',

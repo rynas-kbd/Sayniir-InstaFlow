@@ -1,5 +1,6 @@
 import { Layers } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { PRODUCT_KIND_META } from './product-kinds'
 import { ProductThumb } from './product-thumb'
@@ -12,12 +13,14 @@ export interface ProductCardProps {
   /** Muted placeholders instead of empty values, no hover lift. Used by the live preview. */
   placeholder?: boolean
   className?: string
+  /** Omitted → no toggle rendered (live-preview mode has nothing to persist). */
+  onToggleActive?: (nextActive: boolean) => void
 }
 
 /** Presentational product card — shared by the boutique grid (product-table.tsx) and the
  * create/edit form's live preview, so the two can never visually diverge. Markup below mirrors
  * the original product-table.tsx card verbatim so the grid stays pixel-identical after the swap. */
-export function ProductCard({ view, actions, placeholder, className }: ProductCardProps) {
+export function ProductCard({ view, actions, placeholder, className, onToggleActive }: ProductCardProps) {
   const isPhysical = view.kind === 'physical'
   const hasStock = view.stockQuantity > 0
 
@@ -26,14 +29,15 @@ export function ProductCard({ view, actions, placeholder, className }: ProductCa
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all duration-300',
         !placeholder && 'hover:border-primary/30 hover:shadow-md hover:shadow-primary/5',
+        !view.isActive && 'opacity-60',
         className,
       )}
     >
-      {(!isPhysical || hasStock) && (
+      {(!isPhysical || hasStock) && view.isActive && (
         <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-success/50 via-success to-success/50" />
       )}
 
-      <ProductCardHeader view={view} isPhysical={isPhysical} hasStock={hasStock} />
+      <ProductCardHeader view={view} isPhysical={isPhysical} hasStock={hasStock} onToggleActive={onToggleActive} />
       <ProductCardBody view={view} placeholder={placeholder} />
       <ProductCardOptions view={view} isPhysical={isPhysical} />
 
@@ -42,12 +46,33 @@ export function ProductCard({ view, actions, placeholder, className }: ProductCa
   )
 }
 
-function ProductCardHeader({ view, isPhysical, hasStock }: { view: ProductCardView; isPhysical: boolean; hasStock: boolean }) {
+function ProductCardHeader({
+  view,
+  isPhysical,
+  hasStock,
+  onToggleActive,
+}: {
+  view: ProductCardView
+  isPhysical: boolean
+  hasStock: boolean
+  onToggleActive?: (nextActive: boolean) => void
+}) {
   const meta = PRODUCT_KIND_META[view.kind]
   return (
     <div className="mb-3 flex items-start justify-between gap-3">
       <ProductThumb src={view.imageUrl} kind={view.kind} />
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col items-end gap-1.5">
+        {onToggleActive && (
+          <label className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
+            {view.isActive ? 'Actif' : 'Inactif'}
+            <Switch
+              size="sm"
+              checked={view.isActive}
+              onCheckedChange={onToggleActive}
+              aria-label={view.isActive ? 'Désactiver le produit' : 'Activer le produit'}
+            />
+          </label>
+        )}
         <Badge variant="outline" className="rounded-full border-border/80 bg-muted/20 px-3 py-0.5 text-[10px] font-bold text-muted-foreground">
           {meta.label}
         </Badge>

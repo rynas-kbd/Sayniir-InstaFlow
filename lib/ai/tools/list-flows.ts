@@ -1,20 +1,10 @@
-import type { AiTool } from './types'
+import { listByAccountTool } from './list-by-account'
 
-interface Output {
-  flows: Array<{ id: string; name: string; status: string }>
-}
-
-export const listFlowsTool: AiTool<Record<string, never>, Output> = {
+export const listFlowsTool = listByAccountTool({
   name: 'list_flows',
-  description: "Liste les flows du compte avec leur statut (draft, active, paused).",
-  risk: 'read',
-  inputSchema: { type: 'object', properties: {}, required: [], additionalProperties: false },
-  run: async (_input, ctx) => {
-    const { data } = await ctx.supabase
-      .from('flows')
-      .select('id, name, status')
-      .eq('channel_account_id', ctx.channelAccountId)
-      .order('created_at', { ascending: false })
-    return { flows: data ?? [] }
-  },
-}
+  description: 'Liste les flows du compte avec leur statut (draft, active, paused).',
+  table: 'flows',
+  columns: 'id, name, status',
+  orderBy: { column: 'created_at', ascending: false },
+  resultKey: 'flows',
+})

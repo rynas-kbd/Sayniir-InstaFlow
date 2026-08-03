@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { COPILOT_MAX_TOKENS } from './models'
+import { COPILOT_MAX_TOKENS, MAX_HISTORY_TOKENS } from './models'
 import { buildSystemBlocks, buildProviderTools, pageContextMessage } from './prompt'
 import { streamProviderTurn } from './providers'
 import type { CanonicalContentBlock, CanonicalMessage, CopilotProviderKind, ProviderStopReason } from './providers/types'
 import { executeAiTool } from './tools/execute'
+import { renderConfirmPreview } from './tools/confirm-preview'
 import { getMemoryBlock } from './memory/service'
 import { checkAiCreditLimit, recordAiUsage } from './credits/meter'
 import type { AiTool, ToolExecContext } from './tools/types'
@@ -70,6 +71,37 @@ interface DbMessageRow {
   content: unknown
 }
 
+/** Rough token estimate (4 chars/token) — good enough for an eviction threshold, not a billing figure. */
+function estimateTokens(messages: CanonicalMessage[]): number {
+  let chars = 0
+  for (const m of messages) {
+    chars += typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length
+  }
+  return Math.ceil(chars / 4)
+}
+
+/**
+ * Evicts whole oldest turns (a turn = a real user-text message plus every
+ * assistant/tool message before the next one) once history exceeds
+ * MAX_HISTORY_TOKENS. Trims only at turn boundaries — a tool_result "user"
+ * message (array content, from a past tool call) is never mistaken for a
+ * turn start — so a tool_use/tool_result pairing is never split, which
+ * would reintroduce the corruption class fixed above. Always keeps at
+ * least the most recent turn, however large.
+ */
+export function evictOldHistory(messages: CanonicalMessage[]): CanonicalMessage[] {
+  let trimmed = messages
+  while (estimateTokens(trimmed) > MAX_HISTORY_TOKENS) {
+    const turnStarts = trimmed.reduce<number[]>((acc, m, i) => {
+      if (m.role === 'user' && typeof m.content === 'string') acc.push(i)
+      return acc
+    }, [])
+    if (turnStarts.length <= 1) break
+    trimmed = trimmed.slice(turnStarts[1])
+  }
+  return trimmed
+}
+
 /** Tool results are DB role 'tool' but travel as a canonical 'user' message (see lib/ai/prompt.ts and the openai-compatible adapter for why). */
 function toCanonicalRole(role: DbMessageRow['role']): 'user' | 'assistant' {
   return role === 'assistant' ? 'assistant' : 'user'
@@ -109,10 +141,15 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
       .eq('conversation_id', input.conversationId)
       .order('created_at', { ascending: true })
 
-    const messages: CanonicalMessage[] = ((historyRows ?? []) as DbMessageRow[]).map((row) => ({
+    const loadedMessages: CanonicalMessage[] = ((historyRows ?? []) as DbMessageRow[]).map((row) => ({
       role: toCanonicalRole(row.role),
       content: row.content as string | CanonicalContentBlock[],
     }))
+    // MAX_HISTORY_TOKENS was declared but never enforced — every tool_result
+    // payload (e.g. a full list_contacts page) was replayed on every
+    // iteration of every future turn, forever, eventually hitting the
+    // provider's context ceiling with no recovery path.
+    const messages: CanonicalMessage[] = evictOldHistory(loadedMessages)
 
     if (input.mode !== 'resume') {
       if (input.pageContextText) {
@@ -191,7 +228,14 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
 
       const toolUseBlocks = assistantContent.filter((b): b is Extract<CanonicalContentBlock, { type: 'tool_use' }> => b.type === 'tool_use')
       const resultBlocks: Extract<CanonicalContentBlock, { type: 'tool_result' }>[] = []
-      let pausedForConfirmation = false
+      // The block gated on confirmation, if any — every tool_use block in an
+      // assistant message MUST get a tool_result before the next provider
+      // call, or Anthropic/OpenAI-compatible APIs 400 on replay and the
+      // conversation is permanently stuck. So instead of `break`ing out and
+      // leaving this (and any later) block's tool_result unwritten, every
+      // block always gets one: real output, a "not executed yet" placeholder
+      // for the one being confirmed, or "skipped" for anything after it.
+      let pending: { tool: AiTool<never, unknown>; block: Extract<CanonicalContentBlock, { type: 'tool_use' }> } | null = null
 
       for (const block of toolUseBlocks) {
         const tool = toolByName.get(block.name)
@@ -200,33 +244,29 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
           continue
         }
 
-        if (tool.risk === 'write_live') {
-          const expiresAt = new Date(Date.now() + CONFIRM_TTL_MS).toISOString()
-          const { data: pending } = await supabase
-            .from('ai_tool_calls')
-            .insert({
-              conversation_id: input.conversationId,
-              channel_account_id: input.channelAccountId,
-              tool_use_id: block.id,
-              tool_name: tool.name,
-              input: block.input as Record<string, unknown>,
-              risk: tool.risk,
-              status: 'pending_confirmation',
-              expires_at: expiresAt,
-            })
-            .select('id')
-            .single()
-
-          if (pending) {
-            push({ t: 'confirm', id: pending.id, name: tool.name, label: tool.description, preview: tool.description })
-          }
-          pausedForConfirmation = true
-          break
+        if (pending) {
+          // A confirmation is already pending earlier in this same message —
+          // running another write here (even another write_live) without a
+          // confirmation UI for it would defeat the gate. Ask the model/user
+          // to re-request it once the first one is resolved.
+          resultBlocks.push({
+            type: 'tool_result',
+            toolUseId: block.id,
+            content: 'Non exécuté — une confirmation était requise sur une action précédente dans ce tour. Redemandez cette action si nécessaire.',
+            isError: true,
+          })
+          continue
         }
 
         toolCallCount += 1
         if (toolCallCount > maxToolCalls) {
           resultBlocks.push({ type: 'tool_result', toolUseId: block.id, content: "Limite d'outils atteinte pour ce tour.", isError: true })
+          continue
+        }
+
+        if (tool.risk === 'write_live') {
+          pending = { tool, block }
+          resultBlocks.push({ type: 'tool_result', toolUseId: block.id, content: 'En attente de confirmation de l’utilisateur…' })
           continue
         }
 
@@ -253,20 +293,56 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         }
       }
 
+      let resultMessageId: string | undefined
       if (resultBlocks.length > 0) {
-        await supabase.from('ai_messages').insert({
-          conversation_id: input.conversationId,
-          role: 'tool',
-          content: resultBlocks,
-        })
+        const { data: inserted } = await supabase
+          .from('ai_messages')
+          .insert({ conversation_id: input.conversationId, role: 'tool', content: resultBlocks })
+          .select('id')
+          .single()
+        resultMessageId = inserted?.id
       }
 
-      if (pausedForConfirmation) return
+      if (pending) {
+        const expiresAt = new Date(Date.now() + CONFIRM_TTL_MS).toISOString()
+        const { data: pendingRow, error: pendingError } = await supabase
+          .from('ai_tool_calls')
+          .insert({
+            conversation_id: input.conversationId,
+            channel_account_id: input.channelAccountId,
+            tool_use_id: pending.block.id,
+            tool_name: pending.tool.name,
+            input: pending.block.input as Record<string, unknown>,
+            risk: pending.tool.risk,
+            status: 'pending_confirmation',
+            expires_at: expiresAt,
+            result_message_id: resultMessageId ?? null,
+          })
+          .select('id')
+          .single()
+
+        if (pendingError || !pendingRow) {
+          push({ t: 'error', message: "Impossible d'enregistrer la confirmation en attente. Réessayez." })
+          push({ t: 'done', conversationId: input.conversationId })
+          return
+        }
+
+        push({
+          t: 'confirm',
+          id: pendingRow.id,
+          name: pending.tool.name,
+          label: pending.tool.description,
+          preview: renderConfirmPreview(pending.tool.name, pending.block.input),
+        })
+        push({ t: 'done', conversationId: input.conversationId })
+        return
+      }
 
       messages.push({ role: 'user', content: resultBlocks })
     }
 
     push({ t: 'error', message: "Nombre maximum d'itérations atteint pour ce tour." })
+    push({ t: 'done', conversationId: input.conversationId })
   } catch (err) {
     push({ t: 'error', message: err instanceof Error ? err.message : 'Erreur inconnue' })
   } finally {

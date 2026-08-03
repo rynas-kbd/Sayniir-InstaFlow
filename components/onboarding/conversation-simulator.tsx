@@ -166,7 +166,7 @@ export function ConversationSimulator({
           maxLength={500}
           className="h-9 text-xs"
         />
-        <Button type="submit" size="icon-sm" disabled={sending || !input.trim()} className="h-9 w-9 shrink-0">
+        <Button type="submit" size="icon-sm" disabled={sending || !input.trim()} className="h-9 w-9 shrink-0" aria-label="Envoyer">
           <Send className="size-3.5" />
         </Button>
       </form>

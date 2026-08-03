@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveAccessToken } from '@/lib/channels/shared/tokens'
+import { jsonError } from '@/lib/api/errors'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -34,14 +35,11 @@ export async function GET(request: NextRequest) {
     const data = await res.json()
 
     if (!res.ok || data.error) {
-      console.error('[API] Failed to fetch media:', data.error)
-      return NextResponse.json({ error: data.error?.message || 'Failed to fetch media' }, { status: 500 })
+      return jsonError(500, 'Impossible de récupérer les médias Instagram', data.error)
     }
 
     return NextResponse.json({ data: data.data })
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    console.error('[API] Media fetch exception:', err)
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return jsonError(500, 'Impossible de récupérer les médias Instagram', err)
   }
 }

@@ -97,10 +97,15 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent className="divide-y divide-border p-0">
               {fields.map(({ label, value, icon: Icon, mono }) => (
-                <div key={label} className="flex items-center gap-3 px-5 py-3">
-                  <Icon className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-                  <span className="w-36 shrink-0 text-xs text-muted-foreground">{label}</span>
-                  <span className={`truncate text-sm text-foreground ${mono ? 'font-mono text-xs' : ''}`}>{value}</span>
+                <div key={label} className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-3">
+                  <div className="flex items-center gap-2 sm:contents">
+                    <Icon className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                    <span className="shrink-0 text-xs text-muted-foreground sm:w-36">{label}</span>
+                  </div>
+                  {/* Below sm: full width on its own line so a UUID isn't truncated
+                      to ~15 visible characters — a w-36 fixed label column left
+                      only ~130px for the value at 320px. */}
+                  <span className={`break-all text-sm text-foreground sm:truncate ${mono ? 'font-mono text-xs' : ''}`}>{value}</span>
                 </div>
               ))}
             </CardContent>

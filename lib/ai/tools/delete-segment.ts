@@ -1,27 +1,10 @@
-import type { AiTool } from './types'
+import { deleteByIdTool } from './delete-by-id'
 
-interface Input {
-  segmentId: string
-}
-
-export const deleteSegmentTool: AiTool<Input, { deleted: boolean }> = {
+export const deleteSegmentTool = deleteByIdTool({
   name: 'delete_segment',
-  description: 'Supprime un segment de contacts.',
-  risk: 'write_reversible',
-  inputSchema: {
-    type: 'object',
-    properties: { segmentId: { type: 'string' } },
-    required: ['segmentId'],
-    additionalProperties: false,
-  },
-  resourceRefs: (input) => [{ table: 'segments', id: input.segmentId }],
-  run: async (input, ctx) => {
-    const { error } = await ctx.supabase
-      .from('segments')
-      .delete()
-      .eq('id', input.segmentId)
-      .eq('channel_account_id', ctx.channelAccountId)
-    if (error) throw new Error(error.message)
-    return { deleted: true }
-  },
-}
+  description: 'Supprime un segment de contacts. Irréversible.',
+  table: 'segments',
+  idField: 'segmentId',
+  resultKey: 'deleted',
+  notFoundMessage: 'Segment introuvable',
+})

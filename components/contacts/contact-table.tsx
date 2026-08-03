@@ -108,7 +108,7 @@ export function ContactTable({
       <EmptyState
         icon={Users}
         title="Aucun contact"
-        description="Les contacts de votre CRM apparaîtront automatiquement dès leur premier message."
+        description="Les contacts de votre CRM apparaîtront automatiquement dès leur premier message, ou importez-en un fichier CSV via le bouton en haut de page."
       />
     )
   }
@@ -164,7 +164,16 @@ export function ContactTable({
                       </Badge>
                     ))}
                     <Popover>
-                      <PopoverTrigger render={<Button variant="ghost" size="icon-sm" className="size-6 rounded-full border border-border/60 hover:bg-muted hover:border-border" />}>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-6 rounded-full border border-border/60 hover:bg-muted hover:border-border"
+                            aria-label="Ajouter un tag"
+                          />
+                        }
+                      >
                         <Plus className="size-3 text-muted-foreground" />
                       </PopoverTrigger>
                       <PopoverContent className="w-52 p-1.5" align="start">

@@ -1,20 +1,10 @@
-import type { AiTool } from './types'
+import { listByAccountTool } from './list-by-account'
 
-interface Output {
-  links: Array<{ id: string; name: string; code: string; flow_id: string; clicks: number }>
-}
-
-export const listGrowthLinksTool: AiTool<Record<string, never>, Output> = {
+export const listGrowthLinksTool = listByAccountTool({
   name: 'list_growth_links',
   description: 'Liste les liens de croissance (deep links qui déclenchent un flow) du compte.',
-  risk: 'read',
-  inputSchema: { type: 'object', properties: {}, required: [], additionalProperties: false },
-  run: async (_input, ctx) => {
-    const { data } = await ctx.supabase
-      .from('growth_links')
-      .select('id, name, code, flow_id, clicks')
-      .eq('channel_account_id', ctx.channelAccountId)
-      .order('created_at', { ascending: false })
-    return { links: data ?? [] }
-  },
-}
+  table: 'growth_links',
+  columns: 'id, name, code, flow_id, clicks',
+  orderBy: { column: 'created_at', ascending: false },
+  resultKey: 'links',
+})

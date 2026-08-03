@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import {
   Bot,
@@ -18,7 +18,6 @@ import {
   BookOpen,
   ListChecks,
   Settings2,
-  GripVertical,
   Info,
 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
@@ -27,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { TagInput } from '@/components/shared/tag-input'
 import { cn } from '@/lib/utils'
 import type { AgentSettings } from './types'
 
@@ -85,88 +85,6 @@ function SectionHeader({
         {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
       </div>
     </button>
-  )
-}
-
-function TagInput({
-  label,
-  values,
-  onChange,
-  placeholder,
-  suggestions,
-}: {
-  label?: string
-  values: string[]
-  onChange: (v: string[]) => void
-  placeholder?: string
-  suggestions?: string[]
-}) {
-  const [input, setInput] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  function add(val: string) {
-    const trimmed = val.trim()
-    if (trimmed && !values.includes(trimmed)) {
-      onChange([...values, trimmed])
-    }
-    setInput('')
-    inputRef.current?.focus()
-  }
-
-  function remove(idx: number) {
-    onChange(values.filter((_, i) => i !== idx))
-  }
-
-  return (
-    <div className="space-y-2">
-      {label && <Label className="text-xs font-medium text-muted-foreground">{label}</Label>}
-      <div
-        className="flex min-h-10 flex-wrap gap-1.5 rounded-lg border border-border bg-background p-2 cursor-text"
-        onClick={() => inputRef.current?.focus()}
-      >
-        {values.map((v, i) => (
-          <span
-            key={i}
-            className="inline-flex items-center gap-1 rounded-full bg-terracotta-100 px-2.5 py-0.5 text-xs font-medium text-terracotta-700"
-          >
-            {v}
-            <button type="button" onClick={() => remove(i)} className="hover:text-terracotta-900">
-              <Trash2 className="size-2.5" />
-            </button>
-          </span>
-        ))}
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ',') {
-              e.preventDefault()
-              add(input)
-            } else if (e.key === 'Backspace' && !input && values.length) {
-              remove(values.length - 1)
-            }
-          }}
-          onBlur={() => input.trim() && add(input)}
-          placeholder={values.length === 0 ? placeholder : ''}
-          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/50 min-w-[120px]"
-        />
-      </div>
-      {suggestions && suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {suggestions.filter(s => !values.includes(s)).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => add(s)}
-              className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
-            >
-              + {s}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -357,20 +275,38 @@ export function AgentSettingsCard({
               <ListChecks className="size-3" /> Instructions spécifiques
             </Label>
             <TagInput
-              values={settings.instructions}
+              id="agent-instructions"
+              value={settings.instructions}
               onChange={(v) => {
                 setSettings((s) => ({ ...s, instructions: v }))
                 save({ instructions: v })
               }}
               placeholder="Appuyer sur Entrée pour ajouter..."
-              suggestions={[
+            />
+            <div className="flex flex-wrap gap-1">
+              {[
                 'Toujours saluer le client',
                 'Ne jamais donner de réductions',
                 'Répondre en darija',
                 'Proposer de livraison express',
                 'Ne pas mentionner les concurrents',
-              ]}
-            />
+              ]
+                .filter((s) => !settings.instructions.includes(s))
+                .map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      const v = [...settings.instructions, s]
+                      setSettings((prev) => ({ ...prev, instructions: v }))
+                      save({ instructions: v })
+                    }}
+                    className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
+                  >
+                    + {s}
+                  </button>
+                ))}
+            </div>
             <p className="text-[11px] text-muted-foreground/70">
               Règles que l&apos;IA doit toujours respecter — séparées par Entrée.
             </p>
@@ -427,17 +363,17 @@ export function AgentSettingsCard({
                 </>
               ) : (
                 <div className="flex gap-3 items-start">
-                  <GripVertical className="size-4 mt-0.5 text-muted-foreground/30 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{faq.question}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{faq.answer}</p>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="size-7"
                       onClick={() => setEditingFaqIdx(idx)}
+                      aria-label={`Modifier la question "${faq.question}"`}
                     >
                       <Settings2 className="size-3.5" />
                     </Button>
@@ -446,6 +382,7 @@ export function AgentSettingsCard({
                       size="icon"
                       className="size-7 text-destructive hover:text-destructive"
                       onClick={() => removeFaq(idx)}
+                      aria-label={`Supprimer la question "${faq.question}"`}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
@@ -498,16 +435,34 @@ export function AgentSettingsCard({
           <p className="text-xs text-muted-foreground">
             Ces champs sont collectés <strong>en plus</strong> des informations de commande standard (produit, taille, couleur, adresse, wilaya).
           </p>
+          <Label htmlFor="agent-infos-to-collect" className="text-xs font-medium text-muted-foreground">Champs supplémentaires</Label>
           <TagInput
-            label="Champs supplémentaires"
-            values={settings.infos_to_collect}
+            id="agent-infos-to-collect"
+            value={settings.infos_to_collect}
             onChange={(v) => {
               setSettings((s) => ({ ...s, infos_to_collect: v }))
               save({ infos_to_collect: v })
             }}
             placeholder="Ex: Code promo, Préférence couleur…"
-            suggestions={['Email', 'Réseaux sociaux', 'Code promo', 'Date de livraison souhaitée', 'Commentaire']}
           />
+          <div className="flex flex-wrap gap-1">
+            {['Email', 'Réseaux sociaux', 'Code promo', 'Date de livraison souhaitée', 'Commentaire']
+              .filter((s) => !settings.infos_to_collect.includes(s))
+              .map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    const v = [...settings.infos_to_collect, s]
+                    setSettings((prev) => ({ ...prev, infos_to_collect: v }))
+                    save({ infos_to_collect: v })
+                  }}
+                  className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
+                >
+                  + {s}
+                </button>
+              ))}
+          </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
             <p className="text-[11px] text-muted-foreground/70 w-full">Inclus par défaut :</p>
             {DEFAULT_INFOS.map((d) => (

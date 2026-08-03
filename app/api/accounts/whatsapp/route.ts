@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { code, phoneNumberId, wabaId } = await request.json()
+  const { code, phoneNumberId, wabaId } = await request.json().catch(() => ({}))
   if (!code || !phoneNumberId || !wabaId) {
     return NextResponse.json({ error: 'code, phoneNumberId et wabaId sont requis' }, { status: 400 })
   }

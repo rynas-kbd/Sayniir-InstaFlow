@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jsonError } from '@/lib/api/errors'
+import { jsonError, badRequest } from '@/lib/api/errors'
 import { callAgentLLM } from '@/lib/agent/engine'
+import { requireUser, requireAccountOwnership } from '@/lib/api/auth'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 // POST /api/rules/suggest
 // Body: { intent: string, channel_account_id?: string }
@@ -25,12 +27,28 @@ function parseMaybeJson<T>(payload: unknown): T {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser()
+  if (auth instanceof NextResponse) return auth
+  const { supabase, user } = auth
+
   try {
-    const body = await req.json()
-    const { intent, channel_account_id } = body
+    const body = await req.json().catch(() => null)
+    const intent = body?.intent
+    const channel_account_id = body?.channel_account_id
     if (!intent || typeof intent !== 'string') {
-      return NextResponse.json({ error: 'Missing `intent` in request body' }, { status: 400 })
+      return badRequest('Missing `intent` in request body')
     }
+    if (!intent.trim() || intent.length > 500) {
+      return badRequest("L'intention doit faire entre 1 et 500 caractères")
+    }
+    if (!channel_account_id || typeof channel_account_id !== 'string') {
+      return badRequest('channel_account_id requis')
+    }
+    const ownership = await requireAccountOwnership(supabase, channel_account_id, user.id)
+    if (ownership !== true) return ownership
+
+    const rl = checkRateLimit(`rules:suggest:${user.id}`, 15, 60_000)
+    if (!rl.allowed) return jsonError(429, 'Trop de suggestions, réessayez dans une minute')
 
     const prompt = `Tu es un assistant qui transforme une phrase d'intention en définition claire d'une règle d'automatisation Instagram.
 

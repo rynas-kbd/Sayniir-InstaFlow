@@ -11,7 +11,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { error } = await supabase.from('team_members').delete().eq('id', id)
+  const { data: deleted, error } = await supabase.from('team_members').delete().eq('id', id).select('id')
   if (error) return jsonError(500, 'Une erreur est survenue', error)
+  if (!deleted || deleted.length === 0) return jsonError(404, 'Membre introuvable')
   return NextResponse.json({ success: true })
 }

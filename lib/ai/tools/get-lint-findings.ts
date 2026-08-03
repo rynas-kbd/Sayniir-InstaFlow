@@ -31,7 +31,8 @@ export const getLintFindingsTool: AiTool<Input, { findings: Finding[] }> = {
       .eq('channel_account_id', ctx.channelAccountId)
       .is('dismissed_at', null)
     if (input.scope) query = query.eq('scope', input.scope)
-    const { data } = await query
+    const { data, error } = await query
+    if (error) throw new Error(error.message)
     return { findings: (data ?? []) as Finding[] }
   },
 }

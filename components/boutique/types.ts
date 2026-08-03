@@ -29,12 +29,18 @@ export interface Product {
   sizes: string[]
   colors: string[]
   image_url: string | null
+  /** Supplementary gallery images — image_url stays the cover image for backward compatibility. */
+  images: string[]
+  category: string | null
   stock_quantity: number
   is_active: boolean
 }
 
 export interface Order {
   id: string
+  contact_id: string | null
+  /** Joined from contacts — null if the order predates the link or the contact was deleted. */
+  contact: { id: string; full_name: string | null; username: string | null } | null
   customer_name: string
   customer_phone: string
   wilaya: string | null
@@ -46,9 +52,20 @@ export interface Order {
   color: string | null
   quantity: number
   total_amount: number
+  currency: string
   payment_status: string
   shipping_status: string
   created_at: string
+}
+
+/** A stale, non-confirmed order_session — the ready-made abandoned-cart signal that was never surfaced anywhere. */
+export interface AbandonedSession {
+  id: string
+  sender_id: string
+  customer_name: string | null
+  status: string
+  last_message_at: string
+  products: { name: string } | null
 }
 
 export interface AgentSettings {

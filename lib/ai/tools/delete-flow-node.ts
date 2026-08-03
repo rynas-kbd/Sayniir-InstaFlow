@@ -21,14 +21,26 @@ export const deleteFlowNodeTool: AiTool<Input, { deleted: boolean }> = {
     // a model-echoed node_key (ultimately traceable to conversation text) can't inject a clause.
     const safeNodeKey = input.nodeKey.replace(/[,()]/g, '')
 
-    await ctx.supabase
+    const { error: edgeError } = await ctx.supabase
       .from('flow_edges')
       .delete()
       .eq('flow_id', input.flowId)
       .or(`source_node_key.eq.${safeNodeKey},target_node_key.eq.${safeNodeKey}`)
+    // Previously ignored — a failure here left dangling edges pointing at a
+    // node that's about to be deleted, silently reported as success below.
+    if (edgeError) throw new Error(edgeError.message)
 
-    const { error } = await ctx.supabase.from('flow_nodes').delete().eq('flow_id', input.flowId).eq('node_key', input.nodeKey)
+    const { data, error } = await ctx.supabase
+      .from('flow_nodes')
+      .delete()
+      .eq('flow_id', input.flowId)
+      .eq('node_key', input.nodeKey)
+      .select('node_key')
     if (error) throw new Error(error.message)
+    // A hallucinated/already-deleted nodeKey matches zero rows — report that
+    // instead of a false success (nodeKey isn't in resourceRefs above, since
+    // it isn't a row id; this is the equivalent affected-rows check for it).
+    if (!data || data.length === 0) throw new Error('Nœud introuvable dans ce flow')
     return { deleted: true }
   },
 }

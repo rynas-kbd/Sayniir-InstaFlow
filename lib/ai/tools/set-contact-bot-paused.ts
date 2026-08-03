@@ -17,8 +17,14 @@ export const setContactBotPausedTool: AiTool<Input, { paused: boolean }> = {
   },
   resourceRefs: (input) => [{ table: 'contacts', id: input.contactId }],
   run: async (input, ctx) => {
-    const { error } = await ctx.supabase.from('contacts').update({ bot_paused: input.paused }).eq('id', input.contactId)
+    const { data, error } = await ctx.supabase
+      .from('contacts')
+      .update({ bot_paused: input.paused })
+      .eq('id', input.contactId)
+      .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
+    if (!data || data.length === 0) throw new Error('Contact introuvable')
     return { paused: input.paused }
   },
 }

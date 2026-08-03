@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const { channel_account_id, rows } = body as { channel_account_id: string; rows: Record<string, string>[] }
   if (!channel_account_id || !Array.isArray(rows)) {
     return NextResponse.json({ error: 'channel_account_id et rows sont requis' }, { status: 400 })

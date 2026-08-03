@@ -27,12 +27,13 @@ export const searchContactsTool: AiTool<Input, { contacts: ContactHit[] }> = {
     const safe = input.query.replace(/[,()]/g, ' ').trim()
     if (!safe) return { contacts: [] }
 
-    const { data } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('contacts')
       .select('id, full_name, username, is_subscribed')
       .eq('channel_account_id', ctx.channelAccountId)
       .or(`full_name.ilike.%${safe}%,username.ilike.%${safe}%`)
       .limit(20)
+    if (error) throw new Error(error.message)
     return { contacts: (data ?? []) as ContactHit[] }
   },
 }

@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     .eq('id', id)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 })
+  if (error) return jsonError(404, 'Contact introuvable', error)
   return NextResponse.json(contact)
 }
 
@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const allowed = ['full_name', 'phone', 'email', 'is_subscribed', 'custom_fields', 'bot_paused', 'assigned_to']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
@@ -51,7 +51,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { error } = await supabase.from('contacts').delete().eq('id', id)
+  const { data: deleted, error } = await supabase.from('contacts').delete().eq('id', id).select('id')
   if (error) return jsonError(500, 'Une erreur est survenue', error)
+  if (!deleted || deleted.length === 0) return jsonError(404, 'Contact introuvable')
   return NextResponse.json({ success: true })
 }

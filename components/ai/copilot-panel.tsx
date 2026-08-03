@@ -23,6 +23,15 @@ interface PendingConfirm {
 }
 
 async function readNdjsonStream(res: Response, onEvent: (event: AiStreamEvent) => void): Promise<void> {
+  if (!res.ok) {
+    // A non-2xx (402 quota, 404, 429 rate limit, 503 provider down, 500) has
+    // a JSON error body, not an ndjson stream — reading it as one silently
+    // no-ops (no `t` field matches) and the user sees an empty bubble with
+    // no explanation. Surface it as a normal error event instead.
+    const body = await res.json().catch(() => null)
+    onEvent({ t: 'error', message: body?.error ?? `Erreur serveur (${res.status})` })
+    return
+  }
   if (!res.body) throw new Error('Pas de réponse du serveur')
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
@@ -36,7 +45,11 @@ async function readNdjsonStream(res: Response, onEvent: (event: AiStreamEvent) =
     buffer = lines.pop() ?? ''
     for (const line of lines) {
       if (!line.trim()) continue
-      onEvent(JSON.parse(line) as AiStreamEvent)
+      try {
+        onEvent(JSON.parse(line) as AiStreamEvent)
+      } catch {
+        // One malformed line shouldn't abort the whole read.
+      }
     }
   }
 }
@@ -164,6 +177,18 @@ export function CopilotPanel({
 
     if (!confirmed) {
       setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', parts: [{ type: 'text', text: 'Action annulée.' }] }])
+      // Must reach the server: it patches the placeholder tool_result left
+      // by the paused turn so the conversation stays well-formed for the
+      // next message. A purely local cancel (the previous behavior) left
+      // that tool_use unresolved forever — every later message then 400'd
+      // against the provider. Fire-and-forget is fine here: worst case is a
+      // stale "en attente" placeholder in history, not a broken turn, since
+      // the confirm endpoint independently rejects an already-cancelled id.
+      void fetch('/api/ai/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolCallId }),
+      })
       return
     }
 

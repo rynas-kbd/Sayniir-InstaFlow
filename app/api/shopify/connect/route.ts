@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isValidShopifyDomain } from '@/lib/security/shopify-domain'
 import { jsonError } from '@/lib/api/errors'
+import { encryptApiKey } from '@/lib/crypto'
 
 // POST /api/shopify/connect
 // Body: { accountId, shopDomain, accessToken } — accessToken is a Shopify custom-app Admin API token.
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { accountId, shopDomain, accessToken } = await request.json()
+  const { accountId, shopDomain, accessToken } = await request.json().catch(() => ({}))
   if (!accountId || !shopDomain || !accessToken) {
     return NextResponse.json({ error: 'accountId, shopDomain et accessToken requis' }, { status: 400 })
   }
@@ -40,11 +41,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Connexion Shopify refusée. Vérifiez le domaine et le token.' }, { status: 400 })
   }
 
+  // A Shopify Admin API token is read/write on the merchant's whole store —
+  // encrypt at rest like every other third-party credential (Meta access
+  // tokens via sealAccessToken, BYOK AI keys via encryptApiKey).
   const { error } = await supabase.from('shopify_connections').upsert(
     {
       channel_account_id: accountId,
       shop_domain: domain,
-      access_token: accessToken,
+      access_token: await encryptApiKey(accessToken),
       connected_at: new Date().toISOString(),
     },
     { onConflict: 'channel_account_id' }

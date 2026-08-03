@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 // GET /api/campaigns/[id] — with send stats
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -34,7 +35,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body) return jsonError(400, 'Corps de requête invalide')
+
+  const VALID_STATUSES = new Set(['draft', 'scheduled', 'sending', 'sent', 'cancelled'])
+  if ('status' in body && !VALID_STATUSES.has(body.status)) {
+    return jsonError(400, 'status invalide')
+  }
+
   const allowed = [
     'name',
     'message_template',
@@ -57,6 +65,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const isLaunching = updates.status === 'scheduled'
   const isRelaunching = body.relaunch === true
 
+  // relaunch wipes campaign_sends and resends to the whole audience — bound
+  // how often that can be triggered per campaign to stop a resend loop.
+  if (isRelaunching) {
+    const rl = checkRateLimit(`campaigns:relaunch:${id}`, 3, 5 * 60_000)
+    if (!rl.allowed) return jsonError(429, 'Cette campagne a déjà été relancée récemment, réessayez plus tard')
+  }
+
   if (isLaunching || isRelaunching) {
     updates.status = 'sending'
     updates.started_at = new Date().toISOString()
@@ -64,7 +79,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const { data: campaign, error } = await supabase.from('campaigns').update(updates).eq('id', id).select().single()
-  if (error || !campaign) return NextResponse.json({ error: error?.message || 'Campaign not found' }, { status: 500 })
+  if (error) return jsonError(500, 'Une erreur est survenue', error)
+  if (!campaign) return jsonError(404, 'Campagne introuvable')
 
   if (isLaunching || isRelaunching) {
     try {
@@ -101,7 +117,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { error } = await supabase.from('campaigns').delete().eq('id', id)
+  const { data: deleted, error } = await supabase.from('campaigns').delete().eq('id', id).select('id')
   if (error) return jsonError(500, 'Une erreur est survenue', error)
+  if (!deleted || deleted.length === 0) return jsonError(404, 'Campagne introuvable')
   return NextResponse.json({ success: true })
 }

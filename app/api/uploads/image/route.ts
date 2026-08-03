@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { jsonError } from '@/lib/api/errors'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 const BUCKET = 'images'
 const MAX_SIZE_BYTES = 5 * 1024 * 1024
@@ -40,6 +41,11 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // 5 MB per request with no request-count cap otherwise — bound uploads/min
+  // per user into the public bucket.
+  const rl = checkRateLimit(`uploads:image:${user.id}`, 20, 60_000)
+  if (!rl.allowed) return jsonError(429, 'Trop de téléversements, réessayez dans une minute')
 
   const formData = await request.formData()
   const file = formData.get('file')

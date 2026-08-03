@@ -6,14 +6,14 @@ interface Input {
   triggerType?: string
   triggerKeywords?: string[]
   responseText?: string
-  isActive?: boolean
   replyMethod?: string
   responseTextDm?: string
 }
 
 export const updateAutomationRuleTool: AiTool<Input, { updated: boolean }> = {
   name: 'update_automation_rule',
-  description: "Modifie une règle d'automatisation existante (nom, déclencheur, réponse, activation).",
+  description:
+    "Modifie une règle d'automatisation existante (nom, déclencheur, réponse). N'active/désactive pas la règle — utilise set_automation_rule_active pour ça.",
   risk: 'write_reversible',
   inputSchema: {
     type: 'object',
@@ -23,7 +23,6 @@ export const updateAutomationRuleTool: AiTool<Input, { updated: boolean }> = {
       triggerType: { type: 'string', enum: ['any_message', 'keyword', 'story_reply', 'any_comment', 'comment_keyword'] },
       triggerKeywords: { type: 'array', items: { type: 'string' } },
       responseText: { type: 'string' },
-      isActive: { type: 'boolean' },
       replyMethod: { type: 'string', enum: ['comment', 'dm', 'both'] },
       responseTextDm: { type: 'string' },
     },
@@ -37,18 +36,18 @@ export const updateAutomationRuleTool: AiTool<Input, { updated: boolean }> = {
     if (input.triggerType !== undefined) patch.trigger_type = input.triggerType
     if (input.triggerKeywords !== undefined) patch.trigger_keywords = input.triggerKeywords
     if (input.responseText !== undefined) patch.response_text = input.responseText.trim()
-    if (input.isActive !== undefined) patch.is_active = input.isActive
     if (input.replyMethod !== undefined) patch.reply_method = input.replyMethod
     if (input.responseTextDm !== undefined) patch.response_text_dm = input.responseTextDm.trim()
     if (Object.keys(patch).length === 0) return { updated: false }
     patch.updated_at = new Date().toISOString()
 
-    const { error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from('automation_rules')
       .update(patch)
       .eq('id', input.ruleId)
       .eq('channel_account_id', ctx.channelAccountId)
+      .select('id')
     if (error) throw new Error(error.message)
-    return { updated: true }
+    return { updated: (data?.length ?? 0) > 0 }
   },
 }

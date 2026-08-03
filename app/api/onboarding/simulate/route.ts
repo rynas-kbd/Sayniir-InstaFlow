@@ -5,6 +5,7 @@ import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { runInSandbox } from '@/lib/channels/sandbox'
 import { dispatchInboundMessage } from '@/lib/channels/shared/inbound'
 import type { NormalizedInboundMessage } from '@/lib/channels/types'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 const SANDBOX_SENDER_ID = 'onboarding-test-sender'
 const MAX_TEXT_LENGTH = 500
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return jsonError(401, 'Non authentifié')
+
+  // Each call runs the full inbound pipeline (flow engine + LLM) — bound the
+  // rate so it can't be looped as a free LLM-call generator.
+  const rl = checkRateLimit(`onboarding:simulate:${user.id}`, 15, 60_000)
+  if (!rl.allowed) return jsonError(429, 'Trop de simulations, réessayez dans une minute')
 
   const body = await req.json().catch(() => null)
   const text = typeof body?.text === 'string' ? body.text.trim() : ''

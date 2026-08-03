@@ -1,23 +1,10 @@
-import type { AiTool } from './types'
+import { deleteByIdTool } from './delete-by-id'
 
-interface Input {
-  tagId: string
-}
-
-export const deleteTagTool: AiTool<Input, { deleted: boolean }> = {
+export const deleteTagTool = deleteByIdTool({
   name: 'delete_tag',
-  description: 'Supprime un tag (le retire de tous les contacts qui le portaient).',
-  risk: 'write_reversible',
-  inputSchema: {
-    type: 'object',
-    properties: { tagId: { type: 'string' } },
-    required: ['tagId'],
-    additionalProperties: false,
-  },
-  resourceRefs: (input) => [{ table: 'tags', id: input.tagId }],
-  run: async (input, ctx) => {
-    const { error } = await ctx.supabase.from('tags').delete().eq('id', input.tagId).eq('channel_account_id', ctx.channelAccountId)
-    if (error) throw new Error(error.message)
-    return { deleted: true }
-  },
-}
+  description: 'Supprime un tag (le retire de tous les contacts qui le portaient). Irréversible.',
+  table: 'tags',
+  idField: 'tagId',
+  resultKey: 'deleted',
+  notFoundMessage: 'Tag introuvable',
+})

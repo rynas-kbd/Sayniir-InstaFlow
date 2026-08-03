@@ -154,6 +154,7 @@ export function MobileBottomNav({
                     background: 'color-mix(in srgb, var(--organic-sand-300) 25%, transparent)',
                     color: 'color-mix(in srgb, var(--foreground) 55%, transparent)',
                   }}
+                  aria-label="Fermer la navigation"
                 >
                   <X className="size-3.5" />
                 </button>

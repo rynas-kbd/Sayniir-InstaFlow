@@ -30,29 +30,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(orders)
 }
 
-// PATCH /api/orders?id=... — update order status
-export async function PATCH(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const orderId = request.nextUrl.searchParams.get('id')
-  if (!orderId) return NextResponse.json({ error: 'id required' }, { status: 400 })
-
-  const body = await request.json()
-  const allowed = ['payment_status', 'shipping_status']
-  const updates: Record<string, unknown> = {}
-  for (const key of allowed) {
-    if (key in body) updates[key] = body[key]
-  }
-
-  const { data: order, error } = await supabase
-    .from('orders')
-    .update(updates)
-    .eq('id', orderId)
-    .select()
-    .single()
-
-  if (error) return jsonError(500, 'Une erreur est survenue', error)
-  return NextResponse.json(order)
-}
+// Order updates go through PATCH /api/orders/[id] (app/api/orders/[id]/route.ts)
+// — that's the route order-table.tsx actually calls. This file previously
+// also exported a PATCH /api/orders?id=... with no callers anywhere in the
+// codebase; removed rather than left to drift from the real one.

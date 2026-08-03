@@ -48,7 +48,7 @@ export function InboxFilterBar({
             disabled={isPending}
             className={cn(
               'flex-1 rounded-lg px-2 py-1.5 text-center text-[10.5px] font-medium whitespace-nowrap',
-              'transition-all duration-200 ease-out',
+              'transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
               isActive
                 ? 'shadow-sm'
                 : 'hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_30%,transparent)]'
