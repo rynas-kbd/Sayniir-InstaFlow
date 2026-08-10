@@ -4,6 +4,7 @@ import { resolveAudience, resolveSegment } from '../contacts/service.ts'
 import { TokenExpiredError } from '../meta/messaging.ts'
 import { renderTemplate } from '../personalization.ts'
 import { resolveAccessToken } from '../channels/shared/tokens.ts'
+import { renderCardAsText } from '../channels/shared/card-text.ts'
 import type { ChannelAccountRef, Platform } from '../channels/types.ts'
 import type { Contact } from '../contacts/types.ts'
 
@@ -93,22 +94,35 @@ export async function sendBatch(campaignId: string, limit: number): Promise<{ se
       )
       const personalizedText = renderTemplate(campaign.message_template, contact)
 
+      const cardTitle = renderTemplate(campaign.card_title || personalizedText, contact)
+      const cardSubtitle = campaign.card_subtitle ? renderTemplate(campaign.card_subtitle, contact) : undefined
+
       let result: { messageId: string } | null
-      if (isCard && !campaign.card_image_url && cardButtons.length > 0 && adapter.sendButtons) {
+      if (isCard && cardButtons.length > 0 && adapter.sendButtons) {
+        // Real tappable buttons (button template) work on every channel,
+        // unlike the generic template used below for image-only cards —
+        // the image, if any, still goes out as a link in the body text.
+        const bodyText = campaign.card_image_url
+          ? renderCardAsText({ title: cardTitle, subtitle: cardSubtitle, imageUrl: campaign.card_image_url })
+          : cardTitle
         result = await adapter.sendButtons(
           ref,
           contact.sender_id,
-          renderTemplate(campaign.card_title || personalizedText, contact),
+          bodyText,
           cardButtons.map((b) => ({ type: b.type ?? 'web_url', title: b.title, url: b.url }))
         )
-      } else if (isCard && adapter.sendCard) {
-        result = await adapter.sendCard(
+      } else if (isCard) {
+        // Sent as a plain text link instead of a card attachment — see
+        // lib/channels/shared/card-text.ts.
+        result = await adapter.sendMessage(
           ref,
           contact.sender_id,
-          renderTemplate(campaign.card_title || personalizedText, contact),
-          campaign.card_subtitle ? renderTemplate(campaign.card_subtitle, contact) : undefined,
-          campaign.card_image_url ?? undefined,
-          cardButtons.map((b) => ({ title: b.title, url: b.url ?? '' }))
+          renderCardAsText({
+            title: cardTitle,
+            subtitle: cardSubtitle,
+            imageUrl: campaign.card_image_url,
+            buttons: cardButtons.map((b) => ({ title: b.title, url: b.url })),
+          })
         )
       } else {
         result = await adapter.sendMessage(ref, contact.sender_id, personalizedText)

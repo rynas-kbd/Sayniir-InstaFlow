@@ -3,6 +3,7 @@ import { callAgentLLM } from '../agent/engine.ts'
 import { addTag, removeTag, getContact } from '../contacts/service.ts'
 import { renderTemplate } from '../personalization.ts'
 import { assertSafeOutboundUrl, UnsafeUrlError } from '../security/url-guard.ts'
+import { renderCardAsText } from '../channels/shared/card-text.ts'
 import type { FlowNode, NodeExecContext, NodeResult } from './types.ts'
 import type { ChannelButton } from '../channels/types.ts'
 import type { Contact } from '../contacts/types.ts'
@@ -91,15 +92,11 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
           // Pause here: the run only advances again once a button is
           // clicked (postback), handled separately in continueRunFromPostback.
           return { type: 'pause' }
-        } else if (title && ctx.adapter.sendCard) {
-          await ctx.adapter.sendCard(
-            ctx.ref,
-            ctx.run.sender_id,
-            title,
-            subtitle,
-            imageUrl,
-            buttons.map((b) => ({ title: b.title, url: b.url ?? '' }))
-          )
+        } else {
+          // Sent as a plain text link instead of a card attachment — see
+          // lib/channels/shared/card-text.ts.
+          const text = renderCardAsText({ title, subtitle, imageUrl, buttons: buttons.map((b) => ({ title: b.title, url: b.url })) })
+          if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
         }
       } else {
         const text = renderTemplate((node.config.text as string) || '', contact)

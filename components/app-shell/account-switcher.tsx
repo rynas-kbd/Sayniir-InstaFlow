@@ -2,11 +2,11 @@
 
 import { useTransition } from 'react'
 import Link from 'next/link'
-import { Check, ChevronDown, Plus } from 'lucide-react'
+import { Check, ChevronDown, Layers, Plus } from 'lucide-react'
 import { setActiveAccount } from '@/lib/accounts/actions'
 import { getAccountLabel, PLATFORM_ICON, PLATFORM_LABEL } from '@/lib/channels/labels'
 import { getAvatarColor } from '@/lib/avatar-color'
-import type { ActiveAccount } from '@/lib/accounts/active-account'
+import { ALL_ACCOUNTS_SCOPE, type ActiveAccount } from '@/lib/accounts/active-account'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,18 +20,29 @@ import {
  * scopes its queries to whichever account is active (see
  * lib/accounts/active-account.ts) — this is the only place that account
  * changes. Renders nothing when the user has a single account, since there
- * is nothing to switch between.
+ * is nothing to switch between. `scope: 'all'` selects the unified
+ * cross-channel inbox (Phase 2) instead of one specific account.
  */
-export function AccountSwitcher({ accounts, activeId }: { accounts: ActiveAccount[]; activeId: string }) {
+export function AccountSwitcher({
+  accounts,
+  activeId,
+  scope = 'single',
+}: {
+  accounts: ActiveAccount[]
+  activeId: string
+  scope?: 'all' | 'single'
+}) {
   const [isPending, startTransition] = useTransition()
 
   if (accounts.length <= 1) return null
 
   const active = accounts.find((a) => a.id === activeId) ?? accounts[0]
+  const isAllScope = scope === 'all'
   const ActiveIcon = PLATFORM_ICON[active.platform]
 
   function handleSelect(accountId: string) {
-    if (accountId === active.id) return
+    if (!isAllScope && accountId === active.id) return
+    if (isAllScope && accountId === ALL_ACCOUNTS_SCOPE) return
     startTransition(() => {
       void setActiveAccount(accountId)
     })
@@ -53,11 +64,11 @@ export function AccountSwitcher({ accounts, activeId }: { accounts: ActiveAccoun
         disabled={isPending}
         aria-label="Changer de compte"
       >
-        <div className={`flex size-6 shrink-0 items-center justify-center rounded-full ${getAvatarColor(active.id)}`}>
-          <ActiveIcon className="size-3" strokeWidth={1.75} />
+        <div className={`flex size-6 shrink-0 items-center justify-center rounded-full ${getAvatarColor(isAllScope ? 'all' : active.id)}`}>
+          {isAllScope ? <Layers className="size-3" strokeWidth={1.75} /> : <ActiveIcon className="size-3" strokeWidth={1.75} />}
         </div>
         <span className="hidden max-w-[120px] truncate text-[12.5px] font-medium text-foreground/80 sm:block">
-          {getAccountLabel(active)}
+          {isAllScope ? 'Tous les canaux' : getAccountLabel(active)}
         </span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -74,9 +85,30 @@ export function AccountSwitcher({ accounts, activeId }: { accounts: ActiveAccoun
         }}
       >
         <div className="p-1.5">
+          <DropdownMenuItem
+            onClick={() => handleSelect(ALL_ACCOUNTS_SCOPE)}
+            className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150"
+          >
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--organic-terracotta)_15%,transparent)]">
+              <Layers className="size-3.5" strokeWidth={1.75} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-foreground">Tous les canaux</p>
+              <p className="truncate text-[11px] text-muted-foreground">Boîte de réception unifiée</p>
+            </div>
+            {isAllScope && <Check className="size-4 shrink-0 text-primary" />}
+          </DropdownMenuItem>
+        </div>
+
+        <DropdownMenuSeparator
+          className="mx-1 my-0"
+          style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 30%, transparent)' }}
+        />
+
+        <div className="p-1.5">
           {accounts.map((account) => {
             const Icon = PLATFORM_ICON[account.platform]
-            const isActive = account.id === active.id
+            const isActive = !isAllScope && account.id === active.id
             return (
               <DropdownMenuItem
                 key={account.id}

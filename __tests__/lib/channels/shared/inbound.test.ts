@@ -88,7 +88,7 @@ const { dispatchInboundMessage } = await import('@/lib/channels/shared/inbound')
 
 function makeChannel(): AgentChannel & { sendTextMock: ReturnType<typeof vi.fn> } {
   const sendTextMock = vi.fn(async () => ({ messageId: 'sent-1' }))
-  return { sendTextMock, sendText: sendTextMock, sendCard: vi.fn(async () => null), sendTyping: vi.fn(async () => {}) }
+  return { sendTextMock, sendText: sendTextMock, sendTyping: vi.fn(async () => {}) }
 }
 
 const baseMsg: NormalizedInboundMessage = {

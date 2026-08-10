@@ -2,7 +2,7 @@ import 'server-only'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server.ts'
 import type { Platform } from '@/lib/channels/types.ts'
-import { selectActiveAccount } from './select-active-account.ts'
+import { selectActiveAccount, resolveAccountScope, ALL_ACCOUNTS_SCOPE } from './select-active-account.ts'
 
 /**
  * Cookie holding the id of the "active" channel account — the single
@@ -13,6 +13,8 @@ import { selectActiveAccount } from './select-active-account.ts'
  * leak another account's data.
  */
 export const ACTIVE_ACCOUNT_COOKIE = 'mc_active_account'
+
+export { ALL_ACCOUNTS_SCOPE } from './select-active-account.ts'
 
 export interface ActiveAccount {
   id: string
@@ -81,10 +83,17 @@ export async function listUserAccounts(): Promise<ActiveAccount[]> {
 export async function resolveActiveAccount(): Promise<{
   accounts: ActiveAccount[]
   active: ActiveAccount | null
+  /**
+   * 'all' when the user picked "Tous les canaux" in the account switcher
+   * (Phase 2 unified inbox) — `active` is still populated in that case
+   * (falls back to the first account) so pages that don't yet know about
+   * the 'all' scope keep working exactly as before.
+   */
+  scope: 'all' | 'single'
 }> {
   const accounts = await listUserAccounts()
   const cookieStore = await cookies()
   const requestedId = cookieStore.get(ACTIVE_ACCOUNT_COOKIE)?.value
 
-  return { accounts, active: selectActiveAccount(accounts, requestedId) }
+  return { accounts, active: selectActiveAccount(accounts, requestedId), scope: resolveAccountScope(requestedId) }
 }

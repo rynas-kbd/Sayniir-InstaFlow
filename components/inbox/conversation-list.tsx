@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { PLATFORM_ICON } from '@/lib/channels/labels'
 import type { Conversation } from './types'
 
 // Deterministic organic palette for avatars
@@ -49,10 +50,10 @@ export function ConversationList({
 }) {
   const router = useRouter()
 
-  function select(senderId: string) {
+  function select(conversationId: string) {
     const params = new URLSearchParams()
     if (filter && filter !== 'all') params.set('filter', filter)
-    params.set('conv', senderId)
+    params.set('conv', conversationId)
     router.push(`/inbox?${params.toString()}`)
   }
 
@@ -79,16 +80,17 @@ export function ConversationList({
   return (
     <ul className="m-0 list-none p-0 py-1">
       {conversations.map((conv) => {
-        const isActive = activeId === conv.senderId
+        const isActive = activeId === conv.id
         const initial = (conv.senderFullName?.[0] ?? conv.senderUsername?.[0] ?? '?').toUpperCase()
         const displayName = conv.senderFullName ?? (conv.senderUsername ? `@${conv.senderUsername}` : conv.senderId)
         const preview = conv.lastMessage ?? '(média)'
         const palette = getAvatarPalette(conv.senderId)
+        const PlatformIcon = PLATFORM_ICON[conv.platform]
 
         return (
-          <li key={conv.senderId} className="mx-1.5 my-0.5">
+          <li key={conv.id} className="mx-1.5 my-0.5">
             <button
-              onClick={() => select(conv.senderId)}
+              onClick={() => select(conv.id)}
               className={cn(
                 'relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
                 isActive ? 'shadow-sm' : 'hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_15%,transparent)]'
@@ -133,6 +135,17 @@ export function ConversationList({
                     {initial}
                   </div>
                 )}
+                {/* Platform badge */}
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full"
+                  style={{
+                    background: 'var(--organic-bg, var(--background))',
+                    boxShadow: '0 0 0 1px color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
+                  }}
+                  title={conv.platform}
+                >
+                  <PlatformIcon className="size-2.5" style={{ color: 'var(--organic-terracotta-600)' }} strokeWidth={2} />
+                </span>
                 {/* Unreplied dot */}
                 {conv.hasUnreplied && (
                   <span

@@ -1,4 +1,10 @@
+import type { Platform } from '@/lib/channels/types'
+
 export interface Conversation {
+  /** conversations.id — the URL/routing key (was sender_id before the unified inbox, Phase 2). */
+  id: string
+  channelAccountId: string
+  platform: Platform
   senderId: string
   senderUsername: string | null
   senderFullName: string | null

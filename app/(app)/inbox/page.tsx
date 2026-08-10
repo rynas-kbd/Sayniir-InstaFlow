@@ -1,121 +1,135 @@
 import { Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { getAccountLabel } from '@/lib/channels/labels'
+import type { Platform } from '@/lib/channels/types'
 import { cn } from '@/lib/utils'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { ConversationList } from '@/components/inbox/conversation-list'
 import { ConversationThread } from '@/components/inbox/conversation-thread'
 import { InboxFilterBar } from '@/components/inbox/inbox-filter-bar'
+import { ChannelFilterPills } from '@/components/inbox/channel-filter-pills'
 import type { Conversation, MessageItem } from '@/components/inbox/types'
 
-
+const PAGE_SIZE = 50
+const PLATFORMS: Platform[] = ['instagram', 'whatsapp', 'messenger']
 
 export default async function InboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; conv?: string }>
+  searchParams: Promise<{ filter?: string; conv?: string; channel?: string; page?: string }>
 }) {
   const supabase = await createClient()
-  const { active: account } = await resolveActiveAccount()
+  const { accounts, active: account, scope } = await resolveActiveAccount()
 
-  const { filter, conv } = await searchParams
+  const { filter, conv, channel, page } = await searchParams
   const activeFilter = filter ?? 'all'
   const activeConvId = conv ?? null
+  const activeChannel = channel && PLATFORMS.includes(channel as Platform) ? channel : 'all'
+  const pageNum = Math.max(1, Number(page) || 1)
+  const offset = (pageNum - 1) * PAGE_SIZE
 
-  if (!account) {
+  // Unified inbox (Phase 2): scope 'all' reads across every account the user
+  // can access, not just the cookie's single active account.
+  const accountIds = scope === 'all' ? accounts.map((a) => a.id) : account ? [account.id] : []
+
+  if (accountIds.length === 0) {
     return <NoAccountState description="Connectez un compte pour voir vos conversations." />
   }
 
+  const accountLabels = new Map(accounts.map((a) => [a.id, getAccountLabel(a)]))
+  const availablePlatforms = Array.from(new Set(accounts.map((a) => a.platform)))
+
   let query = supabase
-    .from('message_logs')
+    .from('conversations')
     .select('*')
-    .eq('channel_account_id', account.id)
-    .order('created_at', { ascending: false })
-    .limit(500)
+    .in('channel_account_id', accountIds)
+    .order('last_message_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1)
 
-  if (activeFilter === 'incoming') query = query.eq('direction', 'incoming')
-  if (activeFilter === 'replied') query = query.eq('auto_reply_sent', true)
-  if (activeFilter === 'unreplied') query = query.eq('direction', 'incoming').eq('auto_reply_sent', false)
+  if (activeChannel !== 'all') query = query.eq('platform', activeChannel)
+  if (activeFilter === 'incoming') query = query.eq('last_direction', 'incoming')
+  if (activeFilter === 'replied') query = query.eq('has_auto_replied', true)
+  if (activeFilter === 'unreplied') query = query.eq('has_unreplied', true)
 
-  const { data: allMessages } = await query
+  let unrepliedQuery = supabase
+    .from('conversations')
+    .select('*', { count: 'exact', head: true })
+    .in('channel_account_id', accountIds)
+    .eq('has_unreplied', true)
+  if (activeChannel !== 'all') unrepliedQuery = unrepliedQuery.eq('platform', activeChannel)
 
-  const convMap = new Map<
-    string,
-    {
-      msgs: MessageItem[]
-      accountUsername: string | null
-      senderUsername: string | null
-      senderFullName: string | null
-      senderProfilePic: string | null
-      channelAccountId: string
-    }
-  >()
+  const [{ data: rows }, { count: unrepliedCount }] = await Promise.all([query, unrepliedQuery])
 
-  for (const msg of allMessages ?? []) {
-    const key = msg.sender_id
-    if (!convMap.has(key)) {
-      convMap.set(key, {
-        msgs: [],
-        accountUsername: account.instagram_username ?? null,
-        senderUsername: msg.sender_username ?? null,
-        senderFullName: msg.sender_full_name ?? null,
-        senderProfilePic: msg.sender_profile_pic ?? null,
-        channelAccountId: msg.channel_account_id,
-      })
-    }
-    convMap.get(key)!.msgs.push(msg as MessageItem)
-  }
+  const conversations: Conversation[] = (rows ?? []).map((row) => ({
+    id: row.id,
+    channelAccountId: row.channel_account_id,
+    platform: row.platform,
+    senderId: row.sender_id,
+    senderUsername: row.sender_username,
+    senderFullName: row.sender_full_name,
+    senderProfilePic: row.sender_profile_pic,
+    accountUsername: accountLabels.get(row.channel_account_id) ?? null,
+    lastMessage: row.last_message_text,
+    lastMessageAt: row.last_message_at,
+    lastDirection: row.last_direction,
+    messageCount: row.message_count,
+    hasUnreplied: row.has_unreplied,
+    hasAutoReplied: row.has_auto_replied,
+  }))
 
-  const conversations: Conversation[] = Array.from(convMap.entries())
-    .map(([senderId, data]) => {
-      const sorted = [...data.msgs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      const latest = sorted[0]
-      return {
-        senderId,
-        senderUsername: data.senderUsername,
-        senderFullName: data.senderFullName,
-        senderProfilePic: data.senderProfilePic,
-        accountUsername: data.accountUsername,
-        lastMessage: latest.message_text,
-        lastMessageAt: latest.created_at,
-        lastDirection: latest.direction as 'incoming' | 'outgoing',
-        messageCount: data.msgs.length,
-        hasUnreplied: data.msgs.some((m) => m.direction === 'incoming' && !m.auto_reply_sent),
-        hasAutoReplied: data.msgs.some((m) => m.auto_reply_sent),
-      }
-    })
-    .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime())
+  // Resolved directly by id (not just "found in the current page") so a
+  // deep link into a conversation still opens it even if it falls off the
+  // current filter/page — same account-scoping guarantee RLS already gives
+  // every other query here.
+  const { data: activeConversation } = activeConvId
+    ? await supabase.from('conversations').select('*').eq('id', activeConvId).in('channel_account_id', accountIds).maybeSingle()
+    : { data: null }
 
-  const activeConv = activeConvId ? convMap.get(activeConvId) : null
-  const threadMessages: MessageItem[] = activeConv
-    ? [...activeConv.msgs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    : []
-
-  const activeContact =
-    activeConv && activeConvId
-      ? (
-          await supabase
-            .from('contacts')
-            .select('id, bot_paused, assigned_to')
-            .eq('channel_account_id', activeConv.channelAccountId)
-            .eq('sender_id', activeConvId)
-            .maybeSingle()
-        ).data
-      : null
-
-  const { data: teamMembers } = activeConv
-    ? await supabase.from('team_members').select('name, email').eq('channel_account_id', activeConv.channelAccountId)
+  // Full thread, never truncated by the list's status filter — the old
+  // implementation applied `filter` to the same query it grouped into
+  // threads, so opening an unreplied-only view hid a conversation's own
+  // outgoing messages. Loading the thread independently of `filter` fixes
+  // that.
+  const { data: threadRows } = activeConversation
+    ? await supabase
+        .from('message_logs')
+        .select('*')
+        .eq('channel_account_id', activeConversation.channel_account_id)
+        .eq('sender_id', activeConversation.sender_id)
+        .order('created_at', { ascending: true })
+        .limit(500)
     : { data: [] }
 
-  const { data: snippets } = activeConv
+  const threadMessages: MessageItem[] = (threadRows ?? []) as MessageItem[]
+
+  const activeContact = activeConversation
+    ? (
+        await supabase
+          .from('contacts')
+          .select('id, bot_paused, assigned_to')
+          .eq('channel_account_id', activeConversation.channel_account_id)
+          .eq('sender_id', activeConversation.sender_id)
+          .maybeSingle()
+      ).data
+    : null
+
+  const { data: teamMembers } = activeConversation
+    ? await supabase.from('team_members').select('name, email').eq('channel_account_id', activeConversation.channel_account_id)
+    : { data: [] }
+
+  const { data: snippets } = activeConversation
     ? await supabase
         .from('snippets')
         .select('*')
-        .eq('channel_account_id', activeConv.channelAccountId)
+        .eq('channel_account_id', activeConversation.channel_account_id)
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const unrepliedCount = conversations.filter((c) => c.hasUnreplied).length
+  const backHrefParams = new URLSearchParams()
+  if (activeFilter !== 'all') backHrefParams.set('filter', activeFilter)
+  if (activeChannel !== 'all') backHrefParams.set('channel', activeChannel)
+  const backHref = `/inbox${backHrefParams.toString() ? `?${backHrefParams.toString()}` : ''}`
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
@@ -154,7 +168,7 @@ export default async function InboxPage({
               </div>
             </div>
 
-            {unrepliedCount > 0 && (
+            {(unrepliedCount ?? 0) > 0 && (
               <span
                 className="flex min-w-[22px] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white"
                 style={{ background: 'var(--organic-terracotta-600)' }}
@@ -166,6 +180,14 @@ export default async function InboxPage({
 
           {/* Filter pills — client component for smooth transitions */}
           <InboxFilterBar activeFilter={activeFilter} activeConvId={activeConvId} />
+          {scope === 'all' && (
+            <ChannelFilterPills
+              platforms={availablePlatforms}
+              activeChannel={activeChannel}
+              activeFilter={activeFilter}
+              activeConvId={activeConvId}
+            />
+          )}
         </div>
 
         {/* Conversation list */}
@@ -182,15 +204,18 @@ export default async function InboxPage({
           activeConvId ? 'flex' : 'hidden md:flex'
         )}
       >
-        {activeConv && activeConvId ? (
+        {activeConversation ? (
           <ConversationThread
             messages={threadMessages}
-            senderName={activeConv.senderFullName ?? (activeConv.senderUsername ? `@${activeConv.senderUsername}` : activeConvId)}
-            senderProfilePic={activeConv.senderProfilePic}
-            accountUsername={activeConv.accountUsername}
-            backHref={`/inbox${activeFilter !== 'all' ? `?filter=${activeFilter}` : ''}`}
-            channelAccountId={activeConv.channelAccountId}
-            senderId={activeConvId}
+            senderName={
+              activeConversation.sender_full_name ??
+              (activeConversation.sender_username ? `@${activeConversation.sender_username}` : activeConversation.sender_id)
+            }
+            senderProfilePic={activeConversation.sender_profile_pic}
+            accountUsername={accountLabels.get(activeConversation.channel_account_id) ?? null}
+            backHref={backHref}
+            channelAccountId={activeConversation.channel_account_id}
+            senderId={activeConversation.sender_id}
             contactId={activeContact?.id ?? null}
             initialBotPaused={activeContact?.bot_paused ?? false}
             initialSnippets={snippets ?? []}

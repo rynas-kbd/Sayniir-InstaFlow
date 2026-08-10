@@ -22,7 +22,7 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const [{ data: profile }, { accounts, active }] = await Promise.all([
+  const [{ data: profile }, { accounts, active, scope }] = await Promise.all([
     supabase
       .from('profiles')
       .select('business_type, onboarding_completed_at, onboarding_skipped_at')
@@ -40,15 +40,20 @@ export default async function AppLayout({
 
   const businessType = (profile?.business_type as BusinessType | undefined) ?? 'ecommerce'
 
+  // In the unified 'all' scope the unreplied badge must reflect every
+  // connected channel, not just the account the cookie happens to point
+  // at — read it off `conversations` (Phase 1) across every accessible
+  // account id instead of a single-account message_logs count.
+  const accountIds = scope === 'all' ? accounts.map((a) => a.id) : active ? [active.id] : []
+
   const notificationCounts = active
     ? await (async () => {
         const [{ count: unrepliedMessages }, { count: pendingLeads }, { count: pendingAppointments }] = await Promise.all([
           supabase
-            .from('message_logs')
+            .from('conversations')
             .select('*', { count: 'exact', head: true })
-            .eq('channel_account_id', active.id)
-            .eq('direction', 'incoming')
-            .eq('auto_reply_sent', false),
+            .in('channel_account_id', accountIds)
+            .eq('has_unreplied', true),
           supabase
             .from('leads')
             .select('*', { count: 'exact', head: true })
@@ -98,6 +103,7 @@ export default async function AppLayout({
           notificationCounts={notificationCounts}
           accounts={accounts}
           activeAccountId={active?.id ?? null}
+          accountScope={scope}
         />
         <main className="relative z-10 flex-1 overflow-hidden pb-16 md:pb-0">
           <PageTransitionWrapper>{children}</PageTransitionWrapper>

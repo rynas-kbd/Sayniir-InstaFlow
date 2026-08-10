@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { selectActiveAccount } from '@/lib/accounts/select-active-account'
+import { selectActiveAccount, resolveAccountScope, ALL_ACCOUNTS_SCOPE } from '@/lib/accounts/select-active-account'
 import { getAccountLabel } from '@/lib/channels/labels'
 import type { ActiveAccount } from '@/lib/accounts/active-account'
 
@@ -42,6 +42,27 @@ describe('selectActiveAccount', () => {
 
   it('returns null when the user has no connected accounts', () => {
     expect(selectActiveAccount([], 'b')).toBeNull()
+  })
+
+  it("falls back to the first account when the cookie is the 'all' scope sentinel", () => {
+    // scope is derived separately (resolveAccountScope) — selectActiveAccount
+    // must still resolve a sane single-account fallback for pages that
+    // haven't been updated to read the unified inbox scope yet.
+    expect(selectActiveAccount(accounts, ALL_ACCOUNTS_SCOPE)).toBe(accountA)
+  })
+})
+
+describe('resolveAccountScope', () => {
+  it("returns 'all' for the sentinel cookie value", () => {
+    expect(resolveAccountScope(ALL_ACCOUNTS_SCOPE)).toBe('all')
+  })
+
+  it("returns 'single' for a real account id", () => {
+    expect(resolveAccountScope('some-account-uuid')).toBe('single')
+  })
+
+  it("returns 'single' when no cookie is set", () => {
+    expect(resolveAccountScope(undefined)).toBe('single')
   })
 })
 

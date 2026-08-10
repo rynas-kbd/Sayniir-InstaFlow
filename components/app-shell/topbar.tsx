@@ -14,12 +14,14 @@ export function Topbar({
   notificationCounts,
   accounts,
   activeAccountId,
+  accountScope = 'single',
 }: {
   businessType: BusinessType
   email: string | null
   notificationCounts: NotificationCounts
   accounts: ActiveAccount[]
   activeAccountId: string | null
+  accountScope?: 'all' | 'single'
 }) {
   return (
     <header className="relative flex min-h-14 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-3 pt-safe pb-1.5 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
@@ -44,7 +46,7 @@ export function Topbar({
         </div>
         {activeAccountId && accounts.length > 1 && (
           <>
-            <AccountSwitcher accounts={accounts} activeId={activeAccountId} />
+            <AccountSwitcher accounts={accounts} activeId={activeAccountId} scope={accountScope} />
             <div className="mx-0.5 hidden h-5 w-px bg-[color-mix(in_srgb,var(--organic-sand-400)_40%,transparent)] md:block" />
           </>
         )}

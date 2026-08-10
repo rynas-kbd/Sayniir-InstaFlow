@@ -1,5 +1,13 @@
 import type { ActiveAccount } from './active-account.ts'
 
+/** Sentinel cookie value selecting the unified "all channels" inbox scope (Phase 2). */
+export const ALL_ACCOUNTS_SCOPE = 'all'
+
+/** Pure derivation of account scope from the raw cookie value — split out for the same testability reason as selectActiveAccount below. */
+export function resolveAccountScope(requestedId: string | undefined): 'all' | 'single' {
+  return requestedId === ALL_ACCOUNTS_SCOPE ? 'all' : 'single'
+}
+
 /**
  * Pure selection logic, split out from active-account.ts so it can be unit
  * tested without mocking next/headers or the Supabase server client.

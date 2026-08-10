@@ -3,6 +3,7 @@ import { callAgentLLM } from '../engine.ts'
 import { sendAndReport, type AgentChannel } from '../messaging.ts'
 import { fenceUserText } from '../history.ts'
 import { checkConfidenceEscalation } from '../confidence.ts'
+import { renderCardAsText } from '../../channels/shared/card-text.ts'
 import type { AgentOutcome } from '../types.ts'
 import { getTemplate } from './templates.ts'
 import {
@@ -783,9 +784,16 @@ JSON uniquement (sans backticks) :
   }
 
   if (newlySelectedProduct?.image_url) {
-    // Best-effort — the card is a bonus, `replyText` below is the actual
-    // answer this turn is judged on.
-    await channel.sendCard(newlySelectedProduct.name, `${newlySelectedProduct.price} ${newlySelectedProduct.currency ?? 'DA'}`, newlySelectedProduct.image_url).catch(() => null)
+    // Best-effort — this is a bonus, `replyText` below is the actual answer
+    // this turn is judged on. Sent as a plain text link (not a card
+    // attachment) so it actually reaches the customer on every channel —
+    // see lib/channels/shared/card-text.ts.
+    const photoText = renderCardAsText({
+      title: newlySelectedProduct.name,
+      subtitle: `${newlySelectedProduct.price} ${newlySelectedProduct.currency ?? 'DA'}`,
+      imageUrl: newlySelectedProduct.image_url,
+    })
+    await channel.sendText(photoText).catch(() => null)
   }
   return sendAndReport(channel, replyText, route, quickReplies, llmResult?.isQuestion ? llmResult.confidence : undefined)
 }

@@ -27,7 +27,6 @@ export interface QuickReply {
 
 export interface AgentChannel {
   sendText(text: string, quickReplies?: QuickReply[]): Promise<{ messageId: string } | null>
-  sendCard(title: string, subtitle?: string, imageUrl?: string): Promise<{ messageId: string } | null>
   sendTyping(): Promise<void>
 }
 
@@ -35,17 +34,6 @@ export function channelFromAdapter(adapter: ChannelAdapter, ref: ChannelAccountR
   return {
     async sendText(text, quickReplies) {
       return adapter.sendMessage(ref, recipientExternalId, text, quickReplies)
-    },
-
-    async sendCard(title, subtitle, imageUrl) {
-      if (adapter.sendCard) {
-        return adapter.sendCard(ref, recipientExternalId, title, subtitle, imageUrl, [])
-      }
-      // Channel has no card/template support (e.g. plain WhatsApp text) —
-      // fold the card content into a text message instead of silently
-      // dropping it.
-      const text = subtitle ? `${title}\n${subtitle}` : title
-      return adapter.sendMessage(ref, recipientExternalId, text)
     },
 
     async sendTyping() {

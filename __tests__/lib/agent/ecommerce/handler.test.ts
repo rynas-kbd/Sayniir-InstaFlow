@@ -30,7 +30,6 @@ function makeChannel(): AgentChannel & { sendTextMock: ReturnType<typeof vi.fn> 
   return {
     sendTextMock,
     sendText: sendTextMock,
-    sendCard: vi.fn(async () => ({ messageId: 'card-1' })),
     sendTyping: vi.fn(async () => {}),
   }
 }
