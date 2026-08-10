@@ -29,6 +29,11 @@
    which collided with shadcn's --color-accent hover-surface token).
    ───────────────────────────────────────────── */
 :root {
+  /* Pins the browser's own dark-mode heuristics to whichever theme
+     next-themes has actually applied (see .dark below), instead of
+     leaving the browser free to guess from prefers-color-scheme and
+     double-invert an already-themed page. */
+  color-scheme: light;
   --organic-bg: #f5ead8;
   --organic-surface: #ebddc5;
   --organic-text: #201e1d;
@@ -97,6 +102,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --organic-bg: #1b1714;
   --organic-surface: #241e19;
   --organic-text: #f3e8da;

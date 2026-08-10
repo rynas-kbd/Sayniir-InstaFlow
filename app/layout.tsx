@@ -43,6 +43,10 @@ export const metadata: Metadata = {
   other: {
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
+    // Tells the browser this page manages both themes itself, so it stops
+    // applying its own forced-dark heuristics (color inversion, native
+    // control restyling) on top of the app's already-dark theme.
+    'color-scheme': 'light dark',
   },
 }
 
