@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 /** Fires exactly once — right when the very first real contact lands, before the list grows unmanageable without a segment. */
 export function checkOnboardingFirstContact(account: { id: string }, contactCount: number, segmentCount: number): LintFinding[] {

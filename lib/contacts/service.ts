@@ -1,6 +1,6 @@
-import { createAdminClient } from '../supabase/admin'
-import { isSandbox } from '../channels/sandbox'
-import type { Contact, SenderProfile } from './types'
+import { createAdminClient } from '../supabase/admin.ts'
+import { isSandbox } from '../channels/sandbox.ts'
+import type { Contact, SenderProfile } from './types.ts'
 
 /** Fixed placeholder returned in place of a real contact id during an onboarding simulation. */
 const SANDBOX_CONTACT_ID = 'sandbox-simulated-contact'
@@ -137,8 +137,7 @@ export async function resolveSegment(channelAccountId: string, segmentId: string
   const { data: segment } = await supabase.from('segments').select('*').eq('id', segmentId).eq('channel_account_id', channelAccountId).single()
   if (!segment) return []
 
-  let query = supabase.from('contacts').select('id, custom_fields, last_inbound_at').eq('channel_account_id', channelAccountId)
-  const { data: allContacts } = await query
+  const { data: allContacts } = await supabase.from('contacts').select('id, custom_fields, last_inbound_at').eq('channel_account_id', channelAccountId)
   let candidates = allContacts ?? []
 
   if (segment.tag_ids?.length) {
@@ -167,6 +166,33 @@ export async function resolveSegment(channelAccountId: string, segmentId: string
   if (segment.min_days_since_last_inbound != null) {
     const cutoff = Date.now() - segment.min_days_since_last_inbound * 86400000
     candidates = candidates.filter((c) => !c.last_inbound_at || new Date(c.last_inbound_at).getTime() <= cutoff)
+  }
+
+  if (segment.min_total_orders != null || segment.min_ltv != null) {
+    // orders has no aggregate/grouped read via the query builder — pull the
+    // candidate set's orders once and aggregate in memory, same style as
+    // every other criterion in this function.
+    const { data: orderRows } = await supabase
+      .from('orders')
+      .select('contact_id, total_amount')
+      .eq('channel_account_id', channelAccountId)
+      .in('contact_id', candidates.map((c) => c.id))
+
+    const totalsByContact = new Map<string, { count: number; ltv: number }>()
+    for (const row of orderRows ?? []) {
+      if (!row.contact_id) continue
+      const entry = totalsByContact.get(row.contact_id) ?? { count: 0, ltv: 0 }
+      entry.count += 1
+      entry.ltv += row.total_amount ?? 0
+      totalsByContact.set(row.contact_id, entry)
+    }
+
+    candidates = candidates.filter((c) => {
+      const totals = totalsByContact.get(c.id) ?? { count: 0, ltv: 0 }
+      if (segment.min_total_orders != null && totals.count < segment.min_total_orders) return false
+      if (segment.min_ltv != null && totals.ltv < segment.min_ltv) return false
+      return true
+    })
   }
 
   return candidates.map((c) => c.id)

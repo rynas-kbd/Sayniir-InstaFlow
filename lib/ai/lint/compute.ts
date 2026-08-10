@@ -1,5 +1,5 @@
-import type { FlowNode, FlowEdge } from '../../flows/types'
-import type { LintFinding } from './types'
+import type { FlowNode, FlowEdge } from '../../flows/types.ts'
+import type { LintFinding } from './types.ts'
 import {
   checkFlowUnreachable,
   checkFlowDanglingHandle,
@@ -11,7 +11,7 @@ import {
   checkCampaignWindow24h,
   checkCampaignUnsubscribed,
   type CampaignAudienceContact,
-} from './rules'
+} from './rules/index.ts'
 
 export interface FlowLintInput {
   flow: { id: string; status: string; created_at: string }

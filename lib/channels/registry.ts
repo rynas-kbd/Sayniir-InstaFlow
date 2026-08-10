@@ -1,8 +1,8 @@
-import { instagramAdapter } from './instagram/adapter'
-import { messengerAdapter } from './messenger/adapter'
-import { whatsappAdapter } from './whatsapp/adapter'
-import { isSandbox, captureSandboxMessage } from './sandbox'
-import type { ChannelAdapter, Platform } from './types'
+import { instagramAdapter } from './instagram/adapter.ts'
+import { messengerAdapter } from './messenger/adapter.ts'
+import { whatsappAdapter } from './whatsapp/adapter.ts'
+import { isSandbox, captureSandboxMessage } from './sandbox.ts'
+import type { ChannelAdapter, Platform } from './types.ts'
 
 const adapters: Partial<Record<Platform, ChannelAdapter>> = {
   instagram: instagramAdapter,

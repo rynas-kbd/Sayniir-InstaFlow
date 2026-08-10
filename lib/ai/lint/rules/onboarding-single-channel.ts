@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 /**
  * Waits until the account has proven its one connected channel actually

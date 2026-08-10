@@ -1,7 +1,7 @@
-import { streamAnthropicTurn } from './anthropic'
-import { streamOpenAiCompatibleTurn } from './openai-compatible'
-import { PROVIDER_CONFIG } from '../models'
-import type { CopilotProviderKind, ProviderStreamEvent, ProviderTurnParams } from './types'
+import { streamAnthropicTurn } from './anthropic.ts'
+import { streamOpenAiCompatibleTurn } from './openai-compatible.ts'
+import { PROVIDER_CONFIG } from '../models.ts'
+import type { CopilotProviderKind, ProviderStreamEvent, ProviderTurnParams } from './types.ts'
 
 /** Dispatches to the right adapter — switch-based, matching lib/agent/engine.ts::callAgentLLM's style rather than an interface/class hierarchy. */
 export async function streamProviderTurn(
@@ -18,4 +18,4 @@ export async function streamProviderTurn(
   return streamOpenAiCompatibleTurn({ ...params, baseUrl }, onEvent)
 }
 
-export type { CopilotProviderKind, ProviderStreamEvent, ProviderTurnParams } from './types'
+export type { CopilotProviderKind, ProviderStreamEvent, ProviderTurnParams } from './types.ts'

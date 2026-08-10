@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { CanonicalContentBlock, CanonicalMessage, ProviderStreamEvent, ProviderTurnParams } from './types'
+import type { CanonicalContentBlock, CanonicalMessage, ProviderStreamEvent, ProviderTurnParams } from './types.ts'
 
 function toAnthropicContent(content: string | CanonicalContentBlock[]): Anthropic.MessageParam['content'] {
   if (typeof content === 'string') return content

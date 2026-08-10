@@ -1,6 +1,6 @@
-import { writeMemory } from '../memory/service'
-import type { MemoryKind } from '../memory/types'
-import type { AiTool } from './types'
+import { writeMemory } from '../memory/service.ts'
+import type { MemoryKind } from '../memory/types.ts'
+import type { AiTool } from './types.ts'
 
 interface Input {
   kind: MemoryKind

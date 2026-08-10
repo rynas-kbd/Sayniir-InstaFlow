@@ -1,6 +1,6 @@
-import { createAdminClient } from '../../supabase/admin'
-import { getUserPlanAndSubscription } from '../../plans/restrictions'
-import { AI_PLAN_LIMITS, type AiPlanLimits } from './limits'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { getUserPlanAndSubscription } from '../../plans/restrictions.ts'
+import { AI_PLAN_LIMITS, type AiPlanLimits } from './limits.ts'
 
 const TOKENS_PER_CREDIT = 1000
 

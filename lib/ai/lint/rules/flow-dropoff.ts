@@ -1,5 +1,5 @@
-import type { FlowNode, FlowEdge } from '@/lib/flows/types'
-import { nodeSubjectId, type LintFinding } from '../types'
+import type { FlowNode, FlowEdge } from '@/lib/flows/types.ts'
+import { nodeSubjectId, type LintFinding } from '../types.ts'
 
 const DROPOFF_RATIO = 0.3
 const MIN_PREDECESSOR_REACH = 10

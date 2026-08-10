@@ -1,4 +1,4 @@
-import type { AiTool } from './types'
+import type { AiTool } from './types.ts'
 
 interface Input {
   limit?: number

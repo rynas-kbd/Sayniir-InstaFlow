@@ -1,552 +1,242 @@
-import { NextRequest, NextResponse, after } from 'next/server'
-import { createDispatchAdminClient } from '../../supabase/dispatch-admin'
-import { handleEcommerceMessage, handleEcommerceVoice, handleQaMessage } from '../../agent/ecommerce/handler'
-import { handleAgentMessage, type BusinessType } from '../../agent/router'
-import { TokenExpiredError } from '../../meta/messaging'
-import { getAdapter } from '../registry'
-import { findChannelAccountByExternalId } from './lookup'
-import { upsertContact, getContact } from '../../contacts/service'
-import { renderTemplate } from '../../personalization'
-import { safeEqualStr } from '../../security/compare'
+import { createDispatchAdminClient } from '../../supabase/dispatch-admin.ts'
+import { resolveDispatchContext, isSubscriptionValid, type DispatchContext } from './context.ts'
+import { handleEcommerceMessage, handleQaMessage } from '../../agent/ecommerce/handler.ts'
+import { resolveProduct } from '../../agent/ecommerce/parse.ts'
+import { handleAgentMessage, type BusinessType } from '../../agent/router.ts'
+import { sendAndReport } from '../../agent/messaging.ts'
+import { loadHistory, renderHistoryBlock } from '../../agent/history.ts'
+import { transcribeInbound } from '../../agent/voice.ts'
+import { logTurn } from '../../agent/telemetry.ts'
+import type { AgentOutcome } from '../../agent/types.ts'
+import { TokenExpiredError } from '../../meta/messaging.ts'
+import { findChannelAccountByExternalId } from './lookup.ts'
+import { upsertContact, getContact } from '../../contacts/service.ts'
+import { renderTemplate } from '../../personalization.ts'
 import {
   runFlowsForInbound,
   runFlowsForInboundComment,
   continueRunFromPostback,
   tryContinueRunFromTextCapture,
   startRunFromGrowthLink,
-} from '../../flows/engine'
-import type { ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, Platform } from '../types'
-import { claimInboundEvent, markEventDone, markEventFailed, tryLockConversation, unlockConversation } from './inbound-queue'
+} from '../../flows/engine.ts'
+import type { NormalizedInboundMessage, NormalizedInboundComment } from '../types.ts'
 
-const GREETING_RE =
-  /^(bonjour|salut|salam|hello|hi|hey|bonsoir|مرحبا|السلام عليكم|وعليكم السلام|كيداير|كيف|wesh|coucou|ola|yo)\b/i
-
-const VERIFY_TOKEN_ENV: Record<Platform, string> = {
-  instagram: 'META_WEBHOOK_VERIFY_TOKEN',
-  messenger: 'META_MESSENGER_VERIFY_TOKEN',
-  whatsapp: 'META_WHATSAPP_VERIFY_TOKEN',
-}
-
-const APP_SECRET_ENV: Record<Platform, string> = {
-  instagram: 'META_INSTAGRAM_APP_SECRET',
-  messenger: 'META_MESSENGER_APP_SECRET',
-  whatsapp: 'META_APP_SECRET',
-}
-
-async function isSubscriptionValid(userId: string): Promise<boolean> {
-  const supabase = createDispatchAdminClient()
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('status, expires_at')
-    .eq('user_id', userId)
-    .single()
-
-  const now = new Date()
-  return (
-    !subscription || // admin accounts have no subscription row
-    (subscription.status === 'active' && (!subscription.expires_at || new Date(subscription.expires_at) > now))
-  )
-}
-
-async function deactivateAccount(accountId: string): Promise<void> {
-  const supabase = createDispatchAdminClient()
+async function deactivateAccount(supabase: ReturnType<typeof createDispatchAdminClient>, accountId: string): Promise<void> {
   await supabase.from('channel_accounts').update({ is_active: false }).eq('id', accountId)
 }
 
 /**
- * Mirrors the live supabase/functions/_shared/meta/messaging.ts::handleAutoReply
- * (Deno) — Q&A mode, order-taking tunnel with greeting-reset, configurable
- * default message — generalized behind a ChannelAdapter. Skips echo events
- * (sent BY the connected account) the same way the Deno webhook does today.
+ * Persists what actually happened this turn — reply_text now holds the real
+ * text sent to the customer (or nothing) and handled_by the routing label,
+ * instead of a fixed '[Géré par …]' placeholder written regardless of
+ * whether a reply went out (audit findings F3/F4). Deactivates the account
+ * on a detected expired token, centralizing what used to be duplicated
+ * per-handler cleanup. Also emits structured per-turn telemetry (route,
+ * provider/model, latency, outcome) — previously the only observability was
+ * scattered, sometimes content-leaking console.log calls (audit finding F16).
  */
-export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Promise<void> {
-  if (msg.senderId === msg.recipientId || msg.senderId === msg.channelExternalId) return
-
-  // ── Bot paused for this contact (human is handling it manually in the
-  // inbox) — log the message so it shows in the thread, but skip every
-  // form of automation below (postback, capture, flows, rules, AI). ──────
-  {
-    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
-    if (account) {
-      const supabase = createDispatchAdminClient()
-      const { data: contact } = await supabase
-        .from('contacts')
-        .select('id, bot_paused')
-        .eq('channel_account_id', account.id)
-        .eq('sender_id', msg.senderId)
-        .maybeSingle()
-
-      if (contact?.bot_paused) {
-        if (msg.text || msg.audioUrl) {
-          await supabase.from('message_logs').upsert(
-            {
-              channel_account_id: account.id,
-              contact_id: contact.id,
-              sender_id: msg.senderId,
-              message_id: msg.messageId,
-              message_text: msg.text ?? '[audio]',
-              direction: 'incoming',
-              auto_reply_sent: false,
-            },
-            { onConflict: 'message_id' }
-          )
-        }
-        return
-      }
+async function logOutcome(ctx: DispatchContext, msg: NormalizedInboundMessage, outcome: AgentOutcome, startedAt: number): Promise<void> {
+  if (outcome.status === 'replied') {
+    await ctx.supabase
+      .from('message_logs')
+      .update({ auto_reply_sent: true, reply_text: outcome.replyText, handled_by: outcome.route, replied_at: new Date().toISOString() })
+      .eq('message_id', msg.messageId)
+  } else if (outcome.status === 'error') {
+    console.error(`[dispatchInboundMessage] ${outcome.route} failed:`, outcome.error)
+    if (outcome.error instanceof TokenExpiredError) {
+      await deactivateAccount(ctx.supabase, ctx.account.id)
     }
   }
 
-  // ── Growth link (ref deep link) opened — start the linked flow directly,
-  // the link itself is the trigger, no keyword/comment matching involved. ──
-  if (msg.referralRef) {
-    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
-    if (account && (await isSubscriptionValid(account.user_id))) {
-      const supabase = createDispatchAdminClient()
-      const { data: link } = await supabase
-        .from('growth_links')
-        .select('id, flow_id, clicks')
-        .eq('channel_account_id', account.id)
-        .eq('code', msg.referralRef)
-        .maybeSingle()
+  logTurn({
+    accountId: ctx.account.id,
+    senderId: msg.senderId,
+    route: outcome.route,
+    provider: (ctx.settings?.ai_provider as string) || null,
+    model: (ctx.settings?.ai_model as string) || null,
+    latencyMs: Date.now() - startedAt,
+    outcome: outcome.status,
+  })
+}
 
-      if (link) {
-        await supabase.from('growth_links').update({ clicks: link.clicks + 1 }).eq('id', link.id)
-        const contactId = await upsertContact(account.id, msg.senderId)
-        const { data: agentSettings } = await supabase
-          .from('agent_settings')
-          .select('ai_provider, ai_api_key, ai_model')
-          .eq('channel_account_id', account.id)
-          .single()
-        const { isEncrypted, decryptApiKey } = await import('../../crypto')
-        let apiKey: string | null = agentSettings?.ai_api_key || null
-        if (apiKey && isEncrypted(apiKey)) {
-          try {
-            apiKey = await decryptApiKey(apiKey)
-          } catch {
-            apiKey = null
-          }
-        }
-        await startRunFromGrowthLink(
-          link.flow_id,
-          msg.platform,
-          { id: account.id, user_id: account.user_id, access_token: account.access_token },
-          contactId,
-          msg.senderId,
-          { aiProvider: agentSettings?.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings?.ai_model || null }
-        )
-        if (!msg.text) return
-      }
-    }
-  }
-
-  // ── Button click (postback) — resume the paused flow run directly,
-  // never re-evaluate triggers from scratch. ─────────────────────────────
-  if (msg.postbackPayload) {
-    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
-    if (!account || !(await isSubscriptionValid(account.user_id))) return
-
-    const supabase = createDispatchAdminClient()
-    const { data: agentSettings } = await supabase
-      .from('agent_settings')
-      .select('ai_provider, ai_api_key, ai_model')
-      .eq('channel_account_id', account.id)
-      .single()
-
-    const { isEncrypted, decryptApiKey } = await import('../../crypto')
-    let apiKey: string | null = agentSettings?.ai_api_key || null
-    if (apiKey && isEncrypted(apiKey)) {
-      try {
-        apiKey = await decryptApiKey(apiKey)
-      } catch {
-        apiKey = null
-      }
-    }
-
-    await continueRunFromPostback(
-      msg.postbackPayload,
-      msg.platform,
-      { id: account.id, user_id: account.user_id, access_token: account.access_token },
-      msg.senderId,
-      { aiProvider: agentSettings?.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings?.ai_model || null }
-    )
-    return
-  }
-
-  // ── Text reply to a paused "capture_input" node — store it and resume
-  // that run directly, before any trigger/Q&A/rules handling ever sees it. ──
-  if (msg.text) {
-    const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
-    if (account && (await isSubscriptionValid(account.user_id))) {
-      const supabase = createDispatchAdminClient()
-      const { data: agentSettings } = await supabase
-        .from('agent_settings')
-        .select('ai_provider, ai_api_key, ai_model')
-        .eq('channel_account_id', account.id)
-        .single()
-
-      const { isEncrypted, decryptApiKey } = await import('../../crypto')
-      let apiKey: string | null = agentSettings?.ai_api_key || null
-      if (apiKey && isEncrypted(apiKey)) {
-        try {
-          apiKey = await decryptApiKey(apiKey)
-        } catch {
-          apiKey = null
-        }
-      }
-
-      const consumed = await tryContinueRunFromTextCapture(
-        msg.text,
-        msg.platform,
-        { id: account.id, user_id: account.user_id, access_token: account.access_token },
-        msg.senderId,
-        { aiProvider: agentSettings?.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings?.ai_model || null }
-      )
-      if (consumed) return
-    }
-  }
-
-  if (!msg.text && !msg.audioUrl) return
-
+/**
+ * Bot-paused check — deliberately resolved independently of
+ * resolveDispatchContext(): a lapsed subscription must not suppress this
+ * log (the human handling the conversation manually still wants to see the
+ * message in the inbox), whereas resolveDispatchContext short-circuits on
+ * exactly that condition.
+ */
+async function logIfBotPaused(msg: NormalizedInboundMessage): Promise<boolean> {
   const account = await findChannelAccountByExternalId(msg.platform, msg.channelExternalId)
-  if (!account) {
-    console.warn(`[dispatchInboundMessage] No active account found for ${msg.platform}:${msg.channelExternalId}`)
-    return
-  }
+  if (!account) return false
 
-  if (!(await isSubscriptionValid(account.user_id))) {
-    console.warn(`[dispatchInboundMessage] Subscription inactive/expired — skipping reply`)
-    return
-  }
-
-  const adapter = getAdapter(msg.platform)
-  const ref: ChannelAccountRef = { id: account.id, externalId: msg.channelExternalId, accessToken: account.access_token }
   const supabase = createDispatchAdminClient()
-  const pageId = msg.channelExternalId
-  const senderProfile = await adapter.fetchSenderProfile?.(msg.senderId, account.access_token)
-  const contactId = await upsertContact(account.id, msg.senderId, senderProfile)
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('id, bot_paused')
+    .eq('channel_account_id', account.id)
+    .eq('sender_id', msg.senderId)
+    .maybeSingle()
 
-  const { data: agentSettings } = await supabase.from('agent_settings').select('*').eq('channel_account_id', account.id).single()
-  const { data: ownerProfile } = await supabase.from('profiles').select('business_type').eq('id', account.user_id).single()
-  const businessType: BusinessType = (ownerProfile?.business_type as BusinessType) ?? 'ecommerce'
+  if (!contact?.bot_paused) return false
 
-  const { isEncrypted, decryptApiKey } = await import('../../crypto')
-  let resolvedApiKey: string | null = agentSettings?.ai_api_key || null
-  if (resolvedApiKey && isEncrypted(resolvedApiKey)) {
-    try {
-      resolvedApiKey = await decryptApiKey(resolvedApiKey)
-    } catch (err) {
-      console.error('[dispatchInboundMessage] Failed to decrypt custom AI API key:', err)
-      resolvedApiKey = null
-    }
-  }
-
-  // The rich Q&A/order-taking tunnel below is ecommerce-specific — other
-  // verticals are routed through lib/agent/router.ts::handleAgentMessage
-  // (see the Scenario C block after the classic-rules fallback setup).
-  const isQaActive = businessType === 'ecommerce' && (agentSettings?.is_qa_active ?? false)
-  const isOrderTakingActive = businessType === 'ecommerce' && (agentSettings?.is_order_taking_active ?? false)
-
-  // ── Voice notes ────────────────────────────────────────────────────────
-  if (msg.audioUrl) {
-    // Check auto reply limit for voice note
-    const { checkAutoReplyLimit } = await import('../../plans/restrictions')
-    const autoReplyAllowed = await checkAutoReplyLimit(account.id)
-    if (!autoReplyAllowed) {
-      console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${account.id} — skipping voice reply.`)
-      // Log the message as incoming with no auto reply
-      await supabase.from('message_logs').upsert(
-        {
-          channel_account_id: account.id,
-          contact_id: contactId,
-          sender_id: msg.senderId,
-          sender_username: senderProfile?.username || null,
-          sender_full_name: senderProfile?.name || null,
-          sender_profile_pic: senderProfile?.profilePic || null,
-          message_id: msg.messageId,
-          message_text: '[🎙️ Vocal]',
-          direction: 'incoming',
-          auto_reply_sent: false,
-        },
-        { onConflict: 'message_id' }
-      )
-      return
-    }
-
-    const { downloadAudio, processVoiceWithGemini } = await import('../../meta/voice')
-    let audioBuffer: Buffer
-    try {
-      audioBuffer = await downloadAudio(msg.audioUrl, account.access_token)
-    } catch (err) {
-      console.error(`[dispatchInboundMessage] Failed to download audio for message ${msg.messageId}:`, err)
-      return
-    }
-    const VOICE_MIME = 'audio/mp4'
-
-    if (isOrderTakingActive) {
-      const voiceVerticalConfig = agentSettings?.vertical_config ?? {}
-      const transcription = await handleEcommerceVoice({
-        accountId: account.id,
-        pageId,
-        senderId: msg.senderId,
-        audioBuffer,
-        mimeType: VOICE_MIME,
-        accessToken: account.access_token,
-        customInstructions: agentSettings?.instructions || [],
-        infosToCollect: agentSettings?.infos_to_collect || [],
-        faqs: (voiceVerticalConfig as { faqs?: Array<{ question: string; answer: string }> })?.faqs || [],
-        persona: (voiceVerticalConfig as { persona?: string })?.persona || undefined,
-        aiProvider: agentSettings?.ai_provider || null,
-        aiApiKey: resolvedApiKey,
-        aiModel: agentSettings?.ai_model || null,
-      })
-      const voiceMessageText = transcription ? `[🎙️ Vocal] : ${transcription}` : `[🎙️ Vocal] : [Échec de la transcription]`
-      await supabase.from('message_logs').upsert(
-        {
-          channel_account_id: account.id,
-          contact_id: contactId,
-          sender_id: msg.senderId,
-          sender_username: senderProfile?.username || null,
-          sender_full_name: senderProfile?.name || null,
-          sender_profile_pic: senderProfile?.profilePic || null,
-          message_id: msg.messageId,
-          message_text: voiceMessageText,
-          direction: 'incoming',
-          auto_reply_sent: true,
-          reply_text: transcription
-            ? '[Géré par Prise de Commande IA]'
-            : "Désolé, je n'ai pas bien compris votre message vocal 😅 Pouvez-vous réécrire votre message en texte ?",
-          replied_at: new Date().toISOString(),
-        },
-        { onConflict: 'message_id' }
-      )
-      return
-    }
-
-    const { data: voiceRules } = await supabase
-      .from('automation_rules')
-      .select('*')
-      .eq('channel_account_id', account.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: true })
-    const dmRules = (voiceRules || []).filter((rule) => rule.trigger_type === 'keyword' || rule.trigger_type === 'any_message')
-
-    const geminiResult = await processVoiceWithGemini(audioBuffer, VOICE_MIME, dmRules)
-    const voiceMessageText = `[🎙️ Vocal] : ${geminiResult.transcription}`
-
+  if (msg.text || msg.audioUrl) {
     await supabase.from('message_logs').upsert(
       {
         channel_account_id: account.id,
-        contact_id: contactId,
+        contact_id: contact.id,
         sender_id: msg.senderId,
-        sender_username: senderProfile?.username || null,
-        sender_full_name: senderProfile?.name || null,
-        sender_profile_pic: senderProfile?.profilePic || null,
         message_id: msg.messageId,
-        message_text: voiceMessageText,
+        message_text: msg.text ?? '[audio]',
         direction: 'incoming',
         auto_reply_sent: false,
       },
       { onConflict: 'message_id' }
     )
-
-    try {
-      const result = await adapter.sendMessage(ref, msg.senderId, geminiResult.replyText)
-      if (result) {
-        await supabase
-          .from('message_logs')
-          .update({ auto_reply_sent: true, reply_text: geminiResult.replyText, replied_at: new Date().toISOString() })
-          .eq('message_id', msg.messageId)
-      }
-    } catch (err) {
-      if (err instanceof TokenExpiredError) {
-        await deactivateAccount(account.id)
-      } else {
-        console.error('[dispatchInboundMessage] Failed to send voice reply:', err)
-      }
-    }
-    return
   }
+  return true
+}
 
-  // ── Text messages ─────────────────────────────────────────────────────
-  const messageText = msg.text ?? ''
+function flowAgentArgs(ctx: DispatchContext) {
+  return {
+    aiProvider: (ctx.settings?.ai_provider as string | null) || null,
+    aiApiKey: ctx.aiApiKey,
+    aiModel: (ctx.settings?.ai_model as string | null) || null,
+  }
+}
 
-  await supabase.from('message_logs').upsert(
+function dispatchAccountRef(ctx: DispatchContext): { id: string; user_id: string; access_token: string } {
+  return { id: ctx.account.id, user_id: ctx.account.user_id, access_token: ctx.account.access_token }
+}
+
+/** Growth link (ref deep link) opened — starts the linked flow directly, the link itself is the trigger. Returns whether a link matched. */
+async function handleGrowthLink(ctx: DispatchContext, msg: NormalizedInboundMessage): Promise<boolean> {
+  const { data: link } = await ctx.supabase
+    .from('growth_links')
+    .select('id, flow_id, clicks')
+    .eq('channel_account_id', ctx.account.id)
+    .eq('code', msg.referralRef)
+    .maybeSingle()
+
+  if (!link) return false
+
+  await ctx.supabase.from('growth_links').update({ clicks: link.clicks + 1 }).eq('id', link.id)
+  if (ctx.contactId) {
+    // First-touch attribution only — never overwrites an existing source,
+    // so a contact who already came from somewhere else attributed doesn't
+    // get relabeled just because they later click a growth link too (see
+    // audit: neither orders nor order_sessions reference a flow_id/
+    // campaign_id, so this is the one clean attribution signal available).
+    await ctx.supabase
+      .from('contacts')
+      .update({ acquisition_source: 'growth_link', acquisition_source_id: link.id })
+      .eq('id', ctx.contactId)
+      .is('acquisition_source', null)
+  }
+  await startRunFromGrowthLink(link.flow_id, msg.platform, dispatchAccountRef(ctx), ctx.contactId, msg.senderId, flowAgentArgs(ctx))
+  return true
+}
+
+/** Button click (postback) — resumes the paused flow run directly, never re-evaluates triggers from scratch. */
+async function handlePostback(ctx: DispatchContext, msg: NormalizedInboundMessage): Promise<void> {
+  await continueRunFromPostback(msg.postbackPayload!, msg.platform, dispatchAccountRef(ctx), msg.senderId, flowAgentArgs(ctx))
+}
+
+/** Text reply to a paused "capture_input" node — stores it and resumes that run before any trigger/Q&A/rules handling ever sees it. */
+async function handleTextCapture(ctx: DispatchContext, msg: NormalizedInboundMessage): Promise<boolean> {
+  return tryContinueRunFromTextCapture(msg.text!, msg.platform, dispatchAccountRef(ctx), msg.senderId, flowAgentArgs(ctx))
+}
+
+/** Fetches the sender's profile (name/username/pic) and upserts it onto the already-created contact — done once per real (voice or text) turn. */
+async function enrichContactProfile(ctx: DispatchContext, msg: NormalizedInboundMessage) {
+  const senderProfile = await ctx.adapter.fetchSenderProfile?.(msg.senderId, ctx.account.access_token)
+  const contactId = await upsertContact(ctx.account.id, msg.senderId, senderProfile)
+  return { senderProfile, contactId }
+}
+
+/** Writes a placeholder incoming voice row (limit reached / transcription failed — no transcript to show yet). */
+async function logVoicePlaceholder(
+  ctx: DispatchContext,
+  msg: NormalizedInboundMessage,
+  contactId: string | null,
+  senderProfile: { username?: string; name?: string; profilePic?: string } | null | undefined
+): Promise<void> {
+  await ctx.supabase.from('message_logs').upsert(
     {
-      channel_account_id: account.id,
+      channel_account_id: ctx.account.id,
       contact_id: contactId,
       sender_id: msg.senderId,
       sender_username: senderProfile?.username || null,
       sender_full_name: senderProfile?.name || null,
       sender_profile_pic: senderProfile?.profilePic || null,
       message_id: msg.messageId,
-      message_text: messageText,
+      message_text: '[🎙️ Vocal]',
       direction: 'incoming',
       auto_reply_sent: false,
     },
     { onConflict: 'message_id' }
   )
+}
 
+/**
+ * Transcribes the voice note and hands the transcript to handleTextTurn —
+ * voice now traverses the exact same pipeline as text (flows → Q&A →
+ * tunnel → coaching/agency → classic rules) for every vertical, instead of
+ * only ever reaching the order-taking tunnel (and a generic keyword-rules
+ * matcher for everyone else, never the Q&A agent — audit finding F8).
+ */
+async function handleVoiceTurn(ctx: DispatchContext, msg: NormalizedInboundMessage, businessType: BusinessType): Promise<void> {
+  const startedAt = Date.now()
   const { checkAutoReplyLimit } = await import('../../plans/restrictions')
-  const autoReplyAllowed = await checkAutoReplyLimit(account.id)
-  if (!autoReplyAllowed) {
-    console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${account.id} — skipping text reply.`)
+  if (!(await checkAutoReplyLimit(ctx.account.id))) {
+    console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${ctx.account.id} — skipping voice reply.`)
+    const { senderProfile, contactId } = await enrichContactProfile(ctx, msg)
+    await logVoicePlaceholder(ctx, msg, contactId, senderProfile)
     return
   }
 
-  const { data: rules } = await supabase
+  const { downloadAudio } = await import('../../meta/voice')
+  let audioBuffer: Buffer
+  try {
+    audioBuffer = await downloadAudio(msg.audioUrl!, ctx.account.access_token)
+  } catch (err) {
+    console.error(`[dispatchInboundMessage] Failed to download audio for message ${msg.messageId}:`, err)
+    return
+  }
+  const VOICE_MIME = 'audio/mp4'
+  const transcription = await transcribeInbound(audioBuffer, VOICE_MIME, (ctx.settings?.ai_provider as string) || null, ctx.aiApiKey)
+
+  if (!transcription.trim()) {
+    const { senderProfile, contactId } = await enrichContactProfile(ctx, msg)
+    await logVoicePlaceholder(ctx, msg, contactId, senderProfile)
+    const outcome = await sendAndReport(
+      ctx.channel,
+      "Désolé, je n'ai pas bien compris votre message vocal 😅 Pouvez-vous réécrire en texte ?",
+      'voice.transcription_failed'
+    )
+    await logOutcome(ctx, msg, outcome, startedAt)
+    return
+  }
+
+  console.log(`[Voice] Transcription: "${transcription}"`)
+  await handleTextTurn(ctx, msg, businessType, { messageText: transcription, logText: `[🎙️ Vocal] : ${transcription}`, startedAt })
+}
+
+/** Classic keyword/any_message rules + configurable default message — the terminal fallback for any turn no smarter handler answered. */
+async function handleClassicRulesFallback(
+  ctx: DispatchContext,
+  msg: NormalizedInboundMessage,
+  messageText: string,
+  contactId: string | null,
+  startedAt: number
+): Promise<void> {
+  const { data: rules } = await ctx.supabase
     .from('automation_rules')
     .select('*')
-    .eq('channel_account_id', account.id)
+    .eq('channel_account_id', ctx.account.id)
     .eq('is_active', true)
     .order('created_at', { ascending: true })
 
-  const { data: activeSession } = await supabase
-    .from('order_sessions')
-    .select('id')
-    .eq('channel_account_id', account.id)
-    .eq('sender_id', msg.senderId)
-    .neq('status', 'confirmed')
-    .neq('status', 'cancelled')
-    .maybeSingle()
-
-  const verticalConfig = agentSettings?.vertical_config ?? {}
-  const agentArgs = {
-    customInstructions: agentSettings?.instructions || [],
-    infosToCollect: agentSettings?.infos_to_collect || [],
-    faqs: (verticalConfig as { faqs?: Array<{ question: string; answer: string }> })?.faqs || [],
-    persona: (verticalConfig as { persona?: string })?.persona || undefined,
-    aiProvider: agentSettings?.ai_provider || null,
-    aiApiKey: resolvedApiKey,
-    aiModel: agentSettings?.ai_model || null,
-  }
-
-  // ── Scenario 0: visual flows (opt-in via agent_settings.flows_enabled) ──
-  // Checked first, ahead of the Q&A/order-taking agent and the classic
-  // rules fallback below: a matching flow trigger is an explicit, specific
-  // configuration and must take priority over the generic agent — otherwise
-  // an account with Q&A/order-taking enabled would never reach this block
-  // (both scenarios below return unconditionally) and flows would silently
-  // never fire. Accounts without flows_enabled keep their exact current
-  // behavior untouched.
-  if (agentSettings?.flows_enabled) {
-    const handled = await runFlowsForInbound({
-      platform: msg.platform,
-      account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
-      contactId,
-      senderId: msg.senderId,
-      messageText,
-      storyEventType: msg.storyEventType,
-      agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
-    })
-    if (handled) {
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: '[Géré par Flow]', replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
-      return
-    }
-  }
-
-  // ── Scenario A: active order session → continue the tunnel (reset on greeting) ──
-  if (activeSession && isOrderTakingActive) {
-    if (GREETING_RE.test(messageText.trim())) {
-      await supabase.from('order_sessions').update({ status: 'cancelled' }).eq('id', activeSession.id)
-
-      if (isQaActive) {
-        const { data: products } = await supabase.from('products').select('*').eq('channel_account_id', account.id).eq('is_active', true)
-        await handleQaMessage({
-          pageId,
-          senderId: msg.senderId,
-          messageText,
-          accessToken: account.access_token,
-          products: products ?? [],
-          isOrderTakingActive,
-          ...agentArgs,
-        })
-        await supabase
-          .from('message_logs')
-          .update({
-            auto_reply_sent: true,
-            reply_text: '[Géré par Assistant FAQ IA — salutation après reset]',
-            replied_at: new Date().toISOString(),
-          })
-          .eq('message_id', msg.messageId)
-      } else {
-        const greeting = 'Bonjour ! Comment puis-je vous aider ? 😊'
-        await adapter.sendMessage(ref, msg.senderId, greeting)
-        await supabase
-          .from('message_logs')
-          .update({ auto_reply_sent: true, reply_text: greeting, replied_at: new Date().toISOString() })
-          .eq('message_id', msg.messageId)
-      }
-      return
-    }
-
-    await handleEcommerceMessage({ accountId: account.id, pageId, senderId: msg.senderId, messageText, accessToken: account.access_token, ...agentArgs })
-    await supabase
-      .from('message_logs')
-      .update({ auto_reply_sent: true, reply_text: '[Géré par Prise de Commande IA]', replied_at: new Date().toISOString() })
-      .eq('message_id', msg.messageId)
-    return
-  }
-
-  // ── Scenario B: no active session — Q&A and/or order-taking depending on flags ──
-  if (isQaActive || isOrderTakingActive) {
-    const { data: products } = await supabase.from('products').select('*').eq('channel_account_id', account.id).eq('is_active', true)
-
-    if (isQaActive) {
-      const { hasPurchaseIntent } = await handleQaMessage({
-        pageId,
-        senderId: msg.senderId,
-        messageText,
-        accessToken: account.access_token,
-        products: products ?? [],
-        isOrderTakingActive,
-        skipReplyOnPurchaseIntent: isOrderTakingActive,
-        ...agentArgs,
-      })
-
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: '[Géré par Assistant FAQ IA]', replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
-
-      if (hasPurchaseIntent && isOrderTakingActive) {
-        await handleEcommerceMessage({ accountId: account.id, pageId, senderId: msg.senderId, messageText, accessToken: account.access_token, ...agentArgs })
-      }
-      return
-    }
-
-    if (isOrderTakingActive) {
-      await handleEcommerceMessage({ accountId: account.id, pageId, senderId: msg.senderId, messageText, accessToken: account.access_token, ...agentArgs })
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: '[Géré par Prise de Commande IA]', replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
-      return
-    }
-  }
-
-  // ── Scenario C: coaching/agency verticals (simpler — one LLM call per turn) ──
-  if (businessType !== 'ecommerce' && businessType !== 'generic' && agentSettings?.is_active) {
-    const handled = await handleAgentMessage(businessType, {
-      accountId: account.id,
-      pageId,
-      senderId: msg.senderId,
-      messageText,
-      accessToken: account.access_token,
-      ...agentArgs,
-    })
-    if (handled) {
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: `[Géré par Assistant IA — ${businessType}]`, replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
-      return
-    }
-  }
-
-  // ── Fallback: classic keyword/any_message rules + configurable default message ──
   let replyText: string | null = null
   let matchedRule: (typeof rules extends (infer T)[] | null ? T : never) | null = null
   if (rules && rules.length > 0) {
@@ -563,18 +253,21 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     replyText = matchedRule?.response_text ?? null
   }
 
+  const route = matchedRule ? 'rules.matched' : 'rules.default_message'
+
   if (!replyText) {
-    const defaultEnabled = agentSettings?.default_message_enabled ?? true
-    const defaultText = agentSettings?.default_message_text ?? 'Merci pour votre message ! Nous vous répondrons bientôt. 🙏'
-    const defaultFreq = agentSettings?.default_message_frequency ?? 'always'
+    const settings = ctx.settings
+    const defaultEnabled = settings?.default_message_enabled ?? true
+    const defaultText = (settings?.default_message_text as string) ?? 'Merci pour votre message ! Nous vous répondrons bientôt. 🙏'
+    const defaultFreq = settings?.default_message_frequency ?? 'always'
 
     if (defaultEnabled) {
       let shouldSend = true
       if (defaultFreq === 'first_message_only') {
-        const { count } = await supabase
+        const { count } = await ctx.supabase
           .from('message_logs')
           .select('*', { count: 'exact', head: true })
-          .eq('channel_account_id', account.id)
+          .eq('channel_account_id', ctx.account.id)
           .eq('sender_id', msg.senderId)
           .eq('direction', 'incoming')
         if (count && count > 1) shouldSend = false
@@ -585,29 +278,30 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
 
   if (!replyText) return
 
+  const contact = contactId ? await getContact(ctx.account.id, contactId) : null
+  replyText = renderTemplate(replyText, contact)
+
+  const cardButtons = ((matchedRule?.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []).map((b) => ({
+    ...b,
+    title: renderTemplate(b.title, contact),
+  }))
+  const cardTitle = renderTemplate(matchedRule?.card_title || replyText, contact)
+  const cardSubtitle = matchedRule?.card_subtitle ? renderTemplate(matchedRule.card_subtitle, contact) : undefined
+  const isCard = matchedRule?.response_type === 'card'
+  const hasImage = !!matchedRule?.card_image_url
+
   try {
-    const contact = contactId ? await getContact(account.id, contactId) : null
-    replyText = renderTemplate(replyText, contact)
-
-    const cardButtons = ((matchedRule?.card_buttons as Array<{ type?: 'postback' | 'web_url'; title: string; url?: string }>) ?? []).map(
-      (b) => ({ ...b, title: renderTemplate(b.title, contact) })
-    )
-    const cardTitle = renderTemplate(matchedRule?.card_title || replyText, contact)
-    const cardSubtitle = matchedRule?.card_subtitle ? renderTemplate(matchedRule.card_subtitle, contact) : undefined
-    const isCard = matchedRule?.response_type === 'card'
-    const hasImage = !!matchedRule?.card_image_url
-
     let result: { messageId: string } | null
-    if (isCard && !hasImage && cardButtons.length > 0 && adapter.sendButtons) {
-      result = await adapter.sendButtons(
-        ref,
+    if (isCard && !hasImage && cardButtons.length > 0 && ctx.adapter.sendButtons) {
+      result = await ctx.adapter.sendButtons(
+        ctx.ref,
         msg.senderId,
         cardTitle,
         cardButtons.map((b) => ({ type: b.type ?? 'web_url', title: b.title, url: b.url }))
       )
-    } else if (isCard && adapter.sendCard) {
-      result = await adapter.sendCard(
-        ref,
+    } else if (isCard && ctx.adapter.sendCard) {
+      result = await ctx.adapter.sendCard(
+        ctx.ref,
         msg.senderId,
         cardTitle,
         cardSubtitle,
@@ -615,21 +309,247 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
         cardButtons.map((b) => ({ title: b.title, url: b.url ?? '' }))
       )
     } else {
-      result = await adapter.sendMessage(ref, msg.senderId, replyText)
+      result = await ctx.channel.sendText(replyText)
     }
     if (result) {
-      await supabase
-        .from('message_logs')
-        .update({ auto_reply_sent: true, reply_text: replyText, replied_at: new Date().toISOString() })
-        .eq('message_id', msg.messageId)
+      await logOutcome(ctx, msg, { status: 'replied', replyText, route }, startedAt)
     }
   } catch (err) {
     if (err instanceof TokenExpiredError) {
-      await deactivateAccount(account.id)
+      await deactivateAccount(ctx.supabase, ctx.account.id)
     } else {
       console.error('[dispatchInboundMessage] Failed to send reply:', err)
     }
   }
+}
+
+/**
+ * Handles one full text turn: flows → active-tunnel/Q&A → coaching/agency →
+ * classic rules. Also the delegate target for voice (see handleVoiceTurn):
+ * `opts.messageText` is what the LLM/routing logic actually sees (the
+ * transcript), while `opts.logText` is what message_logs shows for this
+ * inbound row (the `[🎙️ Vocal] : …` marker) — they differ only for voice.
+ */
+async function handleTextTurn(
+  ctx: DispatchContext,
+  msg: NormalizedInboundMessage,
+  businessType: BusinessType,
+  opts?: { messageText: string; logText: string; startedAt?: number }
+): Promise<void> {
+  const startedAt = opts?.startedAt ?? Date.now()
+  const { senderProfile, contactId } = await enrichContactProfile(ctx, msg)
+  const messageText = opts?.messageText ?? msg.text ?? ''
+  const logText = opts?.logText ?? messageText
+  const settings = ctx.settings
+  // Loaded before this turn's own message_logs row exists below, so the
+  // current (not-yet-answered) message never shows up duplicated inside its
+  // own history block (audit finding F5).
+  const historyBlock = renderHistoryBlock(await loadHistory(ctx.supabase, ctx.account.id, msg.senderId))
+
+  await ctx.supabase.from('message_logs').upsert(
+    {
+      channel_account_id: ctx.account.id,
+      contact_id: contactId,
+      sender_id: msg.senderId,
+      sender_username: senderProfile?.username || null,
+      sender_full_name: senderProfile?.name || null,
+      sender_profile_pic: senderProfile?.profilePic || null,
+      message_id: msg.messageId,
+      message_text: logText,
+      direction: 'incoming',
+      auto_reply_sent: false,
+    },
+    { onConflict: 'message_id' }
+  )
+
+  const { checkAutoReplyLimit } = await import('../../plans/restrictions')
+  const autoReplyAllowed = await checkAutoReplyLimit(ctx.account.id)
+  if (!autoReplyAllowed) {
+    console.warn(`[dispatchInboundMessage] Auto reply limit reached for account: ${ctx.account.id} — skipping text reply.`)
+    return
+  }
+
+  const isQaActive = businessType === 'ecommerce' && (settings?.is_qa_active ?? false)
+  const isOrderTakingActive = businessType === 'ecommerce' && (settings?.is_order_taking_active ?? false)
+  const verticalConfig = (settings?.vertical_config as Record<string, unknown>) ?? {}
+  const agentArgs = {
+    customInstructions: (settings?.instructions as string[]) || [],
+    infosToCollect: (settings?.infos_to_collect as string[]) || [],
+    faqs: (verticalConfig as { faqs?: Array<{ question: string; answer: string }> })?.faqs || [],
+    persona: (verticalConfig as { persona?: string })?.persona || undefined,
+    history: historyBlock,
+    aiProvider: (settings?.ai_provider as string) || null,
+    aiApiKey: ctx.aiApiKey,
+    aiModel: (settings?.ai_model as string) || null,
+  }
+
+  // ── Scenario 0: visual flows (opt-in via agent_settings.flows_enabled) ──
+  // Checked first, ahead of the Q&A/order-taking agent and the classic
+  // rules fallback below: a matching flow trigger is an explicit, specific
+  // configuration and must take priority over the generic agent — otherwise
+  // an account with Q&A/order-taking enabled would never reach this block
+  // and flows would silently never fire. Flows are a deterministic node
+  // graph (not an LLM prompt), so they're kept as a hard return rather than
+  // going through the AgentOutcome fallback path below.
+  if (settings?.flows_enabled) {
+    const handled = await runFlowsForInbound({
+      platform: msg.platform,
+      account: dispatchAccountRef(ctx),
+      contactId,
+      senderId: msg.senderId,
+      messageText,
+      storyEventType: msg.storyEventType,
+      agentArgs: { aiProvider: agentArgs.aiProvider, aiApiKey: agentArgs.aiApiKey, aiModel: agentArgs.aiModel },
+    })
+    if (handled) {
+      await logOutcome(ctx, msg, { status: 'replied', replyText: '[Géré par Flow]', route: 'flow' }, startedAt)
+      return
+    }
+  }
+
+  const { data: activeSession } = await ctx.supabase
+    .from('order_sessions')
+    .select('id')
+    .eq('channel_account_id', ctx.account.id)
+    .eq('sender_id', msg.senderId)
+    .neq('status', 'confirmed')
+    .neq('status', 'cancelled')
+    .maybeSingle()
+
+  let outcome: AgentOutcome | null = null
+
+  // ── Scenario A: active order session → continue the tunnel ─────────────
+  // Greetings and cancel/restart/change-product/human-handoff intents
+  // arriving mid-flow are now recognized and handled inside
+  // handleEcommerceMessage itself (see lib/agent/ecommerce/intent.ts),
+  // instead of being intercepted here and unconditionally cancelling the
+  // whole session on any greeting — that used to be the tunnel's only
+  // "exit" and threw away everything the customer had already given
+  // (audit finding F6).
+  if (activeSession && isOrderTakingActive) {
+    outcome = await handleEcommerceMessage({ accountId: ctx.account.id, senderId: msg.senderId, messageText, channel: ctx.channel, ...agentArgs })
+  }
+  // ── Scenario B: no active session — Q&A and/or order-taking depending on flags ──
+  else if (isQaActive || isOrderTakingActive) {
+    if (isQaActive) {
+      // Out-of-stock products (when the shop tracks stock at all — see
+      // migration 20260826) are excluded from what the customer is shown,
+      // not just from what they're allowed to confirm (audit finding F10):
+      // no point offering something an atomic re-check will reject anyway.
+      const { data: products } = await ctx.supabase
+        .from('products')
+        .select('*')
+        .eq('channel_account_id', ctx.account.id)
+        .eq('is_active', true)
+        .or('track_stock.eq.false,stock_quantity.gt.0')
+      const { hasPurchaseIntent, productNameHint, outcome: qaOutcome } = await handleQaMessage({
+        accountId: ctx.account.id,
+        senderId: msg.senderId,
+        channel: ctx.channel,
+        messageText,
+        products: products ?? [],
+        isOrderTakingActive,
+        skipReplyOnPurchaseIntent: isOrderTakingActive,
+        ...agentArgs,
+      })
+      outcome = qaOutcome
+
+      if (hasPurchaseIntent && isOrderTakingActive) {
+        // Resolved deterministically from the Q&A call's own product-name
+        // guess — when it hits, the tunnel below skips its own LLM
+        // extraction call entirely for this turn (audit finding F9).
+        const prefillProductId = productNameHint ? resolveProduct(productNameHint, products ?? [])?.id ?? null : null
+        outcome = await handleEcommerceMessage({
+          accountId: ctx.account.id,
+          senderId: msg.senderId,
+          messageText,
+          channel: ctx.channel,
+          prefillProductId,
+          ...agentArgs,
+        })
+      }
+    } else if (isOrderTakingActive) {
+      outcome = await handleEcommerceMessage({ accountId: ctx.account.id, senderId: msg.senderId, messageText, channel: ctx.channel, ...agentArgs })
+    }
+  }
+  // ── Scenario C: coaching/agency verticals (simpler — one LLM call per turn) ──
+  else if (businessType !== 'ecommerce' && businessType !== 'generic' && settings?.is_active) {
+    outcome = await handleAgentMessage(businessType, {
+      accountId: ctx.account.id,
+      senderId: msg.senderId,
+      messageText,
+      channel: ctx.channel,
+      customInstructions: agentArgs.customInstructions,
+      infosToCollect: agentArgs.infosToCollect,
+      history: agentArgs.history,
+      aiProvider: agentArgs.aiProvider,
+      aiApiKey: agentArgs.aiApiKey,
+      aiModel: agentArgs.aiModel,
+    })
+  }
+
+  if (outcome) {
+    await logOutcome(ctx, msg, outcome, startedAt)
+    // 'replied' → the customer got the smart-agent answer, done.
+    // 'no_reply' → a deliberate silence (e.g. purchase intent silently
+    // handed off to the tunnel above), also done.
+    // 'error' → the customer got NOTHING from the smart agent (LLM down,
+    // send failed, ...). Falling through to classic rules / the default
+    // message means they still get something instead of dead air — this is
+    // the actual fix for audit finding F3.
+    if (outcome.status !== 'error') return
+  }
+
+  await handleClassicRulesFallback(ctx, msg, messageText, contactId, startedAt)
+}
+
+/**
+ * Mirrors the live supabase/functions/_shared/meta/messaging.ts::handleAutoReply
+ * (Deno) — Q&A mode, order-taking tunnel with greeting-reset, configurable
+ * default message — generalized behind a ChannelAdapter. Skips echo events
+ * (sent BY the connected account) the same way the Deno webhook does today.
+ */
+export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Promise<void> {
+  if (msg.senderId === msg.recipientId || msg.senderId === msg.channelExternalId) return
+
+  // Bot paused for this contact (human is handling it manually in the
+  // inbox) — log the message so it shows in the thread, but skip every
+  // form of automation below.
+  if (await logIfBotPaused(msg)) return
+
+  const ctx = await resolveDispatchContext(msg)
+  if (!ctx) return
+
+  // Growth link (ref deep link) opened — start the linked flow directly;
+  // if the event carries no text alongside it, that's the whole turn.
+  if (msg.referralRef) {
+    const handled = await handleGrowthLink(ctx, msg)
+    if (handled && !msg.text) return
+  }
+
+  // Button click (postback) — resume the paused flow run directly.
+  if (msg.postbackPayload) {
+    await handlePostback(ctx, msg)
+    return
+  }
+
+  // Text reply to a paused "capture_input" node — resume that run before
+  // any trigger/Q&A/rules handling ever sees it.
+  if (msg.text) {
+    const consumed = await handleTextCapture(ctx, msg)
+    if (consumed) return
+  }
+
+  if (!msg.text && !msg.audioUrl) return
+
+  const businessType: BusinessType = ctx.businessType
+
+  if (msg.audioUrl) {
+    await handleVoiceTurn(ctx, msg, businessType)
+    return
+  }
+
+  await handleTextTurn(ctx, msg, businessType)
 }
 
 /** Mirrors lib/meta/comments.ts::handleCommentAutoReply, generalized behind a ChannelAdapter. */
@@ -638,9 +558,11 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
 
   const account = await findChannelAccountByExternalId(comment.platform, comment.channelExternalId)
   if (!account) return
-  if (!(await isSubscriptionValid(account.user_id))) return
 
   const supabase = createDispatchAdminClient()
+
+  if (!(await isSubscriptionValid(supabase, account.user_id))) return
+
   const contactId = await upsertContact(account.id, comment.commenterId, { username: comment.commenterUsername })
 
   await supabase.from('comment_logs').upsert(
@@ -663,7 +585,11 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
     return
   }
 
-  const { data: agentSettings } = await supabase.from('agent_settings').select('flows_enabled, ai_provider, ai_api_key, ai_model').eq('channel_account_id', account.id).single()
+  const { data: agentSettings } = await supabase
+    .from('agent_settings')
+    .select('flows_enabled, ai_provider, ai_api_key, ai_model')
+    .eq('channel_account_id', account.id)
+    .maybeSingle()
 
   if (agentSettings?.flows_enabled) {
     const { isEncrypted, decryptApiKey } = await import('../../crypto')
@@ -777,111 +703,9 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
     }
   } catch (err) {
     if (err instanceof TokenExpiredError) {
-      await deactivateAccount(account.id)
+      await deactivateAccount(supabase, account.id)
     } else {
       console.error('[dispatchInboundComment] Failed to send reply:', err)
     }
   }
-}
-
-/**
- * Builds the GET (verification challenge) + POST (event delivery) handlers
- * for a platform's webhook route under app/api/webhooks/[platform]/route.ts.
- */
-export function createWebhookRoute(platform: Platform) {
-  async function GET(request: NextRequest) {
-    const url = new URL(request.url)
-    const mode = url.searchParams.get('hub.mode')
-    const token = url.searchParams.get('hub.verify_token')
-    const challenge = url.searchParams.get('hub.challenge')
-    const verifyToken = process.env[VERIFY_TOKEN_ENV[platform]]
-
-    if (mode === 'subscribe' && safeEqualStr(token, verifyToken)) {
-      return new NextResponse(challenge, { status: 200 })
-    }
-    return new NextResponse('Forbidden', { status: 403 })
-  }
-
-  async function POST(request: NextRequest) {
-    const rawBody = await request.text()
-    const signature = request.headers.get('x-hub-signature-256')
-    const appSecret = process.env[APP_SECRET_ENV[platform]]
-    const adapter = getAdapter(platform)
-
-    // Fail closed when the app secret isn't configured — computing the HMAC
-    // with an empty-string key (the previous `?? ''` fallback) means anyone
-    // can compute a "valid" signature for a forged payload.
-    if (!appSecret) {
-      console.error(`[webhook:${platform}] ${APP_SECRET_ENV[platform]} is not configured`)
-      return new NextResponse('Service Unavailable', { status: 503 })
-    }
-
-    if (!adapter.verifyWebhookSignature(rawBody, signature, appSecret)) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
-    let payload: unknown
-    try {
-      payload = JSON.parse(rawBody)
-    } catch {
-      return new NextResponse('Bad Request', { status: 400 })
-    }
-
-    const messages = adapter.parseWebhookMessages(payload)
-    const comments = adapter.parseWebhookComments(payload)
-
-    // Claim each message's Meta `mid` BEFORE doing any real work. This is
-    // the actual fix for "every bot reply sent 2-3 times": Meta redelivers
-    // a message it didn't get a fast 200 for, and dispatchInboundMessage
-    // (1-2 LLM calls + ~10 DB round-trips) routinely took long enough to
-    // trigger exactly that. Claiming is a single fast insert, so it's safe
-    // to do synchronously here; the actual dispatch moves to after() below
-    // so Meta gets its 200 without waiting on the LLM at all. A duplicate
-    // `mid` (redelivery) fails the claim and is silently skipped.
-    const newMessages: typeof messages = []
-    for (const msg of messages) {
-      const claimed = await claimInboundEvent(msg.messageId, platform, msg)
-      if (claimed) newMessages.push(msg)
-    }
-
-    const newComments: typeof comments = []
-    for (const comment of comments) {
-      const claimed = await claimInboundEvent(`comment:${comment.commentId}`, platform, comment)
-      if (claimed) newComments.push(comment)
-    }
-
-    after(async () => {
-      for (const msg of newMessages) {
-        // Serializes turns for the same (channel, sender) pair — this is
-        // what stops two near-simultaneous messages (or a redelivery that
-        // slipped in before the claim above) from racing on the same
-        // order_sessions row and silently overwriting each other's slots.
-        const locked = await tryLockConversation(msg.channelExternalId, msg.senderId, msg.messageId)
-        if (!locked) continue // left 'processing' — the recovery sweep retries it shortly
-        try {
-          await dispatchInboundMessage(msg)
-          await markEventDone(msg.messageId)
-        } catch (err) {
-          console.error(`[webhook:${platform}] Error handling message ${msg.messageId}:`, err)
-          await markEventFailed(msg.messageId, err)
-        } finally {
-          await unlockConversation(msg.channelExternalId, msg.senderId)
-        }
-      }
-
-      for (const comment of newComments) {
-        try {
-          await dispatchInboundComment(comment)
-          await markEventDone(`comment:${comment.commentId}`)
-        } catch (err) {
-          console.error(`[webhook:${platform}] Error handling comment ${comment.commentId}:`, err)
-          await markEventFailed(`comment:${comment.commentId}`, err)
-        }
-      }
-    })
-
-    return new NextResponse('EVENT_RECEIVED', { status: 200 })
-  }
-
-  return { GET, POST }
 }

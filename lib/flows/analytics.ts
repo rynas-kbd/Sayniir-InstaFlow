@@ -1,4 +1,4 @@
-import { createAdminClient } from '../supabase/admin'
+import { createAdminClient } from '../supabase/admin.ts'
 
 export interface FlowNodeFunnelRow {
   node_key: string

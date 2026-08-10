@@ -1,4 +1,4 @@
-import { listByAccountTool } from './list-by-account'
+import { listByAccountTool } from './list-by-account.ts'
 
 export const listGrowthLinksTool = listByAccountTool({
   name: 'list_growth_links',

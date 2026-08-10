@@ -1,4 +1,4 @@
-import { deleteByIdTool } from './delete-by-id'
+import { deleteByIdTool } from './delete-by-id.ts'
 
 export const deleteTagTool = deleteByIdTool({
   name: 'delete_tag',

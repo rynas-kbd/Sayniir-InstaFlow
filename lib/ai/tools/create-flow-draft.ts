@@ -1,4 +1,4 @@
-import type { AiTool } from './types'
+import type { AiTool } from './types.ts'
 
 type TriggerType = 'any_message' | 'keyword' | 'story_reply' | 'story_mention' | 'any_comment' | 'comment_keyword'
 

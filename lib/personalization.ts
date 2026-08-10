@@ -1,4 +1,4 @@
-import type { Contact } from './contacts/types'
+import type { Contact } from './contacts/types.ts'
 
 /**
  * Renders `{{variable}}` placeholders in a message using contact data.

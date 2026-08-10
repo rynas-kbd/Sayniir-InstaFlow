@@ -1,4 +1,4 @@
-import { encryptApiKey, decryptApiKey, isEncrypted } from '../../crypto'
+import { encryptApiKey, decryptApiKey, isEncrypted } from '../../crypto.ts'
 
 /**
  * channel_accounts.access_token is stored AES-GCM encrypted going forward.

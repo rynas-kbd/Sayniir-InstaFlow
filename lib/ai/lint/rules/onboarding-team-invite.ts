@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 /** The Phase 1 questionnaire's team_size answer promised more than one person; nobody has been added to team_members yet. */
 export function checkOnboardingTeamInvite(account: { id: string }, teamSize: string | null, teamMemberCount: number): LintFinding[] {

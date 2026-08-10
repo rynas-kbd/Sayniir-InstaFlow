@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 const MIN_ACCOUNT_AGE_DAYS = 60
 const MAX_ACTIVE_AUTOMATIONS = 3

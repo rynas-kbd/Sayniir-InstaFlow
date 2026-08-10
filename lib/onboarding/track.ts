@@ -1,5 +1,5 @@
 import 'server-only'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin.ts'
 
 export type OnboardingEventType =
   | 'onboarding.step_completed'

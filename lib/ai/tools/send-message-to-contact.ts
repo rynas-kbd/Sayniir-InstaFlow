@@ -1,6 +1,6 @@
-import { getAdapter } from '../../channels/registry'
-import type { ChannelAccountRef, Platform } from '../../channels/types'
-import type { AiTool } from './types'
+import { getAdapter } from '../../channels/registry.ts'
+import type { ChannelAccountRef, Platform } from '../../channels/types.ts'
+import type { AiTool } from './types.ts'
 
 interface Input {
   contactId: string

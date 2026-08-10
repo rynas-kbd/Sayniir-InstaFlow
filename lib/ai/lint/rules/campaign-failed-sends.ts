@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 const FAILURE_RATIO_THRESHOLD = 0.1
 

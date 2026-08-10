@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
-import { ACTIVE_ACCOUNT_COOKIE } from './active-account'
+import { createClient } from '@/lib/supabase/server.ts'
+import { ACTIVE_ACCOUNT_COOKIE } from './active-account.ts'
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
 

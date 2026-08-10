@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { MemoryEntry } from './types'
+import type { MemoryEntry } from './types.ts'
 
 const MAX_ENTRIES_PER_ACCOUNT = 40
 const VOLATILE_LIMIT = 10

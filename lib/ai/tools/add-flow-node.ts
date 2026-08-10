@@ -1,4 +1,4 @@
-import type { AiTool } from './types'
+import type { AiTool } from './types.ts'
 
 const ALLOWED_TYPES = [
   'send_message',

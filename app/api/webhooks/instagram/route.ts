@@ -1,4 +1,4 @@
-import { createWebhookRoute } from '@/lib/channels/shared/inbound'
+import { createWebhookRoute } from '@/lib/channels/shared/next-webhook-route'
 
 /**
  * Instagram webhook receiver on lib/channels — NOT YET registered as the

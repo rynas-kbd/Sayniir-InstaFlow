@@ -1,4 +1,4 @@
-import type { Product } from './state'
+import type { Product } from './state.ts'
 
 /** Keyword-scored in-memory product search — avoids dumping the full catalog into every LLM
  *  prompt once a shop has more than a handful of products. Products are already fetched once

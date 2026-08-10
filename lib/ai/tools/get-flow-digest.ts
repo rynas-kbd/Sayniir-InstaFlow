@@ -1,5 +1,5 @@
-import { resolveAiContext } from '../context/resolve'
-import type { AiTool } from './types'
+import { resolveAiContext } from '../context/resolve.ts'
+import type { AiTool } from './types.ts'
 
 interface Input {
   flowId: string

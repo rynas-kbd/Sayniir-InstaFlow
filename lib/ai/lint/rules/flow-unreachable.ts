@@ -1,5 +1,5 @@
-import type { FlowNode, FlowEdge } from '@/lib/flows/types'
-import { nodeSubjectId, type LintFinding } from '../types'
+import type { FlowNode, FlowEdge } from '@/lib/flows/types.ts'
+import { nodeSubjectId, type LintFinding } from '../types.ts'
 
 /** BFS from the trigger node; anything not reached is a dead branch. */
 export function checkFlowUnreachable(flow: { id: string }, nodes: FlowNode[], edges: FlowEdge[]): LintFinding[] {

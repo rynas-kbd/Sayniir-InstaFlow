@@ -1,5 +1,5 @@
-import type { LintScope } from '../lint/types'
-import type { AiTool } from './types'
+import type { LintScope } from '../lint/types.ts'
+import type { AiTool } from './types.ts'
 
 interface Input {
   scope?: LintScope

@@ -1,4 +1,4 @@
-import type { Template } from './templates'
+import type { Template } from './templates.ts'
 
 /** Order-session slot-filling state machine — ported verbatim from the live Deno ecommerce.ts,
  *  generalized in Phase 1 to cover non-physical product kinds. */

@@ -1,11 +1,11 @@
-import { createAdminClient } from '../supabase/admin'
-import { callAgentLLM } from '../agent/engine'
-import { addTag, removeTag, getContact } from '../contacts/service'
-import { renderTemplate } from '../personalization'
-import { assertSafeOutboundUrl, UnsafeUrlError } from '../security/url-guard'
-import type { FlowNode, NodeExecContext, NodeResult } from './types'
-import type { ChannelButton } from '../channels/types'
-import type { Contact } from '../contacts/types'
+import { createAdminClient } from '../supabase/admin.ts'
+import { callAgentLLM } from '../agent/engine.ts'
+import { addTag, removeTag, getContact } from '../contacts/service.ts'
+import { renderTemplate } from '../personalization.ts'
+import { assertSafeOutboundUrl, UnsafeUrlError } from '../security/url-guard.ts'
+import type { FlowNode, NodeExecContext, NodeResult } from './types.ts'
+import type { ChannelButton } from '../channels/types.ts'
+import type { Contact } from '../contacts/types.ts'
 
 const EXTERNAL_REQUEST_MAX_RESPONSE_BYTES = 64 * 1024
 

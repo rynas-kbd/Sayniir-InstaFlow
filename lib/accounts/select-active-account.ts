@@ -1,4 +1,4 @@
-import type { ActiveAccount } from './active-account'
+import type { ActiveAccount } from './active-account.ts'
 
 /**
  * Pure selection logic, split out from active-account.ts so it can be unit

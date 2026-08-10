@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { FlowNode, FlowEdge } from '../../flows/types'
-import { computeFlowFindings } from '../lint/compute'
-import { buildFlowDigest } from './flow-digest'
-import type { AiContext } from './types'
+import type { FlowNode, FlowEdge } from '../../flows/types.ts'
+import { computeFlowFindings } from '../lint/compute.ts'
+import { buildFlowDigest } from './flow-digest.ts'
+import type { AiContext } from './types.ts'
 
 // ~4 chars/token heuristic. The hard cap from docs/AI_NATIVE_DESIGN.md §8.5 is 2000 tokens for
 // the page context block; approximated here as a single character cap rather than a tokenizer

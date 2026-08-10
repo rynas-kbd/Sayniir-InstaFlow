@@ -1,4 +1,4 @@
-import type { PlanKey } from '../../plans'
+import type { PlanKey } from '../../plans.ts'
 
 export interface AiPlanLimits {
   monthlyCredits: number

@@ -1,5 +1,5 @@
-import { createAdminClient } from './admin'
-import { isSandbox } from '@/lib/channels/sandbox'
+import { createAdminClient } from './admin.ts'
+import { isSandbox } from '@/lib/channels/sandbox.ts'
 
 /**
  * Tables the inbound dispatch path (lib/channels/shared/inbound.ts,

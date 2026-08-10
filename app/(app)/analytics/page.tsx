@@ -1,6 +1,17 @@
-import { MessageSquare, Zap, TrendingUp, Users, Sparkles, BarChart3, ArrowUpRight, Clock, MessagesSquare, SendHorizontal } from 'lucide-react'
+import { MessageSquare, Zap, TrendingUp, Users, Sparkles, BarChart3, ArrowUpRight, Clock, MessagesSquare, SendHorizontal, ShoppingCart, PackageCheck, Wallet, Receipt } from 'lucide-react'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
-import { getAnalyticsSummary, getMessagesTimeseries, type AnalyticsSummary, type DayPoint } from '@/lib/analytics/queries'
+import {
+  getAnalyticsSummary,
+  getMessagesTimeseries,
+  getConversionFunnel,
+  getHandlingSplit,
+  getRevenueSummary,
+  type AnalyticsSummary,
+  type DayPoint,
+  type ConversionFunnel,
+  type HandlingSplit,
+  type RevenueSummary,
+} from '@/lib/analytics/queries'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -54,10 +65,14 @@ export default async function AnalyticsPage() {
   const to = new Date()
   const from = new Date(to.getTime() - 13 * 86400000)
 
-  const [summary, points]: [AnalyticsSummary, DayPoint[]] = await Promise.all([
-    getAnalyticsSummary(account.id, from, to),
-    getMessagesTimeseries(account.id, from, to),
-  ])
+  const [summary, points, funnel, handling, revenue]: [AnalyticsSummary, DayPoint[], ConversionFunnel, HandlingSplit, RevenueSummary] =
+    await Promise.all([
+      getAnalyticsSummary(account.id, from, to),
+      getMessagesTimeseries(account.id, from, to),
+      getConversionFunnel(account.id, from, to),
+      getHandlingSplit(account.id, from, to),
+      getRevenueSummary(account.id, from, to),
+    ])
 
   const totalMessages = summary.messagesReceived + summary.totalOutgoing
 
@@ -157,6 +172,47 @@ export default async function AnalyticsPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Commerce funnel + revenue ── */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatBadge label="Sessions démarrées" value={funnel.sessionsStarted} icon={ShoppingCart} accent="#0ea5e9" />
+          <StatBadge label="Commandes confirmées" value={funnel.ordersConfirmed} icon={PackageCheck} accent="#22c55e" />
+          <StatBadge label="Chiffre d'affaires" value={`${revenue.totalRevenue.toLocaleString('fr-FR')} DA`} icon={Wallet} accent="#f59e0b" />
+          <StatBadge label="Panier moyen" value={`${Math.round(revenue.averageOrderValue).toLocaleString('fr-FR')} DA`} icon={Receipt} accent="#8b5cf6" />
+        </div>
+
+        {/* IA vs humain breakdown */}
+        <Card className="border-border/40 shadow-sm">
+          <CardHeader className="border-b border-border/40 pb-3">
+            <CardTitle className="text-sm font-semibold">Qui a répondu ?</CardTitle>
+            <CardDescription className="text-xs">IA · Humain (inbox) · Sans réponse</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            {(() => {
+              const handlingTotal = handling.aiHandled + handling.humanHandled + handling.noReply
+              return [
+                { label: 'Réponses IA', value: handling.aiHandled, color: 'var(--color-primary)' },
+                { label: 'Réponses humaines (inbox)', value: handling.humanHandled, color: '#8b5cf6' },
+                { label: 'Sans réponse', value: handling.noReply, color: '#ef4444' },
+              ].map(({ label, value, color }) => {
+                const pct = handlingTotal > 0 ? Math.round((value / handlingTotal) * 100) : 0
+                return (
+                  <div key={label} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="tabular-nums font-medium text-foreground">
+                        {value} <span className="text-muted-foreground/60">({pct}%)</span>
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/50">
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                  </div>
+                )
+              })
+            })()}
+          </CardContent>
+        </Card>
 
         {/* Main chart */}
         <Card className="border-border/40 shadow-sm">

@@ -1,5 +1,5 @@
-import type { FlowNode } from '@/lib/flows/types'
-import { nodeSubjectId, type LintFinding } from '../types'
+import type { FlowNode } from '@/lib/flows/types.ts'
+import { nodeSubjectId, type LintFinding } from '../types.ts'
 
 const ONE_DAY_SECONDS = 86400
 

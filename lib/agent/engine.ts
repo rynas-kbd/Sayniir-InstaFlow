@@ -196,12 +196,30 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
   })
 }
 
-export async function callAgentLLM<T>(
-  prompt: string,
-  aiProvider?: string | null,
-  aiApiKey?: string | null,
-  aiModel?: string | null
-): Promise<T> {
+/** Upper bound on the WHOLE call (all retries/backoff included), on top of
+ *  LLM_TIMEOUT_MS's per-attempt bound — MAX_RETRIES retries at 12s each plus
+ *  backoff could otherwise stretch a single turn past 35s inside the
+ *  webhook's after()/waitUntil window. Fails fast with a clear error past
+ *  this instead of quietly running long (audit finding F14). */
+const TURN_LLM_BUDGET_MS = 20_000
+
+function withBudget<T>(promise: Promise<T>, budgetMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`LLM call exceeded the ${budgetMs}ms turn budget`)), budgetMs)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      }
+    )
+  })
+}
+
+async function dispatchLLM<T>(prompt: string, aiProvider?: string | null, aiApiKey?: string | null, aiModel?: string | null): Promise<T> {
   let safePrompt = prompt
   try {
     // dynamic import so server/bundle size is minimal
@@ -213,7 +231,12 @@ export async function callAgentLLM<T>(
     safePrompt = prompt
   }
 
-  const provider = aiProvider || 'openrouter'
+  // Gemini's free tier is fast and generous enough for a sales/Q&A tunnel
+  // where latency directly costs conversions — the previous default,
+  // OpenRouter's free-tier model, was rate-limited and slow enough that it
+  // drove the whole idempotency/locking layer this codebase needed just to
+  // survive Meta's webhook redelivery window (audit finding F14).
+  const provider = aiProvider || 'gemini'
   const apiKey =
     aiApiKey ||
     (provider === 'gemini'
@@ -234,26 +257,27 @@ export async function callAgentLLM<T>(
       : '')
 
   if (!apiKey) {
-    if (provider === 'openrouter' && process.env.OPENROUTER_API_KEY) {
-      return callLLMWithOpenRouter<T>(safePrompt, process.env.OPENROUTER_API_KEY, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
-    }
+    // Fallback order mirrors the new default: gemini → groq → openrouter.
     if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
       return callLLMWithGemini<T>(safePrompt, process.env.GEMINI_API_KEY, model || 'gemini-2.0-flash')
     }
     if (provider === 'groq' && process.env.GROQ_API_KEY) {
       return callLLMWithGroq<T>(safePrompt, process.env.GROQ_API_KEY, model || 'llama-3.3-70b-versatile')
     }
-    const systemOpenRouter = process.env.OPENROUTER_API_KEY
-    if (systemOpenRouter) {
-      return callLLMWithOpenRouter<T>(safePrompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+    if (provider === 'openrouter' && process.env.OPENROUTER_API_KEY) {
+      return callLLMWithOpenRouter<T>(safePrompt, process.env.OPENROUTER_API_KEY, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
+    }
+    const systemGemini = process.env.GEMINI_API_KEY
+    if (systemGemini) {
+      return callLLMWithGemini<T>(safePrompt, systemGemini, 'gemini-2.0-flash')
     }
     const systemGroq = process.env.GROQ_API_KEY
     if (systemGroq) {
       return callLLMWithGroq<T>(safePrompt, systemGroq, 'llama-3.3-70b-versatile')
     }
-    const systemGemini = process.env.GEMINI_API_KEY
-    if (systemGemini) {
-      return callLLMWithGemini<T>(safePrompt, systemGemini, 'gemini-2.0-flash')
+    const systemOpenRouter = process.env.OPENROUTER_API_KEY
+    if (systemOpenRouter) {
+      return callLLMWithOpenRouter<T>(safePrompt, systemOpenRouter, model || 'nvidia/nemotron-3-ultra-550b-a55b:free')
     }
     throw new Error(`Aucune clé API disponible pour le fournisseur: ${provider}`)
   }
@@ -272,4 +296,8 @@ export async function callAgentLLM<T>(
     default:
       throw new Error(`Fournisseur d'IA non supporté: ${provider}`)
   }
+}
+
+export async function callAgentLLM<T>(prompt: string, aiProvider?: string | null, aiApiKey?: string | null, aiModel?: string | null): Promise<T> {
+  return withBudget(dispatchLLM<T>(prompt, aiProvider, aiApiKey, aiModel), TURN_LLM_BUDGET_MS)
 }

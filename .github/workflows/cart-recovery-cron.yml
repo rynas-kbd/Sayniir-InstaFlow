@@ -1,0 +1,44 @@
+name: Frequent admin sweeps (cart recovery + bot auto-resume)
+
+# Both app/api/admin/cart-recovery and app/api/admin/bot-auto-resume need to
+# run far more often than once a day — cart-recovery to catch sessions in
+# their 1-20h abandonment window inside Meta's 24h messaging window (see
+# lib/agent/ecommerce/cart-recovery.ts), bot-auto-resume to check its
+# 30-minute pause threshold (see lib/contacts/bot-auto-resume.ts). Vercel's
+# 4 daily Hobby-plan cron slots are already used by the other admin/* routes
+# (see vercel.json), so both repeat via this single GitHub Actions workflow
+# instead of adding a 5th/6th Vercel cron.
+#
+# Requires two repo secrets (Settings → Secrets and variables → Actions):
+#   APP_URL      — e.g. https://your-app.vercel.app (no trailing slash)
+#   CRON_SECRET  — same value as the Vercel env var of the same name
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger abandoned-cart recovery sweep
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/admin/cart-recovery")
+          cat /tmp/response.txt
+          if [ "$status" -ge 300 ]; then
+            echo "cart-recovery sweep failed with HTTP $status"
+            exit 1
+          fi
+      - name: Trigger bot auto-resume sweep
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/admin/bot-auto-resume")
+          cat /tmp/response.txt
+          if [ "$status" -ge 300 ]; then
+            echo "bot-auto-resume sweep failed with HTTP $status"
+            exit 1
+          fi

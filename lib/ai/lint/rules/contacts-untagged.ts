@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 const MIN_CONTACTS = 50
 const TAGGED_RATIO_THRESHOLD = 0.5

@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 /** Without a default reply path, messages that match nothing get no response at all. */
 export function checkAccountNoFallback(

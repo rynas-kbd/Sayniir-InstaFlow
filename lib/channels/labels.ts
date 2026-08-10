@@ -1,5 +1,5 @@
 import { Camera, MessageCircle, Phone, type LucideIcon } from 'lucide-react'
-import type { Platform } from './types'
+import type { Platform } from './types.ts'
 
 /**
  * Single source of truth for platform display labels and icons. Previously

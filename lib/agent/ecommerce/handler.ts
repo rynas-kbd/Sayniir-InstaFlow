@@ -1,7 +1,10 @@
-import { createAdminClient } from '../../supabase/admin'
-import { sendReply, sendCardReply, TokenExpiredError } from '../../meta/messaging'
-import { callAgentLLM } from '../engine'
-import { getTemplate } from './templates'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { callAgentLLM } from '../engine.ts'
+import { sendAndReport, type AgentChannel } from '../messaging.ts'
+import { fenceUserText } from '../history.ts'
+import { checkConfidenceEscalation } from '../confidence.ts'
+import type { AgentOutcome } from '../types.ts'
+import { getTemplate } from './templates.ts'
 import {
   getMissingFields,
   getNextQuestion,
@@ -10,11 +13,11 @@ import {
   normalizeAlgerianPhone,
   normalizeDeliveryMode,
   type Product,
-} from './state'
-import { selectRelevantProducts, toPromptCatalogEntry } from './search'
-import { transcribeVoiceForEcommerce } from './voice'
-import { parseSlot, resolveProduct } from './parse'
-import { detectLanguage, type DetectedLang } from './lang'
+} from './state.ts'
+import { selectRelevantProducts, toPromptCatalogEntry } from './search.ts'
+import { parseSlot, resolveProduct } from './parse.ts'
+import { detectLanguage, type DetectedLang } from './lang.ts'
+import { classifyIntent, isGreeting } from './intent.ts'
 
 /**
  * E-commerce order-taking + Q&A agent — ported verbatim from the live
@@ -39,38 +42,45 @@ interface EcommerceLlmResult {
   extractedData: ExtractedFields
   isQuestion: boolean
   questionReply: string | null
+  /** Only meaningful when isQuestion is true — see lib/agent/confidence.ts. */
+  confidence?: number
   detectedLanguage: string
 }
 
 export async function handleQaMessage({
-  pageId,
+  accountId,
   senderId,
+  channel,
   messageText,
-  accessToken,
   products,
   customInstructions = [],
   faqs = [],
   persona,
+  history = '',
   isOrderTakingActive = false,
   skipReplyOnPurchaseIntent = false,
   aiProvider,
   aiApiKey,
   aiModel,
 }: {
-  pageId: string
+  /** Only needed for confidence-based escalation (lib/agent/confidence.ts) — this handler otherwise has no DB access. */
+  accountId: string
   senderId: string
+  channel: AgentChannel
   messageText: string
-  accessToken: string
   products: Product[]
   customInstructions?: string[]
   faqs?: Array<{ question: string; answer: string }>
   persona?: string
+  /** Pre-rendered block from lib/agent/history.ts::renderHistoryBlock, or '' for none. */
+  history?: string
   isOrderTakingActive?: boolean
   skipReplyOnPurchaseIntent?: boolean
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
-}): Promise<{ hasPurchaseIntent: boolean }> {
+}): Promise<{ hasPurchaseIntent: boolean; productNameHint: string | null; outcome: AgentOutcome }> {
+  const route = 'ecommerce.qa'
   const { products: qaRelevantProducts, wasFiltered: qaCatalogFiltered } = selectRelevantProducts(products, messageText)
   const productList = qaRelevantProducts
     .map((p) => {
@@ -87,8 +97,8 @@ export async function handleQaMessage({
     : ''
 
   const orderHint = isOrderTakingActive
-    ? `Si le client veut commander (ex: "je veux commander", "comment commander"), mets hasPurchaseIntent = true.`
-    : `hasPurchaseIntent doit toujours être false.`
+    ? `Si le client veut commander (ex: "je veux commander", "comment commander", "je veux le [produit] en [taille/couleur]"), mets hasPurchaseIntent = true. Si un produit du catalogue est identifiable dans le message, mets son nom exact dans "productNameHint" (sinon null) — cela évite un second appel pour re-détecter ce que le client a déjà dit.`
+    : `hasPurchaseIntent doit toujours être false, et productNameHint toujours null.`
 
   const faqBlock = faqs.length
     ? `=== BASE DE CONNAISSANCES (réponds en priorité à partir de ces Q&R) ===\n${faqs.map((f) => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n')}\n`
@@ -106,71 +116,104 @@ ${customInstructions.length ? `=== INSTRUCTIONS ===\n${customInstructions.map((i
 ${faqBlock}
 === CATALOGUE ===
 ${productList || 'Aucun produit actif.'}${qaCatalogNote}
+${history}
 === MESSAGE ===
-"${messageText}"
+"${fenceUserText(messageText)}"
 
 === TÂCHES ===
 1. Détecte la langue : "fr", "ar", "darija", ou "en".
 2. Si la question est couverte par la base de connaissances, utilise-la en priorité.
 3. Réponds de manière chaleureuse et précise dans la langue du client.
 4. ${orderHint}
+5. Évalue ta propre confiance dans "confidence" (0 à 1) : basse (< 0.5) si la question sort du cadre de la boutique, si l'information demandée n'est couverte ni par le catalogue ni par la base de connaissances, ou si le message est trop ambigu pour y répondre avec certitude.
 
 JSON uniquement (sans backticks) :
 {
   "reply": "ta réponse",
   "detectedLanguage": "fr | ar | darija | en",
-  "hasPurchaseIntent": true | false
+  "hasPurchaseIntent": true | false,
+  "productNameHint": "nom exact du produit ou null",
+  "confidence": 0.0
 }`
 
+  let llm: {
+    reply: string
+    detectedLanguage: string
+    hasPurchaseIntent: boolean
+    productNameHint?: string | null
+    confidence?: number
+  }
   try {
-    const llm = await callAgentLLM<{ reply: string; detectedLanguage: string; hasPurchaseIntent: boolean }>(
-      prompt,
-      aiProvider,
-      aiApiKey,
-      aiModel
-    )
-    if (!(skipReplyOnPurchaseIntent && llm.hasPurchaseIntent)) {
-      await sendReply(pageId, accessToken, senderId, llm.reply)
-    }
-    return { hasPurchaseIntent: llm.hasPurchaseIntent ?? false }
+    llm = await callAgentLLM(prompt, aiProvider, aiApiKey, aiModel)
   } catch (err) {
     console.error('[QA] LLM error:', err)
     // No customer-facing "problème technique" — the Q&A agent has nothing
-    // to re-ask (unlike the order-taking tunnel), so silence here is safer
-    // than a foreign-language error dump: staying quiet lets a keyword rule
-    // or the default message answer instead on a later fallback pass,
-    // rather than guaranteeing an ugly reply on every transient 429/timeout.
-    return { hasPurchaseIntent: false }
+    // to re-ask (unlike the order-taking tunnel). Reporting this as an
+    // 'error' outcome (rather than silently claiming success) lets the
+    // dispatch layer fall back to a keyword rule or the default message
+    // instead of the customer getting nothing while the dashboard shows
+    // "handled" (audit finding F3).
+    return { hasPurchaseIntent: false, productNameHint: null, outcome: { status: 'error', error: err, route } }
   }
+
+  if (skipReplyOnPurchaseIntent && llm.hasPurchaseIntent) {
+    return {
+      hasPurchaseIntent: true,
+      // Lets the tunnel resolve the product deterministically (see
+      // resolveProduct in parse.ts) instead of always spending a second LLM
+      // call re-extracting what this call already saw (audit finding F9).
+      productNameHint: llm.productNameHint || null,
+      outcome: { status: 'no_reply', reason: 'purchase intent handed off to the order-taking tunnel', route },
+    }
+  }
+
+  const handoffLang = detectLanguage(messageText, 'fr')
+  const escalation = await checkConfidenceEscalation(accountId, senderId, channel, llm.confidence, route, getTemplate(handoffLang).humanHandoff)
+  if (escalation) return { hasPurchaseIntent: false, productNameHint: null, outcome: escalation }
+
+  const outcome = await sendAndReport(channel, llm.reply, route, undefined, llm.confidence)
+  return { hasPurchaseIntent: llm.hasPurchaseIntent ?? false, productNameHint: null, outcome }
 }
 
 export async function handleEcommerceMessage({
   accountId,
-  pageId,
   senderId,
   messageText,
-  accessToken,
+  channel,
   customInstructions = [],
   infosToCollect = [],
   faqs = [],
   persona,
+  history = '',
+  prefillProductId = null,
   aiProvider,
   aiApiKey,
   aiModel,
 }: {
   accountId: string
-  pageId: string
   senderId: string
   messageText: string
-  accessToken: string
+  channel: AgentChannel
   customInstructions?: string[]
   infosToCollect?: string[]
   faqs?: Array<{ question: string; answer: string }>
   persona?: string
+  /** Pre-rendered block from lib/agent/history.ts::renderHistoryBlock, or '' for none. */
+  history?: string
+  /**
+   * Product id already resolved deterministically by the caller (see
+   * inbound.ts resolving handleQaMessage's productNameHint via
+   * resolveProduct) — only applied on a brand-new session, where it lets
+   * this turn skip the LLM extraction call entirely instead of spending a
+   * second call re-detecting what the Q&A call already saw (audit finding
+   * F9).
+   */
+  prefillProductId?: string | null
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
-}): Promise<void> {
+}): Promise<AgentOutcome> {
+  const route = 'ecommerce.tunnel'
   const BUILTIN_KEYWORDS = [
     'produit',
     'taille',
@@ -190,6 +233,12 @@ export async function handleEcommerceMessage({
 
   const supabase = createAdminClient()
 
+  // Deliberately NOT filtered by stock here (unlike the catalog shown in
+  // Q&A, see inbound.ts) — this array also resolves the customer's
+  // ALREADY-selected product for an in-progress session, which must keep
+  // working even if that product sells out mid-conversation. The actual
+  // no-overselling guarantee is the atomic re-check right before the order
+  // is inserted below (audit finding F10), not this list.
   const { data: products } = await supabase.from('products').select('*').eq('channel_account_id', accountId).eq('is_active', true)
 
   let { data: session } = await supabase
@@ -199,7 +248,7 @@ export async function handleEcommerceMessage({
     .eq('sender_id', senderId)
     .neq('status', 'confirmed')
     .neq('status', 'cancelled')
-    .single()
+    .maybeSingle()
 
   let isNewSession = false
 
@@ -236,8 +285,7 @@ export async function handleEcommerceMessage({
         .single()
 
       if (!existing) {
-        await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-        return
+        return sendAndReport(channel, 'Désolé, problème technique. Réessayez dans quelques instants.', route)
       }
 
       const { data: resetSession, error: resetError } = await supabase
@@ -266,14 +314,12 @@ export async function handleEcommerceMessage({
         .single()
 
       if (resetError || !resetSession) {
-        await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-        return
+        return sendAndReport(channel, 'Désolé, problème technique. Réessayez dans quelques instants.', route)
       }
       session = resetSession
     } else if (error) {
       console.error('[Ecommerce] Session creation failed:', error)
-      await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-      return
+      return sendAndReport(channel, 'Désolé, problème technique. Réessayez dans quelques instants.', route)
     } else {
       session = newSession
     }
@@ -298,6 +344,28 @@ export async function handleEcommerceMessage({
   let isCancellation = false
   let deterministicallyResolved = false
 
+  // ── Cross-cutting intents, recognized from ANY point in the flow ───────
+  // Previously the tunnel understood exactly one alternative to "answer the
+  // field being asked": a bare yes/no at the final confirmation step. A
+  // greeting sent mid-checkout was intercepted upstream and cancelled the
+  // whole session outright — the only "exit" the tunnel had (audit finding
+  // F6). See lib/agent/ecommerce/intent.ts.
+  const intent = classifyIntent(messageText, awaitingField)
+
+  if (intent === 'human') {
+    await supabase
+      .from('contacts')
+      .update({ bot_paused: true, bot_paused_at: new Date().toISOString() })
+      .eq('channel_account_id', accountId)
+      .eq('sender_id', senderId)
+    return sendAndReport(channel, t.humanHandoff, route)
+  }
+
+  if (isGreeting(messageText) && awaitingField && !isNewSession) {
+    const nextQuestion = getNextQuestion(awaitingField, updated, products ?? [], t, false)
+    return sendAndReport(channel, `${t.welcome}\n\n${nextQuestion.text}`, route, nextQuestion.quickReplies)
+  }
+
   // ── Deterministic-first slot resolution ────────────────────────────────
   // The machine always knows the ONE field it just asked for. Resolving
   // that field with plain matching (catalog lookup, regex, wilaya table)
@@ -308,7 +376,33 @@ export async function handleEcommerceMessage({
   // address because it was ≥10 characters, or "non" to a delivery-mode
   // question being read as "cancel the order" by a confirmation regex that
   // ran unconditionally regardless of what was actually asked.
-  if (awaitingField === 'produit') {
+  if (intent === 'cancel') {
+    isCancellation = true
+    deterministicallyResolved = true
+  } else if (intent === 'restart') {
+    updated.product_id = null
+    updated.selected_size = null
+    updated.selected_color = null
+    updated.customer_name = null
+    updated.customer_phone = null
+    updated.wilaya = null
+    updated.delivery_mode = null
+    updated.shipping_address = null
+    updated.extra_data = {}
+    deterministicallyResolved = true
+  } else if (intent === 'change_product' && updated.product_id) {
+    updated.product_id = null
+    updated.selected_size = null
+    updated.selected_color = null
+    deterministicallyResolved = true
+  } else if (isNewSession && prefillProductId) {
+    // The Q&A call that handed this turn off to the tunnel (audit finding
+    // F9) already resolved a product name deterministically via
+    // resolveProduct — no need to spend this turn's LLM call re-detecting
+    // it from scratch.
+    updated.product_id = prefillProductId
+    deterministicallyResolved = true
+  } else if (awaitingField === 'produit') {
     const resolved = resolveProduct(messageText, products ?? [])
     if (resolved) {
       updated.product_id = resolved.id
@@ -394,9 +488,9 @@ ${customInstructions.length ? `=== INSTRUCTIONS ===\n${customInstructions.map((i
 ${faqBlock}
 === CATALOGUE ===
 ${JSON.stringify(orderRelevantProducts.map(toPromptCatalogEntry), null, 2)}${orderCatalogNote}
-
+${history}
 === MESSAGE CLIENT ===
-"${messageText}"
+"${fenceUserText(messageText)}"
 
 === TES TÂCHES ===
 1. Extrais toutes les données de commande présentes dans le message.
@@ -404,7 +498,7 @@ ${JSON.stringify(orderRelevantProducts.map(toPromptCatalogEntry), null, 2)}${ord
    - true UNIQUEMENT si : (a) salutation sur nouvelle session, (b) vraie question sur produits/prix/tailles/livraison
    - false si : le client donne une info de commande (nom, téléphone, adresse, taille, couleur, wilaya, etc.)
    - RÈGLE : session en cours + message interprétable comme donnée → isQuestion = false
-3. Si isQuestion = true → questionReply = réponse en langue "${lang}". Sinon null.
+3. Si isQuestion = true → questionReply = réponse en langue "${lang}", et évalue ta confiance dans "confidence" (0 à 1 ; basse si l'information n'est ni dans le catalogue ni dans les instructions/base de connaissances, ou si la question sort du cadre de la boutique). Sinon questionReply et confidence restent null.
 
 === RÈGLES D'EXTRACTION ===
 - Téléphone algérien : 07/06/05xxxxxxxx ou +213xxxxxxxxx
@@ -425,7 +519,8 @@ JSON uniquement (sans backticks) :
     "extra_data": { ${extraDataKeys.map((k) => `"${k}": "valeur ou null"`).join(', ')} }
   },
   "isQuestion": true | false,
-  "questionReply": "réponse ou null"
+  "questionReply": "réponse ou null",
+  "confidence": 0.0
 }`
 
     try {
@@ -442,8 +537,7 @@ JSON uniquement (sans backticks) :
         .from('order_sessions')
         .update({ awaiting_field: fallbackField, detected_language: lang, last_message_at: new Date().toISOString() })
         .eq('id', session.id)
-      await sendReply(pageId, accessToken, senderId, fallbackQuestion.text, fallbackQuestion.quickReplies)
-      return
+      return sendAndReport(channel, fallbackQuestion.text, route, fallbackQuestion.quickReplies)
     }
 
     const extracted: ExtractedFields = llmResult.extractedData ?? {}
@@ -466,6 +560,14 @@ JSON uniquement (sans backticks) :
     if (extracted.customer_name) updated.customer_name = extracted.customer_name
     if (extracted.customer_phone) updated.customer_phone = extracted.customer_phone
     updated.extra_data = mergedExtra
+  }
+
+  // Only a genuine LLM-answered question carries real uncertainty — the
+  // slot-extraction half of this same call is either right or wrong, not a
+  // matter of "confidence" (and is deterministic-first anyway, see parseSlot).
+  if (llmResult?.isQuestion && llmResult.questionReply) {
+    const escalation = await checkConfidenceEscalation(accountId, senderId, channel, llmResult.confidence, route, t.humanHandoff)
+    if (escalation) return escalation
   }
 
   const missing = getMissingFields(updated, products ?? [], customInfos)
@@ -614,126 +716,76 @@ JSON uniquement (sans backticks) :
 
       const totalAmount = Math.max(unitPrice * qty - discountAmount, 0)
 
-      const { error: insertError } = await supabase.from('orders').insert({
-        channel_account_id: finalSession.channel_account_id,
-        order_session_id: finalSession.id,
-        contact_id: linkedContact?.id ?? null,
-        customer_name: finalSession.customer_name ?? 'Inconnu',
-        customer_phone: finalSession.customer_phone ?? 'Inconnu',
-        wilaya: isPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
-        delivery_mode: isPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
-        shipping_address: isPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
-        product_name: finalSession.products.name,
-        currency: finalSession.products.currency ?? 'DZD',
-        price: unitPrice,
-        size: finalSession.selected_size,
-        color: finalSession.selected_color,
-        quantity: qty,
-        total_amount: totalAmount,
-        extra_data: { ...(finalSession.extra_data ?? {}), ...(appliedCode ? { applied_discount_code: appliedCode } : {}) },
-      })
+      // Reserve stock BEFORE inserting the order, not after: two customers
+      // confirming the last unit near-simultaneously used to both succeed,
+      // since decrement_product_stock/decrement_variant_stock floored at
+      // zero instead of failing, and nothing re-checked availability
+      // between showing the product and confirming the order (audit
+      // finding F10). Reserving first — atomically, via the migration
+      // 20260826 RPCs — means only one of the two concurrent confirmations
+      // can win; the loser is told the item is gone instead of getting a
+      // false confirmation for a unit that doesn't exist. Non-physical
+      // kinds and products with track_stock off always "succeed" here (see
+      // the RPCs), matching their existing untracked-stock behavior.
+      let stockReserved = true
+      if (isPhysical && variantId) {
+        const { data: ok, error } = await supabase.rpc('decrement_variant_stock', { p_variant_id: variantId, p_quantity: qty })
+        if (error) console.error('[Ecommerce] Variant stock check failed:', error)
+        stockReserved = error ? true : !!ok // a transient RPC error must not block a sale outright — fail open, not closed
+      } else if (isPhysical && finalSession.product_id) {
+        const { data: ok, error } = await supabase.rpc('decrement_product_stock', { p_product_id: finalSession.product_id, p_quantity: qty })
+        if (error) console.error('[Ecommerce] Stock check failed:', error)
+        stockReserved = error ? true : !!ok
+      }
 
-      if (insertError) {
-        console.error('[Ecommerce] Order creation failed:', insertError)
-        // `replyText` was already set to t.confirmed above — the customer
-        // must not see a confirmation for an order that doesn't exist.
-        // Revert the session to "awaiting confirmation" so a retry of
-        // "oui" tries the insert again instead of silently doing nothing.
-        replyText = t.recapConfirm
-        await supabase.from('order_sessions').update({ status: 'gathering_info', awaiting_field: 'confirmation' }).eq('id', finalSession.id)
+      if (!stockReserved) {
+        replyText = t.outOfStock(finalSession.products.name)
+        await supabase
+          .from('order_sessions')
+          .update({ status: 'gathering_info', awaiting_field: 'produit', product_id: null, selected_size: null, selected_color: null })
+          .eq('id', finalSession.id)
       } else {
-        console.log(`[Ecommerce] Order created for session ${finalSession.id}`)
-        await supabase.from('order_sessions').update({ status: 'confirmed' }).eq('id', finalSession.id)
+        const { error: insertError } = await supabase.from('orders').insert({
+          channel_account_id: finalSession.channel_account_id,
+          order_session_id: finalSession.id,
+          contact_id: linkedContact?.id ?? null,
+          customer_name: finalSession.customer_name ?? 'Inconnu',
+          customer_phone: finalSession.customer_phone ?? 'Inconnu',
+          wilaya: isPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
+          delivery_mode: isPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
+          shipping_address: isPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
+          product_name: finalSession.products.name,
+          currency: finalSession.products.currency ?? 'DZD',
+          price: unitPrice,
+          size: finalSession.selected_size,
+          color: finalSession.selected_color,
+          quantity: qty,
+          total_amount: totalAmount,
+          extra_data: { ...(finalSession.extra_data ?? {}), ...(appliedCode ? { applied_discount_code: appliedCode } : {}) },
+        })
 
-        // Stock was never decremented anywhere — confirmed orders left
-        // stock_quantity untouched, making "out of stock" badges decorative.
-        // Atomic RPC (see migration 20260820) avoids a race between two
-        // near-simultaneous orders on the same product. Non-physical kinds
-        // (service/digital/subscription/event) don't track stock this way.
-        if (isPhysical && variantId) {
-          const { error: stockError } = await supabase.rpc('decrement_variant_stock', { p_variant_id: variantId, p_quantity: qty })
-          if (stockError) console.error('[Ecommerce] Variant stock decrement failed:', stockError)
-        } else if (isPhysical && finalSession.product_id) {
-          const { error: stockError } = await supabase.rpc('decrement_product_stock', {
-            p_product_id: finalSession.product_id,
-            p_quantity: qty,
-          })
-          if (stockError) console.error('[Ecommerce] Stock decrement failed:', stockError)
+        if (insertError) {
+          console.error('[Ecommerce] Order creation failed:', insertError)
+          // `replyText` was already set to t.confirmed above — the customer
+          // must not see a confirmation for an order that doesn't exist.
+          // Revert the session to "awaiting confirmation" so a retry of
+          // "oui" tries the insert again instead of silently doing nothing.
+          // (Stock stays reserved either way — safer to under-sell on a
+          // rare insert failure than to double-sell the unit back out.)
+          replyText = t.recapConfirm
+          await supabase.from('order_sessions').update({ status: 'gathering_info', awaiting_field: 'confirmation' }).eq('id', finalSession.id)
+        } else {
+          console.log(`[Ecommerce] Order created for session ${finalSession.id}`)
+          await supabase.from('order_sessions').update({ status: 'confirmed' }).eq('id', finalSession.id)
         }
       }
     }
   }
 
-  try {
-    if (newlySelectedProduct?.image_url) {
-      await sendCardReply(
-        pageId,
-        accessToken,
-        senderId,
-        newlySelectedProduct.name,
-        `${newlySelectedProduct.price} ${newlySelectedProduct.currency ?? 'DA'}`,
-        newlySelectedProduct.image_url
-      )
-    }
-    await sendReply(pageId, accessToken, senderId, replyText, quickReplies)
-  } catch (err) {
-    if (err instanceof TokenExpiredError) {
-      await supabase.from('channel_accounts').update({ is_active: false }).eq('id', accountId)
-    }
-    console.error('[Ecommerce] sendReply failed:', err)
+  if (newlySelectedProduct?.image_url) {
+    // Best-effort — the card is a bonus, `replyText` below is the actual
+    // answer this turn is judged on.
+    await channel.sendCard(newlySelectedProduct.name, `${newlySelectedProduct.price} ${newlySelectedProduct.currency ?? 'DA'}`, newlySelectedProduct.image_url).catch(() => null)
   }
-}
-
-export async function handleEcommerceVoice({
-  accountId,
-  pageId,
-  senderId,
-  audioBuffer,
-  mimeType,
-  accessToken,
-  customInstructions = [],
-  infosToCollect = [],
-  faqs = [],
-  persona,
-  aiProvider,
-  aiApiKey,
-  aiModel,
-}: {
-  accountId: string
-  pageId: string
-  senderId: string
-  audioBuffer: Buffer
-  mimeType: string
-  accessToken: string
-  customInstructions?: string[]
-  infosToCollect?: string[]
-  faqs?: Array<{ question: string; answer: string }>
-  persona?: string
-  aiProvider?: string | null
-  aiApiKey?: string | null
-  aiModel?: string | null
-}): Promise<string | null> {
-  const transcription = await transcribeVoiceForEcommerce(audioBuffer, mimeType, aiProvider, aiApiKey)
-
-  if (!transcription.trim()) {
-    await sendReply(pageId, accessToken, senderId, "Désolé, je n'ai pas bien compris votre message vocal 😅 Pouvez-vous réécrire en texte ?")
-    return null
-  }
-
-  console.log(`[Ecommerce/Voice] Transcription : "${transcription}"`)
-  await handleEcommerceMessage({
-    accountId,
-    pageId,
-    senderId,
-    messageText: transcription,
-    accessToken,
-    customInstructions,
-    infosToCollect,
-    faqs,
-    persona,
-    aiProvider,
-    aiApiKey,
-    aiModel,
-  })
-  return transcription
+  return sendAndReport(channel, replyText, route, quickReplies, llmResult?.isQuestion ? llmResult.confidence : undefined)
 }

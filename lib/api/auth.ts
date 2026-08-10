@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/server'
-import { unauthorized, forbidden } from '@/lib/api/errors'
+import { createClient } from '@/lib/supabase/server.ts'
+import { unauthorized, forbidden } from '@/lib/api/errors.ts'
 import type { NextResponse } from 'next/server'
 
 export interface AuthedRequest {

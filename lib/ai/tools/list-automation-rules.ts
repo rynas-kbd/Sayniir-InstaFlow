@@ -1,4 +1,4 @@
-import { listByAccountTool } from './list-by-account'
+import { listByAccountTool } from './list-by-account.ts'
 
 export const listAutomationRulesTool = listByAccountTool({
   name: 'list_automation_rules',

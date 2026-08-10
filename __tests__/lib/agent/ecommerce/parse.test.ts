@@ -86,6 +86,17 @@ describe('parseSlot — adresse complète (fixes: arbitrary text stored as addre
   test('rejects a confirmation word', () => {
     expect(parseSlot('adresse complète', 'oui', null).matched).toBe(false)
   })
+
+  test('rejects a question without a trailing "?" (audit finding F7)', () => {
+    // "c'est combien la livraison" has no question mark at all — the old
+    // check (only a trailing "?"/"؟") let this slide through and get
+    // stored verbatim as the address.
+    expect(parseSlot('adresse complète', "c'est combien la livraison", null).matched).toBe(false)
+  })
+
+  test('rejects text shorter than a plausible address', () => {
+    expect(parseSlot('adresse complète', 'Alger', null).matched).toBe(false)
+  })
 })
 
 describe('parseSlot — nom complet', () => {
@@ -95,6 +106,29 @@ describe('parseSlot — nom complet', () => {
 
   test('rejects a question', () => {
     expect(parseSlot('nom complet', 'vous livrez le vendredi ?', null).matched).toBe(false)
+  })
+
+  test('rejects a question without a trailing "?" (audit finding F7)', () => {
+    // Regression for the actual bug: any text not ending in "?" was
+    // accepted outright, so "c'est combien la livraison" (no "?") got
+    // stored as the customer's name.
+    expect(parseSlot('nom complet', "c'est combien la livraison", null).matched).toBe(false)
+  })
+
+  test('rejects a greeting sent mid-flow instead of storing it as the name (audit finding F6/F7)', () => {
+    expect(parseSlot('nom complet', 'salam', null).matched).toBe(false)
+  })
+
+  test('rejects text containing digits', () => {
+    expect(parseSlot('nom complet', 'Rynas 2', null).matched).toBe(false)
+  })
+
+  test('rejects a long sentence (more than 5 words)', () => {
+    expect(parseSlot('nom complet', 'je ne sais pas trop comment vous dire', null).matched).toBe(false)
+  })
+
+  test('rejects a single character', () => {
+    expect(parseSlot('nom complet', 'R', null).matched).toBe(false)
   })
 })
 

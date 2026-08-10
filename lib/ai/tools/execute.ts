@@ -1,5 +1,5 @@
-import { createAdminClient } from '../../supabase/admin'
-import type { AiTool, ResourceRef, ToolExecContext } from './types'
+import { createAdminClient } from '../../supabase/admin.ts'
+import type { AiTool, ResourceRef, ToolExecContext } from './types.ts'
 
 export interface ToolCallLogContext {
   conversationId: string

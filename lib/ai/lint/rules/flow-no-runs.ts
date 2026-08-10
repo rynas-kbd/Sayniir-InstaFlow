@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 

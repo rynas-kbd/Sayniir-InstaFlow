@@ -1,5 +1,5 @@
-import { createAdminClient } from '../../supabase/admin'
-import type { Platform } from '../types'
+import { createAdminClient } from '../../supabase/admin.ts'
+import type { Platform } from '../types.ts'
 
 /**
  * Deliberately has NO import from ./inbound — dispatchInboundMessage lives

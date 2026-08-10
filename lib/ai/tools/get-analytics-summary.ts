@@ -1,5 +1,5 @@
-import { getAnalyticsSummary, type AnalyticsSummary } from '../../analytics/queries'
-import type { AiTool } from './types'
+import { getAnalyticsSummary, type AnalyticsSummary } from '../../analytics/queries.ts'
+import type { AiTool } from './types.ts'
 
 const WINDOW_DAYS = 14
 

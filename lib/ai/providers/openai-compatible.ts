@@ -1,4 +1,4 @@
-import type { CanonicalContentBlock, CanonicalMessage, ProviderStopReason, ProviderStreamEvent, ProviderTurnParams } from './types'
+import type { CanonicalContentBlock, CanonicalMessage, ProviderStopReason, ProviderStreamEvent, ProviderTurnParams } from './types.ts'
 
 interface OpenAiToolCallParam {
   id: string

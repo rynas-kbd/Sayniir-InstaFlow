@@ -1,5 +1,5 @@
 import { MessageSquareText, Hash, MousePointerClick, Sparkles, FileText, Percent } from 'lucide-react'
-import type { FlowNodeType, CardButton } from '@/components/flows/types'
+import type { FlowNodeType, CardButton } from '@/components/flows/types.ts'
 
 export interface TemplateNode {
   node_key: string

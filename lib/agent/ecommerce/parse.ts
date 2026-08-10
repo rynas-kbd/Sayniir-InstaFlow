@@ -1,5 +1,6 @@
-import { normalizeAlgerianPhone, normalizeDeliveryMode, isConfirmationMessage, isCancellationMessage, type Product } from './state'
-import { resolveWilaya } from './wilayas'
+import { normalizeAlgerianPhone, normalizeDeliveryMode, isConfirmationMessage, isCancellationMessage, type Product } from './state.ts'
+import { resolveWilaya } from './wilayas.ts'
+import { looksLikeQuestion } from './intent.ts'
 
 /**
  * Deterministic per-slot answer parsing — replaces asking the LLM to
@@ -95,20 +96,31 @@ export function parseSlot(awaitingField: SlotField, text: string, product: Produ
 
     case 'nom complet': {
       // A name is free text by nature — accept anything that isn't itself
-      // a confirmation/cancellation word or a question (heuristic: ends in
-      // "?" or looks like a delivery/size/color answer for another slot).
+      // a confirmation/cancellation word or a question. Previously any
+      // text not ending in "?" was accepted outright, which let a genuine
+      // mid-flow question ("c'est combien la livraison ?" without the
+      // question mark, or a greeting) get silently stored as the
+      // customer's name (audit finding F7) — looksLikeQuestion catches the
+      // interrogative-marker/greeting cases a trailing "?" check misses.
+      // A handful of plausibility checks (length, no digits, not a
+      // sentence) reject the rest of what a real name never looks like.
       if (isConfirmationMessage(trimmed) || isCancellationMessage(trimmed)) return { matched: false }
-      if (trimmed.endsWith('?') || trimmed.endsWith('؟')) return { matched: false }
+      if (looksLikeQuestion(trimmed)) return { matched: false }
+      if (trimmed.length < 2 || trimmed.length > 60) return { matched: false }
+      if (/\d/.test(trimmed)) return { matched: false }
+      if (trimmed.split(/\s+/).length > 5) return { matched: false }
       return { matched: true, value: trimmed }
     }
 
     case 'adresse complète': {
       // Same free-text caveat as name, plus: never accept something that
       // looks like a delivery-mode answer (client re-answering the
-      // previous question) or a confirmation/cancellation word.
+      // previous question), a confirmation/cancellation word, or a
+      // question. A real address is rarely under 8 characters.
       if (isConfirmationMessage(trimmed) || isCancellationMessage(trimmed)) return { matched: false }
       if (normalizeDeliveryMode(null, trimmed)) return { matched: false }
-      if (trimmed.endsWith('?') || trimmed.endsWith('؟')) return { matched: false }
+      if (looksLikeQuestion(trimmed)) return { matched: false }
+      if (trimmed.length < 8) return { matched: false }
       return { matched: true, value: trimmed }
     }
 
@@ -122,8 +134,9 @@ export function parseSlot(awaitingField: SlotField, text: string, product: Produ
     default: {
       // Custom infos_to_collect / kind-specific fields (créneau, nombre de
       // places, ...) are free text — accept as-is unless it's a stray
-      // confirmation/cancellation word.
+      // confirmation/cancellation word or a question.
       if (isConfirmationMessage(trimmed) || isCancellationMessage(trimmed)) return { matched: false }
+      if (looksLikeQuestion(trimmed)) return { matched: false }
       return { matched: true, value: trimmed }
     }
   }

@@ -1,5 +1,5 @@
 import 'server-only'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server.ts'
 
 const MIN_ACCOUNT_AGE_DAYS = 5
 const MAX_ACCOUNT_AGE_DAYS = 9

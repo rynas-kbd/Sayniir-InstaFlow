@@ -1,6 +1,6 @@
-import { createAdminClient } from '../../supabase/admin'
-import { resolveAccessToken } from './tokens'
-import type { Platform } from '../types'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { resolveAccessToken } from './tokens.ts'
+import type { Platform } from '../types.ts'
 
 export interface ChannelAccountRow {
   id: string

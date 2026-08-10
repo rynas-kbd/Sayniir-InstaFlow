@@ -1,7 +1,7 @@
 import 'server-only'
-import { createClient } from '@/lib/supabase/server'
-import { resolveActiveAccount } from '@/lib/accounts/active-account'
-import { ONBOARDING_STEPS, type OnboardingStepId } from './steps'
+import { createClient } from '@/lib/supabase/server.ts'
+import { resolveActiveAccount } from '@/lib/accounts/active-account.ts'
+import { ONBOARDING_STEPS, type OnboardingStepId } from './steps.ts'
 
 export interface OnboardingState {
   currentStepId: OnboardingStepId | null // null once all 3 are done

@@ -1,11 +1,11 @@
-import { createAdminClient } from '../supabase/admin'
-import { getAdapter } from '../channels/registry'
-import { resolveAudience, resolveSegment } from '../contacts/service'
-import { TokenExpiredError } from '../meta/messaging'
-import { renderTemplate } from '../personalization'
-import { resolveAccessToken } from '../channels/shared/tokens'
-import type { ChannelAccountRef, Platform } from '../channels/types'
-import type { Contact } from '../contacts/types'
+import { createAdminClient } from '../supabase/admin.ts'
+import { getAdapter } from '../channels/registry.ts'
+import { resolveAudience, resolveSegment } from '../contacts/service.ts'
+import { TokenExpiredError } from '../meta/messaging.ts'
+import { renderTemplate } from '../personalization.ts'
+import { resolveAccessToken } from '../channels/shared/tokens.ts'
+import type { ChannelAccountRef, Platform } from '../channels/types.ts'
+import type { Contact } from '../contacts/types.ts'
 
 
 

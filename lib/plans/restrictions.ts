@@ -1,5 +1,5 @@
-import { createAdminClient } from '../supabase/admin'
-import { PlanKey } from '../plans'
+import { createAdminClient } from '../supabase/admin.ts'
+import { PlanKey } from '../plans.ts'
 
 export interface PlanLimits {
   contacts: number

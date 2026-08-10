@@ -1,8 +1,8 @@
-import { createAdminClient } from '../../supabase/admin'
-import { resolveAudience, resolveSegment } from '../../contacts/service'
-import type { FlowNode, FlowEdge } from '../../flows/types'
-import type { LintFinding } from './types'
-import { computeFlowFindings, computeCampaignAudienceFindings } from './compute'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { resolveAudience, resolveSegment } from '../../contacts/service.ts'
+import type { FlowNode, FlowEdge } from '../../flows/types.ts'
+import type { LintFinding } from './types.ts'
+import { computeFlowFindings, computeCampaignAudienceFindings } from './compute.ts'
 import {
   checkAccountTokenExpiring,
   checkAccountNoFallback,
@@ -13,7 +13,7 @@ import {
   checkOnboardingTeamInvite,
   checkOnboardingSingleChannel,
   checkOnboardingSecondWave,
-} from './rules'
+} from './rules/index.ts'
 
 /** Upserts findings for an account, preserving dismissed_at/explanation on rows that still apply, and removing rows that no longer do. */
 async function upsertFindings(channelAccountId: string, findings: LintFinding[]): Promise<void> {

@@ -57,7 +57,11 @@ export async function sendReply(
     return null
   }
 
-  console.log(`[sendReply] ✅ Sent to ${recipientId}:`, messageText)
+  // Deliberately no message content in this log — see audit finding F16
+  // (customer message text was landing in server logs verbatim). The
+  // dispatch layer's lib/agent/telemetry.ts::logTurn is the structured,
+  // content-free observability path for what was sent and how.
+  console.log(`[sendReply] ✅ Sent to ${recipientId} (message_id=${data.message_id})`)
   return { message_id: data.message_id as string }
 }
 

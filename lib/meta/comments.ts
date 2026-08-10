@@ -1,6 +1,6 @@
-import { createAdminClient } from '../supabase/admin'
-import { TokenExpiredError } from './messaging'
-import { resolveAccessToken } from '../channels/shared/tokens'
+import { createAdminClient } from '../supabase/admin.ts'
+import { TokenExpiredError } from './messaging.ts'
+import { resolveAccessToken } from '../channels/shared/tokens.ts'
 
 const GRAPH_API_VERSION = 'v21.0'
 

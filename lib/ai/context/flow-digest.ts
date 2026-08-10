@@ -1,5 +1,5 @@
-import type { FlowNode, FlowEdge } from '../../flows/types'
-import type { LintFinding } from '../lint/types'
+import type { FlowNode, FlowEdge } from '../../flows/types.ts'
+import type { LintFinding } from '../lint/types.ts'
 
 const MAX_LABEL_LENGTH = 28
 

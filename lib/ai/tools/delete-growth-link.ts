@@ -1,4 +1,4 @@
-import { deleteByIdTool } from './delete-by-id'
+import { deleteByIdTool } from './delete-by-id.ts'
 
 export const deleteGrowthLinkTool = deleteByIdTool({
   name: 'delete_growth_link',

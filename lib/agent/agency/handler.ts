@@ -1,6 +1,9 @@
-import { createAdminClient } from '../../supabase/admin'
-import { sendReply, TokenExpiredError } from '../../meta/messaging'
-import { callAgentLLM } from '../engine'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { callAgentLLM } from '../engine.ts'
+import { sendAndReport, type AgentChannel } from '../messaging.ts'
+import { fenceUserText } from '../history.ts'
+import { checkConfidenceEscalation } from '../confidence.ts'
+import type { AgentOutcome } from '../types.ts'
 
 /**
  * Agency vertical — lead qualification agent. New build. Unlike ecommerce's
@@ -8,6 +11,9 @@ import { callAgentLLM } from '../engine'
  * (leads table) — qualification_status progresses new → qualifying →
  * qualified/disqualified as the conversation continues.
  */
+
+/** No per-language template system in this vertical (unlike ecommerce) — a single French default matches the existing "Désolé, problème technique..." fallback tone. */
+const HUMAN_HANDOFF_TEXT = "D'accord, je vous mets en relation avec un membre de notre équipe pour être sûr de bien vous aider. Un instant svp 🙏"
 
 interface AgencyLlmResult {
   extractedData: {
@@ -20,34 +26,37 @@ interface AgencyLlmResult {
   qualificationStatus: 'new' | 'qualifying' | 'qualified' | 'disqualified'
   score: number
   replyText: string
+  confidence?: number
 }
 
 export async function handleAgencyMessage({
   accountId,
-  pageId,
   senderId,
   messageText,
-  accessToken,
+  channel,
   customInstructions = [],
   infosToCollect = [],
+  history = '',
   aiProvider,
   aiApiKey,
   aiModel,
 }: {
   accountId: string
-  pageId: string
   senderId: string
   messageText: string
-  accessToken: string
+  channel: AgentChannel
   customInstructions?: string[]
   infosToCollect?: string[]
+  /** Pre-rendered block from lib/agent/history.ts::renderHistoryBlock, or '' for none. */
+  history?: string
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
-}): Promise<void> {
+}): Promise<AgentOutcome> {
+  const route = 'agency'
   const supabase = createAdminClient()
 
-  let { data: lead } = await supabase.from('leads').select('*').eq('channel_account_id', accountId).eq('external_user_id', senderId).single()
+  let { data: lead } = await supabase.from('leads').select('*').eq('channel_account_id', accountId).eq('external_user_id', senderId).maybeSingle()
 
   if (!lead) {
     const { data: newLead, error } = await supabase
@@ -61,8 +70,7 @@ export async function handleAgencyMessage({
 
     if (error || !newLead) {
       console.error('[Agency] Lead creation failed:', error)
-      await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-      return
+      return sendAndReport(channel, 'Désolé, problème technique. Réessayez dans quelques instants.', route)
     }
     lead = newLead
   }
@@ -80,9 +88,9 @@ ${JSON.stringify(
   null,
   2
 )}
-
+${history}
 === MESSAGE DU PROSPECT ===
-"${messageText}"
+"${fenceUserText(messageText)}"
 
 === TÂCHES ===
 1. Extrais nom, téléphone, email, budget approximatif, résumé du besoin si mentionnés.
@@ -93,13 +101,15 @@ ${JSON.stringify(
    - "disqualified" : hors cible (budget/besoin incompatible avec les critères ci-dessus)
 3. Donne un score de 0 à 100 reflétant la qualité du lead.
 4. Réponds au prospect de façon naturelle, en posant la prochaine question de qualification pertinente si besoin.
+5. Évalue ta confiance dans "confidence" (0 à 1) : basse si le message sort du cadre de la qualification, ou si tu n'es pas sûr d'avoir bien compris le besoin.
 
 JSON uniquement (sans backticks) :
 {
   "extractedData": { "full_name": "... ou null", "phone": "... ou null", "email": "... ou null", "budget_range": "... ou null", "need_summary": "... ou null" },
   "qualificationStatus": "new" | "qualifying" | "qualified" | "disqualified",
   "score": 0,
-  "replyText": "le message à envoyer au prospect"
+  "replyText": "le message à envoyer au prospect",
+  "confidence": 0.0
 }`
 
   let llmResult: AgencyLlmResult
@@ -107,8 +117,7 @@ JSON uniquement (sans backticks) :
     llmResult = await callAgentLLM<AgencyLlmResult>(prompt, aiProvider, aiApiKey, aiModel)
   } catch (err) {
     console.error('[Agency] LLM error:', err)
-    await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-    return
+    return { status: 'error', error: err, route }
   }
 
   const d = llmResult.extractedData ?? {}
@@ -125,12 +134,8 @@ JSON uniquement (sans backticks) :
 
   await supabase.from('leads').update(updates).eq('id', lead.id)
 
-  try {
-    await sendReply(pageId, accessToken, senderId, llmResult.replyText)
-  } catch (err) {
-    if (err instanceof TokenExpiredError) {
-      await supabase.from('channel_accounts').update({ is_active: false }).eq('id', accountId)
-    }
-    console.error('[Agency] sendReply failed:', err)
-  }
+  const escalation = await checkConfidenceEscalation(accountId, senderId, channel, llmResult.confidence, route, HUMAN_HANDOFF_TEXT)
+  if (escalation) return escalation
+
+  return sendAndReport(channel, llmResult.replyText, route, undefined, llmResult.confidence)
 }

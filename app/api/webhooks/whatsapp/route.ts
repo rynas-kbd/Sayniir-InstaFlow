@@ -1,4 +1,4 @@
-import { createWebhookRoute } from '@/lib/channels/shared/inbound'
+import { createWebhookRoute } from '@/lib/channels/shared/next-webhook-route'
 
 /**
  * WhatsApp Cloud API webhook receiver. Register this URL as the WhatsApp

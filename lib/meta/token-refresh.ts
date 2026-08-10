@@ -1,5 +1,5 @@
-import { createAdminClient } from '../supabase/admin'
-import { resolveAccessToken, sealAccessToken } from '../channels/shared/tokens'
+import { createAdminClient } from '../supabase/admin.ts'
+import { resolveAccessToken, sealAccessToken } from '../channels/shared/tokens.ts'
 
 const GRAPH_API_VERSION = 'v21.0'
 const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`

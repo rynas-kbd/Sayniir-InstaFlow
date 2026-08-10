@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 /** An active flow does nothing while the account's global flows kill-switch is off. */
 export function checkFlowNotEnabled(flow: { id: string; status: string }, flowsEnabled: boolean): LintFinding[] {

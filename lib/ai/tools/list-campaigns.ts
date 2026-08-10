@@ -1,4 +1,4 @@
-import { listByAccountTool } from './list-by-account'
+import { listByAccountTool } from './list-by-account.ts'
 
 export const listCampaignsTool = listByAccountTool({
   name: 'list_campaigns',

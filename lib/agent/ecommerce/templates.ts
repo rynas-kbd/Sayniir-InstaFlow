@@ -19,6 +19,12 @@ export interface Template {
   recapConfirm: string
   confirmed: string
   cancelled: string
+  /** Sent when a customer asks to talk to a human — see lib/agent/ecommerce/intent.ts's 'human' intent. */
+  humanHandoff: string
+  /** Sent when the atomic stock re-check at confirmation time fails — see the stockReserved guard in handleEcommerceMessage. */
+  outOfStock: (productName: string) => string
+  /** Abandoned-cart recovery nudge — see lib/agent/ecommerce/cart-recovery.ts. productName is null when the session was abandoned before a product was even picked. */
+  cartReminder: (productName: string | null) => string
   labelProduct: string
   labelSize: string
   labelColor: string
@@ -53,6 +59,12 @@ export const TEMPLATES: Record<string, Template> = {
     recapConfirm: 'Est-ce que tout est correct ? Répondez "oui" pour confirmer ou "non" pour annuler.',
     confirmed: '🎉 Merci ! Votre commande a bien été confirmée. Notre équipe vous contactera bientôt.',
     cancelled: "D'accord, votre commande a été annulée. N'hésitez pas à revenir ! 😊",
+    humanHandoff: "D'accord, je vous mets en relation avec un membre de notre équipe. Un instant svp 🙏",
+    outOfStock: (name) => `Désolé, "${name}" vient de se retrouver en rupture de stock 😔 Souhaitez-vous choisir un autre produit ?`,
+    cartReminder: (name) =>
+      name
+        ? `Vous avez laissé une commande en cours pour "${name}" 🛍️ Elle vous intéresse toujours ? Répondez "oui" pour continuer, ou dites-le-moi si vous avez changé d'avis.`
+        : `Vous aviez commencé une commande chez nous 🛍️ Ça vous intéresse toujours ? Répondez "oui" pour reprendre là où on s'était arrêtés.`,
     labelProduct: 'Produit',
     labelSize: 'Taille',
     labelColor: 'Couleur',
@@ -84,6 +96,12 @@ export const TEMPLATES: Record<string, Template> = {
     recapConfirm: 'هل كل شيء صحيح؟ أجب بـ "نعم" للتأكيد أو "لا" للإلغاء.',
     confirmed: '🎉 شكراً! تم تأكيد طلبك. سيتصل بك فريقنا قريباً.',
     cancelled: 'حسناً، تم إلغاء طلبك. لا تتردد في العودة! 😊',
+    humanHandoff: 'حسناً، سأحولك إلى أحد أعضاء فريقنا. لحظة من فضلك 🙏',
+    outOfStock: (name) => `عذراً، "${name}" نفدت كميته للتو من المخزون 😔 هل تريد اختيار منتج آخر؟`,
+    cartReminder: (name) =>
+      name
+        ? `تركت طلبية لم تكتمل بخصوص "${name}" 🛍️ ما زلت مهتماً؟ أجب بـ "نعم" للمتابعة، أو أخبرني إذا غيرت رأيك.`
+        : `كنت قد بدأت طلبية عندنا 🛍️ ما زلت مهتماً؟ أجب بـ "نعم" لمتابعة من حيث توقفنا.`,
     labelProduct: 'المنتج',
     labelSize: 'المقاس',
     labelColor: 'اللون',
@@ -115,6 +133,12 @@ export const TEMPLATES: Record<string, Template> = {
     recapConfirm: 'كلشي صح؟ جاوب بـ "واه" باش تأكد ولا "لا" باش تلغي.',
     confirmed: '🎉 شكراً! الطلب ديالك تأكد. الفريق ديالنا غيتصل بيك قريب.',
     cancelled: 'واخا، الطلب ديالك تلغى. ما تتردد ترجع! 😊',
+    humanHandoff: 'واخا، غادي نحولك لواحد من الفريق ديالنا. لحظة عافاك 🙏',
+    outOfStock: (name) => `سماح ليا، "${name}" سالات الكمية ديالو دابا 😔 واش تحب تختار منتج آخر؟`,
+    cartReminder: (name) =>
+      name
+        ? `خليتي طلبية ماكملتيهاش على "${name}" 🛍️ مازال معجبك؟ جاوب بـ "واه" باش تكمل، ولا قوليها إذا بدلتي رايك.`
+        : `كنتي بديتي طلبية عندنا 🛍️ مازال معجباك؟ جاوب بـ "واه" باش تكمل من فين وقفنا.`,
     labelProduct: 'المنتج',
     labelSize: 'القياس',
     labelColor: 'اللون',
@@ -146,6 +170,12 @@ export const TEMPLATES: Record<string, Template> = {
     recapConfirm: 'Is everything correct? Reply "yes" to confirm or "no" to cancel.',
     confirmed: '🎉 Thank you! Your order has been confirmed. Our team will contact you soon.',
     cancelled: 'Okay, your order has been cancelled. Feel free to come back! 😊',
+    humanHandoff: "Sure, I'll connect you with a member of our team. One moment please 🙏",
+    outOfStock: (name) => `Sorry, "${name}" just went out of stock 😔 Would you like to choose another product?`,
+    cartReminder: (name) =>
+      name
+        ? `You left an order in progress for "${name}" 🛍️ Still interested? Reply "yes" to continue, or let me know if you changed your mind.`
+        : `You started an order with us earlier 🛍️ Still interested? Reply "yes" to pick up where we left off.`,
     labelProduct: 'Product',
     labelSize: 'Size',
     labelColor: 'Color',

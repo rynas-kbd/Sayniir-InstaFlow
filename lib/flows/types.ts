@@ -1,5 +1,5 @@
-import type { ChannelAccountRef } from '../channels/types'
-import type { ChannelAdapter } from '../channels/types'
+import type { ChannelAccountRef } from '../channels/types.ts'
+import type { ChannelAdapter } from '../channels/types.ts'
 
 export interface FlowNode {
   id: string

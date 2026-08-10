@@ -1,6 +1,6 @@
-import { isEncrypted, decryptApiKey } from '../crypto'
-import { createAdminClient } from '../supabase/admin'
-import { PROVIDER_CONFIG, type CopilotProviderKind } from './models'
+import { isEncrypted, decryptApiKey } from '../crypto.ts'
+import { createAdminClient } from '../supabase/admin.ts'
+import { PROVIDER_CONFIG, type CopilotProviderKind } from './models.ts'
 
 export interface CopilotProviderResolution {
   kind: CopilotProviderKind

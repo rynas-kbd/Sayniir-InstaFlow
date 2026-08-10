@@ -1,4 +1,4 @@
-import type { AiStreamEvent } from './types'
+import type { AiStreamEvent } from './types.ts'
 
 export interface NdjsonStream {
   stream: ReadableStream<Uint8Array>

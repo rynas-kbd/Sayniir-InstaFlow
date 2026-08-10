@@ -1,5 +1,5 @@
-import type { LintFinding } from '../types'
-import type { CampaignAudienceContact } from './campaign-window-24h'
+import type { LintFinding } from '../types.ts'
+import type { CampaignAudienceContact } from './campaign-window-24h.ts'
 
 /** Sending to unsubscribed contacts is both a compliance and a Page-ban risk. */
 export function checkCampaignUnsubscribed(

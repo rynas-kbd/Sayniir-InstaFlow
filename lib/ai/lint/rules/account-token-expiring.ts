@@ -1,4 +1,4 @@
-import type { LintFinding } from '../types'
+import type { LintFinding } from '../types.ts'
 
 const WARNING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const ERROR_WINDOW_MS = 48 * 60 * 60 * 1000

@@ -36,6 +36,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
   }
+  // Stamped so the auto-resume sweep (lib/jobs/bot-auto-resume.ts) knows
+  // how long a conversation has been paused — cleared on manual resume too.
+  if ('bot_paused' in body) updates.bot_paused_at = body.bot_paused ? new Date().toISOString() : null
 
   const { data: contact, error } = await supabase.from('contacts').update(updates).eq('id', id).select().single()
   if (error) return jsonError(500, 'Une erreur est survenue', error)

@@ -1,11 +1,11 @@
-import { createDispatchAdminClient } from '../supabase/dispatch-admin'
-import { getAdapter } from '../channels/registry'
-import { matchesMessageTrigger, matchesCommentTrigger } from './matcher'
-import { executeNode } from './nodes'
-import { getContact, setContactFields } from '../contacts/service'
-import { resolveAccessToken } from '../channels/shared/tokens'
-import type { ChannelAccountRef, Platform } from '../channels/types'
-import type { FlowNode, FlowEdge, FlowRun, NodeExecContext } from './types'
+import { createDispatchAdminClient } from '../supabase/dispatch-admin.ts'
+import { getAdapter } from '../channels/registry.ts'
+import { matchesMessageTrigger, matchesCommentTrigger } from './matcher.ts'
+import { executeNode } from './nodes.ts'
+import { getContact, setContactFields } from '../contacts/service.ts'
+import { resolveAccessToken } from '../channels/shared/tokens.ts'
+import type { ChannelAccountRef, Platform } from '../channels/types.ts'
+import type { FlowNode, FlowEdge, FlowRun, NodeExecContext } from './types.ts'
 
 interface DispatchAccount {
   id: string

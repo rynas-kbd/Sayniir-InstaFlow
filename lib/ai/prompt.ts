@@ -1,5 +1,5 @@
-import type { AiTool } from './tools/types'
-import type { CanonicalMessage, ProviderTool } from './providers/types'
+import type { AiTool } from './tools/types.ts'
+import type { CanonicalMessage, ProviderTool } from './providers/types.ts'
 
 const SYSTEM_PERSONA = `Tu es le copilote produit d'Instaflow, intégré directement dans l'application (pas un chatbot séparé).
 Tu aides l'utilisateur à comprendre et modifier son compte : flows, campagnes, contacts, automatisations.

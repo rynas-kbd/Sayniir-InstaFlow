@@ -1,6 +1,12 @@
-import { createAdminClient } from '../../supabase/admin'
-import { sendReply, TokenExpiredError } from '../../meta/messaging'
-import { callAgentLLM } from '../engine'
+import { createAdminClient } from '../../supabase/admin.ts'
+import { callAgentLLM } from '../engine.ts'
+import { sendAndReport, type AgentChannel } from '../messaging.ts'
+import { fenceUserText } from '../history.ts'
+import { checkConfidenceEscalation } from '../confidence.ts'
+import type { AgentOutcome } from '../types.ts'
+
+/** No per-language template system in this vertical (unlike ecommerce) — a single French default matches the existing "Désolé, problème technique..." fallback tone. */
+const HUMAN_HANDOFF_TEXT = "D'accord, je vous mets en relation avec un membre de notre équipe pour être sûr de bien vous aider. Un instant svp 🙏"
 
 /**
  * Coaching vertical — appointment booking agent. New build (no existing
@@ -27,31 +33,34 @@ interface CoachingLlmResult {
   questionReply: string | null
   readyToBook: boolean
   replyText: string
+  confidence?: number
 }
 
 export async function handleCoachingMessage({
   accountId,
-  pageId,
   senderId,
   messageText,
-  accessToken,
+  channel,
   customInstructions = [],
   infosToCollect = [],
+  history = '',
   aiProvider,
   aiApiKey,
   aiModel,
 }: {
   accountId: string
-  pageId: string
   senderId: string
   messageText: string
-  accessToken: string
+  channel: AgentChannel
   customInstructions?: string[]
   infosToCollect?: string[]
+  /** Pre-rendered block from lib/agent/history.ts::renderHistoryBlock, or '' for none. */
+  history?: string
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
-}): Promise<void> {
+}): Promise<AgentOutcome> {
+  const route = 'coaching'
   const supabase = createAdminClient()
 
   let { data: session } = await supabase
@@ -61,7 +70,7 @@ export async function handleCoachingMessage({
     .eq('external_user_id', senderId)
     .neq('status', 'confirmed')
     .neq('status', 'cancelled')
-    .single()
+    .maybeSingle()
 
   if (!session) {
     const { data: newSession, error } = await supabase
@@ -81,8 +90,7 @@ export async function handleCoachingMessage({
 
     if (error || !newSession) {
       console.error('[Coaching] Session creation failed:', error)
-      await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-      return
+      return sendAndReport(channel, 'Désolé, problème technique. Réessayez dans quelques instants.', route)
     }
     session = newSession
   }
@@ -106,15 +114,16 @@ ${JSON.stringify(
   null,
   2
 )}
-
+${history}
 === MESSAGE DU CLIENT ===
-"${messageText}"
+"${fenceUserText(messageText)}"
 
 === TÂCHES ===
 1. Extrais le service souhaité, la date/heure souhaitée (en texte libre, ne cherche pas à normaliser), le nom et le téléphone du client.
 2. readyToBook = true UNIQUEMENT si service + date/heure souhaitée + nom + téléphone sont tous connus (dans l'état actuel + ce message) ET que le client vient de confirmer.
 3. Si des informations manquent, redemande-les une par une, poliment, dans la langue du client.
 4. Si readyToBook = true, remercie le client et indique qu'un membre de l'équipe confirmera le créneau exact rapidement.
+5. Évalue ta confiance dans "confidence" (0 à 1) : basse si le message sort du cadre de la prise de RDV, ou si tu n'es pas sûr d'avoir bien compris la demande.
 
 JSON uniquement (sans backticks) :
 {
@@ -128,7 +137,8 @@ JSON uniquement (sans backticks) :
   "isQuestion": true | false,
   "questionReply": "réponse si le client posait une question, sinon null",
   "readyToBook": true | false,
-  "replyText": "le message à envoyer au client"
+  "replyText": "le message à envoyer au client",
+  "confidence": 0.0
 }`
 
   let llmResult: CoachingLlmResult
@@ -136,8 +146,7 @@ JSON uniquement (sans backticks) :
     llmResult = await callAgentLLM<CoachingLlmResult>(prompt, aiProvider, aiApiKey, aiModel)
   } catch (err) {
     console.error('[Coaching] LLM error:', err)
-    await sendReply(pageId, accessToken, senderId, 'Désolé, problème technique. Réessayez dans quelques instants.')
-    return
+    return { status: 'error', error: err, route }
   }
 
   const d = llmResult.extractedData ?? {}
@@ -152,7 +161,7 @@ JSON uniquement (sans backticks) :
   await supabase.from('booking_sessions').update(updates).eq('id', session.id)
 
   if (llmResult.readyToBook) {
-    const { data: finalSession } = await supabase.from('booking_sessions').select('*').eq('id', session.id).single()
+    const { data: finalSession } = await supabase.from('booking_sessions').select('*').eq('id', session.id).maybeSingle()
     if (finalSession) {
       await supabase.from('appointments').insert({
         channel_account_id: accountId,
@@ -166,12 +175,8 @@ JSON uniquement (sans backticks) :
     }
   }
 
-  try {
-    await sendReply(pageId, accessToken, senderId, llmResult.replyText)
-  } catch (err) {
-    if (err instanceof TokenExpiredError) {
-      await supabase.from('channel_accounts').update({ is_active: false }).eq('id', accountId)
-    }
-    console.error('[Coaching] sendReply failed:', err)
-  }
+  const escalation = await checkConfidenceEscalation(accountId, senderId, channel, llmResult.confidence, route, HUMAN_HANDOFF_TEXT)
+  if (escalation) return escalation
+
+  return sendAndReport(channel, llmResult.replyText, route, undefined, llmResult.confidence)
 }
