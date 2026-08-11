@@ -5,6 +5,48 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ─────────────────────────────────────────────
+   Scroll Lock & Layout Shift Prevention Fix
+   Enforces a stable scrollbar gutter and prevents Base UI / Radix
+   from removing the scrollbar or shifting page layout when opening
+   any floating element (menu, dialog, popover, sheet, tooltip).
+   ───────────────────────────────────────────── */
+
+/* 1. Reserve space for the scrollbar at all times so it never shifts content */
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+/* 2. Block Base UI / Radix scroll-locking from ever hiding overflow or injecting
+      a padding-right compensator — we already have a stable gutter above */
+html[data-scroll-locked],
+body[data-scroll-locked] {
+  overflow: auto !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 3. Cover the inline-style overflow approach used by some Radix versions */
+body[style*='overflow: hidden'],
+body[style*='overflow:hidden'],
+body[style*='padding-right'] {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
+/* 4. Always keep pointer-events active on body (Base UI restores it, but guard anyway) */
+body {
+  pointer-events: auto !important;
+}
+
+/* 5. Portals render inside <body> — ensure they never inherit a shifted layout */
+[data-radix-popper-content-wrapper],
+[data-base-ui-portal] {
+  will-change: transform;
+}
+
+
+/* ─────────────────────────────────────────────
    Instaflow design tokens — "Organic"
    Warm, rounded, a little playful: a cream-and-sand ground with a
    terracotta accent and a sage second accent, Caprasimo display
@@ -205,6 +247,76 @@
   --chart-3: var(--organic-terracotta-400);
   --chart-4: var(--organic-sage-400);
   --chart-5: var(--organic-sand-600);
+}
+
+/* ─────────────────────────────────────────────
+   Custom Color Themes — applied via data-color-theme attribute on <html>
+   Each theme overrides the primary/ring/sidebar accent tokens only.
+   Terracotta is the default (:root), so no override block is needed for it.
+   ───────────────────────────────────────────── */
+
+/* Ocean Cyber — cobalt blue */
+html[data-color-theme='ocean'] {
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --ring: #3b82f6;
+  --sidebar-primary: #3b82f6;
+  --sidebar-ring: #3b82f6;
+  --organic-terracotta: #3b82f6;
+  --organic-terracotta-300: #93c5fd;
+  --organic-terracotta-400: #60a5fa;
+  --organic-terracotta-500: #3b82f6;
+  --organic-terracotta-600: #2563eb;
+  --organic-terracotta-700: #1d4ed8;
+  --organic-terracotta-800: #1e40af;
+}
+
+/* Emerald — forest green */
+html[data-color-theme='emerald'] {
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  --ring: #10b981;
+  --sidebar-primary: #10b981;
+  --sidebar-ring: #10b981;
+  --organic-terracotta: #10b981;
+  --organic-terracotta-300: #6ee7b7;
+  --organic-terracotta-400: #34d399;
+  --organic-terracotta-500: #10b981;
+  --organic-terracotta-600: #059669;
+  --organic-terracotta-700: #047857;
+  --organic-terracotta-800: #065f46;
+}
+
+/* Sunset — vibrant pink & amethyst */
+html[data-color-theme='sunset'] {
+  --primary: #ec4899;
+  --primary-foreground: #ffffff;
+  --ring: #ec4899;
+  --sidebar-primary: #ec4899;
+  --sidebar-ring: #ec4899;
+  --organic-terracotta: #ec4899;
+  --organic-terracotta-300: #f9a8d4;
+  --organic-terracotta-400: #f472b6;
+  --organic-terracotta-500: #ec4899;
+  --organic-terracotta-600: #db2777;
+  --organic-terracotta-700: #be185d;
+  --organic-terracotta-800: #9d174d;
+}
+
+/* Midnight Gold — warm amber & onyx */
+html[data-color-theme='midnight'] {
+  --primary: #f59e0b;
+  --primary-foreground: #1a1714;
+  --ring: #f59e0b;
+  --sidebar-primary: #f59e0b;
+  --sidebar-ring: #f59e0b;
+  --organic-terracotta: #f59e0b;
+  --organic-terracotta-300: #fcd34d;
+  --organic-terracotta-400: #fbbf24;
+  --organic-terracotta-500: #f59e0b;
+  --organic-terracotta-600: #d97706;
+  --organic-terracotta-700: #b45309;
+  --organic-terracotta-800: #92400e;
 }
 
 .dark {

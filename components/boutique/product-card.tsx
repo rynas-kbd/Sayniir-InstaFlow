@@ -1,7 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
-import { Layers, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Layers } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -18,35 +17,17 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ view, actions, placeholder, className, onToggleActive }: ProductCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null)
   const isPhysical = view.kind === 'physical'
   const hasStock = view.stockQuantity > 0
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (placeholder || !cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 8
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -6
-    cardRef.current.style.transform = `perspective(800px) rotateX(${y}deg) rotateY(${x}deg) translateY(-4px)`
-  }
-
-  const handleMouseLeave = () => {
-    if (placeholder || !cardRef.current) return
-    cardRef.current.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0)'
-  }
-
   return (
     <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-300 ease-out',
-        !placeholder && 'hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5',
+        !placeholder && 'hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5',
         !view.isActive && 'opacity-60 grayscale-[0.15]',
         className,
       )}
-      style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
     >
       {/* Top ambient glowing line */}
       {(!isPhysical || hasStock) && view.isActive && (
