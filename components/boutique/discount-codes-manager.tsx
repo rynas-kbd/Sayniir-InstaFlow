@@ -98,39 +98,43 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
   }
 
   return (
-    <div className="pt-4">
-      <div className="mb-4 flex justify-end">
+    <div className="pt-2">
+      <div className="mb-4 flex justify-between items-center">
+        <div>
+          <h3 className="text-sm font-bold text-foreground">Codes promotionnels</h3>
+          <p className="text-xs text-muted-foreground">Créés pour être reconnus et appliqués automatiquement par l&apos;agent IA dans le chat.</p>
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button type="button" size="sm" />}>
-            <Plus className="size-3.5" /> Nouveau code promo
+          <DialogTrigger render={<Button type="button" size="sm" className="font-bold gap-1.5" />}>
+            <Plus className="size-4" /> Nouveau code promo
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Créer un code promo</DialogTitle>
+              <DialogTitle className="font-heading">Créer un code promo</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
+            <div className="space-y-3.5 py-2">
               <div className="space-y-1.5">
-                <Label htmlFor="dc-code">Code</Label>
-                <Input id="dc-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="PROMO10" />
+                <Label htmlFor="dc-code" className="text-xs font-bold">Code promo (ex: PROMO10)</Label>
+                <Input id="dc-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="BIENVENUE20" className="font-mono uppercase font-bold" />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="dc-percent">Réduction (%)</Label>
+                  <Label htmlFor="dc-percent" className="text-xs font-bold">Réduction (%)</Label>
                   <Input id="dc-percent" type="number" min="1" max="100" value={percentOff} onChange={(e) => { setPercentOff(e.target.value); setAmountOff('') }} placeholder="10" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="dc-amount">Ou montant fixe (DZD)</Label>
+                  <Label htmlFor="dc-amount" className="text-xs font-bold">Ou montant fixe (DZD)</Label>
                   <Input id="dc-amount" type="number" min="1" value={amountOff} onChange={(e) => { setAmountOff(e.target.value); setPercentOff('') }} placeholder="500" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="dc-max-uses">Nombre d&apos;utilisations max (facultatif)</Label>
+                <Label htmlFor="dc-max-uses" className="text-xs font-bold">Nombre d&apos;utilisations max (facultatif)</Label>
                 <Input id="dc-max-uses" type="number" min="1" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} placeholder="Illimité" />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" onClick={handleCreate} disabled={saving || !code.trim() || (!percentOff && !amountOff)}>
-                {saving ? 'Création…' : 'Créer'}
+              <Button type="button" onClick={handleCreate} disabled={saving || !code.trim() || (!percentOff && !amountOff)} className="font-bold">
+                {saving ? 'Création…' : 'Créer le code'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -140,24 +144,45 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
       {codes.length === 0 ? (
         <EmptyState
           icon={Tag}
-          title="Aucun code promo"
-          description="Créez un code que l'IA pourra appliquer en conversation quand un client le mentionne."
+          title="Aucun code promo actif"
+          description="Créez un code promo pour stimuler vos ventes et permettre à l'IA d'offrir des réductions lors du closings."
         />
       ) : (
-        <div className="divide-y divide-border/60 rounded-xl border border-border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm divide-y divide-border/40">
           {codes.map((c) => (
-            <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="font-mono text-sm font-semibold text-foreground">{c.code}</p>
-                <p className="text-xs text-muted-foreground">
-                  {c.percent_off ? `-${c.percent_off}%` : `-${c.amount_off} DZD`}
-                  {c.max_uses ? ` · ${c.times_used}/${c.max_uses} utilisations` : ` · ${c.times_used} utilisation(s)`}
-                  {c.expires_at ? ` · expire le ${new Date(c.expires_at).toLocaleDateString('fr-FR')}` : ''}
-                </p>
+            <div key={c.id} className="flex items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-muted/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm font-extrabold tracking-wider bg-primary/10 text-primary border border-primary/20 rounded-lg px-2.5 py-1">
+                    {c.code}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-extrabold text-foreground">
+                      {c.percent_off ? `-${c.percent_off}% de réduction` : `-${c.amount_off?.toLocaleString('fr-FR')} DZD de réduction`}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {c.max_uses ? `${c.times_used} / ${c.max_uses} utilisations` : `${c.times_used} utilisation(s)`}
+                    {c.expires_at ? ` · Expire le ${new Date(c.expires_at).toLocaleDateString('fr-FR')}` : ''}
+                  </p>
+                </div>
               </div>
+
               <div className="flex shrink-0 items-center gap-3">
-                <Switch checked={c.is_active} onCheckedChange={(v) => handleToggle(c.id, v)} aria-label={c.is_active ? 'Désactiver' : 'Activer'} />
-                <button type="button" onClick={() => handleDelete(c.id)} className="text-muted-foreground hover:text-destructive" aria-label={`Supprimer ${c.code}`}>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground select-none cursor-pointer">
+                  <span className={c.is_active ? 'text-primary font-bold' : 'text-muted-foreground'}>
+                    {c.is_active ? 'Actif' : 'Inactif'}
+                  </span>
+                  <Switch checked={c.is_active} onCheckedChange={(v) => handleToggle(c.id, v)} aria-label={c.is_active ? 'Désactiver' : 'Activer'} />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(c.id)}
+                  className="rounded-lg p-1.5 text-muted-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                  aria-label={`Supprimer ${c.code}`}
+                >
                   <Trash2 className="size-4" />
                 </button>
               </div>

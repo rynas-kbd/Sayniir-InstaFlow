@@ -13,29 +13,32 @@ import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function FlowsPage() {
   const supabase = await createClient()
-  const { active: account } = await resolveActiveAccount()
-  const accountName = account ? getAccountLabel(account) : null
+  const { accounts, active: account, scope } = await resolveActiveAccount()
 
   if (!account) {
     return <NoAccountState description="Connectez un compte Instagram, Messenger ou WhatsApp pour créer des flows." />
   }
 
+  const accountIds = scope === 'all' ? accounts.map((a) => a.id) : [account.id]
+  const accountNameMap = new Map(accounts.map((a) => [a.id, getAccountLabel(a)]))
+
   const [{ data: flows }, { data: settings }, { data: runsData }, { data: insightRows }] = await Promise.all([
-    supabase.from('flows').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
-    supabase.from('agent_settings').select('flows_enabled').eq('channel_account_id', account.id).maybeSingle(),
-    supabase.from('flow_runs').select('id, status').eq('channel_account_id', account.id),
+    supabase.from('flows').select('*').in('channel_account_id', accountIds).order('created_at', { ascending: false }),
+    supabase.from('agent_settings').select('flows_enabled').in('channel_account_id', accountIds),
+    supabase.from('flow_runs').select('id, status').in('channel_account_id', accountIds),
     supabase
       .from('ai_insights')
       .select('id, rule_id, scope, subject_id, severity, title, detail, fix_tool_name, fix_tool_input')
-      .eq('channel_account_id', account.id)
+      .in('channel_account_id', accountIds)
       .eq('scope', 'flow')
       .is('dismissed_at', null),
   ])
 
-  const safeFlows = (flows ?? []) as FlowSummary[]
+  const safeFlows = (flows ?? []) as (FlowSummary & { channel_account_id?: string })[]
   const activeCount = safeFlows.filter((f) => f.status === 'active').length
   const totalRuns = runsData?.length ?? 0
   const completedRuns = runsData?.filter((r) => r.status === 'completed').length ?? 0
+  const flowsEnabled = settings?.some((s) => s.flows_enabled) ?? false
 
   const insightsByFlowId = new Map<string, AiInsight[]>()
   for (const row of insightRows ?? []) {
@@ -77,7 +80,7 @@ export default async function FlowsPage() {
         {/* Flows enabled banner */}
         <FlowsEnabledToggle
           channelAccountId={account.id}
-          initialEnabled={settings?.flows_enabled ?? false}
+          initialEnabled={flowsEnabled}
         />
 
         <div className="mt-5">
@@ -86,7 +89,12 @@ export default async function FlowsPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {safeFlows.map((flow) => (
-                <FlowCard key={flow.id} flow={flow} accountName={accountName} insights={insightsByFlowId.get(flow.id) ?? []} />
+                <FlowCard
+                  key={flow.id}
+                  flow={flow}
+                  accountName={flow.channel_account_id ? accountNameMap.get(flow.channel_account_id) ?? null : null}
+                  insights={insightsByFlowId.get(flow.id) ?? []}
+                />
               ))}
               {/* Add new card */}
               <Link

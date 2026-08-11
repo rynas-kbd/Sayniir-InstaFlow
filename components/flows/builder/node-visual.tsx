@@ -41,7 +41,7 @@ export interface FlowNodeData {
 
 export function FlowNodeVisual({ data, selected }: NodeProps) {
   const nodeData = data as unknown as FlowNodeData
-  const meta = NODE_META[nodeData.nodeType]
+  const meta = NODE_META[nodeData.nodeType] ?? { icon: Zap, label: String(nodeData.nodeType || 'Nœud') }
   const Icon = meta.icon
   const isTrigger = nodeData.nodeType === 'trigger'
   const postbackButtons =

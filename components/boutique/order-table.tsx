@@ -20,16 +20,16 @@ type PaymentStatus = (typeof PAYMENT_STATUSES)[number]
 type ShippingStatus = (typeof SHIPPING_STATUSES)[number]
 
 const PAYMENT_CONFIG: Record<PaymentStatus, { label: string; className: string }> = {
-  pending:  { label: 'En attente', className: 'bg-warning/10 text-warning border-warning/20' },
-  paid:     { label: 'Payé',       className: 'bg-success/10 text-success border-success/20' },
+  pending:  { label: 'En attente', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+  paid:     { label: 'Payé',       className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
   failed:   { label: 'Échoué',    className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  refunded: { label: 'Remboursé', className: 'bg-sage-100 text-sage-700 border-sage-200' },
+  refunded: { label: 'Remboursé', className: 'bg-[var(--organic-sage-100)] text-[var(--organic-sage-800)] border-[var(--organic-sage-300)]' },
 }
 
 const SHIPPING_CONFIG: Record<ShippingStatus, { label: string; className: string }> = {
   pending:   { label: 'À expédier', className: 'bg-muted text-muted-foreground border-border' },
-  shipped:   { label: 'Expédié',    className: 'bg-terracotta-100 text-terracotta-700 border-terracotta-200' },
-  delivered: { label: 'Livré',      className: 'bg-success/10 text-success border-success/20' },
+  shipped:   { label: 'Expédié',    className: 'bg-[var(--organic-terracotta-100)] text-[var(--organic-terracotta-800)] border-[var(--organic-terracotta-300)]' },
+  delivered: { label: 'Livré',      className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
   cancelled: { label: 'Annulé',    className: 'bg-destructive/10 text-destructive border-destructive/20' },
 }
 

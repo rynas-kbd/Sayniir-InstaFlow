@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Package, Plus, Edit2, Trash2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -242,54 +243,81 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         <EmptyState icon={Search} title="Aucun résultat" description="Aucun produit ne correspond à ces filtres." />
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((product) => (
-              <div key={product.id} className="relative">
-                <Checkbox
-                  checked={selected.has(product.id)}
-                  onCheckedChange={() => toggleSelected(product.id)}
-                  className="absolute left-2 top-2 z-10 bg-card"
-                  aria-label={`Sélectionner ${product.name}`}
-                />
-                <ProductCard
-                  view={productToCardView(product)}
-                  onToggleActive={(next) => handleToggleActive(product, next)}
-                  actions={
-                    <>
-                      <button
-                        onClick={() => setDeletingId(product.id)}
-                        className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-destructive/8 hover:text-destructive transition-all active:scale-95"
-                        aria-label="Supprimer produit"
-                      >
-                        <Trash2 className="size-3.5" />
-                        Supprimer
-                      </button>
+          <motion.div
+            layout
+            className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            <AnimatePresence mode="popLayout">
+              {visible.map((product, idx) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, y: 14, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+                  transition={{
+                    duration: 0.3,
+                    delay: Math.min(idx * 0.04, 0.3),
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="relative group/wrapper"
+                >
+                  <Checkbox
+                    checked={selected.has(product.id)}
+                    onCheckedChange={() => toggleSelected(product.id)}
+                    className="absolute left-3 top-3 z-20 bg-card shadow-sm border-border/80 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    aria-label={`Sélectionner ${product.name}`}
+                  />
+                  <ProductCard
+                    view={productToCardView(product)}
+                    onToggleActive={(next) => handleToggleActive(product, next)}
+                    actions={
+                      <>
+                        <button
+                          onClick={() => setDeletingId(product.id)}
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 cursor-pointer"
+                          aria-label="Supprimer produit"
+                        >
+                          <Trash2 className="size-3.5" />
+                          Supprimer
+                        </button>
 
-                      <button
-                        onClick={() => setEditing(product)}
-                        className="flex items-center gap-1.5 rounded-lg bg-primary/8 hover:bg-primary/14 px-3.5 py-1.5 text-[11px] font-bold text-primary transition-all active:scale-95"
-                        aria-label="Modifier produit"
-                      >
-                        <Edit2 className="size-3.5" />
-                        Modifier
-                      </button>
-                    </>
-                  }
-                />
-              </div>
-            ))}
+                        <button
+                          onClick={() => setEditing(product)}
+                          className="flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 px-3.5 py-1.5 text-[11px] font-extrabold text-primary transition-all active:scale-95 cursor-pointer"
+                          aria-label="Modifier produit"
+                        >
+                          <Edit2 className="size-3.5" />
+                          Modifier
+                        </button>
+                      </>
+                    }
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {/* Add product card tile inside the grid */}
-            <Link
-              href="/boutique/products/new"
-              className="group flex min-h-[210px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/60 bg-transparent text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-[0.98]"
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: Math.min(visible.length * 0.04, 0.3) }}
             >
-              <div className="flex size-11 items-center justify-center rounded-xl border border-dashed border-current/30 transition-all group-hover:border-primary/40 group-hover:bg-primary/8">
-                <Plus className="size-5" />
-              </div>
-              <span className="text-xs font-bold tracking-tight">Nouveau produit</span>
-            </Link>
-          </div>
+              <Link
+                href="/boutique/products/new"
+                className="group flex min-h-[220px] h-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 bg-card/40 p-6 text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary/5 hover:text-primary hover:-translate-y-0.5 shadow-sm active:scale-[0.98]"
+              >
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-dashed border-primary/30 bg-primary/8 text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary">
+                  <Plus className="size-6" />
+                </div>
+                <div className="text-center">
+                  <span className="block text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary">Nouveau produit</span>
+                  <span className="mt-0.5 block text-[11px] font-medium text-muted-foreground">Ajouter manuellement au catalogue</span>
+                </div>
+              </Link>
+            </motion.div>
+          </motion.div>
 
           {visibleCount < filtered.length && (
             <div className="mt-4 flex justify-center">

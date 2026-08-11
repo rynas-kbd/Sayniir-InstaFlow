@@ -67,7 +67,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex flex-1 h-full min-h-full flex-col overflow-hidden">
       {/* flex-wrap + the left group's own min-w-0/flex-1: a long flow name
           truncates instead of pushing the action popovers off-screen, and
           if the row genuinely doesn't fit (long name + both actions on a
@@ -91,7 +91,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
           <FlowAnalyticsPopover funnel={funnel} />
         </div>
       </div>
-      <div className="min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 h-full">
         <FlowCanvas
           flow={flowMeta}
           initialNodes={(nodes ?? []) as FlowNodeRecord[]}

@@ -1,10 +1,11 @@
-import { Clock3 } from 'lucide-react'
+import { Clock3, User, ShoppingBag, ArrowRight } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Badge } from '@/components/ui/badge'
 import type { AbandonedSession } from './types'
 
-const STATUS_LABEL: Record<string, string> = {
-  selecting_product: 'Choix du produit',
-  gathering_info: 'Informations de livraison',
+const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  selecting_product: { label: 'Choix du produit', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
+  gathering_info: { label: 'Informations de livraison', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
 }
 
 function timeAgo(iso: string): string {
@@ -15,36 +16,64 @@ function timeAgo(iso: string): string {
   return `il y a ${days}j`
 }
 
-/**
- * order_sessions stuck mid-conversation (not confirmed, not cancelled, no
- * message in 2h+) are a ready-made abandoned-cart list — nothing new to
- * build, just never read anywhere. Read-only: a merchant follows up
- * manually via the inbox, there's no automated recovery flow here.
- */
 export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession[] }) {
   if (sessions.length === 0) {
     return (
       <EmptyState
         icon={Clock3}
         title="Aucun panier abandonné"
-        description="Les conversations commencées mais jamais confirmées (plus de 2h sans réponse) apparaîtront ici."
+        description="Les conversations commencées mais interrompues depuis plus de 2 heures apparaîtront ici pour relance."
       />
     )
   }
 
   return (
-    <div className="divide-y divide-border/60 rounded-xl border border-border">
-      {sessions.map((s) => (
-        <div key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-foreground">{s.customer_name || s.sender_id}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {s.products?.name ?? 'Produit non sélectionné'} · {STATUS_LABEL[s.status] ?? s.status}
-            </p>
-          </div>
-          <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(s.last_message_at)}</span>
+    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+      <div className="border-b border-border/50 bg-muted/30 px-5 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Clock3 className="size-4 text-primary" />
+          <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+            {sessions.length} Panier{sessions.length > 1 ? 's' : ''} abandonné{sessions.length > 1 ? 's' : ''} en attente
+          </span>
         </div>
-      ))}
+        <span className="text-[11px] font-medium text-muted-foreground">Inactifs &gt; 2h</span>
+      </div>
+
+      <div className="divide-y divide-border/40">
+        {sessions.map((s) => {
+          const statusInfo = STATUS_LABEL[s.status] ?? { label: s.status, color: 'bg-muted text-muted-foreground border-border' }
+          const name = s.customer_name || s.sender_id
+          const initials = name.slice(0, 2).toUpperCase()
+
+          return (
+            <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="grid size-9 shrink-0 place-content-center rounded-full bg-primary/10 text-primary font-bold text-xs border border-primary/20">
+                  {initials.length === 2 ? initials : <User className="size-4" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-extrabold text-foreground">{name}</p>
+                    <Badge variant="outline" className={`rounded-full px-2 py-0 text-[10px] font-semibold border ${statusInfo.color}`}>
+                      {statusInfo.label}
+                    </Badge>
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground flex items-center gap-1.5">
+                    <ShoppingBag className="size-3 text-muted-foreground/70 shrink-0" />
+                    <span>{s.products?.name ?? 'Produit non sélectionné'}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 ml-auto sm:ml-0">
+                <span className="text-xs font-medium text-muted-foreground/80 bg-muted/50 px-2.5 py-1 rounded-md">
+                  {timeAgo(s.last_message_at)}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
