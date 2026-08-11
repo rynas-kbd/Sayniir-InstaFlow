@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export type ColorTheme = 'terracotta' | 'ocean' | 'emerald' | 'sunset' | 'midnight'
+export type ColorTheme = 'terracotta' | 'ocean' | 'emerald' | 'sunset' | 'midnight' | 'custom'
 export type WallpaperId = 'none' | 'aurora' | 'cyber' | 'waves' | 'cosmic' | 'sunset' | 'custom'
 
 export interface ColorThemeOption {
@@ -62,6 +62,15 @@ export const COLOR_THEMES: ColorThemeOption[] = [
     darkGradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
     previewBorder: '#f59e0b',
   },
+  {
+    id: 'custom',
+    name: 'Personnalisé',
+    description: 'Vos couleurs sur mesure',
+    primaryColor: '#c67139',
+    gradient: 'linear-gradient(135deg, var(--custom-primary-color, #c67139) 0%, var(--custom-primary-color, #c67139) 100%)',
+    darkGradient: 'linear-gradient(135deg, var(--custom-primary-color, #c67139) 0%, var(--custom-primary-color, #c67139) 100%)',
+    previewBorder: 'var(--custom-primary-color, #c67139)',
+  },
 ]
 
 interface CustomThemeContextType {
@@ -73,11 +82,17 @@ interface CustomThemeContextType {
   setBgOpacity: (opacity: number) => void
   customImageUrl: string
   setCustomImageUrl: (url: string) => void
+  customPrimaryColor: string
+  setCustomPrimaryColor: (color: string) => void
+  customSecondaryColor: string
+  setCustomSecondaryColor: (color: string) => void
   savePreferences: (updates: {
     colorTheme?: ColorTheme
     wallpaper?: WallpaperId
     bgOpacity?: number
     customImageUrl?: string
+    customPrimaryColor?: string
+    customSecondaryColor?: string
   }) => Promise<void>
 }
 
@@ -100,10 +115,18 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
   const [wallpaper, setWallpaperState] = useState<WallpaperId>('none')
   const [bgOpacity, setBgOpacityState] = useState<number>(40)
   const [customImageUrl, setCustomImageUrlState] = useState<string>('')
+  const [customPrimaryColor, setCustomPrimaryColorState] = useState<string>('#c67139')
+  const [customSecondaryColor, setCustomSecondaryColorState] = useState<string>('#8fa073')
   const [mounted, setMounted] = useState(false)
 
   const applyColorThemeToDOM = (themeName: ColorTheme) => {
     document.documentElement.setAttribute('data-color-theme', themeName)
+  }
+
+  const applyCustomColors = (primary: string, secondary: string) => {
+    if (typeof document === 'undefined') return
+    document.documentElement.style.setProperty('--custom-primary-color', primary)
+    document.documentElement.style.setProperty('--custom-secondary-color', secondary)
   }
 
   // Load preferences from Supabase User Metadata or cookie on mount (NO localStorage)
@@ -116,6 +139,11 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       const cookieWallpaper = getCookie('instaflow_wallpaper') as WallpaperId | null
       const cookieOpacity = getCookie('instaflow_bg_opacity')
       const cookieImg = getCookie('instaflow_custom_bg_url')
+      const cookiePrimary = getCookie('instaflow_custom_primary')
+      const cookieSecondary = getCookie('instaflow_custom_secondary')
+
+      let activePrimary = '#c67139'
+      let activeSecondary = '#8fa073'
 
       if (cookieTheme && COLOR_THEMES.some((t) => t.id === cookieTheme)) {
         setColorThemeState(cookieTheme)
@@ -124,6 +152,16 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       if (cookieWallpaper) setWallpaperState(cookieWallpaper)
       if (cookieOpacity) setBgOpacityState(Number(cookieOpacity))
       if (cookieImg) setCustomImageUrlState(cookieImg)
+      if (cookiePrimary) {
+        setCustomPrimaryColorState(cookiePrimary)
+        activePrimary = cookiePrimary
+      }
+      if (cookieSecondary) {
+        setCustomSecondaryColorState(cookieSecondary)
+        activeSecondary = cookieSecondary
+      }
+
+      applyCustomColors(activePrimary, activeSecondary)
 
       // Fetch official preferences from Supabase user session
       const { data: { user } } = await supabase.auth.getUser()
@@ -146,6 +184,17 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
           setCustomImageUrlState(pref.customImageUrl)
           setCookie('instaflow_custom_bg_url', pref.customImageUrl)
         }
+        if (pref.customPrimaryColor) {
+          setCustomPrimaryColorState(pref.customPrimaryColor)
+          activePrimary = pref.customPrimaryColor
+          setCookie('instaflow_custom_primary', pref.customPrimaryColor)
+        }
+        if (pref.customSecondaryColor) {
+          setCustomSecondaryColorState(pref.customSecondaryColor)
+          activeSecondary = pref.customSecondaryColor
+          setCookie('instaflow_custom_secondary', pref.customSecondaryColor)
+        }
+        applyCustomColors(activePrimary, activeSecondary)
       }
       setMounted(true)
     }
@@ -158,24 +207,33 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
     wallpaper?: WallpaperId
     bgOpacity?: number
     customImageUrl?: string
+    customPrimaryColor?: string
+    customSecondaryColor?: string
   }) => {
     const nextColorTheme = updates.colorTheme ?? colorTheme
     const nextWallpaper = updates.wallpaper ?? wallpaper
     const nextBgOpacity = updates.bgOpacity ?? bgOpacity
     const nextCustomImageUrl = updates.customImageUrl !== undefined ? updates.customImageUrl : customImageUrl
+    const nextCustomPrimary = updates.customPrimaryColor ?? customPrimaryColor
+    const nextCustomSecondary = updates.customSecondaryColor ?? customSecondaryColor
 
     setColorThemeState(nextColorTheme)
     setWallpaperState(nextWallpaper)
     setBgOpacityState(nextBgOpacity)
     setCustomImageUrlState(nextCustomImageUrl)
+    setCustomPrimaryColorState(nextCustomPrimary)
+    setCustomSecondaryColorState(nextCustomSecondary)
 
     applyColorThemeToDOM(nextColorTheme)
+    applyCustomColors(nextCustomPrimary, nextCustomSecondary)
 
     // Save to Cookies
     setCookie('instaflow_color_theme', nextColorTheme)
     setCookie('instaflow_wallpaper', nextWallpaper)
     setCookie('instaflow_bg_opacity', String(nextBgOpacity))
     setCookie('instaflow_custom_bg_url', nextCustomImageUrl)
+    setCookie('instaflow_custom_primary', nextCustomPrimary)
+    setCookie('instaflow_custom_secondary', nextCustomSecondary)
 
     // Save to Supabase User Metadata (persisted across devices & sessions without localStorage)
     const supabase = createClient()
@@ -190,6 +248,8 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
             wallpaper: nextWallpaper,
             bgOpacity: nextBgOpacity,
             customImageUrl: nextCustomImageUrl,
+            customPrimaryColor: nextCustomPrimary,
+            customSecondaryColor: nextCustomSecondary,
           },
         },
       })
@@ -200,6 +260,8 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
   const setWallpaper = (w: WallpaperId) => savePreferences({ wallpaper: w })
   const setBgOpacity = (o: number) => savePreferences({ bgOpacity: o })
   const setCustomImageUrl = (url: string) => savePreferences({ customImageUrl: url })
+  const setCustomPrimaryColor = (color: string) => savePreferences({ customPrimaryColor: color })
+  const setCustomSecondaryColor = (color: string) => savePreferences({ customSecondaryColor: color })
 
   return (
     <CustomThemeContext.Provider
@@ -212,6 +274,10 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
         setBgOpacity,
         customImageUrl,
         setCustomImageUrl,
+        customPrimaryColor,
+        setCustomPrimaryColor,
+        customSecondaryColor,
+        setCustomSecondaryColor,
         savePreferences,
       }}
     >

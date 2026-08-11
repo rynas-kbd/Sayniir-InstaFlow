@@ -33,6 +33,10 @@ export function ThemeCustomizerModal({
     setBgOpacity,
     customImageUrl,
     setCustomImageUrl,
+    customPrimaryColor,
+    setCustomPrimaryColor,
+    customSecondaryColor,
+    setCustomSecondaryColor,
   } = useCustomTheme()
 
   return (
@@ -124,6 +128,54 @@ export function ThemeCustomizerModal({
                 )
               })}
             </div>
+
+            {colorTheme === 'custom' && (
+              <div className="mt-4 space-y-4 rounded-2xl border border-border/50 bg-muted/10 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Primary Color Picker */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Couleur primaire
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
+                      <div 
+                        className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
+                        style={{ backgroundColor: customPrimaryColor }}
+                      >
+                        <input
+                          type="color"
+                          value={customPrimaryColor}
+                          onChange={(e) => setCustomPrimaryColor(e.target.value)}
+                          className="absolute inset-0 size-full opacity-0 cursor-pointer"
+                        />
+                      </div>
+                      <span className="font-mono text-xs font-semibold uppercase">{customPrimaryColor}</span>
+                    </div>
+                  </div>
+
+                  {/* Secondary Color Picker */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Couleur secondaire
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
+                      <div 
+                        className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
+                        style={{ backgroundColor: customSecondaryColor }}
+                      >
+                        <input
+                          type="color"
+                          value={customSecondaryColor}
+                          onChange={(e) => setCustomSecondaryColor(e.target.value)}
+                          className="absolute inset-0 size-full opacity-0 cursor-pointer"
+                        />
+                      </div>
+                      <span className="font-mono text-xs font-semibold uppercase">{customSecondaryColor}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Wallpaper Selection */}

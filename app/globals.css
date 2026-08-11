@@ -481,10 +481,65 @@ html[data-color-theme="midnight"] .dark {
   --organic-terracotta-500: #d97706;
   --organic-terracotta-600: #fbbf24;
   --organic-terracotta-700: #fcd34d;
-  --organic-terracotta-800: #fde68a;
-  --organic-terracotta-900: #fef3c7;
   --primary: #fbbf24;
   --ring: #fbbf24;
+}
+
+/* Custom Theme */
+html[data-color-theme="custom"] {
+  --primary: var(--custom-primary-color, #c67139);
+  --ring: var(--custom-primary-color, #c67139);
+  --sidebar-primary: var(--custom-primary-color, #c67139);
+  --sidebar-ring: var(--custom-primary-color, #c67139);
+  --organic-terracotta: var(--custom-primary-color, #c67139);
+  --organic-terracotta-100: color-mix(in srgb, var(--custom-primary-color, #c67139) 6%, #ffffff);
+  --organic-terracotta-200: color-mix(in srgb, var(--custom-primary-color, #c67139) 15%, #ffffff);
+  --organic-terracotta-300: color-mix(in srgb, var(--custom-primary-color, #c67139) 40%, #ffffff);
+  --organic-terracotta-400: color-mix(in srgb, var(--custom-primary-color, #c67139) 65%, #ffffff);
+  --organic-terracotta-500: var(--custom-primary-color, #c67139);
+  --organic-terracotta-600: color-mix(in srgb, var(--custom-primary-color, #c67139) 85%, #000000);
+  --organic-terracotta-700: color-mix(in srgb, var(--custom-primary-color, #c67139) 70%, #000000);
+  --organic-terracotta-800: color-mix(in srgb, var(--custom-primary-color, #c67139) 55%, #000000);
+  --organic-terracotta-900: color-mix(in srgb, var(--custom-primary-color, #c67139) 40%, #000000);
+
+  --organic-sage: var(--custom-secondary-color, #8fa073);
+  --organic-sage-100: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 6%, #ffffff);
+  --organic-sage-200: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 15%, #ffffff);
+  --organic-sage-300: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 40%, #ffffff);
+  --organic-sage-400: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 65%, #ffffff);
+  --organic-sage-500: var(--custom-secondary-color, #8fa073);
+  --organic-sage-600: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 85%, #000000);
+  --organic-sage-700: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 70%, #000000);
+  --organic-sage-800: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 55%, #000000);
+  --organic-sage-900: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 40%, #000000);
+}
+html[data-color-theme="custom"].dark,
+html[data-color-theme="custom"] .dark {
+  --primary: var(--custom-primary-color, #c67139);
+  --ring: var(--custom-primary-color, #c67139);
+  --sidebar-primary: var(--custom-primary-color, #c67139);
+  --sidebar-ring: var(--custom-primary-color, #c67139);
+  --organic-terracotta: var(--custom-primary-color, #c67139);
+  --organic-terracotta-100: color-mix(in srgb, var(--custom-primary-color, #c67139) 15%, #1b1714);
+  --organic-terracotta-200: color-mix(in srgb, var(--custom-primary-color, #c67139) 30%, #1b1714);
+  --organic-terracotta-300: color-mix(in srgb, var(--custom-primary-color, #c67139) 45%, #1b1714);
+  --organic-terracotta-400: color-mix(in srgb, var(--custom-primary-color, #c67139) 60%, #1b1714);
+  --organic-terracotta-500: var(--custom-primary-color, #c67139);
+  --organic-terracotta-600: color-mix(in srgb, var(--custom-primary-color, #c67139) 85%, #ffffff);
+  --organic-terracotta-700: color-mix(in srgb, var(--custom-primary-color, #c67139) 70%, #ffffff);
+  --organic-terracotta-800: color-mix(in srgb, var(--custom-primary-color, #c67139) 55%, #ffffff);
+  --organic-terracotta-900: color-mix(in srgb, var(--custom-primary-color, #c67139) 40%, #ffffff);
+
+  --organic-sage: var(--custom-secondary-color, #8fa073);
+  --organic-sage-100: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 15%, #1b1714);
+  --organic-sage-200: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 30%, #1b1714);
+  --organic-sage-300: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 45%, #1b1714);
+  --organic-sage-400: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 60%, #1b1714);
+  --organic-sage-500: var(--custom-secondary-color, #8fa073);
+  --organic-sage-600: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 85%, #ffffff);
+  --organic-sage-700: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 70%, #ffffff);
+  --organic-sage-800: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 55%, #ffffff);
+  --organic-sage-900: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 40%, #ffffff);
 }
 
 

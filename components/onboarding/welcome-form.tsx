@@ -330,7 +330,7 @@ export function WelcomeForm() {
                 <div>
                   <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Palette de couleur</span>
                   <div className="grid grid-cols-1 gap-2">
-                    {COLOR_THEMES.map((opt) => {
+                    {COLOR_THEMES.filter((opt) => opt.id !== 'custom').map((opt) => {
                       const isSelected = colorTheme === opt.id
                       return (
                         <button
