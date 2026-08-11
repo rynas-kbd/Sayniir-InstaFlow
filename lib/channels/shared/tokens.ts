@@ -16,3 +16,19 @@ export async function resolveAccessToken(storedValue: string): Promise<string> {
 export async function sealAccessToken(plainToken: string): Promise<string> {
   return encryptApiKey(plainToken)
 }
+
+/**
+ * channel_accounts.webhook_app_secret — the Meta App Secret for a manually
+ * admin-connected WhatsApp account (their own Meta app). NULL for accounts
+ * connected via the shared self-serve Embedded Signup app; same
+ * encrypt-at-rest treatment as access_token, symmetric helper naming.
+ */
+export async function resolveWebhookSecret(storedValue: string | null): Promise<string | null> {
+  if (!storedValue) return storedValue
+  return isEncrypted(storedValue) ? decryptApiKey(storedValue) : storedValue
+}
+
+/** Always encrypt before writing a secret to channel_accounts.webhook_app_secret. */
+export async function sealWebhookSecret(plainSecret: string): Promise<string> {
+  return encryptApiKey(plainSecret)
+}

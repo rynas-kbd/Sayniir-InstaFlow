@@ -24,6 +24,27 @@ export interface WhatsAppPayload {
   }>
 }
 
+/**
+ * Pulls just the routing key (phone_number_id) out of a raw webhook body,
+ * BEFORE signature verification — used to resolve which account's secret to
+ * verify against (see lib/channels/shared/lookup.ts::resolveWhatsAppAppSecret).
+ * Safe to read pre-verification: phone_number_id is routing metadata, not a
+ * secret — a forged value still can't pass HMAC verification without
+ * knowing that account's real secret. Defensive by design: any malformed or
+ * unexpected shape returns null rather than throwing, so a bad payload
+ * falls back to the global secret (same as an unknown account) instead of
+ * crashing the request.
+ */
+export function extractWhatsAppPhoneNumberId(rawBody: string): string | null {
+  try {
+    const payload = JSON.parse(rawBody) as Partial<WhatsAppPayload>
+    if (payload.object !== 'whatsapp_business_account') return null
+    return payload.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id ?? null
+  } catch {
+    return null
+  }
+}
+
 export function parseWhatsAppMessages(
   payload: WhatsAppPayload
 ): Array<{ phoneNumberId: string; message: WhatsAppMessage }> {

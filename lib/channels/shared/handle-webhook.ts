@@ -2,7 +2,7 @@ import { getAdapter } from '../registry'
 import { safeEqualStr } from '../../security/compare'
 import { claimInboundEvent, markEventDone, markEventFailed, tryLockConversation, unlockConversation } from './inbound-queue'
 import { dispatchInboundMessage, dispatchInboundComment } from './inbound'
-import { findChannelAccountByExternalId } from './lookup'
+import { findChannelAccountByExternalId, resolveWhatsAppAppSecret } from './lookup'
 import type { Platform } from '../types'
 
 const VERIFY_TOKEN_ENV: Record<Platform, string> = {
@@ -11,6 +11,11 @@ const VERIFY_TOKEN_ENV: Record<Platform, string> = {
   whatsapp: 'META_WHATSAPP_VERIFY_TOKEN',
 }
 
+// Instagram/Messenger accounts all connect through our one shared app, so
+// their signing secret is a single global env var. WhatsApp accounts can
+// now be manually admin-connected through a CLIENT's own Meta app (see
+// 20260901020000_whatsapp_manual_connect.sql) — resolveWhatsAppAppSecret()
+// below resolves that per-account, falling back to this same global value.
 const APP_SECRET_ENV: Record<Platform, string> = {
   instagram: 'META_INSTAGRAM_APP_SECRET',
   messenger: 'META_MESSENGER_APP_SECRET',
@@ -59,7 +64,7 @@ async function handleEvent(
 ): Promise<Response> {
   const rawBody = await request.text()
   const signature = request.headers.get('x-hub-signature-256')
-  const appSecret = process.env[APP_SECRET_ENV[platform]]
+  const appSecret = platform === 'whatsapp' ? await resolveWhatsAppAppSecret(rawBody) : process.env[APP_SECRET_ENV[platform]]
   const adapter = getAdapter(platform)
 
   // Fail closed when the app secret isn't configured — computing the HMAC

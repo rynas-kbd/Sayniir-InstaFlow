@@ -4,6 +4,7 @@ import { randomInt } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sealAccessToken } from '@/lib/channels/shared/tokens'
+import { fetchPhoneNumberInfo, subscribeWabaWebhooks } from '@/lib/meta/whatsapp'
 
 const GRAPH_API_VERSION = 'v21.0'
 
@@ -60,12 +61,11 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Verify + fetch display info for the number.
-  const verifyRes = await fetch(
-    `https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneNumberId}?fields=verified_name,display_phone_number&access_token=${accessToken}`
-  )
-  const verifyData = await verifyRes.json()
-  if (!verifyRes.ok || verifyData.error) {
-    return NextResponse.json({ error: verifyData.error?.message ?? 'Numéro invalide' }, { status: 400 })
+  let phoneInfo
+  try {
+    phoneInfo = await fetchPhoneNumberInfo(phoneNumberId, accessToken)
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Numéro invalide' }, { status: 400 })
   }
 
   const adminSupabase = createAdminClient()
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
     platform: 'whatsapp' as const,
     waba_id: wabaId,
     phone_number_id: phoneNumberId,
-    phone_number: verifyData.display_phone_number ?? null,
-    page_name: verifyData.verified_name ?? null,
+    phone_number: phoneInfo.displayPhoneNumber,
+    page_name: phoneInfo.verifiedName,
     access_token: await sealAccessToken(accessToken),
     token_type: 'business',
     is_active: true,
@@ -110,13 +110,9 @@ export async function POST(request: NextRequest) {
     return jsonError(500, 'Une erreur est survenue', writeError)
   }
 
-  try {
-    await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${wabaId}/subscribed_apps`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-  } catch (err) {
-    console.error('[WhatsApp connect] WABA subscription failed:', err)
+  const subscribeResult = await subscribeWabaWebhooks(wabaId, accessToken)
+  if (!subscribeResult.ok) {
+    console.error('[WhatsApp connect] WABA subscription failed:', subscribeResult.error)
   }
 
   const { data: existingSub } = await adminSupabase.from('subscriptions').select('id').eq('user_id', user.id).single()

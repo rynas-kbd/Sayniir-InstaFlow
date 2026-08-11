@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X } from 'lucide-react'
+import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X, Phone } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { PLAN_CONFIG, type PlanKey } from '@/lib/plans'
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { WhatsAppManualConnectForm } from '@/components/admin/whatsapp-manual-connect-form'
 
 import DeleteClientButton from './DeleteClientButton'
 import SubscriptionForm from './SubscriptionForm'
@@ -60,14 +61,20 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
     // panels below; a fuller multi-account admin view is future work.
     supabase
       .from('channel_accounts')
-      .select('id, instagram_username, page_picture_url, is_active, connected_at')
+      .select('id, platform, instagram_username, page_picture_url, phone_number, phone_number_id, is_active, connected_at')
       .eq('user_id', userId)
       .order('connected_at', { ascending: true }),
   ])
 
   if (!profile) notFound()
 
+  // Unchanged from before: picks the first connected account regardless of
+  // platform for the header/keyword panels (automation_rules isn't
+  // IG-specific) — see the comment on the query above.
   const igAccount = channelAccounts?.[0] ?? null
+  const whatsappAccounts = channelAccounts?.filter((a) => a.platform === 'whatsapp') ?? []
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/webhooks/whatsapp`
+  const verifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN ?? ''
 
   const { data: rules } = await supabase
     .from('automation_rules')
@@ -316,6 +323,35 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                 Sauvegarder
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* ── WhatsApp manuel ── */}
+        <Card>
+          <CardHeader>
+            <SectionTitle
+              icon={Phone}
+              title="WhatsApp — connexion manuelle"
+              sub="Pour un client dont on ne peut pas encore utiliser l'inscription en libre-service (notre app Meta est en mode Développement) : il crée sa propre app Meta et vous transmet ses identifiants."
+            />
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {whatsappAccounts.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {whatsappAccounts.map((acc) => (
+                  <div
+                    key={acc.id}
+                    className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-xs ${
+                      acc.is_active ? 'border-success/25 bg-success/5' : 'border-border bg-muted/40'
+                    }`}
+                  >
+                    <span className="font-medium text-foreground">{acc.phone_number ?? acc.phone_number_id}</span>
+                    <StatusDot tone={acc.is_active ? 'success' : 'neutral'} label={acc.is_active ? 'Actif' : 'Inactif'} />
+                  </div>
+                ))}
+              </div>
+            )}
+            <WhatsAppManualConnectForm userId={userId} webhookUrl={webhookUrl} verifyToken={verifyToken} />
           </CardContent>
         </Card>
 

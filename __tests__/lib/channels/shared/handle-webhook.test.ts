@@ -8,8 +8,10 @@ import type { ChannelAdapter, NormalizedInboundMessage } from '@/lib/channels/ty
 // page_id/phone_number_id (msg.channelExternalId), which is not a UUID and
 // made every lock attempt fail silently, dropping the message.
 const findChannelAccountByExternalId = vi.fn()
+const resolveWhatsAppAppSecret = vi.fn()
 vi.mock('@/lib/channels/shared/lookup', () => ({
   findChannelAccountByExternalId: (...args: unknown[]) => findChannelAccountByExternalId(...args),
+  resolveWhatsAppAppSecret: (...args: unknown[]) => resolveWhatsAppAppSecret(...args),
 }))
 
 const claimInboundEvent = vi.fn()
@@ -190,5 +192,60 @@ describe('handleWebhookRequest', () => {
     const url = 'https://example.com/api/webhooks/instagram?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=echo-123'
     const res = await handleWebhookRequest('instagram', new Request(url), () => {})
     expect(res.status).toBe(403)
+  })
+})
+
+// WhatsApp accounts can now be manually admin-connected through a client's
+// OWN Meta app (see 20260901020000_whatsapp_manual_connect.sql +
+// app/admin/(dashboard)/clients/[id]/actions.ts::connectWhatsAppManually) —
+// their webhook payloads are signed with THEIR app secret, not the shared
+// global one, so the signing secret must be resolved per-account for
+// WhatsApp specifically. Instagram/Messenger are untouched by this (covered
+// by every test above, unmodified).
+describe('handleWebhookRequest — whatsapp per-account app secret resolution', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.META_APP_SECRET = 'global-secret'
+    adapter = makeAdapter({ platform: 'whatsapp' })
+    claimInboundEvent.mockResolvedValue(true)
+    tryLockConversation.mockResolvedValue(true)
+    findChannelAccountByExternalId.mockResolvedValue(null)
+  })
+
+  afterEach(() => {
+    process.env = { ...ORIGINAL_ENV }
+  })
+
+  test('verifies against the manually-connected account\'s own app secret, not the global one', async () => {
+    resolveWhatsAppAppSecret.mockResolvedValue('client-own-app-secret')
+    const verifyWebhookSignature = vi.fn(() => true)
+    adapter.verifyWebhookSignature = verifyWebhookSignature
+
+    const res = await handleWebhookRequest('whatsapp', postRequest({}), () => {})
+
+    expect(res.status).toBe(200)
+    expect(verifyWebhookSignature).toHaveBeenCalledWith(expect.any(String), null, 'client-own-app-secret')
+  })
+
+  test('falls back to the global app secret for self-serve-connected accounts (resolveWhatsAppAppSecret returns it)', async () => {
+    resolveWhatsAppAppSecret.mockResolvedValue('global-secret')
+    const verifyWebhookSignature = vi.fn(() => true)
+    adapter.verifyWebhookSignature = verifyWebhookSignature
+
+    const res = await handleWebhookRequest('whatsapp', postRequest({}), () => {})
+
+    expect(res.status).toBe(200)
+    expect(verifyWebhookSignature).toHaveBeenCalledWith(expect.any(String), null, 'global-secret')
+  })
+
+  test('returns 503 without touching the adapter when no per-account or global secret resolves', async () => {
+    resolveWhatsAppAppSecret.mockResolvedValue(null)
+    const verifyWebhookSignature = vi.fn(() => true)
+    adapter.verifyWebhookSignature = verifyWebhookSignature
+
+    const res = await handleWebhookRequest('whatsapp', postRequest({}), () => {})
+
+    expect(res.status).toBe(503)
+    expect(verifyWebhookSignature).not.toHaveBeenCalled()
   })
 })
