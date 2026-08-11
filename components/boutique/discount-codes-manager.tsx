@@ -113,7 +113,7 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
                 <Label htmlFor="dc-code">Code</Label>
                 <Input id="dc-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="PROMO10" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="dc-percent">Réduction (%)</Label>
                   <Input id="dc-percent" type="number" min="1" max="100" value={percentOff} onChange={(e) => { setPercentOff(e.target.value); setAmountOff('') }} placeholder="10" />

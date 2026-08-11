@@ -173,7 +173,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
           />
         </div>
         <Select value={paymentFilter} onValueChange={(v) => { setPaymentFilter(v as typeof paymentFilter); setVisibleCount(PAGE_SIZE) }}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Paiement" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Paiement" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
             {PAYMENT_STATUSES.map((s) => (
@@ -181,8 +181,8 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
             ))}
           </SelectContent>
         </Select>
-        <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-[150px]" />
-        <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-[150px]" />
+        <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-full sm:w-[150px]" />
+        <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-full sm:w-[150px]" />
       </div>
 
       {filtered.length === 0 ? (

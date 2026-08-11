@@ -25,7 +25,7 @@ export function FlowAnalyticsPopover({ funnel }: { funnel: FlowFunnelSummary }) 
         <BarChart3 className="size-3.5" /> Analytics
       </PopoverTrigger>
       <PopoverContent className="w-80 p-3" align="end">
-        <div className="mb-2.5 grid grid-cols-4 gap-2 text-center">
+        <div className="mb-2.5 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
           <div>
             <p className="text-base font-bold text-foreground tabular-nums">{funnel.totalRuns}</p>
             <p className="text-[10px] text-muted-foreground">Total</p>

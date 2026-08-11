@@ -115,6 +115,11 @@ export function ContactTable({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200">
+      {/* Desktop: table. Below md the tags + actions cells get too tall and
+          cramped to read as table rows — swap to a card list instead of
+          shrinking columns further (mirrors the split order-table.tsx
+          already uses for the same reason). */}
+      <div className="hidden md:block">
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow className="border-b border-border/60">
@@ -240,6 +245,113 @@ export function ContactTable({
           })}
         </TableBody>
       </Table>
+      </div>
+
+      {/* Mobile: card list */}
+      <div className="divide-y divide-border/40 md:hidden">
+        {contacts.map((contact) => {
+          const displayName = contact.full_name ?? (contact.username ? `@${contact.username}` : contact.sender_id)
+          const initial = (contact.full_name?.[0] ?? contact.username?.[0] ?? '?').toUpperCase()
+          const avatarColorClass = getAvatarColor(contact.sender_id)
+
+          return (
+            <div key={contact.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${avatarColorClass}`}>
+                    {initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-foreground text-sm line-clamp-1">{displayName}</div>
+                    {contact.phone && (
+                      <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Phone className="size-3" />
+                        {contact.phone}
+                      </div>
+                    )}
+                    {contact.last_inbound_at && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground/70">
+                        Dernier inbound :{' '}
+                        {new Date(contact.last_inbound_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <CustomFieldsPopover contact={contact} onSave={(fields) => saveCustomFields(contact.id, fields)} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeletingId(contact.id)}
+                    className="size-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Supprimer contact"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {contact.contact_tags.map((ct) => (
+                  <Badge
+                    key={ct.tag_id}
+                    variant="outline"
+                    className="text-[10px] font-medium py-0 px-2 rounded-full border bg-card"
+                    style={{ borderColor: ct.tags.color + '40', color: ct.tags.color, backgroundColor: ct.tags.color + '0a' }}
+                  >
+                    {ct.tags.name}
+                  </Badge>
+                ))}
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="size-8 rounded-full border border-border/60 hover:bg-muted hover:border-border"
+                        aria-label="Ajouter un tag"
+                      />
+                    }
+                  >
+                    <Plus className="size-3.5 text-muted-foreground" />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-52 p-1.5" align="start">
+                    <div className="mb-1.5 px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Gérer les tags
+                    </div>
+                    {tags.length === 0 ? (
+                      <p className="p-2 text-xs text-muted-foreground italic">Aucun tag créé.</p>
+                    ) : (
+                      <div className="space-y-0.5 max-h-52 overflow-y-auto">
+                        {tags.map((tag) => {
+                          const active = contact.contact_tags.some((ct) => ct.tag_id === tag.id)
+                          return (
+                            <button
+                              key={tag.id}
+                              onClick={() => toggleTag(contact, tag)}
+                              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs hover:bg-muted transition-all"
+                            >
+                              <span className="flex items-center gap-2 font-medium">
+                                <span className="size-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                                {tag.name}
+                              </span>
+                              {active && <X className="size-3.5 text-muted-foreground hover:text-foreground" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       <AlertDialog open={deletingId !== null} onOpenChange={(next) => !next && setDeletingId(null)}>
         <AlertDialogContent>

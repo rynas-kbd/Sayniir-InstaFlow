@@ -896,3 +896,19 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ─────────────────────────────────────────────
+   Flow builder — touch target sizing
+   React Flow's default connection handles (~6px) and Controls buttons
+   (~26px) are mouse-precision sized. One rule each fixes it everywhere
+   the canvas is used, instead of touching every <Handle> in node-visual.tsx.
+   ───────────────────────────────────────────── */
+.react-flow__handle {
+  width: 14px;
+  height: 14px;
+}
+
+.react-flow__controls-button {
+  width: 32px;
+  height: 32px;
+}
+

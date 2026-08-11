@@ -191,7 +191,7 @@ export default async function InboxPage({
         </div>
 
         {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1">
           <ConversationList conversations={conversations} activeId={activeConvId} filter={activeFilter} />
         </div>
       </div>

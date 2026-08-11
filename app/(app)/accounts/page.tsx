@@ -39,7 +39,7 @@ export default async function AccountsPage() {
   }).length
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full">
       <Suspense fallback={null}>
         <ConnectResultToast redirectTo={!onboarding.isActivated ? '/dashboard' : '/accounts'} />
       </Suspense>

@@ -13,7 +13,7 @@ export default async function NewFlowPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Nouveau flow" description="Partez d'un template ou d'une toile vide." />
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div className="flex-1 p-4 sm:p-6">
         <div className="mx-auto max-w-lg">
           <Link href="/flows" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-3.5" /> Retour aux flows

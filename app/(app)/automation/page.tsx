@@ -14,7 +14,7 @@ export default async function AutomationPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Règles" description="Réponses automatiques par mot-clé, DM et commentaires." />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1">
         <AutomationClient accounts={accounts} initialRules={rules ?? []} />
       </div>
     </div>

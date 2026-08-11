@@ -58,7 +58,7 @@ export function PostSelector({
             Aucun post trouvé sur ce compte.
           </div>
         ) : (
-          <div className="grid max-h-90 grid-cols-3 gap-2.5 overflow-y-auto pr-1">
+          <div className="grid max-h-90 grid-cols-2 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-3">
             {media.map((m) => {
               const isSelected = localSelected.includes(m.id)
               return (

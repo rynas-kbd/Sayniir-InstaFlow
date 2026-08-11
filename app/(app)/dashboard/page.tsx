@@ -133,7 +133,7 @@ export default async function DashboardPage() {
         }
       />
 
-      <DashboardContainer className="flex-1 overflow-y-auto space-y-6 p-4 md:p-6">
+      <DashboardContainer className="flex-1 space-y-6 p-4 md:p-6">
         {!onboarding.isActivated ? (
           <ActivationChecklist
             currentStepId={onboarding.currentStepId!}

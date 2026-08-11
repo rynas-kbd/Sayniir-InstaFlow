@@ -68,13 +68,20 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
-        <Link href="/flows" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" /> Flows
-        </Link>
-        <span className="text-sm font-semibold text-foreground">{flow.name}</span>
-        {flowLevelInsights.length > 0 && <InsightBadge insights={flowLevelInsights} />}
-        <div className="ml-auto flex items-center gap-2">
+      {/* flex-wrap + the left group's own min-w-0/flex-1: a long flow name
+          truncates instead of pushing the action popovers off-screen, and
+          if the row genuinely doesn't fit (long name + both actions on a
+          narrow phone) the actions drop to their own line instead of
+          clipping. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Link href="/flows" className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-3.5" /> Flows
+          </Link>
+          <span className="min-w-0 truncate text-sm font-semibold text-foreground">{flow.name}</span>
+          {flowLevelInsights.length > 0 && <InsightBadge insights={flowLevelInsights} />}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <GrowthLinkPopover
             channelAccountId={flow.channel_account_id}
             flowId={id}

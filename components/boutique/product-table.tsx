@@ -181,7 +181,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           />
         </div>
         <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les types</SelectItem>
             {PRODUCT_KINDS.map((k) => (
@@ -190,7 +190,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           </SelectContent>
         </Select>
         <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
-          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Statut" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous</SelectItem>
             <SelectItem value="active">Actifs</SelectItem>
@@ -199,7 +199,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         </Select>
         {categories.length > 0 && (
           <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Catégorie" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes catégories</SelectItem>
               {categories.map((c) => (

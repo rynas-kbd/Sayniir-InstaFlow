@@ -85,7 +85,7 @@ export default async function CampaignsPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div className="flex-1 p-4 sm:p-6">
         {/* Campaign Metrics Summary */}
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard title="Campagnes totales" value={totalCampaigns} />

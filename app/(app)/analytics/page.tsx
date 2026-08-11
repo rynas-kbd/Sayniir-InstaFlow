@@ -83,7 +83,7 @@ export default async function AnalyticsPage() {
         description="Performances et statistiques des 14 derniers jours."
       />
 
-      <div className="flex-1 overflow-y-auto space-y-5 p-4 sm:p-6 pb-20 md:pb-6">
+      <div className="flex-1 space-y-5 p-4 sm:p-6 pb-20 md:pb-6">
 
         {/* Intro banner */}
         <div className="relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent px-5 py-4 flex items-center justify-between gap-4">
@@ -141,7 +141,7 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Secondary stats row */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
               <MessagesSquare className="size-4 text-blue-500" />

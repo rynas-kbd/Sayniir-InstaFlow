@@ -92,7 +92,7 @@ export default async function BoutiquePage() {
   const stats = { revenue, aov, conversionRate, topProducts }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
+    <div className="flex h-full flex-col">
       <div className="flex-1 p-4 sm:p-6">
         <BoutiqueClient
           channelAccountId={account.id}

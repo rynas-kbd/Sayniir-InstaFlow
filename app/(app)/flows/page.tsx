@@ -73,7 +73,7 @@ export default async function FlowsPage() {
       </div>
 
       {/* ── Content ─────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div className="flex-1 p-4 sm:p-6">
         {/* Flows enabled banner */}
         <FlowsEnabledToggle
           channelAccountId={account.id}

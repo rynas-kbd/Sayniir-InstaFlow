@@ -76,7 +76,7 @@ export default async function SettingsPage() {
   ]
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full">
       <div className="mx-auto max-w-2xl">
         <PageHeader title="Paramètres" description="Gérez votre compte et vos préférences." />
 

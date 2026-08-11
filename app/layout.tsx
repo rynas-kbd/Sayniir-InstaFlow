@@ -54,8 +54,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // No maximumScale/userScalable: false here — that blocked pinch-zoom
+  // app-wide, a WCAG 1.4.4 (Resize Text) failure. It's not needed to stop
+  // iOS's zoom-on-input-focus either: components/ui/{input,textarea}.tsx
+  // already render at 16px (text-base) on mobile with md:text-sm only
+  // kicking in on desktop, which is the actual correct fix for that.
   // Without this, every env(safe-area-inset-*) in the app (the mobile bottom
   // nav's own padding, .pb-safe) silently resolves to 0px on iPhone — the
   // safe-area handling was dead code without it.

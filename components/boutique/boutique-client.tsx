@@ -88,7 +88,12 @@ export function BoutiqueClient({
 
       {/* ── Tab Navigation ── */}
       <div>
-        <div className="flex items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
+        {/* Below sm: tabs keep their natural width and the row scrolls
+            horizontally instead of crushing 6 tabs into ~55px each
+            (matches the overflow-x-auto + hidden-scrollbar pattern
+            components/inbox/channel-filter-pills.tsx already uses). At
+            sm and up flex-1 takes back over for the equal-fill desktop look. */}
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-muted/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map(({ key, label, icon: Icon }) => {
             const isActive = tab === key
             const count = counts[key]
@@ -97,7 +102,7 @@ export function BoutiqueClient({
                 key={key}
                 onClick={() => setTab(key)}
                 className={cn(
-                  'relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                  'relative flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:flex-1',
                   isActive
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'

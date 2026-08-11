@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { Zap } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+} from '@/components/ui/responsive-dialog'
 import { FormDialogHeader } from '@/components/shared/form-section'
 import { FormFooter } from '@/components/shared/form-footer'
 import { useRuleForm } from './rule-form/use-rule-form'
@@ -28,16 +32,16 @@ export function RuleFormDialog({
   const [postSelectorActive, setPostSelectorActive] = useState(false)
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+    <ResponsiveDialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <ResponsiveDialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         {!postSelectorActive && (
-          <DialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
+          <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
             <FormDialogHeader
               icon={Zap}
               title={rule ? 'Modifier la règle' : 'Nouvelle règle'}
               description="Réponse automatique par mot-clé, DM ou commentaire."
             />
-          </DialogHeader>
+          </ResponsiveDialogHeader>
         )}
 
         <form onSubmit={api.submit} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -54,7 +58,7 @@ export function RuleFormDialog({
             />
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

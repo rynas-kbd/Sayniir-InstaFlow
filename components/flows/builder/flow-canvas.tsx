@@ -404,6 +404,15 @@ export function FlowCanvas({
             onNodeClick={(_, node) => setSelectedId(node.id)}
             onPaneClick={() => setSelectedId(null)}
             fitView
+            fitViewOptions={{ padding: 0.3 }}
+            panOnDrag
+            zoomOnPinch
+            minZoom={0.25}
+            maxZoom={2}
+            // Default 20px is a near-miss on a fingertip; widen the radius a
+            // dragged connection snaps within so wiring nodes on touch
+            // doesn't need pixel-precise accuracy.
+            connectionRadius={40}
           >
             <Background />
             <Controls />
