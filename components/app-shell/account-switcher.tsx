@@ -6,7 +6,8 @@ import { Check, ChevronDown, Layers, Plus } from 'lucide-react'
 import { setActiveAccount } from '@/lib/accounts/actions'
 import { getAccountLabel, PLATFORM_ICON, PLATFORM_LABEL } from '@/lib/channels/labels'
 import { getAvatarColor } from '@/lib/avatar-color'
-import { ALL_ACCOUNTS_SCOPE, type ActiveAccount } from '@/lib/accounts/active-account'
+import { ALL_ACCOUNTS_SCOPE } from '@/lib/accounts/select-active-account'
+import type { ActiveAccount } from '@/lib/accounts/active-account'
 import {
   DropdownMenu,
   DropdownMenuContent,
