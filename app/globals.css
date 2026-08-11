@@ -255,6 +255,135 @@
   --chart-5: var(--organic-sand-600);
 }
 
+/* ─────────────────────────────────────────────
+   Custom Color Themes Overrides
+   ───────────────────────────────────────────── */
+
+/* Océan Cyber (Blue / Indigo) */
+html[data-color-theme="ocean"] {
+  --organic-terracotta: #2563eb;
+  --organic-terracotta-100: #eff6ff;
+  --organic-terracotta-200: #dbeafe;
+  --organic-terracotta-300: #93c5fd;
+  --organic-terracotta-400: #60a5fa;
+  --organic-terracotta-500: #3b82f6;
+  --organic-terracotta-600: #2563eb;
+  --organic-terracotta-700: #1d4ed8;
+  --organic-terracotta-800: #1e40af;
+  --organic-terracotta-900: #1e3a8a;
+  --primary: #2563eb;
+  --ring: #2563eb;
+}
+html[data-color-theme="ocean"].dark,
+html[data-color-theme="ocean"] .dark {
+  --organic-terracotta: #3b82f6;
+  --organic-terracotta-100: #172554;
+  --organic-terracotta-200: #1e3a8a;
+  --organic-terracotta-300: #1e40af;
+  --organic-terracotta-400: #1d4ed8;
+  --organic-terracotta-500: #2563eb;
+  --organic-terracotta-600: #3b82f6;
+  --organic-terracotta-700: #60a5fa;
+  --organic-terracotta-800: #93c5fd;
+  --organic-terracotta-900: #dbeafe;
+  --primary: #3b82f6;
+  --ring: #3b82f6;
+}
+
+/* Émeraude (Forest Mint) */
+html[data-color-theme="emerald"] {
+  --organic-terracotta: #059669;
+  --organic-terracotta-100: #ecfdf5;
+  --organic-terracotta-200: #d1fae5;
+  --organic-terracotta-300: #6ee7b7;
+  --organic-terracotta-400: #34d399;
+  --organic-terracotta-500: #10b981;
+  --organic-terracotta-600: #059669;
+  --organic-terracotta-700: #047857;
+  --organic-terracotta-800: #065f46;
+  --organic-terracotta-900: #064e3b;
+  --primary: #059669;
+  --ring: #059669;
+}
+html[data-color-theme="emerald"].dark,
+html[data-color-theme="emerald"] .dark {
+  --organic-terracotta: #10b981;
+  --organic-terracotta-100: #022c22;
+  --organic-terracotta-200: #064e3b;
+  --organic-terracotta-300: #065f46;
+  --organic-terracotta-400: #047857;
+  --organic-terracotta-500: #059669;
+  --organic-terracotta-600: #10b981;
+  --organic-terracotta-700: #34d399;
+  --organic-terracotta-800: #6ee7b7;
+  --organic-terracotta-900: #d1fae5;
+  --primary: #10b981;
+  --ring: #10b981;
+}
+
+/* Coucher de soleil (Amethyst Sunset) */
+html[data-color-theme="sunset"] {
+  --organic-terracotta: #c026d3;
+  --organic-terracotta-100: #fdf4ff;
+  --organic-terracotta-200: #fae8ff;
+  --organic-terracotta-300: #f0abfc;
+  --organic-terracotta-400: #e879f9;
+  --organic-terracotta-500: #d946ef;
+  --organic-terracotta-600: #c026d3;
+  --organic-terracotta-700: #a21caf;
+  --organic-terracotta-800: #86198f;
+  --organic-terracotta-900: #701a75;
+  --primary: #c026d3;
+  --ring: #c026d3;
+}
+html[data-color-theme="sunset"].dark,
+html[data-color-theme="sunset"] .dark {
+  --organic-terracotta: #e879f9;
+  --organic-terracotta-100: #4a044e;
+  --organic-terracotta-200: #701a75;
+  --organic-terracotta-300: #86198f;
+  --organic-terracotta-400: #a21caf;
+  --organic-terracotta-500: #c026d3;
+  --organic-terracotta-600: #d946ef;
+  --organic-terracotta-700: #e879f9;
+  --organic-terracotta-800: #f0abfc;
+  --organic-terracotta-900: #fae8ff;
+  --primary: #e879f9;
+  --ring: #e879f9;
+}
+
+/* Minuit Doré (Amber / Gold) */
+html[data-color-theme="midnight"] {
+  --organic-terracotta: #d97706;
+  --organic-terracotta-100: #fffbeb;
+  --organic-terracotta-200: #fef3c7;
+  --organic-terracotta-300: #fde68a;
+  --organic-terracotta-400: #fcd34d;
+  --organic-terracotta-500: #fbbf24;
+  --organic-terracotta-600: #d97706;
+  --organic-terracotta-700: #b45309;
+  --organic-terracotta-800: #92400e;
+  --organic-terracotta-900: #78350f;
+  --primary: #d97706;
+  --ring: #d97706;
+}
+html[data-color-theme="midnight"].dark,
+html[data-color-theme="midnight"] .dark {
+  --organic-terracotta: #fbbf24;
+  --organic-terracotta-100: #451a03;
+  --organic-terracotta-200: #78350f;
+  --organic-terracotta-300: #92400e;
+  --organic-terracotta-400: #b45309;
+  --organic-terracotta-500: #d97706;
+  --organic-terracotta-600: #fbbf24;
+  --organic-terracotta-700: #fcd34d;
+  --organic-terracotta-800: #fde68a;
+  --organic-terracotta-900: #fef3c7;
+  --primary: #fbbf24;
+  --ring: #fbbf24;
+}
+
+
 @theme inline {
   --font-sans: var(--organic-body-family);
   --font-mono: var(--font-jetbrains-mono), "Fira Code", monospace;

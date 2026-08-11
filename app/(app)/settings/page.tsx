@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { SignOutButton } from '@/components/settings/sign-out-button'
 import { TeamMembersCard } from '@/components/settings/team-members-card'
 import { BillingCard } from '@/components/settings/billing-card'
+import { AppearanceCard } from '@/components/settings/appearance-card'
 import { CopilotSettingsCard } from '@/components/ai/copilot-settings-card'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { checkAiCreditLimit } from '@/lib/ai/credits/meter'
@@ -110,6 +111,8 @@ export default async function SettingsPage() {
               ))}
             </CardContent>
           </Card>
+
+          <AppearanceCard />
 
           <BillingCard status={subscription?.status ?? null} expiresAt={subscription?.expires_at ?? null} />
 

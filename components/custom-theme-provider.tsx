@@ -1,0 +1,229 @@
+'use client'
+
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+export type ColorTheme = 'terracotta' | 'ocean' | 'emerald' | 'sunset' | 'midnight'
+export type WallpaperId = 'none' | 'aurora' | 'cyber' | 'waves' | 'cosmic' | 'sunset' | 'custom'
+
+export interface ColorThemeOption {
+  id: ColorTheme
+  name: string
+  description: string
+  primaryColor: string
+  gradient: string
+  darkGradient: string
+  previewBorder: string
+}
+
+export const COLOR_THEMES: ColorThemeOption[] = [
+  {
+    id: 'terracotta',
+    name: 'Terracotta',
+    description: 'Chaleureux & naturel (Organique)',
+    primaryColor: '#c67139',
+    gradient: 'linear-gradient(135deg, #f6a06b 0%, #c67139 100%)',
+    darkGradient: 'linear-gradient(135deg, #e2884d 0%, #b2622d 100%)',
+    previewBorder: '#c67139',
+  },
+  {
+    id: 'ocean',
+    name: 'Océan Cyber',
+    description: 'Bleu cobalt & indigo vibrant',
+    primaryColor: '#3b82f6',
+    gradient: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)',
+    darkGradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    previewBorder: '#3b82f6',
+  },
+  {
+    id: 'emerald',
+    name: 'Émeraude',
+    description: 'Vert forêt & sauge rafraîchissant',
+    primaryColor: '#10b981',
+    gradient: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+    darkGradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+    previewBorder: '#10b981',
+  },
+  {
+    id: 'sunset',
+    name: 'Coucher de soleil',
+    description: 'Rose vibrant & améthyste',
+    primaryColor: '#ec4899',
+    gradient: 'linear-gradient(135deg, #f472b6 0%, #d946ef 100%)',
+    darkGradient: 'linear-gradient(135deg, #ec4899 0%, #c026d3 100%)',
+    previewBorder: '#ec4899',
+  },
+  {
+    id: 'midnight',
+    name: 'Minuit Doré',
+    description: 'Ambre chaud & onyx élégant',
+    primaryColor: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+    darkGradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+    previewBorder: '#f59e0b',
+  },
+]
+
+interface CustomThemeContextType {
+  colorTheme: ColorTheme
+  setColorTheme: (theme: ColorTheme) => void
+  wallpaper: WallpaperId
+  setWallpaper: (wallpaper: WallpaperId) => void
+  bgOpacity: number
+  setBgOpacity: (opacity: number) => void
+  customImageUrl: string
+  setCustomImageUrl: (url: string) => void
+  savePreferences: (updates: {
+    colorTheme?: ColorTheme
+    wallpaper?: WallpaperId
+    bgOpacity?: number
+    customImageUrl?: string
+  }) => Promise<void>
+}
+
+const CustomThemeContext = createContext<CustomThemeContextType | undefined>(undefined)
+
+function setCookie(name: string, value: string, days = 365) {
+  if (typeof document === 'undefined') return
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const matches = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1')}=([^;]*)`))
+  return matches ? decodeURIComponent(matches[1]) : null
+}
+
+export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
+  const [colorTheme, setColorThemeState] = useState<ColorTheme>('terracotta')
+  const [wallpaper, setWallpaperState] = useState<WallpaperId>('none')
+  const [bgOpacity, setBgOpacityState] = useState<number>(40)
+  const [customImageUrl, setCustomImageUrlState] = useState<string>('')
+  const [mounted, setMounted] = useState(false)
+
+  const applyColorThemeToDOM = (themeName: ColorTheme) => {
+    document.documentElement.setAttribute('data-color-theme', themeName)
+  }
+
+  // Load preferences from Supabase User Metadata or cookie on mount (NO localStorage)
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function loadTheme() {
+      // Check cookie fallback first for rapid SSR feel
+      const cookieTheme = getCookie('instaflow_color_theme') as ColorTheme | null
+      const cookieWallpaper = getCookie('instaflow_wallpaper') as WallpaperId | null
+      const cookieOpacity = getCookie('instaflow_bg_opacity')
+      const cookieImg = getCookie('instaflow_custom_bg_url')
+
+      if (cookieTheme && COLOR_THEMES.some((t) => t.id === cookieTheme)) {
+        setColorThemeState(cookieTheme)
+        applyColorThemeToDOM(cookieTheme)
+      }
+      if (cookieWallpaper) setWallpaperState(cookieWallpaper)
+      if (cookieOpacity) setBgOpacityState(Number(cookieOpacity))
+      if (cookieImg) setCustomImageUrlState(cookieImg)
+
+      // Fetch official preferences from Supabase user session
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.user_metadata?.theme_preferences) {
+        const pref = user.user_metadata.theme_preferences
+        if (pref.colorTheme) {
+          setColorThemeState(pref.colorTheme)
+          applyColorThemeToDOM(pref.colorTheme)
+          setCookie('instaflow_color_theme', pref.colorTheme)
+        }
+        if (pref.wallpaper) {
+          setWallpaperState(pref.wallpaper)
+          setCookie('instaflow_wallpaper', pref.wallpaper)
+        }
+        if (typeof pref.bgOpacity === 'number') {
+          setBgOpacityState(pref.bgOpacity)
+          setCookie('instaflow_bg_opacity', String(pref.bgOpacity))
+        }
+        if (pref.customImageUrl !== undefined) {
+          setCustomImageUrlState(pref.customImageUrl)
+          setCookie('instaflow_custom_bg_url', pref.customImageUrl)
+        }
+      }
+      setMounted(true)
+    }
+
+    loadTheme()
+  }, [])
+
+  const savePreferences = async (updates: {
+    colorTheme?: ColorTheme
+    wallpaper?: WallpaperId
+    bgOpacity?: number
+    customImageUrl?: string
+  }) => {
+    const nextColorTheme = updates.colorTheme ?? colorTheme
+    const nextWallpaper = updates.wallpaper ?? wallpaper
+    const nextBgOpacity = updates.bgOpacity ?? bgOpacity
+    const nextCustomImageUrl = updates.customImageUrl !== undefined ? updates.customImageUrl : customImageUrl
+
+    setColorThemeState(nextColorTheme)
+    setWallpaperState(nextWallpaper)
+    setBgOpacityState(nextBgOpacity)
+    setCustomImageUrlState(nextCustomImageUrl)
+
+    applyColorThemeToDOM(nextColorTheme)
+
+    // Save to Cookies
+    setCookie('instaflow_color_theme', nextColorTheme)
+    setCookie('instaflow_wallpaper', nextWallpaper)
+    setCookie('instaflow_bg_opacity', String(nextBgOpacity))
+    setCookie('instaflow_custom_bg_url', nextCustomImageUrl)
+
+    // Save to Supabase User Metadata (persisted across devices & sessions without localStorage)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const existing = user.user_metadata?.theme_preferences || {}
+      await supabase.auth.updateUser({
+        data: {
+          theme_preferences: {
+            ...existing,
+            colorTheme: nextColorTheme,
+            wallpaper: nextWallpaper,
+            bgOpacity: nextBgOpacity,
+            customImageUrl: nextCustomImageUrl,
+          },
+        },
+      })
+    }
+  }
+
+  const setColorTheme = (t: ColorTheme) => savePreferences({ colorTheme: t })
+  const setWallpaper = (w: WallpaperId) => savePreferences({ wallpaper: w })
+  const setBgOpacity = (o: number) => savePreferences({ bgOpacity: o })
+  const setCustomImageUrl = (url: string) => savePreferences({ customImageUrl: url })
+
+  return (
+    <CustomThemeContext.Provider
+      value={{
+        colorTheme: mounted ? colorTheme : 'terracotta',
+        setColorTheme,
+        wallpaper,
+        setWallpaper,
+        bgOpacity,
+        setBgOpacity,
+        customImageUrl,
+        setCustomImageUrl,
+        savePreferences,
+      }}
+    >
+      {children}
+    </CustomThemeContext.Provider>
+  )
+}
+
+export function useCustomTheme() {
+  const context = useContext(CustomThemeContext)
+  if (!context) {
+    throw new Error('useCustomTheme must be used within a CustomThemeProvider')
+  }
+  return context
+}

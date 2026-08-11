@@ -3,18 +3,12 @@ import localFont from 'next/font/local'
 import { JetBrains_Mono, Outfit, Figtree } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { CustomThemeProvider } from '@/components/custom-theme-provider'
+import { CustomBackground } from '@/components/custom-background'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 import { MotionProvider } from '@/components/app-shell/motion-provider'
 
-// Self-hosted rather than next/font/google: on this Next.js version,
-// next/font/google emits a corrupted `unicode-range` (literal "U+??") on
-// the @font-face block that covers Basic Latin for Caprasimo, so the
-// browser drops that face entirely and every plain-ASCII heading falls
-// back to the system font. Confirmed via two independent HTTP clients
-// against the compiled dev CSS. Local files below are the same "latin"
-// subset Google's own CSS2 API serves for this exact family/weight
-// request, just bypassing next/font/google's broken metadata generation.
 const caprasimo = localFont({
   src: './fonts/caprasimo-400.woff2',
   weight: '400',
@@ -44,9 +38,6 @@ export const metadata: Metadata = {
   other: {
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    // Tells the browser this page manages both themes itself, so it stops
-    // applying its own forced-dark heuristics (color inversion, native
-    // control restyling) on top of the app's already-dark theme.
     'color-scheme': 'light dark',
   },
 }
@@ -54,14 +45,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  // No maximumScale/userScalable: false here — that blocked pinch-zoom
-  // app-wide, a WCAG 1.4.4 (Resize Text) failure. It's not needed to stop
-  // iOS's zoom-on-input-focus either: components/ui/{input,textarea}.tsx
-  // already render at 16px (text-base) on mobile with md:text-sm only
-  // kicking in on desktop, which is the actual correct fix for that.
-  // Without this, every env(safe-area-inset-*) in the app (the mobile bottom
-  // nav's own padding, .pb-safe) silently resolves to 0px on iPhone — the
-  // safe-area handling was dead code without it.
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f5ead8' },
@@ -83,12 +66,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <MotionProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-            </TooltipProvider>
-          </MotionProvider>
+          <CustomThemeProvider>
+            <CustomBackground />
+            <MotionProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+              </TooltipProvider>
+            </MotionProvider>
+          </CustomThemeProvider>
         </ThemeProvider>
       </body>
     </html>

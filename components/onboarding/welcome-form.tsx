@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTheme } from 'next-themes'
+import { COLOR_THEMES, useCustomTheme, type ColorTheme } from '@/components/custom-theme-provider'
 import { springs } from '@/lib/motion/springs'
 import {
   ShoppingBag,
@@ -20,6 +22,10 @@ import {
   Building2,
   ArrowLeft,
   Check,
+  Palette,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -61,7 +67,12 @@ const TEAM_SIZES: Array<{ value: TeamSize; label: string; icon: typeof User }> =
 ]
 
 const AUTO_ADVANCE_DELAY_MS = 320
-const STEP_TITLES = ['Quelle est votre activité ?', 'Votre objectif principal ?', 'Combien êtes-vous ?']
+const STEP_TITLES = [
+  'Quelle est votre activité ?',
+  'Votre objectif principal ?',
+  'Combien êtes-vous ?',
+  'Personnalisez votre interface',
+]
 
 /** Premium selection card — gradient icon chip, selected ring + glow + check badge, hover lift. */
 function OptionTile<T extends string>({
@@ -134,6 +145,9 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 
 export function WelcomeForm() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const { colorTheme, setColorTheme } = useCustomTheme()
+
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
   const [businessType, setBusinessType] = useState<BusinessType | null>(null)
@@ -156,11 +170,6 @@ export function WelcomeForm() {
     setStep(nextStep)
   }
 
-  /** Selecting a tile on a non-final step both records the value and, after a
-   * short beat to let the selection register visually, slides to the next
-   * question — the "one question at a time, keeps moving" feel. The last
-   * step never auto-advances: it fires a network request (handleSubmit),
-   * which must stay an explicit action. */
   function autoAdvance(nextStep: number) {
     if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
     advanceTimeout.current = setTimeout(() => goTo(nextStep, 1), AUTO_ADVANCE_DELAY_MS)
@@ -168,8 +177,6 @@ export function WelcomeForm() {
 
   function handleBusinessTypeSelect(value: BusinessType) {
     setBusinessType(value)
-    // 'sell_more' only exists for boutiques — switching away from ecommerce
-    // must not silently submit a goal that's no longer offered or valid.
     if (value !== 'ecommerce' && primaryGoal === 'sell_more') {
       setPrimaryGoal(null)
     }
@@ -181,6 +188,11 @@ export function WelcomeForm() {
     autoAdvance(2)
   }
 
+  function handleTeamSizeSelect(value: TeamSize) {
+    setTeamSize(value)
+    autoAdvance(3)
+  }
+
   async function handleSubmit() {
     if (!canFinish) return
     setSaving(true)
@@ -189,7 +201,13 @@ export function WelcomeForm() {
       const res = await fetch('/api/onboarding/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_type: businessType, primary_goal: primaryGoal, team_size: teamSize }),
+        body: JSON.stringify({
+          business_type: businessType,
+          primary_goal: primaryGoal,
+          team_size: teamSize,
+          theme_mode: theme,
+          color_theme: colorTheme,
+        }),
       })
       if (!res.ok) throw new Error()
       router.push('/dashboard')
@@ -218,7 +236,7 @@ export function WelcomeForm() {
     <AuthCard tagline="Personnalisons votre espace en 30 secondes">
       <div className="flex flex-col gap-5">
         <div>
-          <ProgressBar step={step} total={3} />
+          <ProgressBar step={step} total={4} />
           <div className="flex items-center justify-between">
             {step > 0 ? (
               <button
@@ -231,7 +249,7 @@ export function WelcomeForm() {
             ) : (
               <span />
             )}
-            <span className="text-[11px] font-medium text-muted-foreground">Étape {step + 1}/3</span>
+            <span className="text-[11px] font-medium text-muted-foreground">Étape {step + 1}/4</span>
           </div>
         </div>
 
@@ -274,8 +292,73 @@ export function WelcomeForm() {
             {step === 2 && (
               <div className="grid grid-cols-2 gap-2.5">
                 {TEAM_SIZES.map((opt) => (
-                  <OptionTile key={opt.value} {...opt} selected={teamSize === opt.value} onSelect={setTeamSize} />
+                  <OptionTile key={opt.value} {...opt} selected={teamSize === opt.value} onSelect={handleTeamSizeSelect} />
                 ))}
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                {/* Mode switch */}
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Mode d&apos;affichage</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'light', label: 'Clair', icon: Sun },
+                      { id: 'dark', label: 'Sombre', icon: Moon },
+                      { id: 'system', label: 'Système', icon: Monitor },
+                    ].map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setTheme(id)}
+                        className={cn(
+                          'flex flex-col items-center justify-center gap-1 rounded-xl border py-2.5 text-xs font-medium transition-all duration-150',
+                          theme === id
+                            ? 'border-primary bg-primary/10 text-foreground font-semibold'
+                            : 'border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40'
+                        )}
+                      >
+                        <Icon className="size-4" strokeWidth={1.75} />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Palette picker */}
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Palette de couleur</span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {COLOR_THEMES.map((opt) => {
+                      const isSelected = colorTheme === opt.id
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setColorTheme(opt.id as ColorTheme)}
+                          className={cn(
+                            'flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all duration-150',
+                            isSelected
+                              ? 'border-primary bg-primary/10 text-foreground font-semibold shadow-xs'
+                              : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-border hover:bg-muted/40'
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="size-5 rounded-full shadow-xs flex items-center justify-center"
+                              style={{ background: opt.gradient }}
+                            >
+                              {isSelected && <Check className="size-3 text-white" strokeWidth={3} />}
+                            </div>
+                            <span className="text-xs">{opt.name}</span>
+                          </div>
+                          <span className="text-[10.5px] text-muted-foreground">{opt.description}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
@@ -283,9 +366,9 @@ export function WelcomeForm() {
 
         {error && <p className="text-center text-[13px] text-destructive">{error}</p>}
 
-        {step === 2 && (
+        {step === 3 && (
           <Button size="lg" disabled={!canFinish || saving} onClick={handleSubmit} className="w-full">
-            {saving ? 'Un instant…' : 'Terminer'}
+            {saving ? 'Un instant…' : 'Accéder au Dashboard'}
           </Button>
         )}
 
@@ -301,3 +384,4 @@ export function WelcomeForm() {
     </AuthCard>
   )
 }
+
