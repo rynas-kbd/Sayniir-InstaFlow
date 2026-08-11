@@ -12,7 +12,7 @@ export default async function BoutiquePage() {
 
   if (!account) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex min-h-full flex-col">
         <PageHeader title="Boutique" description="Catalogue produits et commandes." />
         <NoAccountState description="Connectez un compte pour commencer à gérer votre boutique." />
       </div>
@@ -92,7 +92,7 @@ export default async function BoutiquePage() {
   const stats = { revenue, aov, conversionRate, topProducts }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <div className="flex-1 p-4 sm:p-6">
         <BoutiqueClient
           channelAccountId={account.id}

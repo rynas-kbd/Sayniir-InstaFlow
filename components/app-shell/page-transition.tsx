@@ -18,7 +18,7 @@ export function PageTransitionWrapper({ children }: { children: React.ReactNode 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="h-full w-full"
+        className="min-h-full w-full"
       >
         {children}
       </motion.div>

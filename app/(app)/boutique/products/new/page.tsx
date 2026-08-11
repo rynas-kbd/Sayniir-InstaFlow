@@ -10,7 +10,7 @@ export default async function NewProductPage() {
   if (!account) redirect('/boutique')
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Nouveau produit" description="Renseignez les informations affichées à vos clients." />
       <div className="flex-1 p-4 sm:p-6">
         <div className="mx-auto w-full max-w-5xl">

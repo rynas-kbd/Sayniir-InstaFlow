@@ -13,7 +13,7 @@ export default async function ContactsPage() {
 
   if (!account) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex min-h-full flex-col">
         <PageHeader title="Contacts" description="Votre CRM : contacts, tags et historique." />
         <NoAccountState description="Connectez un compte pour commencer à recevoir des contacts." />
       </div>
@@ -30,7 +30,7 @@ export default async function ContactsPage() {
   ])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader
         title="Contacts"
         description={`${contacts?.length ?? 0} contact${(contacts?.length ?? 0) !== 1 ? 's' : ''}`}

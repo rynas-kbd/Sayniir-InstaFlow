@@ -67,7 +67,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       {/* flex-wrap + the left group's own min-w-0/flex-1: a long flow name
           truncates instead of pushing the action popovers off-screen, and
           if the row genuinely doesn't fit (long name + both actions on a

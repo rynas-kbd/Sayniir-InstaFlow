@@ -113,7 +113,7 @@ export default async function DashboardPage() {
   const replyRate = totalMessages ? Math.round((totalReplied / totalMessages) * 100) : 0
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader
         title="Dashboard"
         description="Pilotez et analysez vos automatisations en temps réel."

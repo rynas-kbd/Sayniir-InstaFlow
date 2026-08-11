@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { BotMessageSquare } from 'lucide-react'
-import { usePathname } from 'next/navigation'
 import { springs } from '@/lib/motion/springs'
 import {
   Tooltip,
@@ -25,10 +24,13 @@ interface CopilotFABProps {
  * reserved for hover, so the orb doesn't compete for attention on every page.
  */
 export function CopilotFAB({ onClick }: CopilotFABProps) {
-  const pathname = usePathname()
-
-  const isFlowBuilder = pathname?.match(/^\/flows\/[^/]+$/)
-  const positionClasses = isFlowBuilder ? 'bottom-20 right-6' : 'bottom-6 right-6 pb-safe'
+  // MobileBottomNav (app/(app)/layout.tsx) renders on every mobile page, not
+  // just the flow builder — bottom-20 clears its ~62px height (+ safe-area)
+  // everywhere. The old bottom-6 default only avoided the nav on the one
+  // route (/flows/[id]) that had been separately patched to bottom-20;
+  // every other page still had the FAB sitting on top of the nav bar,
+  // covering and swallowing taps on its rightmost "Plus" tab.
+  const positionClasses = 'bottom-20 right-6 pb-safe'
 
   return (
     <TooltipProvider delay={300}>

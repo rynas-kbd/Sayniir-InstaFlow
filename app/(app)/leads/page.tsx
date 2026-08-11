@@ -29,7 +29,7 @@ export default async function LeadsPage() {
   const qualifiedCount = safeLeads.filter((l) => l.qualification_status === 'qualified').length
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Leads" description="Qualification automatique des prospects par l'IA." />
       <div className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6">
         {safeLeads.length > 0 && (

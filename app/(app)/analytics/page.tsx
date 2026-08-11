@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
 
   if (!account) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex min-h-full flex-col">
         <PageHeader title="Analytics" description="Performances et statistiques des 14 derniers jours." />
         <NoAccountState description="Connectez un compte pour voir vos statistiques." />
       </div>
@@ -77,7 +77,7 @@ export default async function AnalyticsPage() {
   const totalMessages = summary.messagesReceived + summary.totalOutgoing
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader
         title="Analytics"
         description="Performances et statistiques des 14 derniers jours."

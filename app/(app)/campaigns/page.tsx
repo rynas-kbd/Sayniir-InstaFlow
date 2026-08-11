@@ -19,7 +19,7 @@ export default async function CampaignsPage() {
 
   if (!account) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex min-h-full flex-col">
         <PageHeader title="Campagnes" description="Diffusions ciblées vers vos contacts et segments." />
         <NoAccountState description="Connectez un compte pour lancer des campagnes." />
       </div>
@@ -73,7 +73,7 @@ export default async function CampaignsPage() {
   const failedCampaigns = safeCampaigns.filter((c) => c.status === 'failed').length
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader
         title="Campagnes"
         description="Diffusions ciblées vers vos contacts et segments."

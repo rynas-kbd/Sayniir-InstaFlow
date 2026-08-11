@@ -47,7 +47,7 @@ export default async function FlowsPage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="glass-banner border-b border-border/40 px-6 py-5">
         <div className="flex items-start justify-between gap-4">

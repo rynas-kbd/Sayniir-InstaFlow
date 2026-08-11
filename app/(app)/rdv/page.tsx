@@ -27,7 +27,7 @@ export default async function RdvPage() {
   const confirmedCount = safeAppointments.filter((a) => a.status === 'confirmed').length
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Rendez-vous" description="Prises de rendez-vous automatisées par l'IA." />
       <div className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6">
         {safeAppointments.length > 0 && (

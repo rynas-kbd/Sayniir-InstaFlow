@@ -16,7 +16,7 @@ export default async function NewAutomationRulePage() {
     .eq('user_id', user!.id)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Nouvelle règle" description="Réponse automatique par mot-clé, DM ou commentaire." />
       <div className="flex-1 p-4 sm:p-6">
         <div className="mx-auto w-full max-w-5xl">
