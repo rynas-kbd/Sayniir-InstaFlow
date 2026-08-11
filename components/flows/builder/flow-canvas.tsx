@@ -14,6 +14,7 @@ import {
   type Edge,
   type Connection,
 } from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
