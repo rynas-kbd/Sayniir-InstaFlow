@@ -201,6 +201,8 @@ html { scroll-behavior: smooth; }
 
 .lp-nav-cta { border-radius: 10px; font-size: 13.5px; padding: 9px 18px; }
 
+
+
 /* --- Pricing highlight card ------------------------------------------ */
 .lp-pricing-highlight {
   border: 2px solid var(--organic-terracotta) !important;

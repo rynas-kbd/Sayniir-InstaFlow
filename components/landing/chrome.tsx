@@ -133,6 +133,29 @@ export function LandingNav() {
           </Link>
         </div>
       )}
+
+      {/* Floating mobile bottom conversion bar */}
+      <div
+        className="fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between gap-3 rounded-2xl p-3 shadow-2xl md:hidden border"
+        style={{
+          background: 'color-mix(in srgb, var(--organic-surface) 96%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+          backdropFilter: 'blur(16px)',
+          color: 'var(--organic-text)',
+        }}
+      >
+        <div className="flex flex-col pl-1">
+          <span className="font-heading text-xs font-extrabold tracking-tight" style={{ color: 'var(--organic-text)' }}>Instaflow</span>
+          <span className="text-[10.5px] font-medium" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>Essai gratuit · En ligne en 10m</span>
+        </div>
+        <Link
+          href="/register"
+          className="btn btn-primary h-9 px-4 text-xs font-bold"
+          style={{ borderRadius: 10 }}
+        >
+          Essai gratuit →
+        </Link>
+      </div>
     </>
   )
 }
@@ -140,56 +163,97 @@ export function LandingNav() {
 export function LandingFooter() {
   return (
     <footer
-      className="py-12"
+      className="pt-16 pb-12"
       style={{ borderTop: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
     >
-      <div className="grid grid-cols-[auto_1fr] items-start gap-x-16 gap-y-8" style={{ gridTemplateColumns: 'auto 1fr' }}>
-        {/* Brand column */}
-        <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
+        {/* Brand & Mission column */}
+        <div className="flex flex-col items-start gap-4">
           <Link
             href="/"
-            className="font-heading text-xl font-bold tracking-tight no-underline"
+            className="font-heading text-2xl font-extrabold tracking-tight no-underline"
             style={{ color: 'var(--organic-text)' }}
           >
-            Instaflow
+            Instaflow<span style={{ color: 'var(--organic-terracotta)' }}>.</span>
           </Link>
-          <p className="text-[13px] leading-[1.6] max-w-[22ch]" style={{ color: 'color-mix(in srgb, var(--organic-text) 58%, transparent)' }}>
-            L&apos;IA qui vend dans vos DM pendant que vous dormez.
+          <p className="text-[13.5px] leading-[1.65] max-w-[28ch]" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
+            L&apos;IA conversationnelle multi-canal qui vend dans vos DM Instagram, WhatsApp et Messenger 24/7.
           </p>
+
+          {/* Operational Status Pill */}
+          <div
+            className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11.5px] font-semibold"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--organic-sage-600) 30%, transparent)',
+              background: 'var(--organic-sage-100)',
+              color: 'var(--organic-sage-900)',
+            }}
+          >
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-emerald-600" />
+            </span>
+            <span>Systèmes 100% opérationnels</span>
+          </div>
         </div>
 
-        {/* Links columns */}
-        <div className="flex flex-wrap justify-end gap-x-12 gap-y-6">
-          <div className="flex flex-col gap-2.5">
-            <span className="text-[11px] font-bold tracking-[.09em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>Produit</span>
-            <a href="#product"   className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>Démo</a>
-            <a href="#features"  className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>Fonctionnalités</a>
-            <a href="#pricing"   className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>Tarifs</a>
-            <a href="#faq"       className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>FAQ</a>
-          </div>
-          <div className="flex flex-col gap-2.5">
-            <span className="text-[11px] font-bold tracking-[.09em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>Légal</span>
-            <Link href="/politique-de-confidentialite" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>Confidentialité</Link>
-            <Link href="/conditions-utilisation"       className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>CGU</Link>
-            <Link href="/suppression-donnees"          className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)', transition: 'color .15s' }}>Suppression</Link>
-          </div>
+        {/* Column 1: Produit */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Produit</span>
+          <a href="#product" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Démo interactive</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Fonctionnalités</a>
+          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Tarifs &amp; Plans</a>
+          <Link href="/register" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Créer un compte</Link>
+        </div>
+
+        {/* Column 2: Canaux */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Canaux</span>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Instagram DM</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>WhatsApp Business</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Messenger</a>
+          <a href="#faq" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Conformité Meta API</a>
+        </div>
+
+        {/* Column 3: Légal & Support */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Légal &amp; Support</span>
+          <Link href="/politique-de-confidentialite" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Confidentialité</Link>
+          <Link href="/conditions-utilisation" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Conditions (CGU)</Link>
+          <Link href="/suppression-donnees" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Suppression de données</Link>
+          <a href="#faq" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Centre d&apos;aide (FAQ)</a>
         </div>
       </div>
 
+      {/* Large subtle watermark brand text */}
+      <div className="mt-14 overflow-hidden select-none pointer-events-none text-center">
+        <span
+          className="font-heading font-black text-[clamp(64px,14vw,160px)] leading-none tracking-tighter uppercase opacity-[0.04]"
+          style={{ color: 'var(--organic-text)' }}
+        >
+          Instaflow
+        </span>
+      </div>
+
+      {/* Bottom Bar */}
       <div
-        className="mt-10 flex flex-wrap items-center justify-between gap-4 pt-6"
+        className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-6"
         style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)' }}
       >
-        <span className="text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>
-          © 2026 Instaflow · Fait avec soin ✦
+        <span className="text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
+          © 2026 Instaflow Inc. Tous droits réservés.
         </span>
-        <Link
-          href="/register"
-          className="btn btn-primary"
-          style={{ fontSize: 13, padding: '8px 16px' }}
-        >
-          Essai gratuit →
-        </Link>
+
+        <div className="flex items-center gap-4 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}>
+          <span className="inline-flex items-center gap-1.5">
+            <span>🇫🇷</span>
+            <span>Français</span>
+          </span>
+          <span>·</span>
+          <Link href="/register" className="font-semibold no-underline hover:underline" style={{ color: 'var(--organic-terracotta)' }}>
+            Commencer l&apos;essai gratuit →
+          </Link>
+        </div>
       </div>
     </footer>
   )

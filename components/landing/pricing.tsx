@@ -52,7 +52,7 @@ export function Pricing() {
         </div>
       </div>
 
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-stretch gap-5">
+      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 items-stretch gap-5">
         {PRICING_TIERS.map((tier) => {
           const price = billing === 'annual' ? tier.priceAnnual : tier.price
           const period = billing === 'annual' ? tier.periodAnnual : tier.period

@@ -60,7 +60,7 @@ export function LogoMarquee() {
 export function MetricsBand() {
   return (
     <section className="pb-[88px]">
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
+      <div data-reveal-group className="lp-stagger grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         {METRICS.map((m) => (
           <div
             key={m.label}
@@ -97,7 +97,7 @@ export function FeaturesGrid() {
       <h2 data-reveal className="mb-10 max-w-[20ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         Pas un chatbot. Un closer.
       </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
         {FEATURES.map((f, idx) => (
           <div key={f.title} data-reveal className="lp-card card">
             <span
@@ -128,7 +128,7 @@ export function Channels() {
       <h2 data-reveal className="mb-10 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         Là où vos clients sont déjà.
       </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
         {CHANNEL_INFO.map((c) => (
           <div key={c.title} data-reveal className="lp-card card flex-row items-start gap-4 p-6">
             <span
@@ -244,7 +244,7 @@ export function Testimonials() {
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="Preuves & Avis" note="Agences · e-commerce · créateurs" />
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
         {TESTIMONIALS.map((t) => (
           <figure key={t.name} data-reveal className="lp-card card m-0">
             <div className="lp-stars mb-3" aria-label="5 étoiles">★★★★★</div>
@@ -392,33 +392,36 @@ export function ClosingCta() {
     <section className="pb-12">
       <div
         data-reveal
-        className="relative overflow-hidden rounded-3xl p-[clamp(40px,6vw,80px)_clamp(24px,5vw,72px)]"
-        style={{ background: 'var(--organic-terracotta-800)' }}
+        className="relative overflow-hidden rounded-3xl p-[clamp(40px,6vw,80px)_clamp(24px,5vw,72px)] border-[1.5px]"
+        style={{
+          background: 'var(--organic-surface)',
+          borderColor: 'color-mix(in srgb, var(--organic-terracotta) 35%, transparent)',
+          boxShadow: '0 8px 32px rgba(0,0,0,.08)',
+        }}
       >
-
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: 'var(--organic-terracotta-300)' }}>
+        <span className="inline-flex items-center gap-1.5 text-xs font-extrabold tracking-[.12em] uppercase" style={{ color: 'var(--organic-terracotta)' }}>
           ✦ Démarrer aujourd&apos;hui
         </span>
         <h2
-          className="relative mt-5 max-w-[18ch] font-heading text-[clamp(32px,4.4vw,56px)] leading-[1.08]"
-          style={{ color: 'var(--organic-terracotta-100)' }}
+          className="relative mt-5 max-w-[18ch] font-heading text-[clamp(32px,4.4vw,56px)] font-extrabold leading-[1.08]"
+          style={{ color: 'var(--organic-text)' }}
         >
           Votre prochain client est en train d&apos;écrire, là, maintenant.
         </h2>
-        <p className="relative mt-5 max-w-[52ch] text-[16.5px] leading-[1.65]" style={{ color: 'var(--organic-terracotta-200)' }}>
+        <p className="relative mt-5 max-w-[52ch] text-[16.5px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 78%, transparent)' }}>
           Un essai gratuit sur votre vrai compte, vos vrais DM. Si ça ne se rentabilise pas en un mois,
           on vous aide à repasser à votre ancien outil.
         </p>
         <div className="relative mt-8 flex flex-wrap items-center gap-3">
-          <Link href="/register" className="btn rounded-full" style={{ background: 'var(--organic-bg)', color: 'var(--organic-text)', boxShadow: '0 4px 20px rgba(0,0,0,.25)' }}>
-            Essai gratuit
+          <Link href="/register" className="btn btn-primary rounded-full px-6">
+            Essai gratuit →
           </Link>
-          <Link href="/register" className="btn btn-ghost" style={{ color: 'var(--organic-terracotta-100)', borderColor: 'var(--organic-terracotta-400)' }}>
+          <Link href="/register" className="btn btn-secondary rounded-full px-6">
             Commencer gratuitement
           </Link>
           <span
             className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
-            style={{ color: 'var(--organic-terracotta-300)' }}
+            style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
