@@ -21,7 +21,7 @@ export default async function AdminLayout({
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background md:flex-row">
+    <div className="app-shell-root flex h-dvh flex-col overflow-hidden bg-background md:flex-row">
       {/* Below md: the 232px fixed sidebar left ~140px for content on a 375px
           viewport, and a 6-column table inside that. Only 2 nav items exist
           today (see AdminNav), so a horizontal top bar covers it without a

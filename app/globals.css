@@ -30,6 +30,13 @@ body {
   pointer-events: auto !important;
 }
 
+/* Prevent body/html scroll when the app shell is mounted to fix extra space/nothingness scroll at the bottom */
+html:has(.app-shell-root),
+body:has(.app-shell-root) {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
 
 /* ─────────────────────────────────────────────
    Instaflow design tokens — "Organic"

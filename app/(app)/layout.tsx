@@ -75,7 +75,7 @@ export default async function AppLayout({
 
   return (
     <CopilotProvider channelAccountId={active?.id ?? null}>
-    <div className="flex h-dvh overflow-hidden bg-background">
+    <div className="app-shell-root flex h-dvh overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── Aurora blobs — the "light source" behind glass panels ── */}

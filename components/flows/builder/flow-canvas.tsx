@@ -14,8 +14,10 @@ import {
   type Edge,
   type Connection,
 } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
 import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from '@/components/ui/sheet'
 import {
   MessageSquare,
   GitBranch,
@@ -30,10 +32,9 @@ import {
   ListPlus,
   Globe,
   SplitSquareHorizontal,
+  Workflow,
+  HelpCircle,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sheet, SheetContent, SheetTitle, SheetHeader } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { FlowNodeVisual, type FlowNodeData } from './node-visual'
 import { NodeInspector } from './node-inspector'
@@ -343,45 +344,54 @@ export function FlowCanvas({
   )
 
   const inspectorContent = isTriggerSelected ? (
-    <Card className="border-none shadow-none">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle className="text-sm">Déclencheur</CardTitle>
-      </CardHeader>
-      <CardContent className="px-0">
-        <NodeInspector
-          nodeType="trigger"
-          config={triggerConfig as Record<string, unknown>}
-          onChange={(cfg) =>
-            updateTrigger({
-              trigger_type: cfg.trigger_type as string,
-              trigger_keywords: cfg.trigger_keywords as string[] | null,
-              target_post_ids: cfg.target_post_ids as string[] | null,
-            })
-          }
-          tags={tags}
-          flows={otherFlows}
-        />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between pb-2 border-b border-[color-mix(in_srgb,var(--organic-sand-400)_20%,transparent)]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Déclencheur</h3>
+      </div>
+      <NodeInspector
+        nodeType="trigger"
+        config={triggerConfig as Record<string, unknown>}
+        onChange={(cfg) =>
+          updateTrigger({
+            trigger_type: cfg.trigger_type as string,
+            trigger_keywords: cfg.trigger_keywords as string[] | null,
+            target_post_ids: cfg.target_post_ids as string[] | null,
+          })
+        }
+        tags={tags}
+        flows={otherFlows}
+      />
+    </div>
   ) : nodeData ? (
-    <Card className="border-none shadow-none">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle className="text-sm">Configuration</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 px-0">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between pb-2 border-b border-[color-mix(in_srgb,var(--organic-sand-400)_20%,transparent)]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Configuration</h3>
+      </div>
+      <div className="flex flex-col gap-4">
         <NodeInspector nodeType={nodeData.nodeType} config={nodeData.config} onChange={updateSelectedConfig} tags={tags} flows={otherFlows} />
         <Button
           type="button"
           variant="outline"
           onClick={deleteSelected}
-          className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          className="w-full border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-200"
         >
           <Trash2 className="size-3.5" /> Supprimer le nœud
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   ) : (
-    <p className="text-sm text-muted-foreground">Cliquez sur un nœud pour le configurer.</p>
+    <div className="flex h-[calc(100vh-140px)] flex-col items-center justify-center text-center p-6 space-y-4">
+      <div className="relative flex size-14 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--organic-sand-300)_15%,transparent)] border border-[color-mix(in_srgb,var(--organic-sand-400)_20%,transparent)] shadow-sm">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[var(--organic-terracotta)]/10 to-transparent opacity-60 animate-pulse" />
+        <Workflow className="size-6 text-muted-foreground/60" />
+      </div>
+      <div className="space-y-1.5 max-w-[200px]">
+        <p className="text-xs font-bold text-foreground/80">Configuration</p>
+        <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+          Sélectionnez un nœud dans le canvas pour afficher et modifier ses options.
+        </p>
+      </div>
+    </div>
   )
 
   return (
@@ -431,7 +441,7 @@ export function FlowCanvas({
         </div>
 
         {/* Right sidebar — inspector (desktop only) */}
-        <div className="hidden h-full w-72 shrink-0 overflow-y-auto border-l border-border bg-sidebar p-4 md:block">
+        <div className="hidden h-full w-80 shrink-0 overflow-y-auto border-l border-[color-mix(in_srgb,var(--organic-sand-400)_30%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_70%,transparent)] backdrop-blur-xl p-4 md:block">
           {inspectorContent}
         </div>
       </div>
