@@ -6,43 +6,28 @@
 
 /* ─────────────────────────────────────────────
    Scroll Lock & Layout Shift Prevention Fix
-   Enforces a stable scrollbar gutter and prevents Base UI / Radix
-   from removing the scrollbar or shifting page layout when opening
-   any floating element (menu, dialog, popover, sheet, tooltip).
+   Prevents Base UI from removing the scrollbar or injecting padding-right
+   when opening any floating element (menu, dialog, popover, sheet).
    ───────────────────────────────────────────── */
 
-/* 1. Reserve space for the scrollbar at all times so it never shifts content */
+/* Reserve scrollbar gutter space so opening a menu never shifts content */
 html {
   scrollbar-gutter: stable;
-  overflow-y: scroll;
 }
 
-/* 2. Block Base UI / Radix scroll-locking from ever hiding overflow or injecting
-      a padding-right compensator — we already have a stable gutter above */
+/* Block Base UI / Radix from hiding overflow or injecting a padding compensator */
 html[data-scroll-locked],
-body[data-scroll-locked] {
+body[data-scroll-locked],
+body[style*='overflow: hidden'],
+body[style*='overflow:hidden'] {
   overflow: auto !important;
   padding-right: 0 !important;
   margin-right: 0 !important;
 }
 
-/* 3. Cover the inline-style overflow approach used by some Radix versions */
-body[style*='overflow: hidden'],
-body[style*='overflow:hidden'],
-body[style*='padding-right'] {
-  overflow: auto !important;
-  padding-right: 0 !important;
-}
-
-/* 4. Always keep pointer-events active on body (Base UI restores it, but guard anyway) */
+/* Ensure pointer-events are never removed from body */
 body {
   pointer-events: auto !important;
-}
-
-/* 5. Portals render inside <body> — ensure they never inherit a shifted layout */
-[data-radix-popper-content-wrapper],
-[data-base-ui-portal] {
-  will-change: transform;
 }
 
 
