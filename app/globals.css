@@ -351,7 +351,7 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
+    @apply font-sans bg-background;
     /* Explicit fallback: ensures font-family is set even before the
        @apply-generated var() resolves. Overridden by font-sans once
        --font-outfit is injected by Next.js. */
@@ -362,6 +362,11 @@
     font-size: 15px;
     line-height: 1.55;
     font-family: inherit;
+    /* No legitimate document-level overscroll once every full-bleed shell
+       uses dvh instead of vh (see h-dvh/min-h-dvh across app/) — this just
+       removes residual rubber-band bounce. Doesn't affect the inner
+       overflow-y-auto panels; overscroll-behavior isn't inherited. */
+    overscroll-behavior-y: none;
   }
 
   h1, h2, h3, h4, h5, h6 {

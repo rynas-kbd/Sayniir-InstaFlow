@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state'
  */
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <EmptyState
         icon={Compass}
         title="Page introuvable"

@@ -3,7 +3,7 @@ import { Footer } from '@/components/marketing/footer'
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <Navbar />
       <main>{children}</main>
       <Footer />

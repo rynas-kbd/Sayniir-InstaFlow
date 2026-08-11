@@ -19,7 +19,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   }, [error])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <EmptyState
         icon={AlertTriangle}
         title="Une erreur est survenue"

@@ -56,6 +56,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  // Without this, every env(safe-area-inset-*) in the app (the mobile bottom
+  // nav's own padding, .pb-safe) silently resolves to 0px on iPhone — the
+  // safe-area handling was dead code without it.
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f5ead8' },
     { media: '(prefers-color-scheme: dark)', color: '#1a1714' },
