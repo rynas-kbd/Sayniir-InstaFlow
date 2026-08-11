@@ -4,12 +4,19 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Package, Plus, Edit2, Trash2, Search } from 'lucide-react'
+import { Package, Plus, Edit2, Trash2, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from '@/components/ui/sheet'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +50,13 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+
+  const activeFilterCount = [
+    kindFilter !== 'all',
+    activeFilter !== 'all',
+    categoryFilter !== 'all',
+  ].filter(Boolean).length
 
   const categories = useMemo(
     () => Array.from(new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c)))).sort(),
@@ -168,8 +182,72 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         />
       )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1">
+      {/* ── Filter bottom sheet (mobile) ── */}
+      <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 pt-4 max-h-[80dvh] overflow-y-auto">
+          <SheetHeader className="mb-4 flex-row items-center justify-between">
+            <SheetTitle className="text-base font-extrabold">Filtres</SheetTitle>
+            <button
+              onClick={() => setFilterSheetOpen(false)}
+              className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/60 transition-colors"
+              aria-label="Fermer"
+            >
+              <X className="size-4" />
+            </button>
+          </SheetHeader>
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Type de produit</p>
+              <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les types</SelectItem>
+                  {PRODUCT_KINDS.map((k) => (
+                    <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Statut</p>
+              <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Statut" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="active">Actifs</SelectItem>
+                  <SelectItem value="inactive">Inactifs</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {categories.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Catégorie</p>
+                <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes catégories</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              className="mt-2 w-full"
+              onClick={() => { setKindFilter('all'); setActiveFilter('all'); setCategoryFilter('all'); setVisibleCount(PAGE_SIZE) }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Search + filter controls ── */}
+      <div className="mb-4 flex items-center gap-2">
+        {/* Search — full width on mobile */}
+        <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -181,51 +259,88 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
             className="pl-8"
           />
         </div>
-        <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
-          <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
-            {PRODUCT_KINDS.map((k) => (
-              <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
-          <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Statut" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous</SelectItem>
-            <SelectItem value="active">Actifs</SelectItem>
-            <SelectItem value="inactive">Inactifs</SelectItem>
-          </SelectContent>
-        </Select>
-        {categories.length > 0 && (
-          <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
-            <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+
+        {/* Mobile: filter button */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative shrink-0 sm:hidden"
+          onClick={() => setFilterSheetOpen(true)}
+          aria-label="Ouvrir les filtres"
+        >
+          <SlidersHorizontal className="size-4" />
+          {activeFilterCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground">
+              {activeFilterCount}
+            </span>
+          )}
+        </Button>
+
+        {/* Desktop: inline filters */}
+        <div className="hidden sm:flex items-center gap-2 flex-wrap">
+          <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
+            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes catégories</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem value="all">Tous les types</SelectItem>
+              {PRODUCT_KINDS.map((k) => (
+                <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
-        <div className="ml-auto">
+          <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
+            <SelectTrigger className="w-[130px]"><SelectValue placeholder="Statut" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="active">Actifs</SelectItem>
+              <SelectItem value="inactive">Inactifs</SelectItem>
+            </SelectContent>
+          </Select>
+          {categories.length > 0 && (
+            <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="ml-auto hidden sm:block">
           <ProductImportActions channelAccountId={channelAccountId} onImported={handleImported} />
         </div>
       </div>
 
+      {/* Mobile import actions */}
+      <div className="mb-3 flex sm:hidden">
+        <ProductImportActions channelAccountId={channelAccountId} onImported={handleImported} />
+      </div>
+
+      {/* Bulk actions — sticky bottom on mobile, inline on desktop */}
       {selected.size > 0 && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-          <span className="text-xs font-medium text-foreground">{selected.size} sélectionné(s)</span>
-          <div className="ml-auto flex gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>Désactiver</Button>
-            <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>
-              Supprimer
-            </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Annuler</Button>
+        <>
+          {/* Mobile sticky bar */}
+          <div className="fixed bottom-0 inset-x-0 z-50 flex sm:hidden items-center gap-2 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 shadow-2xl">
+            <span className="text-xs font-bold text-foreground">{selected.size} sél.</span>
+            <div className="ml-auto flex gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
+              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>Suppr.</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}><X className="size-3.5" /></Button>
+            </div>
           </div>
-        </div>
+          {/* Desktop inline bar */}
+          <div className="hidden sm:flex mb-4 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+            <span className="text-xs font-medium text-foreground">{selected.size} sélectionné(s)</span>
+            <div className="ml-auto flex gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>Désactiver</Button>
+              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>Supprimer</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Annuler</Button>
+            </div>
+          </div>
+        </>
       )}
 
       {products.length === 0 ? (
@@ -245,7 +360,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         <>
           <motion.div
             layout
-            className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence mode="popLayout">
               {visible.map((product, idx) => (
@@ -270,7 +385,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                   />
                   <ProductCard
                     view={productToCardView(product)}
-                    onToggleActive={(next) => handleToggleActive(product, next)}
+                    onToggleActive={(next: boolean) => handleToggleActive(product, next)}
                     actions={
                       <>
                         <button

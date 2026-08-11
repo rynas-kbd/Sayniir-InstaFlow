@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, isValidElement, cloneElement, type ReactElement } from 'react'
+import React, { useId, isValidElement, cloneElement, type ReactElement } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
