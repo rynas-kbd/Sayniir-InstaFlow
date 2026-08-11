@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { haptic } from '@/lib/motion/haptics'
 
 const PLATFORM_LABELS: Record<string, string> = {
   instagram: 'Instagram',
@@ -44,6 +45,7 @@ export function ConnectResultToast({ redirectTo = '/accounts' }: { redirectTo?: 
     if (connected) {
       const label = PLATFORM_LABELS[connected] ?? connected
       toast.success(`Compte ${label} connecté`)
+      haptic('success')
       router.replace(redirectTo)
       return
     }

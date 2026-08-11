@@ -5,6 +5,7 @@ import { MessageCircle, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { springs } from '@/lib/motion/springs'
 import { useSidebarStore } from '@/lib/stores/sidebar-store'
 import { getNavSections, type BusinessType } from './nav-config'
 
@@ -16,7 +17,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
   return (
     <motion.aside
       animate={{ width: collapsed ? 76 : 255 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 32 }}
+      transition={springs.smooth}
       className="hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-5 pb-3 md:flex h-full overflow-hidden"
     >
       {/* Logo */}
@@ -82,7 +83,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                       <motion.div
                         layoutId="active-sidebar-pill"
                         className="absolute inset-0 rounded-lg bg-sidebar-accent z-0"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        transition={springs.smooth}
                       />
                     )}
                     
@@ -90,7 +91,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                       <motion.span 
                         layoutId="active-sidebar-indicator"
                         className="absolute -left-3 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary z-10"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        transition={springs.smooth}
                       />
                     )}
 

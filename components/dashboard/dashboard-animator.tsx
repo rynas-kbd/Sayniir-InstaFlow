@@ -2,6 +2,7 @@
 
 import { motion, Variants } from 'framer-motion'
 import * as React from 'react'
+import { springs } from '@/lib/motion/springs'
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -16,14 +17,10 @@ const containerVariants: Variants = {
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
-  show: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { 
-      type: 'spring', 
-      stiffness: 320, 
-      damping: 25 
-    } 
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: springs.snappy
   }
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { springs } from '@/lib/motion/springs'
 import {
   ShoppingBag,
   CalendarClock,
@@ -83,7 +84,7 @@ function OptionTile<T extends string>({
       aria-pressed={selected}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+      transition={springs.snappy}
       className={cn(
         'relative flex flex-col items-center gap-2.5 rounded-2xl border px-4 py-5 text-center transition-colors duration-200',
         selected
@@ -95,7 +96,7 @@ function OptionTile<T extends string>({
         <motion.span
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+          transition={springs.snappy}
           className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
         >
           <Check className="size-3" strokeWidth={3} />

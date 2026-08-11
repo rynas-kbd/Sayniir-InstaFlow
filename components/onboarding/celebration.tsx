@@ -2,9 +2,15 @@
 
 import { motion } from 'framer-motion'
 import { PartyPopper } from 'lucide-react'
+import { useEffect } from 'react'
+import { haptic } from '@/lib/motion/haptics'
 
 /** Shown for a couple of seconds right after the first simulated reply lands — the "aha" payoff. */
 export function Celebration() {
+  useEffect(() => {
+    haptic('success')
+  }, [])
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.94 }}

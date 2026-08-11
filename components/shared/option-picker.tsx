@@ -2,6 +2,7 @@
 
 import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { springs } from '@/lib/motion/springs'
 
 export interface OptionPickerItem<T extends string> {
   value: T
@@ -60,7 +61,7 @@ export function OptionPicker<T extends string>({ value, onChange, options, name,
                   layoutId={reduce ? undefined : `${layoutId}-selected`}
                   aria-hidden
                   className="absolute inset-0 rounded-2xl bg-primary/8 ring-1 ring-primary/30"
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  transition={springs.smooth}
                 />
               )}
               <span

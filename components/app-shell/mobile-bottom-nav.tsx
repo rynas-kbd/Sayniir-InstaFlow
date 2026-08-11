@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { springs } from '@/lib/motion/springs'
+import { useDragDismiss } from '@/lib/motion/use-drag-dismiss'
 import {
   LayoutDashboard,
   Inbox,
@@ -87,6 +89,7 @@ export function MobileBottomNav({
 }) {
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
+  const dragDismiss = useDragDismiss({ onDismiss: () => setMoreOpen(false) })
   const moreItems = MORE_ITEMS_BY_TYPE[businessType]
 
   const businessTab = BUSINESS_TAB_BY_TYPE[businessType]
@@ -123,11 +126,12 @@ export function MobileBottomNav({
             {/* Sheet */}
             <motion.div
               key="sheet"
+              {...dragDismiss}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe md:hidden"
+              transition={springs.playful}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe touch-none md:hidden"
               style={{
                 background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
                 backdropFilter: 'blur(32px) saturate(1.8)',
@@ -241,7 +245,7 @@ export function MobileBottomNav({
                       background:
                         'color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
                     }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    transition={springs.smooth}
                   />
                 )}
 
@@ -295,7 +299,7 @@ export function MobileBottomNav({
                 style={{
                   background: 'color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
                 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                transition={springs.smooth}
               />
             )}
             <MoreHorizontal

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { BotMessageSquare } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { springs } from '@/lib/motion/springs'
 import {
   Tooltip,
   TooltipContent,
@@ -37,7 +38,7 @@ export function CopilotFAB({ onClick }: CopilotFABProps) {
             className={`fixed z-40 ${positionClasses}`}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            transition={springs.snappy}
           >
             <motion.button
               type="button"
@@ -46,7 +47,7 @@ export function CopilotFAB({ onClick }: CopilotFABProps) {
               className="group relative flex size-14 items-center justify-center rounded-full"
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+              transition={springs.snappy}
             >
               {/* Outer glow — a slow breathing radial gradient, well past the button's edge */}
               <motion.span

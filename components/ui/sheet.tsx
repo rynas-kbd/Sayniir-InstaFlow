@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { motion, useDragControls } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDragDismiss } from "@/lib/motion/use-drag-dismiss"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -46,6 +48,17 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  // Only bottom sheets get a drag handle for now — that's the one side
+  // actually used with tall, scrollable content (flow-canvas.tsx) in this
+  // app, so the drag gesture is scoped to a small handle instead of the
+  // whole popup to avoid fighting that content's own scroll.
+  const isBottomSheet = side === "bottom"
+  const closeRef = React.useRef<HTMLButtonElement>(null)
+  const dragControls = useDragControls()
+  const dragDismiss = useDragDismiss({
+    onDismiss: () => closeRef.current?.click(),
+  })
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -58,7 +71,30 @@ function SheetContent({
         )}
         {...props}
       >
-        {children}
+        {isBottomSheet ? (
+          <motion.div
+            {...dragDismiss}
+            dragListener={false}
+            dragControls={dragControls}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+          >
+            <div
+              onPointerDown={(event) => dragControls.start(event)}
+              className="mx-auto -mt-1 h-1 w-10 shrink-0 cursor-grab touch-none rounded-full bg-foreground/15 active:cursor-grabbing"
+              aria-hidden="true"
+            />
+            {children}
+          </motion.div>
+        ) : (
+          children
+        )}
+        <SheetPrimitive.Close
+          ref={closeRef}
+          data-slot="sheet-drag-close-trigger"
+          className="hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+        />
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"

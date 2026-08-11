@@ -367,15 +367,17 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--organic-heading-family);
     font-weight: var(--organic-heading-weight);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
   }
-  h1 { font-size: 42px; }
-  h2 { font-size: 32px; }
-  h3 { font-size: 25px; }
-  h4 { font-size: 20px; }
-  h5 { font-size: 16px; }
-  h6 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+  /* Tracking and leading are size-specific, not a single fixed value: large
+     display text needs negative tracking (letters read too far apart as
+     they grow) and tight leading, while small text needs looser leading
+     to stay legible and tracking closer to 0. */
+  h1 { font-size: 42px; line-height: 1.05; letter-spacing: -0.025em; }
+  h2 { font-size: 32px; line-height: 1.08; letter-spacing: -0.02em; }
+  h3 { font-size: 25px; line-height: 1.15; letter-spacing: -0.015em; }
+  h4 { font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; }
+  h5 { font-size: 16px; line-height: 1.3; letter-spacing: 0; }
+  h6 { font-size: 13px; line-height: 1.35; letter-spacing: 0.08em; text-transform: uppercase; }
 
   :focus-visible {
     outline: 2px solid var(--organic-terracotta);
@@ -838,6 +840,54 @@ h1, h2, h3, h4, h5, h6 {
 @media (prefers-reduced-motion: no-preference) {
   body {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Accessibility-driven motion & material overrides
+   MotionConfig reducedMotion="user" (app/layout.tsx) already strips
+   framer-motion's translate/scale/spring animations down to opacity
+   when this preference is set — these rules cover the plain-CSS
+   transitions and transforms that framer-motion doesn't touch.
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Frostier, more opaque materials instead of a heavy blur when the
+   user has asked the OS to reduce transparency. */
+@media (prefers-reduced-transparency: reduce) {
+  .backdrop-blur-xs,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: var(--background) !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --organic-divider: color-mix(in srgb, #201e1d 45%, transparent);
+  }
+  .dark {
+    --organic-divider: color-mix(in srgb, #f5ead8 45%, transparent);
+  }
+  * {
+    --tw-ring-color: currentColor;
   }
 }
 
