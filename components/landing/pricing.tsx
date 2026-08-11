@@ -62,8 +62,8 @@ export function Pricing() {
             <div
               key={tier.name}
               data-reveal
-              className="lp-card card relative flex flex-col"
-              style={tier.highlighted ? { border: '2px solid var(--organic-terracotta)', zIndex: 1 } : undefined}
+              className={`lp-card card relative flex flex-col${tier.highlighted ? ' lp-pricing-highlight' : ''}`}
+              style={tier.highlighted ? { zIndex: 1 } : undefined}
             >
               {tier.highlighted && (
                 <span

@@ -77,7 +77,7 @@ export default async function AppLayout({
     <CopilotProvider channelAccountId={active?.id ?? null}>
     <div className="flex h-dvh overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
-      <div className="relative flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── Aurora blobs — the "light source" behind glass panels ── */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           {/* Terracotta top-right */}
@@ -105,7 +105,7 @@ export default async function AppLayout({
           activeAccountId={active?.id ?? null}
           accountScope={scope}
         />
-        <main className="relative z-10 flex-1 overflow-hidden pb-16 md:pb-0">
+        <main className="relative z-10 flex-1 min-h-0 overflow-hidden pb-16 md:pb-0">
           <PageTransitionWrapper>{children}</PageTransitionWrapper>
         </main>
       </div>

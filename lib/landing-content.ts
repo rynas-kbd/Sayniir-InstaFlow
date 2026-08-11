@@ -1,4 +1,4 @@
-export const CHANNELS = ['DM Instagram', 'Discussions WhatsApp', 'Messagerie Messenger'] as const
+export const CHANNELS = ['Instagram', 'WhatsApp', 'Messenger'] as const
 
 export interface FlowNode {
   id: string

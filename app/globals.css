@@ -81,9 +81,9 @@
      string injected by next/font into a <style> tag in <head> when the
      corresponding class is on <html> (see app/layout.tsx). system-ui/sans-serif
      remain as the true final fallback if the webfont fails to load. */
-  --organic-heading-family: var(--font-caprasimo), system-ui, sans-serif;
-  --organic-heading-weight: 400;
-  --organic-body-family: var(--font-outfit), system-ui, sans-serif;
+  --organic-heading-family: var(--font-outfit), var(--font-figtree), system-ui, sans-serif;
+  --organic-heading-weight: 700;
+  --organic-body-family: var(--font-figtree), var(--font-outfit), system-ui, sans-serif;
 
   --organic-space-1: 4.4px;
   --organic-space-2: 8.8px;

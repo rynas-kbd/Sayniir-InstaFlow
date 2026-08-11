@@ -20,23 +20,23 @@ const TONE_ICON_BG: Record<'a' | 's', string> = {
   s: 'var(--organic-sage-100)',
 }
 const TONE_ICON_FG: Record<'a' | 's', string> = {
-  a: 'var(--organic-terracotta-700)',
-  s: 'var(--organic-sage-800)',
+  a: 'var(--organic-terracotta-600)',
+  s: 'var(--organic-sage-700)',
 }
 const TONE_AVATAR_BG: Record<'a' | 's', string> = {
-  a: 'var(--organic-terracotta-300)',
-  s: 'var(--organic-sage-300)',
+  a: 'var(--organic-terracotta-200)',
+  s: 'var(--organic-sage-200)',
 }
 const TONE_AVATAR_FG: Record<'a' | 's', string> = {
-  a: 'var(--organic-terracotta-900)',
-  s: 'var(--organic-sage-900)',
+  a: 'var(--organic-terracotta-800)',
+  s: 'var(--organic-sage-800)',
 }
 
 export function LogoMarquee() {
   const loop = [...LOGO_STRIP, ...LOGO_STRIP]
   return (
     <section className="pb-16">
-      <p className="mb-5 text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+      <p className="mb-5 text-center text-xs font-bold tracking-[.12em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
         Adopté par plus de 12 000 équipes qui vivent dans leurs DM
       </p>
       <div className="lp-marquee">
@@ -45,8 +45,8 @@ export function LogoMarquee() {
             <span
               key={i}
               aria-hidden={i >= LOGO_STRIP.length}
-              className="font-heading text-xl"
-              style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}
+              className="font-heading text-xl font-bold tracking-tight"
+              style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
             >
               {name}
             </span>
@@ -60,11 +60,18 @@ export function LogoMarquee() {
 export function MetricsBand() {
   return (
     <section className="pb-[88px]">
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
+      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
         {METRICS.map((m) => (
-          <div key={m.label} data-reveal className="pl-[18px]" style={{ borderLeft: '2.5px solid var(--organic-terracotta)' }}>
-            <div data-count className="font-heading text-[clamp(34px,3.2vw,46px)] leading-[1.1]">{m.value}</div>
-            <div className="mt-1.5 text-[13px] font-semibold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
+          <div
+            key={m.label}
+            data-reveal
+            className="lp-card card p-6"
+            style={{ borderLeft: '3px solid var(--organic-terracotta)' }}
+          >
+            <div data-count className="font-heading text-[clamp(32px,3.2vw,44px)] leading-[1.08] font-bold" style={{ color: 'var(--organic-text)' }}>
+              {m.value}
+            </div>
+            <div className="mt-2 text-[12.5px] font-semibold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
               {m.label}
             </div>
           </div>
@@ -75,25 +82,32 @@ export function MetricsBand() {
 }
 
 export function FeaturesGrid() {
+  const ICONS: React.ReactNode[] = [
+    <svg key="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+    <svg key="ii" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    <svg key="iii" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.89 11a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.81 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 7.91a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+    <svg key="iv" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+    <svg key="v" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+    <svg key="vi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  ]
+
   return (
     <section id="features" className="pb-[88px]">
-      <SectionHeader kicker="01 — Pourquoi ça gagne" note="Conçu pour ceux qui vendent en message" />
-      <h2 data-reveal className="mb-10 max-w-[20ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
+      <SectionHeader kicker="Pourquoi ça gagne" note="Conçu pour ceux qui vendent en message" />
+      <h2 data-reveal className="mb-10 max-w-[20ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         Pas un chatbot. Un closer.
       </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-        {FEATURES.map((f) => (
+      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+        {FEATURES.map((f, idx) => (
           <div key={f.title} data-reveal className="lp-card card">
             <span
-              className="mb-4 grid size-11 place-content-center rounded-full"
-              style={{ background: TONE_ICON_BG[f.tone] }}
+              className="mb-4 grid size-10 place-content-center rounded-xl shrink-0"
+              style={{ background: TONE_ICON_BG[f.tone], color: TONE_ICON_FG[f.tone] }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TONE_ICON_FG[f.tone]} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="8" />
-              </svg>
+              {ICONS[idx % ICONS.length]}
             </span>
-            <h3 className="mb-2 font-heading text-[17px] leading-[1.2]">{f.title}</h3>
-            <p className="m-0 text-[13px] opacity-80">{f.body}</p>
+            <h3 className="mb-2 font-heading text-[16px] leading-[1.25]">{f.title}</h3>
+            <p className="m-0 text-[13.5px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}>{f.body}</p>
           </div>
         ))}
       </div>
@@ -102,26 +116,32 @@ export function FeaturesGrid() {
 }
 
 export function Channels() {
+  const CHANNEL_ICONS: Record<string, React.ReactNode> = {
+    'DM Instagram': <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
+    WhatsApp:  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+    Messenger: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  }
+
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="02 — Canaux" note="API natives · pas de bricolage en zone grise" />
-      <h2 data-reveal className="mb-10 max-w-[22ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
+      <SectionHeader kicker="Canaux" note="API natives · pas de bricolage" />
+      <h2 data-reveal className="mb-10 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         Là où vos clients sont déjà.
       </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
+      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
         {CHANNEL_INFO.map((c) => (
-          <div key={c.title} data-reveal className="flex items-start gap-4">
+          <div key={c.title} data-reveal className="lp-card card flex-row items-start gap-4 p-6">
             <span
-              className="grid size-14 shrink-0 place-content-center rounded-full"
-              style={{ background: TONE_ICON_BG[c.tone] }}
+              className="grid size-12 shrink-0 place-content-center rounded-xl"
+              style={{ background: TONE_ICON_BG[c.tone], color: TONE_ICON_FG[c.tone] }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TONE_ICON_FG[c.tone]} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-              </svg>
+              {CHANNEL_ICONS[c.title] ?? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /></svg>
+              )}
             </span>
             <div>
-              <h3 className="mb-1.5 font-heading text-xl">{c.title}</h3>
-              <p className="m-0 text-[14.5px] leading-[1.6]" style={{ color: 'color-mix(in srgb, var(--organic-text) 74%, transparent)' }}>
+              <h3 className="mb-1.5 font-heading text-[17px]">{c.title}</h3>
+              <p className="m-0 text-[13.5px] leading-[1.6]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
                 {c.body}
               </p>
             </div>
@@ -135,20 +155,20 @@ export function Channels() {
 export function InboxShowcase() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="03 — L'inbox" note="Fig. 02 · boîte d'équipe partagée" />
-      <h2 data-reveal className="mb-3 max-w-[22ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
+      <SectionHeader kicker="L'inbox partagée" note="Boîte d'équipe collaborative" />
+      <h2 data-reveal className="mb-3 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         L'IA rédige. Vous validez. Elle apprend.
       </h2>
-      <p className="mb-9 max-w-[56ch] text-base leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 78%, transparent)' }}>
+      <p className="mb-9 max-w-[56ch] text-base leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 76%, transparent)' }}>
         Chaque conversation dont l&apos;IA n&apos;est pas sûre arrive ici avec une réponse suggérée et un score de confiance.
         Validez-la, modifiez-la, ou reprenez la main — dans tous les cas, elle progresse.
       </p>
       <div
         data-reveal
-        className="overflow-hidden rounded-[calc(var(--radius-lg)*2)] border-[1.5px]"
-        style={{ borderColor: 'var(--organic-sand-300)', background: 'var(--organic-bg)', boxShadow: 'var(--organic-shadow-lg)' }}
+        className="overflow-hidden rounded-2xl border-[1.5px]"
+        style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)', background: 'var(--organic-bg)', boxShadow: '0 8px 32px rgba(0,0,0,.08)' }}
       >
-        <div className="flex items-center gap-2.5 border-b-[1.5px] px-5 py-3.5" style={{ borderColor: 'var(--organic-sand-200)' }}>
+        <div className="flex items-center gap-2.5 border-b-[1.5px] px-5 py-3.5" style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 8%, transparent)' }}>
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-terracotta-300)' }} />
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sage-300)' }} />
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sand-300)' }} />
@@ -156,13 +176,13 @@ export function InboxShowcase() {
           <span className="tag ml-auto" style={{ background: 'var(--organic-sage-100)', color: 'var(--organic-sage-800)' }}>3 à traiter</span>
         </div>
         <div className="lp-inbox-grid grid min-h-[380px] grid-cols-[300px_minmax(0,1fr)]">
-          <div className="border-r-[1.5px] p-3" style={{ borderColor: 'var(--organic-sand-200)' }}>
+          <div className="border-r-[1.5px] p-3" style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 8%, transparent)' }}>
             <div className="mb-3 flex flex-wrap gap-1.5">
               <span className="tag" style={{ background: 'var(--organic-terracotta-100)', color: 'var(--organic-terracotta-800)' }}>Tout · 47</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>Instagram</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>WhatsApp</span>
             </div>
-            <div className="mb-2 rounded-2xl p-3.5" style={{ background: 'var(--organic-terracotta-100)' }}>
+            <div className="mb-2 rounded-xl p-3.5" style={{ background: 'var(--organic-terracotta-100)' }}>
               <div className="flex justify-between text-[13px]">
                 <strong>Maya R.</strong>
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>2m</span>
@@ -171,7 +191,7 @@ export function InboxShowcase() {
                 Vous livrez au Canada ? Il me le faut avant…
               </div>
             </div>
-            <div className="mb-2 rounded-2xl p-3.5">
+            <div className="mb-2 rounded-xl p-3.5">
               <div className="flex justify-between text-[13px]">
                 <strong>Jon B.</strong>
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>11m</span>
@@ -180,7 +200,7 @@ export function InboxShowcase() {
                 Traité par l&apos;IA · statut de commande → résolu
               </div>
             </div>
-            <div className="rounded-2xl p-3.5">
+            <div className="rounded-xl p-3.5">
               <div className="flex justify-between text-[13px]">
                 <strong>@petalandstem</strong>
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>24m</span>
@@ -195,7 +215,7 @@ export function InboxShowcase() {
               Vous livrez au Canada ? Il me le faut avant le 14 pour un mariage
             </div>
             <div
-              className="mt-auto rounded-[var(--radius-lg)] border-[1.5px] p-4"
+              className="mt-auto rounded-xl border-[1.5px] p-4"
               style={{ borderColor: 'var(--organic-terracotta-300)', background: 'var(--organic-terracotta-100)' }}
             >
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -223,24 +243,24 @@ export function InboxShowcase() {
 export function Testimonials() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="04 — Preuves" note="Agences · e-commerce · créateurs" />
-      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
+      <SectionHeader kicker="Preuves & Avis" note="Agences · e-commerce · créateurs" />
+      <div data-reveal-group className="lp-stagger grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
         {TESTIMONIALS.map((t) => (
-          <figure key={t.name} data-reveal className="lp-card card lp-figure m-0">
-            <blockquote className="mb-5 font-heading text-[19px] leading-[1.45]" style={{ textIndent: '-0.559em' }}>
+          <figure key={t.name} data-reveal className="lp-card card m-0">
+            <div className="lp-stars mb-3" aria-label="5 étoiles">★★★★★</div>
+            <blockquote className="mb-5 text-[14.5px] leading-[1.6]" style={{ fontStyle: 'italic', color: 'color-mix(in srgb, var(--organic-text) 88%, transparent)' }}>
               &ldquo;{t.quote}&rdquo;
             </blockquote>
-            <figcaption className="flex items-center gap-3">
+            <figcaption className="flex items-center gap-3 mt-auto">
               <span
-                className="grid size-9 place-content-center rounded-full text-[13px] font-bold"
+                className="grid size-9 shrink-0 place-content-center rounded-full text-[12px] font-bold"
                 style={{ background: TONE_AVATAR_BG[t.tone], color: TONE_AVATAR_FG[t.tone] }}
               >
                 {t.initials}
               </span>
-              <span className="text-[13.5px] leading-[1.4]">
-                <strong>{t.name}</strong>
-                <br />
-                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>{t.role}</span>
+              <span className="text-[13px] leading-[1.4]">
+                <strong className="block">{t.name}</strong>
+                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 58%, transparent)' }}>{t.role}</span>
               </span>
             </figcaption>
           </figure>
@@ -253,25 +273,35 @@ export function Testimonials() {
 export function ComparisonTable() {
   return (
     <section className="pb-[88px]">
-      <SectionHeader kicker="05 — Le changement" note="Migration gratuite sur tout plan payant" />
-      <h2 data-reveal className="mb-9 max-w-[24ch] font-heading text-[clamp(30px,3.6vw,46px)] leading-[1.1]">
+      <SectionHeader kicker="Le changement" note="Migration gratuite sur tout plan payant" />
+      <h2 data-reveal className="mb-9 max-w-[24ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
         Les outils chatbot historiques datent de 2019.
       </h2>
-      <div data-reveal className="overflow-x-auto">
+      <div data-reveal className="overflow-x-auto rounded-2xl border-[1.5px]" style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}>
         <table className="table" style={{ minWidth: 640 }}>
           <thead>
-            <tr>
+            <tr style={{ background: 'color-mix(in srgb, var(--organic-bg) 60%, transparent)' }}>
               <th style={{ width: '30%' }} />
-              <th style={{ color: 'var(--organic-terracotta-700)' }}>Instaflow</th>
-              <th>Outils chatbot historiques</th>
+              <th className="lp-col-us">Instaflow</th>
+              <th className="lp-col-them">Outils historiques</th>
             </tr>
           </thead>
           <tbody>
             {COMPARISON_ROWS.map(([label, us, them]) => (
               <tr key={label}>
-                <td style={{ fontWeight: 700 }}>{label}</td>
-                <td>{us}</td>
-                <td>{them}</td>
+                <td style={{ fontWeight: 600 }}>{label}</td>
+                <td>
+                  <span className="lp-check inline-flex items-center gap-1.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span className="text-[13.5px]" style={{ color: 'var(--organic-text)' }}>{us}</span>
+                  </span>
+                </td>
+                <td>
+                  <span className="lp-cross inline-flex items-center gap-1.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span className="text-[13.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{them}</span>
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -290,9 +320,9 @@ export function Faq() {
 
   return (
     <section id="faq" className="pb-[88px]">
-      <SectionHeader kicker="07 — Questions" note="" />
-      <div className="lp-faq-grid grid grid-cols-[minmax(0,380px)_minmax(0,1fr)] gap-x-[clamp(24px,5vw,80px)] gap-y-7">
-        <h2 className="font-heading text-[clamp(30px,3.4vw,42px)] leading-[1.1]">Les questions qu'on nous pose le plus.</h2>
+      <SectionHeader kicker="Questions fréquentes" note="" />
+      <div className="lp-faq-grid grid grid-cols-[minmax(0,340px)_minmax(0,1fr)] gap-x-[clamp(24px,5vw,80px)] gap-y-7">
+        <h2 className="font-heading text-[clamp(28px,3.2vw,40px)] leading-[1.12]">Les questions qu&apos;on nous pose le plus.</h2>
         <div data-reveal-group className="lp-stagger flex flex-col">
           {FAQ_ITEMS.map((item, i) => {
             const isOpen = openIndex === i
@@ -301,7 +331,7 @@ export function Faq() {
                 key={item.q}
                 data-reveal
                 className="py-[18px]"
-                style={{ borderBottom: i < FAQ_ITEMS.length - 1 ? '1.5px solid var(--organic-sand-300)' : undefined }}
+                style={{ borderBottom: i < FAQ_ITEMS.length - 1 ? '1.5px solid color-mix(in srgb, var(--organic-text) 9%, transparent)' : undefined }}
               >
                 <button
                   onClick={() => toggleIndex(i)}
@@ -309,7 +339,7 @@ export function Faq() {
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${i}`}
                 >
-                  <span style={{ fontFamily: 'Figtree, var(--font-figtree), system-ui, sans-serif' }}>{item.q}</span>
+                  <span style={{ fontFamily: 'var(--organic-body-family), system-ui, sans-serif' }}>{item.q}</span>
                   <motion.span
                     animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
@@ -362,33 +392,39 @@ export function ClosingCta() {
     <section className="pb-12">
       <div
         data-reveal
-        className="relative overflow-hidden rounded-[calc(var(--radius-lg)*2)] p-[clamp(40px,6vw,80px)_clamp(24px,5vw,72px)]"
+        className="relative overflow-hidden rounded-3xl p-[clamp(40px,6vw,80px)_clamp(24px,5vw,72px)]"
         style={{ background: 'var(--organic-terracotta-800)' }}
       >
-        <div
-          className="pointer-events-none absolute -right-[120px] -bottom-[160px] size-[380px] rounded-full"
-          style={{ background: 'var(--organic-terracotta-700)' }}
-        />
-        <span className="text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'var(--organic-terracotta-300)' }}>
-          08 — Démarrer
+
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: 'var(--organic-terracotta-300)' }}>
+          ✦ Démarrer aujourd&apos;hui
         </span>
         <h2
-          className="relative mt-5 max-w-[18ch] font-heading text-[clamp(34px,4.6vw,60px)] leading-[1.08]"
+          className="relative mt-5 max-w-[18ch] font-heading text-[clamp(32px,4.4vw,56px)] leading-[1.08]"
           style={{ color: 'var(--organic-terracotta-100)' }}
         >
-          Votre prochain client est en train d'écrire, là, maintenant.
+          Votre prochain client est en train d&apos;écrire, là, maintenant.
         </h2>
         <p className="relative mt-5 max-w-[52ch] text-[16.5px] leading-[1.65]" style={{ color: 'var(--organic-terracotta-200)' }}>
           Un essai gratuit sur votre vrai compte, vos vrais DM. Si ça ne se rentabilise pas en un mois,
           on vous aide à repasser à votre ancien outil.
         </p>
-        <div className="relative mt-8 flex flex-wrap gap-3">
-          <Link href="/register" className="btn rounded-full" style={{ background: 'var(--organic-bg)', color: 'var(--organic-text)' }}>
+        <div className="relative mt-8 flex flex-wrap items-center gap-3">
+          <Link href="/register" className="btn rounded-full" style={{ background: 'var(--organic-bg)', color: 'var(--organic-text)', boxShadow: '0 4px 20px rgba(0,0,0,.25)' }}>
             Essai gratuit
           </Link>
           <Link href="/register" className="btn btn-ghost" style={{ color: 'var(--organic-terracotta-100)', borderColor: 'var(--organic-terracotta-400)' }}>
             Commencer gratuitement
           </Link>
+          <span
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
+            style={{ color: 'var(--organic-terracotta-300)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            Sans carte bancaire
+          </span>
         </div>
       </div>
     </section>
