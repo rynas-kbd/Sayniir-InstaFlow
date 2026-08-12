@@ -1245,4 +1245,41 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ─────────────────────────────────────────────
+   Flow builder — MiniMap Glass & High Contrast Styling
+   ───────────────────────────────────────────── */
+.react-flow__minimap {
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  border: 1px solid color-mix(in srgb, var(--organic-terracotta) 35%, transparent) !important;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.35), 0 0 0 1px color-mix(in srgb, var(--organic-terracotta) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--card) 96%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45) !important;
+  stroke: var(--organic-terracotta) !important;
+  stroke-width: 2.5 !important;
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+.react-flow__minimap-node {
+  rx: 4px !important;
+  ry: 4px !important;
+  stroke-width: 0 !important;
+}
+
+@media (max-width: 767px) {
+  .react-flow__minimap {
+    bottom: 5.5rem !important;
+    right: 1rem !important;
+    width: 155px !important;
+    height: 110px !important;
+  }
+}
+
+
 
