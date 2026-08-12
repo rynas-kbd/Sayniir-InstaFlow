@@ -65,6 +65,7 @@ export default async function BoutiquePage() {
     channel_account_id: account.id,
     is_qa_active: rawSettings?.is_qa_active ?? false,
     is_order_taking_active: rawSettings?.is_order_taking_active ?? false,
+    is_availability_check_active: rawSettings?.is_availability_check_active ?? false,
     ai_provider: rawSettings?.ai_provider ?? 'openrouter',
     ai_api_key: apiKey,
     ai_model: rawSettings?.ai_model ?? 'nvidia/nemotron-3-ultra-550b-a55b:free',

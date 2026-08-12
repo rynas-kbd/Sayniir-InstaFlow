@@ -36,7 +36,10 @@ export function verifyWebhookSignature(
 export interface WebhookMessage {
   mid: string
   text?: string
-  attachments?: Array<{ type: string; payload: { url?: string } }>
+  // 'share' (a post/reel forwarded into the DM) and 'ig_reel' carry a CDN
+  // `url` and sometimes a `title` — neither is a shortcode/media id, see
+  // lib/agent/ecommerce/post-resolver.ts for how that gets resolved anyway.
+  attachments?: Array<{ type: string; payload: { url?: string; title?: string; reel_video_id?: string; id?: string } }>
   reply_to?: { mid?: string; story?: { id: string; url?: string } }
 }
 

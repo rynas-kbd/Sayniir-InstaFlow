@@ -19,6 +19,8 @@ import { selectRelevantProducts, toPromptCatalogEntry } from './search.ts'
 import { parseSlot, resolveProduct } from './parse.ts'
 import { detectLanguage, type DetectedLang } from './lang.ts'
 import { classifyIntent, isGreeting } from './intent.ts'
+import { detectShopIntent } from './intent-router.ts'
+import { resolveAvailability } from './availability.ts'
 
 /**
  * E-commerce order-taking + Q&A agent — ported verbatim from the live
@@ -187,6 +189,7 @@ export async function handleEcommerceMessage({
   persona,
   history = '',
   prefillProductId = null,
+  isAvailabilityActive = false,
   aiProvider,
   aiApiKey,
   aiModel,
@@ -210,6 +213,8 @@ export async function handleEcommerceMessage({
    * F9).
    */
   prefillProductId?: string | null
+  /** Mirrors agent_settings.is_availability_check_active — gates the in-tunnel availability guard below (see intent === 'question'). */
+  isAvailabilityActive?: boolean
   aiProvider?: string | null
   aiApiKey?: string | null
   aiModel?: string | null
@@ -352,6 +357,31 @@ export async function handleEcommerceMessage({
   // whole session outright — the only "exit" the tunnel had (audit finding
   // F6). See lib/agent/ecommerce/intent.ts.
   const intent = classifyIntent(messageText, awaitingField)
+
+  // ── In-tunnel availability guard (requirement §6, applied mid-checkout) ──
+  // A question arriving mid-flow ("il est encore dispo ?") would otherwise
+  // go straight to the LLM extraction prompt below, which has no hard stock
+  // signal and can only guess — the exact thing this feature exists to
+  // prevent. Only short-circuits a genuine 'question' (never a slot
+  // answer), and only when the stock check actually resolves to a real
+  // product — anything else (ambiguous/not found/lookup failed) falls
+  // through to the LLM as before, since a wrong guess here is worse than
+  // the LLM's own "let me check" phrasing.
+  if (isAvailabilityActive && intent === 'question') {
+    const routedInTunnel = detectShopIntent(messageText, { hasSharedPost: false })
+    if (routedInTunnel.primary === 'availability') {
+      const candidateProducts = currentProduct ? [currentProduct] : products ?? []
+      const resolution = await resolveAvailability({ supabase, accountId, messageText, products: candidateProducts })
+      if (resolution.kind === 'available' || resolution.kind === 'out_of_stock') {
+        const availabilityLine =
+          resolution.kind === 'available'
+            ? t.availableYes(resolution.product.name, resolution.product.price, resolution.product.currency ?? 'DZD')
+            : t.availableNo(resolution.product.name)
+        const nextQuestion = getNextQuestion(awaitingField ?? 'produit', updated, products ?? [], t, false)
+        return sendAndReport(channel, `${availabilityLine}\n\n${nextQuestion.text}`, route, nextQuestion.quickReplies)
+      }
+    }
+  }
 
   if (intent === 'human') {
     await supabase

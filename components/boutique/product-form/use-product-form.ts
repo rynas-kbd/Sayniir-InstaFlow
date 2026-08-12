@@ -54,5 +54,5 @@ export function useProductForm({ channelAccountId, product, onSave, onSaved }: U
     }
   }
 
-  return { form, errors, saving, isEdit: Boolean(product), channelAccountId, setField, submit }
+  return { form, errors, saving, isEdit: Boolean(product), channelAccountId, productId: product?.id, setField, submit }
 }

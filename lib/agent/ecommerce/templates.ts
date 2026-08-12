@@ -25,6 +25,13 @@ export interface Template {
   outOfStock: (productName: string) => string
   /** Abandoned-cart recovery nudge — see lib/agent/ecommerce/cart-recovery.ts. productName is null when the session was abandoned before a product was even picked. */
   cartReminder: (productName: string | null) => string
+  /** Vérification de disponibilité — see lib/agent/ecommerce/availability.ts. Never LLM-generated: these six cover every AvailabilityResolution kind. */
+  availableYes: (name: string, price: number, currency: string) => string
+  availableNo: (name: string) => string
+  availabilityAmbiguous: (names: string[]) => string
+  availabilityNotFound: string
+  availabilityNeedsProduct: string
+  availabilityLookupFailed: string
   labelProduct: string
   labelSize: string
   labelColor: string
@@ -65,6 +72,12 @@ export const TEMPLATES: Record<string, Template> = {
       name
         ? `Vous avez laissé une commande en cours pour "${name}" 🛍️ Elle vous intéresse toujours ? Répondez "oui" pour continuer, ou dites-le-moi si vous avez changé d'avis.`
         : `Vous aviez commencé une commande chez nous 🛍️ Ça vous intéresse toujours ? Répondez "oui" pour reprendre là où on s'était arrêtés.`,
+    availableYes: (name, price, currency) => `Oui, "${name}" est disponible ✅ (${price} ${currency}). Vous souhaitez le commander ?`,
+    availableNo: (name) => `Désolé, "${name}" est en rupture de stock pour le moment 😔`,
+    availabilityAmbiguous: (names) => `Plusieurs produits pourraient correspondre : ${names.join(', ')}. Lequel voulez-vous dire ?`,
+    availabilityNotFound: "Désolé, je n'ai pas trouvé ce produit dans notre catalogue. Pouvez-vous préciser son nom ?",
+    availabilityNeedsProduct: 'Quel produit voulez-vous que je vérifie ?',
+    availabilityLookupFailed: "Désolé, je n'arrive pas à identifier ce produit pour le moment. Pouvez-vous m'indiquer son nom ?",
     labelProduct: 'Produit',
     labelSize: 'Taille',
     labelColor: 'Couleur',
@@ -102,6 +115,12 @@ export const TEMPLATES: Record<string, Template> = {
       name
         ? `تركت طلبية لم تكتمل بخصوص "${name}" 🛍️ ما زلت مهتماً؟ أجب بـ "نعم" للمتابعة، أو أخبرني إذا غيرت رأيك.`
         : `كنت قد بدأت طلبية عندنا 🛍️ ما زلت مهتماً؟ أجب بـ "نعم" لمتابعة من حيث توقفنا.`,
+    availableYes: (name, price, currency) => `نعم، "${name}" متوفر ✅ (${price} ${currency}). هل تريد طلبه؟`,
+    availableNo: (name) => `عذراً، "${name}" غير متوفر حالياً 😔`,
+    availabilityAmbiguous: (names) => `عدة منتجات قد تتطابق : ${names.join('، ')}. أيها تريد؟`,
+    availabilityNotFound: 'عذراً، لم أجد هذا المنتج في كتالوجنا. هل يمكنك تحديد اسمه؟',
+    availabilityNeedsProduct: 'أي منتج تريد أن أتحقق منه؟',
+    availabilityLookupFailed: 'عذراً، لا أستطيع تحديد هذا المنتج الآن. هل يمكنك إعطائي اسمه؟',
     labelProduct: 'المنتج',
     labelSize: 'المقاس',
     labelColor: 'اللون',
@@ -139,6 +158,12 @@ export const TEMPLATES: Record<string, Template> = {
       name
         ? `خليتي طلبية ماكملتيهاش على "${name}" 🛍️ مازال معجبك؟ جاوب بـ "واه" باش تكمل، ولا قوليها إذا بدلتي رايك.`
         : `كنتي بديتي طلبية عندنا 🛍️ مازال معجباك؟ جاوب بـ "واه" باش تكمل من فين وقفنا.`,
+    availableYes: (name, price, currency) => `واه، "${name}" كاين ✅ (${price} ${currency}). واش تحب تطلبو؟`,
+    availableNo: (name) => `سماح ليا، "${name}" ماكانش دابا 😔`,
+    availabilityAmbiguous: (names) => `كاين بزاف منتجات يمكن يتوافقو : ${names.join('، ')}. أشمن واحد بغيتي؟`,
+    availabilityNotFound: 'سماح ليا، ماكاينش هاد المنتج فالكاطالوغ ديالنا. واش تقدر تعطيني سميتو؟',
+    availabilityNeedsProduct: 'أشمن منتج بغيتي نتأكد منو؟',
+    availabilityLookupFailed: 'سماح ليا، مانقدرش نتأكد من هاد المنتج دابا. واش تقدر تعطيني سميتو؟',
     labelProduct: 'المنتج',
     labelSize: 'القياس',
     labelColor: 'اللون',
@@ -176,6 +201,12 @@ export const TEMPLATES: Record<string, Template> = {
       name
         ? `You left an order in progress for "${name}" 🛍️ Still interested? Reply "yes" to continue, or let me know if you changed your mind.`
         : `You started an order with us earlier 🛍️ Still interested? Reply "yes" to pick up where we left off.`,
+    availableYes: (name, price, currency) => `Yes, "${name}" is available ✅ (${price} ${currency}). Would you like to order it?`,
+    availableNo: (name) => `Sorry, "${name}" is currently out of stock 😔`,
+    availabilityAmbiguous: (names) => `A few products could match: ${names.join(', ')}. Which one did you mean?`,
+    availabilityNotFound: "Sorry, I couldn't find that product in our catalog. Could you tell me its name?",
+    availabilityNeedsProduct: 'Which product would you like me to check?',
+    availabilityLookupFailed: "Sorry, I can't identify that product right now. Could you give me its name?",
     labelProduct: 'Product',
     labelSize: 'Size',
     labelColor: 'Color',

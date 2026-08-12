@@ -8,6 +8,7 @@ import {
   Key,
   MessageCircleQuestion,
   ShoppingBag,
+  PackageSearch,
   Save,
   CheckCircle2,
   Plus,
@@ -227,6 +228,26 @@ export function AgentSettingsCard({
               onCheckedChange={(v) => {
                 setSettings((s) => ({ ...s, is_order_taking_active: v }))
                 save({ is_order_taking_active: v })
+              }}
+              disabled={saving}
+            />
+          </div>
+          {/* Availability check toggle */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sky-50">
+                <PackageSearch className="size-4 text-sky-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Vérification de disponibilité</p>
+                <p className="text-xs text-muted-foreground">Répond aux questions de stock à partir des données réelles, jamais deviné.</p>
+              </div>
+            </div>
+            <Switch
+              checked={settings.is_availability_check_active}
+              onCheckedChange={(v) => {
+                setSettings((s) => ({ ...s, is_availability_check_active: v }))
+                save({ is_availability_check_active: v })
               }}
               disabled={saving}
             />

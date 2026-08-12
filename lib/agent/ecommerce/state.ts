@@ -16,6 +16,11 @@ export interface Product {
   colors?: string[]
   image_url?: string | null
   metadata?: { remaining?: number; [key: string]: unknown }
+  /** Free-text category (components/boutique/types.ts) — used by product-match.ts as a secondary matching field. */
+  category?: string | null
+  /** See supabase/migrations/20260826_conversation_quality.sql — FALSE means stock is decorative and the product is always treated as available. */
+  track_stock?: boolean
+  stock_quantity?: number
 }
 
 /** Kind-specific free-text field collected via extra_data, in addition to the shared core fields. */

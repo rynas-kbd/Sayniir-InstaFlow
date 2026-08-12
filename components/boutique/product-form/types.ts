@@ -33,6 +33,8 @@ export interface ProductFormApi {
   saving: boolean
   isEdit: boolean
   channelAccountId: string
+  /** Only set in edit mode — posts can only be linked to a product that already exists (see linked-posts-field.tsx). */
+  productId?: string
   setField: <K extends ProductFormField>(key: K, value: ProductFormState[K]) => void
   submit: (e: React.FormEvent) => void
 }

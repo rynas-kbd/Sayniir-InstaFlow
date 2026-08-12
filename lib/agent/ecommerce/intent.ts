@@ -22,7 +22,7 @@ export type TurnIntent = 'answer' | 'question' | 'cancel' | 'restart' | 'change_
  * Arabic-script greeting). `\p{L}`/`\p{N}` lookaround is the Unicode-aware
  * equivalent, correct for Latin and Arabic script alike.
  */
-function wordBoundaryRegex(alternation: string): RegExp {
+export function wordBoundaryRegex(alternation: string): RegExp {
   return new RegExp(`(?<![\\p{L}\\p{N}])(?:${alternation})(?![\\p{L}\\p{N}])`, 'iu')
 }
 

@@ -6,6 +6,20 @@ export interface ChannelAccountRef {
   accessToken: string
 }
 
+/**
+ * A post/reel the customer forwarded into the DM (Instagram "share"/"ig_reel"
+ * attachments, or a reply to one of the shop's own stories). Meta gives no
+ * shortcode/media id on the share attachment itself — only a CDN `url` —
+ * so resolving this to an actual product goes through
+ * lib/agent/ecommerce/post-resolver.ts, not straight lookup.
+ */
+export interface SharedPostRef {
+  kind: 'share' | 'ig_reel' | 'story_mention' | 'story_reply'
+  mediaId?: string
+  url?: string
+  title?: string
+}
+
 export interface NormalizedInboundMessage {
   platform: Platform
   channelExternalId: string // page_id / phone_number_id — looked up against channel_accounts
@@ -17,6 +31,7 @@ export interface NormalizedInboundMessage {
   postbackPayload?: string
   storyEventType?: 'reply' | 'mention'
   referralRef?: string
+  sharedPost?: SharedPostRef
   timestamp: number
 }
 

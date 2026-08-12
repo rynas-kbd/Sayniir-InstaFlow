@@ -1,9 +1,16 @@
-import { parseWebhookMessaging, type WebhookPayload } from '../../meta/webhook'
+import { parseWebhookMessaging, type WebhookPayload, type WebhookMessage } from '../../meta/webhook'
 import { verifyWebhookSignature } from '../shared/signature'
 import { getLoginUrl, exchangeCodeForToken, exchangeForLongLivedToken, listPages, subscribeToWebhooks as fbSubscribeToWebhooks } from './oauth'
-import type { ChannelAdapter, ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, ChannelButton } from '../types'
+import type { ChannelAdapter, ChannelAccountRef, NormalizedInboundMessage, NormalizedInboundComment, ChannelButton, SharedPostRef } from '../types'
 
 const GRAPH_API_VERSION = 'v21.0'
+
+/** Facebook Messenger only exposes 'share' — no story concept, unlike Instagram (see the IG adapter's fuller version). */
+function resolveSharedPost(message: WebhookMessage): SharedPostRef | undefined {
+  const shareAttachment = message.attachments?.find((att) => att.type === 'share')
+  if (!shareAttachment) return undefined
+  return { kind: 'share', url: shareAttachment.payload?.url, title: shareAttachment.payload?.title, mediaId: shareAttachment.payload?.id }
+}
 
 /**
  * Messenger adapter — reuses Instagram's messaging[] webhook shape (both
@@ -74,6 +81,7 @@ export const messengerAdapter: ChannelAdapter = {
         messageId: messaging.message.mid,
         text: messaging.message.text,
         audioUrl: audioAttachment?.payload?.url,
+        sharedPost: resolveSharedPost(messaging.message),
         timestamp: messaging.timestamp,
       })
     }

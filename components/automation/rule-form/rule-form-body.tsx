@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, Zap, LayoutTemplate, ImageIcon } from 'lucide-react'
+import { Send, Zap, LayoutTemplate } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { OptionPicker } from '@/components/shared/option-picker'
 import { Field, FormSection, fieldA11y } from '@/components/shared/form-section'
 import { TagInput } from '@/components/shared/tag-input'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { PostSelector } from '@/components/shared/post-selector'
+import { PostTargetField } from '@/components/shared/post-target-field'
 import { TriggerPicker } from './trigger-picker'
 import { ReplyMethodPicker } from './reply-method-picker'
-import { PostSelector } from '../post-selector'
 import type { RuleFormApi } from './types'
 
 export function RuleFormBody({
@@ -104,22 +104,11 @@ export function RuleFormBody({
           <div className="flex flex-wrap gap-3.5 border-t border-border/60 pt-2.5">
             <div className="min-w-[180px] flex-1">
               <Field label="Post(s) cible(s)" htmlFor="r-target-posts">
-                {form.target_post_ids.length > 0 ? (
-                  <div className="flex h-9 items-center gap-2">
-                    <span className="text-[13px] font-semibold text-primary">{form.target_post_ids.length} post(s) sélectionné(s)</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowPostSelector(true)}
-                      className="cursor-pointer text-[13px] text-muted-foreground underline hover:text-foreground"
-                    >
-                      Modifier
-                    </button>
-                  </div>
-                ) : (
-                  <Button type="button" variant="outline" className="w-full" onClick={() => setShowPostSelector(true)}>
-                    <ImageIcon className="size-3.5" /> Sélectionner des posts
-                  </Button>
-                )}
+                <PostTargetField
+                  accountId={form.channel_account_id}
+                  selectedIds={form.target_post_ids}
+                  onOpen={() => setShowPostSelector(true)}
+                />
               </Field>
             </div>
             <div className="min-w-[180px] flex-1">

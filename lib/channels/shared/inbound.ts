@@ -2,6 +2,8 @@ import { createDispatchAdminClient } from '../../supabase/dispatch-admin.ts'
 import { resolveDispatchContext, isSubscriptionValid, type DispatchContext } from './context.ts'
 import { handleEcommerceMessage, handleQaMessage } from '../../agent/ecommerce/handler.ts'
 import { resolveProduct } from '../../agent/ecommerce/parse.ts'
+import { detectShopIntent } from '../../agent/ecommerce/intent-router.ts'
+import { handleAvailabilityMessage } from '../../agent/ecommerce/availability.ts'
 import { handleAgentMessage, type BusinessType } from '../../agent/router.ts'
 import { sendAndReport } from '../../agent/messaging.ts'
 import { loadHistory, renderHistoryBlock } from '../../agent/history.ts'
@@ -339,7 +341,9 @@ async function handleTextTurn(
   const startedAt = opts?.startedAt ?? Date.now()
   const { senderProfile, contactId } = await enrichContactProfile(ctx, msg)
   const messageText = opts?.messageText ?? msg.text ?? ''
-  const logText = opts?.logText ?? messageText
+  // A shared post with no caption text (see the guard below, widened to let
+  // this turn through at all) still needs something readable in the inbox.
+  const logText = opts?.logText ?? (messageText || (msg.sharedPost ? '[Post partagé]' : ''))
   const settings = ctx.settings
   // Loaded before this turn's own message_logs row exists below, so the
   // current (not-yet-answered) message never shows up duplicated inside its
@@ -371,6 +375,7 @@ async function handleTextTurn(
 
   const isQaActive = businessType === 'ecommerce' && (settings?.is_qa_active ?? false)
   const isOrderTakingActive = businessType === 'ecommerce' && (settings?.is_order_taking_active ?? false)
+  const isAvailabilityActive = businessType === 'ecommerce' && (settings?.is_availability_check_active ?? false)
   const verticalConfig = (settings?.vertical_config as Record<string, unknown>) ?? {}
   const agentArgs = {
     customInstructions: (settings?.instructions as string[]) || [],
@@ -427,11 +432,58 @@ async function handleTextTurn(
   // "exit" and threw away everything the customer had already given
   // (audit finding F6).
   if (activeSession && isOrderTakingActive) {
-    outcome = await handleEcommerceMessage({ accountId: ctx.account.id, senderId: msg.senderId, messageText, channel: ctx.channel, ...agentArgs })
+    outcome = await handleEcommerceMessage({
+      accountId: ctx.account.id,
+      senderId: msg.senderId,
+      messageText,
+      channel: ctx.channel,
+      isAvailabilityActive,
+      ...agentArgs,
+    })
   }
-  // ── Scenario B: no active session — Q&A and/or order-taking depending on flags ──
-  else if (isQaActive || isOrderTakingActive) {
-    if (isQaActive) {
+  // ── Scenario B: no active session — availability, then Q&A and/or order-taking depending on flags ──
+  else if (isQaActive || isOrderTakingActive || isAvailabilityActive) {
+    // Availability is checked first (requirement §6: "la vérification de
+    // disponibilité doit être effectuée en premier"): a "dispo ?" must
+    // never fall into the Q&A LLM, whose catalog is stock-filtered below
+    // anyway and would just stay silent about an out-of-stock item instead
+    // of saying so. detectShopIntent is a plain regex router (no LLM), so
+    // this costs nothing on turns that aren't about availability — it
+    // leaves `outcome` untouched and the existing Q&A/tunnel logic runs
+    // exactly as before.
+    if (isAvailabilityActive) {
+      const routed = detectShopIntent(messageText, { hasSharedPost: !!msg.sharedPost })
+      if (routed.primary === 'availability') {
+        const { outcome: availabilityOutcome, availableProductId } = await handleAvailabilityMessage({
+          accountId: ctx.account.id,
+          senderId: msg.senderId,
+          channel: ctx.channel,
+          messageText,
+          sharedPost: msg.sharedPost,
+        })
+        outcome = availabilityOutcome
+
+        // Chain into the order-taking tunnel ONLY when the same message
+        // also carried an explicit purchase commitment ("... si oui je le
+        // prends") AND the product was actually confirmed available —
+        // requirement §6. prefillProductId is the same hand-off point the
+        // Q&A→tunnel path below already uses (audit finding F9): the
+        // tunnel skips its own LLM extraction call for this turn.
+        if (routed.chainPurchase && availableProductId && isOrderTakingActive && outcome.status !== 'error') {
+          outcome = await handleEcommerceMessage({
+            accountId: ctx.account.id,
+            senderId: msg.senderId,
+            messageText,
+            channel: ctx.channel,
+            prefillProductId: availableProductId,
+            isAvailabilityActive,
+            ...agentArgs,
+          })
+        }
+      }
+    }
+
+    if (!outcome && isQaActive) {
       // Out-of-stock products (when the shop tracks stock at all — see
       // migration 20260826) are excluded from what the customer is shown,
       // not just from what they're allowed to confirm (audit finding F10):
@@ -465,11 +517,19 @@ async function handleTextTurn(
           messageText,
           channel: ctx.channel,
           prefillProductId,
+          isAvailabilityActive,
           ...agentArgs,
         })
       }
-    } else if (isOrderTakingActive) {
-      outcome = await handleEcommerceMessage({ accountId: ctx.account.id, senderId: msg.senderId, messageText, channel: ctx.channel, ...agentArgs })
+    } else if (!outcome && isOrderTakingActive) {
+      outcome = await handleEcommerceMessage({
+        accountId: ctx.account.id,
+        senderId: msg.senderId,
+        messageText,
+        channel: ctx.channel,
+        isAvailabilityActive,
+        ...agentArgs,
+      })
     }
   }
   // ── Scenario C: coaching/agency verticals (simpler — one LLM call per turn) ──
@@ -540,7 +600,10 @@ export async function dispatchInboundMessage(msg: NormalizedInboundMessage): Pro
     if (consumed) return
   }
 
-  if (!msg.text && !msg.audioUrl) return
+  // A shared post with no caption text is still a real turn (see requirement
+  // §2: "dispo ?" is often just the post itself, no words at all) —
+  // previously dropped here outright since neither text nor audio was set.
+  if (!msg.text && !msg.audioUrl && !msg.sharedPost) return
 
   const businessType: BusinessType = ctx.businessType
 

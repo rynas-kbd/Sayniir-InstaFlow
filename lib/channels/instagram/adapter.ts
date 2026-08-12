@@ -5,7 +5,7 @@ import {
   getInstagramUserInfo,
   subscribeToWebhooks as igSubscribeToWebhooks,
 } from '../../meta/oauth'
-import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload } from '../../meta/webhook'
+import { parseWebhookMessaging, parseWebhookComments, type WebhookPayload, type WebhookMessage } from '../../meta/webhook'
 import { sendReply, fetchSenderProfile, sendCardReply, sendButtonMessage, sendTypingIndicator } from '../../meta/messaging'
 import { refreshLongLivedToken } from '../../meta/token-refresh'
 import { verifyWebhookSignature } from '../shared/signature'
@@ -15,7 +15,35 @@ import type {
   NormalizedInboundMessage,
   NormalizedInboundComment,
   ChannelButton,
+  SharedPostRef,
 } from '../types'
+
+/**
+ * A post/reel/story the customer forwarded or reacted to — Meta gives no
+ * shortcode/media id on a 'share' attachment, only a CDN `url`, so this is
+ * just capture; lib/agent/ecommerce/post-resolver.ts does the actual
+ * post→product resolution. Checked in a fixed order because a message can
+ * only carry one of these per Meta's payload shape.
+ */
+function resolveSharedPost(message: WebhookMessage): SharedPostRef | undefined {
+  const shareAttachment = message.attachments?.find((att) => att.type === 'share' || att.type === 'ig_reel')
+  if (shareAttachment) {
+    return {
+      kind: shareAttachment.type === 'ig_reel' ? 'ig_reel' : 'share',
+      url: shareAttachment.payload?.url,
+      title: shareAttachment.payload?.title,
+      mediaId: shareAttachment.payload?.id ?? shareAttachment.payload?.reel_video_id,
+    }
+  }
+  if (message.reply_to?.story) {
+    return { kind: 'story_reply', mediaId: message.reply_to.story.id, url: message.reply_to.story.url }
+  }
+  const storyMention = message.attachments?.find((att) => att.type === 'story_mention')
+  if (storyMention) {
+    return { kind: 'story_mention', url: storyMention.payload?.url }
+  }
+  return undefined
+}
 
 /**
  * Instagram adapter — thin ChannelAdapter wrapper around lib/meta/*.
@@ -103,6 +131,7 @@ export const instagramAdapter: ChannelAdapter = {
         text: messaging.message.text,
         audioUrl: audioAttachment?.payload?.url,
         storyEventType,
+        sharedPost: resolveSharedPost(messaging.message),
         referralRef: messaging.referral?.ref,
         timestamp: messaging.timestamp,
       })

@@ -9,6 +9,7 @@ import { PriceFields } from './price-fields'
 import { VariantFields } from './variant-fields'
 import { KindDetailsFields } from './kind-details-fields'
 import { ImageUrlField } from './image-url-field'
+import { LinkedPostsField } from './linked-posts-field'
 import type { ProductFormApi } from './types'
 
 /** Renders only the form sections — no <form> boundary, no footer. The caller (page or dialog)
@@ -40,6 +41,7 @@ export function ProductFormBody({ api, autoFocusName }: { api: ProductFormApi; a
       {form.kind === 'physical' && <VariantFields api={api} />}
       <KindDetailsFields api={api} />
       <ImageUrlField api={api} />
+      <LinkedPostsField api={api} />
     </div>
   )
 }

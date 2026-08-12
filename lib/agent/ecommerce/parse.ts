@@ -1,6 +1,7 @@
 import { normalizeAlgerianPhone, normalizeDeliveryMode, isConfirmationMessage, isCancellationMessage, type Product } from './state.ts'
 import { resolveWilaya } from './wilayas.ts'
 import { looksLikeQuestion } from './intent.ts'
+import { stripDiacritics, foldedEquals } from './normalize.ts'
 
 /**
  * Deterministic per-slot answer parsing — replaces asking the LLM to
@@ -41,14 +42,6 @@ export interface SlotParseResult {
   /** Only set for the 'confirmation' slot. */
   isConfirmation?: boolean
   isCancellation?: boolean
-}
-
-function stripDiacritics(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function foldedEquals(a: string, b: string): boolean {
-  return stripDiacritics(a).toLowerCase().trim() === stripDiacritics(b).toLowerCase().trim()
 }
 
 /**

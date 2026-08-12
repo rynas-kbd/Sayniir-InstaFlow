@@ -54,6 +54,11 @@ vi.mock('@/lib/agent/router', () => ({
   handleAgentMessage: (...args: unknown[]) => handleAgentMessage(...args),
 }))
 
+const handleAvailabilityMessage = vi.fn()
+vi.mock('@/lib/agent/ecommerce/availability', () => ({
+  handleAvailabilityMessage: (...args: unknown[]) => handleAvailabilityMessage(...args),
+}))
+
 vi.mock('@/lib/agent/history', () => ({
   loadHistory: vi.fn(async () => []),
   renderHistoryBlock: vi.fn(() => ''),
@@ -200,5 +205,88 @@ describe('dispatchInboundMessage — voice reaches the exact same routing as tex
 
     const logged = ctx.supabase._inserted.message_logs?.[0] as { message_text: string } | undefined
     expect(logged?.message_text).toBe('[🎙️ Vocal] : je veux commander')
+  })
+})
+
+describe('dispatchInboundMessage — availability check (système de détection des intentions)', () => {
+  test('feature off: an availability-shaped message never reaches the availability handler, Q&A answers it as before', async () => {
+    const ctx = makeCtx({
+      settings: { is_qa_active: true, is_availability_check_active: false, flows_enabled: false },
+    })
+    ctx.supabase = makeFakeSupabase({ order_sessions: [{ data: null, error: null }] })
+    ctx.supabase._bareOverrides.products = [{ data: [], error: null }]
+    resolveDispatchContext.mockResolvedValue(ctx)
+    tryContinueRunFromTextCapture.mockResolvedValue(false)
+    handleQaMessage.mockResolvedValue({
+      hasPurchaseIntent: false,
+      productNameHint: null,
+      outcome: { status: 'replied', replyText: 'Réponse Q&A', route: 'ecommerce.qa' },
+    })
+
+    await dispatchInboundMessage({ ...baseMsg, text: 'dispo ?' })
+
+    expect(handleAvailabilityMessage).not.toHaveBeenCalled()
+    expect(handleQaMessage).toHaveBeenCalledTimes(1)
+  })
+
+  test('feature on: an availability question is answered by the availability handler before Q&A ever runs', async () => {
+    const ctx = makeCtx({
+      settings: { is_availability_check_active: true, is_qa_active: true, is_order_taking_active: false, flows_enabled: false },
+    })
+    ctx.supabase = makeFakeSupabase({ order_sessions: [{ data: null, error: null }] })
+    resolveDispatchContext.mockResolvedValue(ctx)
+    tryContinueRunFromTextCapture.mockResolvedValue(false)
+    handleAvailabilityMessage.mockResolvedValue({
+      outcome: { status: 'replied', replyText: 'Oui, disponible ✅', route: 'ecommerce.availability' },
+      availableProductId: null,
+    })
+
+    await dispatchInboundMessage({ ...baseMsg, text: 'Il est disponible ?' })
+
+    expect(handleAvailabilityMessage).toHaveBeenCalledTimes(1)
+    expect(handleQaMessage).not.toHaveBeenCalled()
+    const logged = ctx.supabase._updated.message_logs?.at(-1) as { handled_by: string; reply_text: string } | undefined
+    expect(logged).toMatchObject({ handled_by: 'ecommerce.availability', reply_text: 'Oui, disponible ✅' })
+  })
+
+  test('an explicit purchase commitment on the same message chains availability into the order-taking tunnel (requirement §6)', async () => {
+    const ctx = makeCtx({
+      settings: { is_availability_check_active: true, is_order_taking_active: true, is_qa_active: false, flows_enabled: false },
+    })
+    ctx.supabase = makeFakeSupabase({ order_sessions: [{ data: null, error: null }] })
+    resolveDispatchContext.mockResolvedValue(ctx)
+    tryContinueRunFromTextCapture.mockResolvedValue(false)
+    handleAvailabilityMessage.mockResolvedValue({
+      outcome: { status: 'replied', replyText: 'Oui, disponible ✅', route: 'ecommerce.availability' },
+      availableProductId: 'prod-1',
+    })
+    handleEcommerceMessage.mockResolvedValue({ status: 'replied', replyText: 'Quel est votre nom complet ?', route: 'ecommerce.tunnel' })
+
+    await dispatchInboundMessage({ ...baseMsg, text: 'Il est dispo ? Si oui je le prends' })
+
+    expect(handleAvailabilityMessage).toHaveBeenCalledTimes(1)
+    expect(handleEcommerceMessage).toHaveBeenCalledTimes(1)
+    expect(handleEcommerceMessage.mock.calls[0][0]).toMatchObject({ prefillProductId: 'prod-1', isAvailabilityActive: true })
+
+    const logged = ctx.supabase._updated.message_logs?.at(-1) as { handled_by: string; reply_text: string } | undefined
+    expect(logged).toMatchObject({ handled_by: 'ecommerce.tunnel', reply_text: 'Quel est votre nom complet ?' })
+  })
+
+  test('no purchase commitment does NOT chain into the tunnel, even when order-taking is active', async () => {
+    const ctx = makeCtx({
+      settings: { is_availability_check_active: true, is_order_taking_active: true, is_qa_active: false, flows_enabled: false },
+    })
+    ctx.supabase = makeFakeSupabase({ order_sessions: [{ data: null, error: null }] })
+    resolveDispatchContext.mockResolvedValue(ctx)
+    tryContinueRunFromTextCapture.mockResolvedValue(false)
+    handleAvailabilityMessage.mockResolvedValue({
+      outcome: { status: 'replied', replyText: 'Oui, disponible ✅', route: 'ecommerce.availability' },
+      availableProductId: 'prod-1',
+    })
+
+    await dispatchInboundMessage({ ...baseMsg, text: 'Il est disponible ?' })
+
+    expect(handleAvailabilityMessage).toHaveBeenCalledTimes(1)
+    expect(handleEcommerceMessage).not.toHaveBeenCalled()
   })
 })

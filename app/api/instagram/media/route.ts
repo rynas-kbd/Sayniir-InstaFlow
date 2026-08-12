@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveAccessToken } from '@/lib/channels/shared/tokens'
 import { jsonError } from '@/lib/api/errors'
+import { buildMediaRequestUrl, parseMediaPage } from '@/lib/instagram/media'
+
+const DEFAULT_LIMIT = 24
+const MAX_LIMIT = 50
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -10,6 +14,11 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams
   const accountId = searchParams.get('accountId')
+  const after = searchParams.get('after')
+  const requestedLimit = Number(searchParams.get('limit'))
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(requestedLimit, MAX_LIMIT)
+    : DEFAULT_LIMIT
 
   if (!accountId) {
     return NextResponse.json({ error: 'Missing accountId' }, { status: 400 })
@@ -29,16 +38,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const accessToken = await resolveAccessToken(account.access_token)
-    const res = await fetch(
-      `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&access_token=${accessToken}`
-    )
+    const res = await fetch(buildMediaRequestUrl({ accessToken, limit, after }))
     const data = await res.json()
 
     if (!res.ok || data.error) {
       return jsonError(500, 'Impossible de récupérer les médias Instagram', data.error)
     }
 
-    return NextResponse.json({ data: data.data })
+    const { items, nextCursor } = parseMediaPage(data)
+    return NextResponse.json({ data: items, nextCursor })
   } catch (err: unknown) {
     return jsonError(500, 'Impossible de récupérer les médias Instagram', err)
   }

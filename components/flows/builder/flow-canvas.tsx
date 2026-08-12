@@ -37,6 +37,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { useMediaQuery } from '@/lib/use-media-query'
+import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
 import { FlowNodeVisual, type FlowNodeData } from './node-visual'
 import { NodeInspector } from './node-inspector'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowNodeType, FlowSummary } from '../types'
@@ -63,14 +64,16 @@ function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string
     case 'trigger': {
       const triggerType = (config.trigger_type as string) ?? 'any_message'
       const kws = (config.trigger_keywords as string[] | null) ?? []
+      const postIds = (config.target_post_ids as string[] | null) ?? []
+      const postsSuffix = postIds.length > 0 ? ` · ${postIds.length} post(s)` : ' · tous les posts'
       if (triggerType === 'keyword') {
         return `Mots-clés : ${kws.join(', ') || 'Aucun'}`
       }
       if (triggerType === 'comment_keyword') {
-        return `Commentaire mots-clés : ${kws.join(', ') || 'Aucun'}`
+        return `Commentaire mots-clés : ${kws.join(', ') || 'Aucun'}${postsSuffix}`
       }
       if (triggerType === 'any_comment') {
-        return 'Tout commentaire'
+        return `Tout commentaire${postsSuffix}`
       }
       return 'Tout message DM'
     }
@@ -121,6 +124,7 @@ function toReactFlowEdge(record: FlowEdgeRecord): Edge {
 export interface FlowMeta {
   id: string
   name: string
+  channel_account_id: string
   trigger_type: string
   trigger_keywords: string[] | null
   target_post_ids: string[] | null
@@ -170,6 +174,7 @@ export function FlowCanvas({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [postPickerOpen, setPostPickerOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 767px)')
   // Local copy of trigger config (so changes are reflected immediately)
   const [triggerConfig, setTriggerConfig] = useState<{
@@ -361,6 +366,8 @@ export function FlowCanvas({
         }
         tags={tags}
         flows={otherFlows}
+        channelAccountId={flow.channel_account_id}
+        onOpenPostPicker={() => setPostPickerOpen(true)}
       />
     </div>
   ) : nodeData ? (
@@ -369,7 +376,15 @@ export function FlowCanvas({
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Configuration</h3>
       </div>
       <div className="flex flex-col gap-4">
-        <NodeInspector nodeType={nodeData.nodeType} config={nodeData.config} onChange={updateSelectedConfig} tags={tags} flows={otherFlows} />
+        <NodeInspector
+          nodeType={nodeData.nodeType}
+          config={nodeData.config}
+          onChange={updateSelectedConfig}
+          tags={tags}
+          flows={otherFlows}
+          channelAccountId={flow.channel_account_id}
+          onOpenPostPicker={() => setPostPickerOpen(true)}
+        />
         <Button
           type="button"
           variant="outline"
@@ -466,6 +481,14 @@ export function FlowCanvas({
           {inspectorContent}
         </SheetContent>
       </Sheet>
+
+      <PostPickerDialog
+        open={postPickerOpen}
+        accountId={flow.channel_account_id}
+        selectedIds={triggerConfig.target_post_ids ?? []}
+        onSelect={(ids) => updateTrigger({ target_post_ids: ids.length > 0 ? ids : null })}
+        onClose={() => setPostPickerOpen(false)}
+      />
     </ReactFlowProvider>
   )
 }

@@ -23,6 +23,7 @@ import type { FlowNodeType, CardButton } from '../types'
 import type { Tag as ContactTag } from '@/components/contacts/types'
 import type { FlowSummary } from '../types'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
+import { PostTargetField } from '@/components/shared/post-target-field'
 
 // ── Node metadata ──────────────────────────────────────────────────────────
 const NODE_META: Record<FlowNodeType, { label: string; icon: React.ElementType; color: string; glow: string; gradient: string }> = {
@@ -137,12 +138,16 @@ export function NodeInspector({
   onChange,
   tags,
   flows,
+  channelAccountId,
+  onOpenPostPicker,
 }: {
   nodeType: FlowNodeType
   config: Record<string, unknown>
   onChange: (config: Record<string, unknown>) => void
   tags: ContactTag[]
   flows: FlowSummary[]
+  channelAccountId?: string
+  onOpenPostPicker?: () => void
 }) {
   const meta = NODE_META[nodeType] ?? NODE_META.send_message
   const Icon = meta.icon
@@ -157,16 +162,12 @@ export function NodeInspector({
       case 'trigger': {
         const triggerType = (config.trigger_type as string) ?? 'any_message'
         const keywords = ((config.trigger_keywords as string[] | null) ?? []).join(', ')
-        const postIds = ((config.target_post_ids as string[] | null) ?? []).join(', ')
+        const postIds = (config.target_post_ids as string[] | null) ?? []
         const isComment = triggerType === 'any_comment' || triggerType === 'comment_keyword'
 
         function commitKeywords(raw: string) {
           const arr = raw ? raw.split(',').map((k) => k.trim()).filter(Boolean) : null
           onChange({ ...config, trigger_keywords: arr })
-        }
-        function commitPostIds(raw: string) {
-          const arr = raw ? raw.split(',').map((k) => k.trim()).filter(Boolean) : null
-          onChange({ ...config, target_post_ids: arr })
         }
 
         return (
@@ -198,12 +199,12 @@ export function NodeInspector({
                 </Field>
               )}
 
-              {isComment && (
-                <Field label="IDs de posts ciblés" hint="Laissez vide pour tous les posts.">
-                  <Input
-                    defaultValue={postIds}
-                    onBlur={(e) => commitPostIds(e.target.value)}
-                    placeholder="123456789, 987654321…"
+              {isComment && channelAccountId && onOpenPostPicker && (
+                <Field label="Post(s) cible(s)">
+                  <PostTargetField
+                    accountId={channelAccountId}
+                    selectedIds={postIds}
+                    onOpen={onOpenPostPicker}
                   />
                 </Field>
               )}

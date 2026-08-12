@@ -3,7 +3,7 @@ import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
 // POST /api/products/sync-sheet
-// Body: { accountId: string, sheetUrl: string }
+// Body: { accountId: string, sheetUrl: string, mapping?: Record<string, string> }
 // Reads a PUBLIC Google Sheet (shared as "Anyone with link can view")
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
-  const { accountId, sheetUrl } = body
+  const { accountId, sheetUrl, mapping } = body
 
   if (!accountId || !sheetUrl) {
     return NextResponse.json({ error: 'accountId et sheetUrl requis' }, { status: 400 })
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Aucune donnée trouvée dans le Google Sheet.' }, { status: 400 })
   }
 
-  const products = rows.map((row) => normalizeRow(row, accountId)).filter(
+  const products = rows.map((row) => normalizeRow(row, accountId, mapping)).filter(
     (p): p is NonNullable<ReturnType<typeof normalizeRow>> => p !== null
   )
   if (products.length === 0) {
@@ -142,24 +142,43 @@ function splitCSVLine(line: string): string[] {
   return result
 }
 
-function normalizeRow(row: Record<string, string>, accountId: string) {
-  const name = row['name'] || row['nom'] || row['product'] || row['produit']
-  const priceRaw = row['price'] || row['prix'] || row['price_ht'] || row['tarif']
+function normalizeRow(row: Record<string, string>, accountId: string, customMapping?: Record<string, string>) {
+  // Helper to get value from row using custom mapping or fallback patterns
+  const getValue = (field: string, fallbacks: string[]): string => {
+    // Check if there's a custom mapping for this field
+    if (customMapping) {
+      const mappedColumn = Object.entries(customMapping).find(([, targetField]) => targetField === field)?.[0]
+      if (mappedColumn && row[mappedColumn] !== undefined) {
+        return (row[mappedColumn] ?? '').trim()
+      }
+    }
+    // Fall back to automatic detection
+    const lowerRow = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+    for (const key of fallbacks) {
+      if (lowerRow[key]) return (lowerRow[key] ?? '').trim()
+    }
+    return ''
+  }
+
+  const name = getValue('name', ['name', 'nom', 'product', 'produit'])
+  const priceRaw = getValue('price', ['price', 'prix', 'price_ht', 'tarif'])
   const price = parseFloat(priceRaw)
   if (!name || isNaN(price)) return null
 
-  const sizesRaw = row['sizes'] || row['tailles'] || row['size'] || row['taille'] || ''
-  const colorsRaw = row['colors'] || row['couleurs'] || row['color'] || row['couleur'] || ''
-  const stockRaw = row['stock'] || row['stock_quantity'] || row['quantite'] || '0'
+  const sizesRaw = getValue('sizes', ['sizes', 'tailles', 'size', 'taille'])
+  const colorsRaw = getValue('colors', ['colors', 'couleurs', 'color', 'couleur'])
+  const stockRaw = getValue('stock_quantity', ['stock', 'stock_quantity', 'quantite'])
+  const description = getValue('description', ['description', 'desc'])
+  const imageUrl = getValue('image_url', ['image_url', 'image', 'photo'])
 
   return {
     channel_account_id: accountId,
     name: name.trim(),
-    description: (row['description'] || row['desc'] || '').trim() || null,
+    description: description || null,
     price,
     sizes: sizesRaw ? sizesRaw.split('|').map((s: string) => s.trim()).filter(Boolean) : [],
     colors: colorsRaw ? colorsRaw.split('|').map((c: string) => c.trim()).filter(Boolean) : [],
-    image_url: (row['image_url'] || row['image'] || row['photo'] || '').trim() || null,
+    image_url: imageUrl || null,
     stock_quantity: parseInt(stockRaw) || 0,
     is_active: true,
   }

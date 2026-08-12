@@ -72,6 +72,7 @@ export interface AgentSettings {
   channel_account_id: string
   is_qa_active: boolean
   is_order_taking_active: boolean
+  is_availability_check_active: boolean
   ai_provider: string
   ai_api_key: string
   ai_model: string

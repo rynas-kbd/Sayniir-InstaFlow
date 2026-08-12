@@ -5,6 +5,7 @@ interface Input {
   defaultMessageEnabled?: boolean
   isQaActive?: boolean
   isOrderTakingActive?: boolean
+  isAvailabilityCheckActive?: boolean
   persona?: string
   faqs?: Array<{ question: string; answer: string }>
 }
@@ -13,7 +14,7 @@ interface Input {
 export const updateAgentSettingsTool: AiTool<Input, { updated: boolean }> = {
   name: 'update_agent_settings',
   description:
-    "Modifie des réglages globaux du compte : activer les flows, le message par défaut, l'assistant FAQ ou la prise de commande de la Boutique, et le persona/FAQ utilisés par l'IA de la Boutique.",
+    "Modifie des réglages globaux du compte : activer les flows, le message par défaut, l'assistant FAQ, la prise de commande ou la vérification de disponibilité de la Boutique, et le persona/FAQ utilisés par l'IA de la Boutique.",
   risk: 'write_live',
   inputSchema: {
     type: 'object',
@@ -22,6 +23,7 @@ export const updateAgentSettingsTool: AiTool<Input, { updated: boolean }> = {
       defaultMessageEnabled: { type: 'boolean' },
       isQaActive: { type: 'boolean' },
       isOrderTakingActive: { type: 'boolean' },
+      isAvailabilityCheckActive: { type: 'boolean' },
       persona: { type: 'string' },
       faqs: {
         type: 'array',
@@ -42,6 +44,7 @@ export const updateAgentSettingsTool: AiTool<Input, { updated: boolean }> = {
     if (typeof input.defaultMessageEnabled === 'boolean') patch.default_message_enabled = input.defaultMessageEnabled
     if (typeof input.isQaActive === 'boolean') patch.is_qa_active = input.isQaActive
     if (typeof input.isOrderTakingActive === 'boolean') patch.is_order_taking_active = input.isOrderTakingActive
+    if (typeof input.isAvailabilityCheckActive === 'boolean') patch.is_availability_check_active = input.isAvailabilityCheckActive
 
     if (input.persona !== undefined || input.faqs !== undefined) {
       const { data: existing } = await ctx.supabase

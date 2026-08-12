@@ -60,6 +60,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
   const flowMeta: FlowMeta = {
     id: flow.id,
     name: flow.name,
+    channel_account_id: flow.channel_account_id,
     trigger_type: flow.trigger_type,
     trigger_keywords: flow.trigger_keywords ?? null,
     target_post_ids: flow.target_post_ids ?? null,

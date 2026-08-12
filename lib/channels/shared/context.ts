@@ -19,6 +19,7 @@ export type AgentSettingsRow = Record<string, unknown> & {
   is_active?: boolean | null
   is_qa_active?: boolean | null
   is_order_taking_active?: boolean | null
+  is_availability_check_active?: boolean | null
   flows_enabled?: boolean | null
   default_message_enabled?: boolean | null
   default_message_text?: string | null
