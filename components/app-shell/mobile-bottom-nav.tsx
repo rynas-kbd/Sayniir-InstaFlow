@@ -208,7 +208,7 @@ export function MobileBottomNav({
 
       {/* ── Bottom Tab Bar ── */}
       <nav
-        className="relative shrink-0 z-30 md:hidden"
+        className="relative shrink-0 z-[60] md:hidden"
         style={{
           background: 'color-mix(in srgb, var(--organic-bg) 78%, transparent)',
           backdropFilter: 'blur(32px) saturate(1.8)',

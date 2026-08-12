@@ -46,7 +46,7 @@ export function Topbar({
   accountScope?: 'all' | 'single'
 }) {
   return (
-    <header className="relative flex min-h-16 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-4 pt-safe pb-2 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
+    <header className="relative z-[60] flex min-h-16 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-4 pt-safe pb-2 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
       {/* Bottom border — terracotta gradient line */}
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-px"
