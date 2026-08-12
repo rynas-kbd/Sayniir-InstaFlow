@@ -85,48 +85,55 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
         <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[var(--organic-terracotta)] via-[var(--organic-sage)] to-[var(--organic-terracotta)] opacity-80" />
       )}
 
-      {/* ── Mobile Layout (Streamlined, readable row) ── */}
-      <div className="flex sm:hidden items-center gap-3 p-3">
-        {SelectionPill}
-        <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
-          {renderCover()}
-        </div>
-        
-        <div className="min-w-0 flex-1 space-y-1">
-          {/* Product Name — top priority, up to 2 lines */}
-          <h3 className="line-clamp-2 text-sm font-bold tracking-tight text-foreground leading-snug group-hover:text-primary transition-colors">
-            {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
-          </h3>
-          
-          {/* Price & Stock info row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-black text-[var(--organic-terracotta)] tabular-nums">
-              {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'} <span className="text-[9px] font-extrabold text-muted-foreground uppercase">{view.currency}</span>
-            </span>
-
-            {isPhysical && (
-              <span className={cn(
-                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide',
-                hasStock 
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                  : 'bg-destructive/10 text-destructive'
-              )}>
-                <span className={cn('size-1 rounded-full', hasStock ? 'bg-emerald-500' : 'bg-destructive')} />
-                {hasStock ? `${view.stockQuantity}` : 'Rupture'}
-              </span>
-            )}
+      {/* ── Mobile Layout (2-Row Spacious Card) ── */}
+      <div className="flex sm:hidden flex-col p-3.5 gap-2.5">
+        {/* Top Row: Selection + Image + Title & Price + Active Switch */}
+        <div className="flex items-start gap-3">
+          {SelectionPill}
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
+            {renderCover()}
           </div>
+          
+          <div className="min-w-0 flex-1 space-y-1">
+            {/* Product Name — Full width, 2 lines max */}
+            <h3 className="line-clamp-2 text-sm font-bold tracking-tight text-foreground leading-snug group-hover:text-primary transition-colors">
+              {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
+            </h3>
+            
+            {/* Price & Stock badges */}
+            <div className="flex items-center gap-2 flex-wrap pt-0.5">
+              <span className="text-sm font-black text-[var(--organic-terracotta)] tabular-nums">
+                {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'} <span className="text-[9px] font-extrabold text-muted-foreground uppercase">{view.currency}</span>
+              </span>
+
+              {isPhysical && (
+                <span className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide',
+                  hasStock 
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                    : 'bg-destructive/10 text-destructive border border-destructive/20'
+                )}>
+                  <span className={cn('size-1.5 rounded-full', hasStock ? 'bg-emerald-500 animate-pulse' : 'bg-destructive')} />
+                  {hasStock ? `${view.stockQuantity}` : 'Rupture'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Active Switch at top right */}
+          {onToggleActive && (
+            <div className="shrink-0 pt-0.5">
+              <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? 'Désactiver' : 'Activer'} />
+            </div>
+          )}
         </div>
 
-        {/* Right side: Switch & Actions */}
-        <div className="flex flex-col items-end gap-1.5 shrink-0 pl-1">
-          {onToggleActive && (
-            <label className="flex items-center justify-center cursor-pointer select-none">
-              <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? 'Désactiver' : 'Activer'} />
-            </label>
-          )}
-          {actions && <div className="flex items-center gap-1">{actions}</div>}
-        </div>
+        {/* Bottom Row: Actions (Modifier / Supprimer) — clean bottom row with zero title squeeze */}
+        {actions && (
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+            {actions}
+          </div>
+        )}
       </div>
 
       {/* ── Desktop Layout (Vertical card) ── */}
