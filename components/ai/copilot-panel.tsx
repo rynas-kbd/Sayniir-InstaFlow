@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Streamdown } from 'streamdown'
 import { Send, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -216,6 +217,20 @@ export function CopilotPanel({
   const isLive = sending || confirming || isThinking
   const isMobile = !useMediaQuery('(min-width: 640px)')
 
+  // ── Swipe-to-dismiss (mobile bottom sheet only) ─────────────────────────
+  const dragY = useMotionValue(0)
+  const sheetOpacity = useTransform(dragY, [0, 300], [1, 0.4])
+
+  function handleDragEnd(_: unknown, info: { offset: { y: number }; velocity: { y: number } }) {
+    const shouldClose = info.offset.y > 120 || info.velocity.y > 500
+    if (shouldClose) {
+      onOpenChange(false)
+    } else {
+      // Snap back to 0
+      void animate(dragY, 0, { type: 'spring', stiffness: 400, damping: 30 })
+    }
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -225,16 +240,21 @@ export function CopilotPanel({
           isMobile ? 'h-[85dvh] rounded-t-2xl' : 'sm:max-w-md'
         )}
       >
-        {/* Drag handle — mobile only */}
-        {isMobile && (
-          <div className="flex justify-center pt-3 pb-1 shrink-0">
-            <div className="h-1 w-10 rounded-full bg-foreground/20" />
-          </div>
-        )}
-        <div className={cn(
-          'glass-card flex flex-1 flex-col gap-0 overflow-hidden',
-          isMobile ? 'rounded-t-2xl' : 'h-full rounded-none sm:rounded-l-2xl'
-        )}>
+        {/* Mobile: draggable wrapper for swipe-to-dismiss */}
+        {isMobile ? (
+          <motion.div
+            style={{ y: dragY, opacity: sheetOpacity }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={handleDragEnd}
+            className="flex flex-col h-full touch-none"
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+              <div className="h-1.5 w-12 rounded-full bg-foreground/25 transition-colors" />
+            </div>
+            <div className="glass-card flex flex-1 flex-col gap-0 overflow-hidden rounded-t-2xl">
           <SheetHeader className="border-b border-border/50 px-4 py-3.5">
             {/* SheetTitle stays text-only (screen readers need an accessible dialog title) —
                 the visual identity block below is a sibling, not nested inside it, since
@@ -378,7 +398,94 @@ export function CopilotPanel({
             <Send className={isMobile ? 'size-5' : 'size-4'} />
           </Button>
         </form>
-        </div>
+          </div>
+        </motion.div>
+        ) : (
+          /* Desktop: static right panel */
+          <div className="glass-card flex h-full flex-col gap-0 overflow-hidden rounded-none sm:rounded-l-2xl">
+            <SheetHeader className="border-b border-border/50 px-4 py-3.5">
+              <SheetTitle className="sr-only">Copilote</SheetTitle>
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
+                  <span
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                  />
+                  <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
+                  <span
+                    className={cn(
+                      'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                      isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-sm font-semibold text-foreground">Copilote</span>
+                  <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+                </div>
+              </div>
+            </SheetHeader>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+              {messages.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Demandez-moi de diagnostiquer un flow, chercher un contact, ou résumer votre activité récente.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {messages.map((m) => {
+                    if (m.role === 'user') {
+                      return (
+                        <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                          {m.text}
+                        </div>
+                      )
+                    }
+                    if (m.parts.length === 0) {
+                      return (
+                        <div key={m.id} className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground">
+                          {sending && <Loader2 className="size-3.5 animate-spin" />}
+                        </div>
+                      )
+                    }
+                    return (
+                      <Fragment key={m.id}>
+                        {m.parts.map((part, i) =>
+                          part.type === 'text' ? (
+                            part.text.trim() && (
+                              <div key={i} className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                                <Streamdown className="copilot-markdown">{part.text}</Streamdown>
+                              </div>
+                            )
+                          ) : (
+                            <ToolResultCard key={i} name={part.name} output={part.output} />
+                          )
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={(e) => { e.preventDefault(); void send(input) }}
+              className="flex items-center gap-2 border-t border-border/50 p-3"
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Écrire au copilote…"
+                disabled={sending || Boolean(pendingConfirm)}
+                className="h-9 flex-1 rounded-full border border-border bg-background/80 px-3.5 text-sm outline-none transition-colors focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/25"
+              />
+              <Button type="submit" size="icon" disabled={sending || !input.trim() || Boolean(pendingConfirm)} className="size-9 shrink-0" aria-label="Envoyer">
+                <Send className="size-4" />
+              </Button>
+            </form>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )
