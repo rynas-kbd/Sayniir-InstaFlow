@@ -108,8 +108,8 @@ export default async function AppLayout({
         <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto">
           <PageTransitionWrapper accountKey={scope === 'all' ? 'all' : active?.id ?? 'none'}>{children}</PageTransitionWrapper>
         </main>
+        <MobileBottomNav businessType={businessType} unrepliedCount={notificationCounts.unrepliedMessages} />
       </div>
-      <MobileBottomNav businessType={businessType} unrepliedCount={notificationCounts.unrepliedMessages} />
     </div>
     </CopilotProvider>
   )

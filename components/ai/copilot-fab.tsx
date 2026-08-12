@@ -43,7 +43,7 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.div
-            className={`fixed z-40 ${positionClasses} ${hideOnMobile ? 'hidden md:flex' : ''}`}
+            className="hidden md:flex fixed bottom-6 right-6 z-40"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={springs.snappy}
