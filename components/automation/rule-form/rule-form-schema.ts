@@ -3,6 +3,7 @@ import type { RuleFormErrors, RuleFormState } from './types'
 
 export const FIELD_IDS: Record<keyof RuleFormState, string> = {
   channel_account_id: 'r-account',
+  target_account_ids: 'r-target-accounts',
   name: 'r-name',
   trigger_type: 'r-trigger-type',
   trigger_keywords: 'r-keywords',
@@ -20,6 +21,7 @@ export const FIELD_IDS: Record<keyof RuleFormState, string> = {
 export function emptyForm(rule: AutomationRule | undefined, defaultTab: 'dm' | 'comment', defaultAccountId: string): RuleFormState {
   return {
     channel_account_id: rule?.channel_account_id ?? defaultAccountId,
+    target_account_ids: rule?.target_account_ids ?? [],
     name: rule?.name ?? '',
     trigger_type: rule?.trigger_type ?? (defaultTab === 'dm' ? 'any_message' : 'any_comment'),
     trigger_keywords: rule?.trigger_keywords ?? [],
@@ -91,6 +93,8 @@ export function buildRulePayload(f: RuleFormState, defaultTab: 'dm' | 'comment')
 
   return {
     channel_account_id: f.channel_account_id,
+    // Never re-list the primary account as its own "additional" target.
+    target_account_ids: f.target_account_ids.filter((id) => id !== f.channel_account_id),
     name: f.name.trim(),
     trigger_type: f.trigger_type,
     trigger_keywords: f.trigger_type === 'keyword' || f.trigger_type === 'comment_keyword' ? f.trigger_keywords : null,

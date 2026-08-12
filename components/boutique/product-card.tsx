@@ -1,11 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Layers } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { PRODUCT_KIND_META } from './product-kinds'
-import { ProductThumb } from './product-thumb'
 import type { ProductCardView } from './product-card-view'
 
 export interface ProductCardProps {
@@ -17,52 +17,85 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ view, actions, placeholder, className, onToggleActive }: ProductCardProps) {
+  const [imgBroken, setImgBroken] = useState(false)
   const isPhysical = view.kind === 'physical'
   const hasStock = view.stockQuantity > 0
   const meta = PRODUCT_KIND_META[view.kind]
+  const Icon = meta.icon
+
+  const renderCover = () => {
+    if (!view.imageUrl || imgBroken) {
+      return (
+        <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/5 via-primary/10 to-[var(--organic-sage-100)] text-primary/60 dark:text-primary/85">
+          <Icon className="size-10 stroke-[1.5] transition-transform duration-500 ease-out group-hover:scale-110" />
+        </div>
+      )
+    }
+    return (
+      <img
+        src={view.imageUrl}
+        alt={view.name}
+        onError={() => setImgBroken(true)}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+      />
+    )
+  }
 
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-all duration-300 ease-out',
-        !placeholder && 'hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5',
-        !view.isActive && 'opacity-60 grayscale-[0.15]',
+        'group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 ease-out',
+        !placeholder && 'hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1',
+        !view.isActive && 'opacity-65 grayscale-[0.1]',
         className,
       )}
     >
       {/* Top accent line */}
       {(!isPhysical || hasStock) && view.isActive && (
-        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[var(--organic-terracotta)] via-[var(--organic-sage)] to-[var(--organic-terracotta)] opacity-85" />
+        <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[var(--organic-terracotta)] via-[var(--organic-sage)] to-[var(--organic-terracotta)] opacity-80" />
       )}
 
-      {/* Mobile: horizontal compact row */}
-      <div className="flex sm:hidden items-center gap-3 p-3">
-        <div className="shrink-0">
-          <ProductThumb src={view.imageUrl} kind={view.kind} />
+      {/* ── Mobile Layout (Horizontal compact row) ── */}
+      <div className="flex sm:hidden items-center gap-3.5 p-3">
+        <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
+          {renderCover()}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-            <Badge variant="outline" className="rounded-full border-border/80 bg-muted/30 px-2 py-0 text-[9px] font-bold text-muted-foreground">
+        
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge variant="outline" className="rounded-full border-border/60 bg-muted/40 px-2 py-0 text-[8.5px] font-bold text-muted-foreground uppercase tracking-wider">
               {meta.label}
             </Badge>
             {isPhysical && (
-              <span className={cn('inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold', hasStock ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-destructive/10 text-destructive')}>
-                <span className={cn('size-1.5 rounded-full', hasStock ? 'bg-emerald-500' : 'bg-destructive')} />
-                {hasStock ? view.stockQuantity : 'Rupture'}
+              <span className={cn(
+                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-wide',
+                hasStock 
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-destructive/10 text-destructive'
+              )}>
+                <span className={cn('size-1 rounded-full', hasStock ? 'bg-emerald-500' : 'bg-destructive')} />
+                {hasStock ? `${view.stockQuantity}` : 'Rupture'}
               </span>
             )}
           </div>
-          <h3 className="line-clamp-1 text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary">
-            {view.name || (placeholder && <span className="italic text-muted-foreground/50">Nom du produit</span>)}
+          
+          <h3 className="line-clamp-1 text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">
+            {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
           </h3>
-          <span className="text-base font-black text-[var(--organic-terracotta)] tabular-nums">
-            {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'}
-            <span className="ml-1 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{view.currency}</span>
-          </span>
+          
+          <div className="flex items-baseline gap-1">
+            <span className="text-base font-black text-[var(--organic-terracotta)] tabular-nums">
+              {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'}
+            </span>
+            <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-wider">{view.currency}</span>
+          </div>
         </div>
+
         <div className="flex flex-col items-end gap-2 shrink-0">
           {onToggleActive && (
-            <label style={{ minHeight: '44px', minWidth: '44px' }} className="flex items-center justify-center cursor-pointer">
+            <label style={{ minHeight: '36px', minWidth: '36px' }} className="flex items-center justify-center cursor-pointer select-none">
               <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? 'Désactiver' : 'Activer'} />
             </label>
           )}
@@ -70,80 +103,108 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
         </div>
       </div>
 
-      {/* Desktop: vertical card */}
-      <div className="hidden sm:flex flex-col p-4">
-        <div className="mb-3.5 flex items-start justify-between gap-3">
-          <ProductThumb src={view.imageUrl} kind={view.kind} />
-          <div className="flex flex-col items-end gap-1.5">
-            {onToggleActive && (
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground select-none cursor-pointer">
-                <span className={cn('transition-colors', view.isActive ? 'text-primary font-bold' : 'text-muted-foreground')}>
+      {/* ── Desktop Layout (Vertical card) ── */}
+      <div className="hidden sm:flex flex-col h-full">
+        {/* Card Cover Image Header */}
+        <div className="relative w-full aspect-[16/10] overflow-hidden rounded-t-2xl bg-muted/20 border-b border-border/40">
+          {renderCover()}
+          
+          {/* Badge kind overlay */}
+          <div className="absolute left-3 bottom-3 z-15">
+            <Badge className="rounded-full bg-background/90 text-foreground border border-border/50 px-2.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
+              {meta.label}
+            </Badge>
+          </div>
+
+          {/* Active/Inactive Switch overlay */}
+          {onToggleActive && (
+            <div className="absolute right-3 top-3 z-15">
+              <label className="flex items-center gap-2 rounded-full bg-background/80 hover:bg-background/95 transition-colors duration-200 border border-border/60 shadow-md backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-foreground select-none cursor-pointer">
+                <span className={cn('transition-colors tracking-tight uppercase text-[9px]', view.isActive ? 'text-primary' : 'text-muted-foreground')}>
                   {view.isActive ? 'Actif' : 'Masqué'}
                 </span>
                 <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? 'Désactiver' : 'Activer'} />
               </label>
-            )}
-            <div className="flex items-center gap-1">
-              <Badge variant="outline" className="rounded-full border-border/80 bg-muted/30 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                {meta.label}
+            </div>
+          )}
+        </div>
+
+        {/* Card Body */}
+        <div className="flex flex-col p-4 flex-1 space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="line-clamp-1 text-base font-extrabold tracking-tight text-foreground transition-colors group-hover:text-primary leading-snug">
+              {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
+            </h3>
+            
+            {/* Availability Badges */}
+            {isPhysical && (
+              <Badge
+                variant={hasStock ? 'secondary' : 'destructive'}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider shrink-0 transition-all duration-300',
+                  hasStock 
+                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' 
+                    : 'border-destructive/20 bg-destructive/10 text-destructive'
+                )}
+              >
+                <span className={cn('size-1.5 rounded-full', hasStock ? 'bg-emerald-500 animate-pulse' : 'bg-destructive')} />
+                {hasStock ? `${view.stockQuantity} en stock` : 'Rupture'}
               </Badge>
-              {isPhysical && (
-                <Badge
-                  variant={hasStock ? 'secondary' : 'destructive'}
-                  className={cn('inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold transition-all', hasStock ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-destructive/30 bg-destructive/10 text-destructive')}
-                >
-                  <span className={cn('size-1.5 rounded-full', hasStock ? 'bg-emerald-500 animate-pulse' : 'bg-destructive')} />
-                  {hasStock ? `${view.stockQuantity} en stock` : 'Rupture'}
-                </Badge>
+            )}
+          </div>
+
+          {view.description ? (
+            <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground h-8">
+              {view.description}
+            </p>
+          ) : (
+            <div className="h-8 italic text-muted-foreground/30 text-xs">Aucune description fournie.</div>
+          )}
+
+          {/* Pricing & Options */}
+          <div className="pt-1.5 flex items-baseline justify-between gap-2 mt-auto">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black tracking-tight text-[var(--organic-terracotta)]">
+                {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'}
+              </span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{view.currency}</span>
+            </div>
+          </div>
+
+          {/* Options badges */}
+          <div className="border-t border-border/40 pt-3 space-y-1.5">
+            <span className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-wider text-muted-foreground/80">
+              <Layers className="size-3 text-muted-foreground/50" /> 
+              {isPhysical ? 'Variantes & Tailles' : 'Spécifications'}
+            </span>
+            
+            <div className="flex min-h-[24px] flex-wrap gap-1">
+              {view.optionBadges.length > 0 ? (
+                <>
+                  {view.optionBadges.slice(0, 3).map((variant, i) => (
+                    <Badge key={i} variant="outline" className="rounded-md border-border/70 bg-muted/40 px-2 py-0.5 text-[10px] font-bold text-foreground/80">
+                      {variant}
+                    </Badge>
+                  ))}
+                  {view.optionBadges.length > 3 && (
+                    <Badge variant="outline" className="rounded-md border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-extrabold text-primary">
+                      +{view.optionBadges.length - 3}
+                    </Badge>
+                  )}
+                </>
+              ) : (
+                <span className="text-[10px] font-bold italic text-muted-foreground/40 uppercase tracking-wide">— Produit unique</span>
               )}
             </div>
           </div>
-        </div>
 
-        <div className="flex min-h-[64px] flex-1 flex-col gap-1.5">
-          <h3 className="line-clamp-1 text-base font-extrabold tracking-tight text-foreground transition-colors group-hover:text-primary">
-            {view.name || (placeholder && <span className="italic text-muted-foreground/50">Nom du produit</span>)}
-          </h3>
-          {view.description && (
-            <p className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{view.description}</p>
+          {/* Action Footer */}
+          {actions && (
+            <div className="mt-2 border-t border-border/40 pt-3 flex items-center justify-end gap-2">
+              {actions}
+            </div>
           )}
-          <div className="mt-auto pt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black tracking-tight text-[var(--organic-terracotta)]">
-              {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'}
-            </span>
-            <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">{view.currency}</span>
-          </div>
         </div>
-
-        <div className="mt-3.5 flex flex-col justify-end gap-1.5 border-t border-border/40 pt-3">
-          <span className="flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground/80">
-            <Layers className="size-3 text-muted-foreground/60" /> {isPhysical ? 'Variantes & Tailles' : 'Spécifications'}
-          </span>
-          <div className="mt-0.5 flex min-h-[24px] flex-wrap gap-1">
-            {view.optionBadges.length > 0 ? (
-              <>
-                {view.optionBadges.slice(0, 4).map((variant, i) => (
-                  <Badge key={i} variant="outline" className="rounded-md border-border/70 bg-muted/40 px-2 py-0.5 text-[10.5px] font-semibold text-foreground/80">
-                    {variant}
-                  </Badge>
-                ))}
-                {view.optionBadges.length > 4 && (
-                  <Badge variant="outline" className="rounded-md border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10.5px] font-bold text-primary">
-                    +{view.optionBadges.length - 4}
-                  </Badge>
-                )}
-              </>
-            ) : (
-              <span className="text-[11px] font-medium italic text-muted-foreground/60">— Produit unique</span>
-            )}
-          </div>
-        </div>
-
-        {actions && (
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/40 pt-3">
-            {actions}
-          </div>
-        )}
       </div>
     </div>
   )

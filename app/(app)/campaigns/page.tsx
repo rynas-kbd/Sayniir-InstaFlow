@@ -14,7 +14,7 @@ import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 
 export default async function CampaignsPage() {
   const supabase = await createClient()
-  const { active: account } = await resolveActiveAccount()
+  const { accounts, active: account } = await resolveActiveAccount()
   const accountName = account ? getAccountLabel(account) : null
 
   if (!account) {
@@ -118,6 +118,7 @@ export default async function CampaignsPage() {
                 segments={segments ?? []}
                 sendCounts={sendCountsByCampaign.get(campaign.id) ?? { sent: 0, pending: 0, failed: 0 }}
                 insights={insightsByCampaignId.get(campaign.id) ?? []}
+                allAccounts={accounts}
               />
             ))}
             

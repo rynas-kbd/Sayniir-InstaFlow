@@ -11,6 +11,7 @@ import { TagInput } from '@/components/shared/tag-input'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
 import { PostSelector } from '@/components/shared/post-selector'
 import { PostTargetField } from '@/components/shared/post-target-field'
+import { AccountChipPicker } from '@/components/shared/account-chip-picker'
 import { TriggerPicker } from './trigger-picker'
 import { ReplyMethodPicker } from './reply-method-picker'
 import type { RuleFormApi } from './types'
@@ -72,6 +73,30 @@ export function RuleFormBody({
                 ))}
               </SelectContent>
             </Select>
+          </Field>
+        )}
+        {selectableAccounts.length > 1 && (
+          <Field label="Comptes additionnels" htmlFor="r-target-accounts" hint="Cette règle se déclenchera aussi sur les comptes sélectionnés.">
+            <AccountChipPicker
+              accounts={selectableAccounts
+                .filter((a) => a.id !== form.channel_account_id)
+                .map((a) => ({
+                  id: a.id,
+                  platform: a.platform ?? 'instagram',
+                  page_name: a.page_name ?? null,
+                  instagram_username: a.instagram_username ?? null,
+                  phone_number: a.phone_number ?? null,
+                }))}
+              selectedIds={form.target_account_ids}
+              onToggle={(accountId) =>
+                setField(
+                  'target_account_ids',
+                  form.target_account_ids.includes(accountId)
+                    ? form.target_account_ids.filter((id) => id !== accountId)
+                    : [...form.target_account_ids, accountId]
+                )
+              }
+            />
           </Field>
         )}
         <Field label="Nom" htmlFor="r-name" required error={errors.name}>

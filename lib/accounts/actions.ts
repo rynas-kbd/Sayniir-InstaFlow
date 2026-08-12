@@ -15,31 +15,36 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
  * directly, so it re-checks rather than trusting the caller. 'all' is only
  * accepted when the user actually has more than one accessible account —
  * otherwise there's nothing to unify and it would just hide data.
+ *
+ * Returns whether the switch actually happened, so the client (which awaits
+ * this inside a transition — see account-switcher.tsx) can surface a real
+ * error instead of silently doing nothing.
  */
-export async function setActiveAccount(accountId: string): Promise<void> {
+export async function setActiveAccount(accountId: string): Promise<boolean> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return
+  if (!user) return false
+
+  const accounts = await listUserAccounts()
 
   if (accountId === ALL_ACCOUNTS_SCOPE) {
-    const accounts = await listUserAccounts()
-    if (accounts.length <= 1) return
+    if (accounts.length <= 1) return false
     await writeActiveAccountCookie(ALL_ACCOUNTS_SCOPE)
-    return
+    return true
   }
 
-  const { data: account } = await supabase
-    .from('channel_accounts')
-    .select('id')
-    .eq('id', accountId)
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!account) return
+  // Membership check via listUserAccounts() — not a raw `user_id = auth.uid()`
+  // query — so this accepts exactly the accounts the switcher UI actually
+  // offers, including ones reachable only through an accepted team
+  // invitation (listUserAccounts() unions both; a plain ownership query
+  // would silently reject a team member switching to a shared account).
+  const account = accounts.find((a) => a.id === accountId)
+  if (!account) return false
 
   await writeActiveAccountCookie(accountId)
+  return true
 }
 
 async function writeActiveAccountCookie(value: string): Promise<void> {

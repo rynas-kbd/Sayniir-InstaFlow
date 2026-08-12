@@ -232,12 +232,20 @@ async function handleClassicRulesFallback(
   contactId: string | null,
   startedAt: number
 ): Promise<void> {
-  const { data: rules } = await ctx.supabase
-    .from('automation_rules')
-    .select('*')
-    .eq('channel_account_id', ctx.account.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true })
+  // A rule matches this account either as its owner (channel_account_id) or
+  // as one of its additional targets (rule_target_accounts — see migration
+  // 20260903000000 and PUT-equivalent handling in app/api/rules/**). Two
+  // queries rather than one embedded-join filter, same reasoning as
+  // lib/flows/engine.ts::queryFlowsForAccount.
+  const { data: targetRows } = await ctx.supabase.from('rule_target_accounts').select('rule_id').eq('channel_account_id', ctx.account.id)
+  const targetRuleIds = (targetRows ?? []).map((r) => r.rule_id)
+
+  let rulesQuery = ctx.supabase.from('automation_rules').select('*').eq('is_active', true)
+  rulesQuery =
+    targetRuleIds.length > 0
+      ? rulesQuery.or(`channel_account_id.eq.${ctx.account.id},id.in.(${targetRuleIds.join(',')})`)
+      : rulesQuery.eq('channel_account_id', ctx.account.id)
+  const { data: rules } = await rulesQuery.order('created_at', { ascending: true })
 
   let replyText: string | null = null
   let matchedRule: (typeof rules extends (infer T)[] | null ? T : never) | null = null
@@ -682,12 +690,15 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
     }
   }
 
-  const { data: rules } = await supabase
-    .from('automation_rules')
-    .select('*')
-    .eq('channel_account_id', account.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true })
+  const { data: commentTargetRows } = await supabase.from('rule_target_accounts').select('rule_id').eq('channel_account_id', account.id)
+  const commentTargetRuleIds = (commentTargetRows ?? []).map((r) => r.rule_id)
+
+  let commentRulesQuery = supabase.from('automation_rules').select('*').eq('is_active', true)
+  commentRulesQuery =
+    commentTargetRuleIds.length > 0
+      ? commentRulesQuery.or(`channel_account_id.eq.${account.id},id.in.(${commentTargetRuleIds.join(',')})`)
+      : commentRulesQuery.eq('channel_account_id', account.id)
+  const { data: rules } = await commentRulesQuery.order('created_at', { ascending: true })
 
   const applicableRules = (rules || []).filter((rule) => {
     if (!['any_comment', 'comment_keyword'].includes(rule.trigger_type)) return false

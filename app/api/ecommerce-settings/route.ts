@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { encryptApiKey, decryptApiKey, isEncrypted } from '@/lib/crypto'
 import { createClient } from '@/lib/supabase/server'
+import { propagateAgentSettings } from '@/lib/boutique/sync'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -144,6 +145,16 @@ export async function PATCH(request: NextRequest) {
     .single()
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
+
+  // Runs after the response is sent (Next.js after() — same pattern as the
+  // webhook dispatch path) so propagating to sibling accounts never adds
+  // latency to the save the merchant actually asked for, and a hiccup on a
+  // sibling never fails it either.
+  after(() =>
+    propagateAgentSettings(supabase, channel_account_id, settings).catch((err) =>
+      console.error('[ecommerce-settings] Boutique sync propagation failed:', err)
+    )
+  )
 
   const responseData = { ...settings };
   // Decrypt before masking for internal use if needed

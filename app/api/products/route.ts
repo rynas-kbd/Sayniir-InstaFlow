@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
+import { propagateProductUpsert } from '@/lib/boutique/sync'
 
 // GET /api/products?accountId=...
 export async function GET(request: NextRequest) {
@@ -73,5 +74,25 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
+
+  after(() =>
+    propagateProductUpsert(supabase, channel_account_id, {
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      currency: product.currency,
+      kind: product.kind,
+      sizes: product.sizes,
+      colors: product.colors,
+      image_url: product.image_url,
+      images: product.images,
+      category: product.category,
+      metadata: product.metadata,
+      track_stock: product.track_stock,
+      stock_quantity: product.stock_quantity,
+      is_active: product.is_active,
+    }).catch((err) => console.error('[products] Boutique sync propagation failed:', err))
+  )
+
   return NextResponse.json(product, { status: 201 })
 }

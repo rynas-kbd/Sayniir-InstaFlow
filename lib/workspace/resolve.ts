@@ -6,6 +6,8 @@ export interface Workspace {
   id: string
   ownerUserId: string
   name: string | null
+  /** Boutique multi-account sync — see app/api/workspace/sync-settings and app/api/boutique/sync-now. */
+  boutiqueSyncEnabled: boolean
 }
 
 export interface ResolvedWorkspace {
@@ -42,13 +44,31 @@ export async function resolveWorkspace(): Promise<ResolvedWorkspace> {
   if (!user) return { workspace: null, accounts: [] }
 
   const [{ data: workspaceRow }, accounts] = await Promise.all([
-    supabase.from('workspaces').select('id, owner_user_id, name').eq('owner_user_id', user.id).maybeSingle(),
+    supabase.from('workspaces').select('id, owner_user_id, name, boutique_sync_enabled').eq('owner_user_id', user.id).maybeSingle(),
     listUserAccounts(),
   ])
 
   const workspace: Workspace | null = workspaceRow
-    ? { id: workspaceRow.id, ownerUserId: workspaceRow.owner_user_id, name: workspaceRow.name }
+    ? {
+        id: workspaceRow.id,
+        ownerUserId: workspaceRow.owner_user_id,
+        name: workspaceRow.name,
+        boutiqueSyncEnabled: workspaceRow.boutique_sync_enabled ?? false,
+      }
     : null
 
   return { workspace, accounts }
+}
+
+/**
+ * Sibling account ids within a workspace — deliberately NOT listUserAccounts()
+ * (which also includes accounts the caller only has via a team invite,
+ * owned by someone else). Boutique sync only ever touches accounts the
+ * workspace owner actually owns, so an invited member can't use it to leak
+ * their catalog into accounts they were never granted access to.
+ */
+export async function getWorkspaceAccountIds(workspaceId: string): Promise<string[]> {
+  const supabase = await createClient()
+  const { data } = await supabase.from('channel_accounts').select('id').eq('workspace_id', workspaceId)
+  return (data ?? []).map((row) => row.id as string)
 }

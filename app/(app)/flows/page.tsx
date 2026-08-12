@@ -35,6 +35,16 @@ export default async function FlowsPage() {
   ])
 
   const safeFlows = (flows ?? []) as (FlowSummary & { channel_account_id?: string })[]
+
+  const { data: targetRows } = safeFlows.length
+    ? await supabase.from('flow_target_accounts').select('flow_id, channel_account_id').in('flow_id', safeFlows.map((f) => f.id))
+    : { data: [] as { flow_id: string; channel_account_id: string }[] }
+  const targetAccountsByFlowId = new Map<string, string[]>()
+  for (const row of targetRows ?? []) {
+    const list = targetAccountsByFlowId.get(row.flow_id) ?? []
+    list.push(row.channel_account_id)
+    targetAccountsByFlowId.set(row.flow_id, list)
+  }
   const activeCount = safeFlows.filter((f) => f.status === 'active').length
   const totalRuns = runsData?.length ?? 0
   const completedRuns = runsData?.filter((r) => r.status === 'completed').length ?? 0
@@ -94,6 +104,8 @@ export default async function FlowsPage() {
                   flow={flow}
                   accountName={flow.channel_account_id ? accountNameMap.get(flow.channel_account_id) ?? null : null}
                   insights={insightsByFlowId.get(flow.id) ?? []}
+                  allAccounts={accounts}
+                  initialTargetAccountIds={targetAccountsByFlowId.get(flow.id) ?? []}
                 />
               ))}
               {/* Add new card */}

@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 
+/** Attaches target_account_ids (rule_target_accounts) to each rule — see migration 20260903000000. */
+async function withTargetAccounts<T extends { id: string }>(supabase: Awaited<ReturnType<typeof createClient>>, rules: T[]) {
+  if (rules.length === 0) return rules as (T & { target_account_ids: string[] })[]
+  const { data: rows } = await supabase.from('rule_target_accounts').select('rule_id, channel_account_id').in('rule_id', rules.map((r) => r.id))
+  const byRuleId = new Map<string, string[]>()
+  for (const row of rows ?? []) {
+    const list = byRuleId.get(row.rule_id) ?? []
+    list.push(row.channel_account_id)
+    byRuleId.set(row.rule_id, list)
+  }
+  return rules.map((r) => ({ ...r, target_account_ids: byRuleId.get(r.id) ?? [] }))
+}
+
 // GET /api/rules — list rules for the current user, or ?accountId=... to scope to a single account
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -20,7 +33,7 @@ export async function GET(request: NextRequest) {
       .eq('channel_account_id', accountId)
       .order('created_at', { ascending: false })
 
-    return NextResponse.json(rules ?? [])
+    return NextResponse.json(await withTargetAccounts(supabase, rules ?? []))
   }
 
   const { data: accounts } = await supabase
@@ -37,7 +50,7 @@ export async function GET(request: NextRequest) {
     .in('channel_account_id', accountIds)
     .order('created_at', { ascending: false })
 
-  return NextResponse.json(rules ?? [])
+  return NextResponse.json(await withTargetAccounts(supabase, rules ?? []))
 }
 
 // POST /api/rules — create a new rule
@@ -49,6 +62,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   const {
     channel_account_id,
+    target_account_ids,
     name,
     trigger_type,
     trigger_keywords,
@@ -99,5 +113,16 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
-  return NextResponse.json(rule, { status: 201 })
+
+  const targetIds: string[] = Array.isArray(target_account_ids)
+    ? [...new Set(target_account_ids.filter((v: unknown): v is string => typeof v === 'string' && v !== channel_account_id))]
+    : []
+  if (targetIds.length > 0) {
+    // RLS on rule_target_accounts (migration 20260903000000) rejects any id
+    // that isn't one of the caller's own accounts — a bad id here just fails
+    // silently rather than blocking rule creation over an optional field.
+    await supabase.from('rule_target_accounts').insert(targetIds.map((channel_account_id) => ({ rule_id: rule.id, channel_account_id })))
+  }
+
+  return NextResponse.json({ ...rule, target_account_ids: targetIds }, { status: 201 })
 }

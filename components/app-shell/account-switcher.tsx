@@ -2,6 +2,8 @@
 
 import { useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Check, ChevronDown, Layers, Plus } from 'lucide-react'
 import { setActiveAccount } from '@/lib/accounts/actions'
 import { getAccountLabel, PLATFORM_ICON, PLATFORM_LABEL } from '@/lib/channels/labels'
@@ -34,6 +36,7 @@ export function AccountSwitcher({
   scope?: 'all' | 'single'
 }) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   if (accounts.length <= 1) return null
 
@@ -44,8 +47,18 @@ export function AccountSwitcher({
   function handleSelect(accountId: string) {
     if (!isAllScope && accountId === active.id) return
     if (isAllScope && accountId === ALL_ACCOUNTS_SCOPE) return
-    startTransition(() => {
-      void setActiveAccount(accountId)
+    // Awaited inside the transition (not fire-and-forget) so React keeps
+    // `isPending` true until the cookie is actually written, and the
+    // explicit router.refresh() guarantees every Server Component re-reads
+    // it — see lib/accounts/actions.ts::setActiveAccount and
+    // components/app-shell/page-transition.tsx for the other half of the fix.
+    startTransition(async () => {
+      const ok = await setActiveAccount(accountId)
+      if (!ok) {
+        toast.error('Impossible de changer de compte')
+        return
+      }
+      router.refresh()
     })
   }
 

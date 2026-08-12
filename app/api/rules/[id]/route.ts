@@ -14,8 +14,13 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json().catch(() => ({}))
 
-  // Only allow updating safe fields
+  // Only allow updating safe fields. channel_account_id WAS missing here —
+  // that made the "Compte" picker in the edit dialog a no-op (it showed
+  // "Règle mise à jour" but never actually moved the rule). Safe to include:
+  // RLS's WITH CHECK on automation_rules rejects a new value the caller
+  // doesn't own, same as it already does for INSERT.
   const allowed = [
+    'channel_account_id',
     'name',
     'trigger_type',
     'trigger_keywords',
@@ -44,7 +49,23 @@ export async function PATCH(
     .single()
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
-  return NextResponse.json(rule)
+
+  let targetAccountIds: string[] | undefined
+  if (Array.isArray(body.target_account_ids)) {
+    const rawIds: unknown[] = body.target_account_ids
+    const filtered: string[] = rawIds.filter((v): v is string => typeof v === 'string' && v !== rule.channel_account_id)
+    targetAccountIds = [...new Set(filtered)]
+    const { error: deleteError } = await supabase.from('rule_target_accounts').delete().eq('rule_id', id)
+    if (deleteError) return jsonError(500, 'Une erreur est survenue', deleteError)
+    if (targetAccountIds.length > 0) {
+      const { error: insertError } = await supabase
+        .from('rule_target_accounts')
+        .insert(targetAccountIds.map((channel_account_id) => ({ rule_id: id, channel_account_id })))
+      if (insertError) return jsonError(500, 'Un ou plusieurs comptes sélectionnés sont invalides', insertError)
+    }
+  }
+
+  return NextResponse.json(targetAccountIds !== undefined ? { ...rule, target_account_ids: targetAccountIds } : rule)
 }
 
 // DELETE /api/rules/[id] — delete a rule

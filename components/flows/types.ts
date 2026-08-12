@@ -25,6 +25,8 @@ export interface FlowSummary {
   trigger_type: string
   trigger_keywords: string[] | null
   created_at: string
+  /** Owner account — see flow-card.tsx's account picker and flow_target_accounts. */
+  channel_account_id?: string
 }
 
 export interface FlowNodeRecord {

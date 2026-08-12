@@ -30,6 +30,8 @@ export interface AutomationRule {
   card_image_url?: string | null
   card_buttons?: RuleCardButton[]
   is_active: boolean
+  /** Accounts besides `channel_account_id` this rule also matches on — see rule_target_accounts. */
+  target_account_ids?: string[]
 }
 
 export interface RuleFormPayload {
@@ -46,4 +48,5 @@ export interface RuleFormPayload {
   card_subtitle: string
   card_image_url: string
   card_buttons: RuleCardButton[]
+  target_account_ids: string[]
 }

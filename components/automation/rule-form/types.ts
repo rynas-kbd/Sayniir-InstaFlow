@@ -5,6 +5,8 @@ import type { TriggerType, RuleCardButton, ChannelAccountLite } from '../types'
  * round-tripping through a comma string. */
 export interface RuleFormState {
   channel_account_id: string
+  /** Additional accounts this rule also matches on, besides channel_account_id — see rule_target_accounts. */
+  target_account_ids: string[]
   name: string
   trigger_type: TriggerType
   trigger_keywords: string[]

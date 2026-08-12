@@ -106,7 +106,7 @@ export default async function AppLayout({
           accountScope={scope}
         />
         <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto pb-16 md:pb-0">
-          <PageTransitionWrapper>{children}</PageTransitionWrapper>
+          <PageTransitionWrapper accountKey={scope === 'all' ? 'all' : active?.id ?? 'none'}>{children}</PageTransitionWrapper>
         </main>
       </div>
       <MobileBottomNav businessType={businessType} unrepliedCount={notificationCounts.unrepliedMessages} />

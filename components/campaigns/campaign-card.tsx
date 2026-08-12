@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Trash2, Rocket, Ban, Users, Loader2, RotateCcw, Edit2 } from 'lucide-react'
+import { Trash2, Rocket, Ban, Users, Loader2, RotateCcw, Edit2, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -15,6 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { AccountChipPicker, type PickableAccount } from '@/components/shared/account-chip-picker'
 import { CampaignFormDialog } from './campaign-form-dialog'
 import type { Campaign, Segment } from './types'
 import type { Tag } from '@/components/contacts/types'
@@ -67,6 +69,7 @@ export function CampaignCard({
   tags,
   segments: initialSegments,
   insights = [],
+  allAccounts = [],
 }: {
   campaign: Campaign
   sendCounts: { sent: number; pending: number; failed: number }
@@ -75,6 +78,8 @@ export function CampaignCard({
   tags: Tag[]
   segments: Segment[]
   insights?: AiInsight[]
+  /** Every account the caller could duplicate this campaign into — see POST /api/campaigns/[id]/duplicate. */
+  allAccounts?: PickableAccount[]
 }) {
   const router = useRouter()
   const [campaign, setCampaign] = useState(initialCampaign)
@@ -83,6 +88,35 @@ export function CampaignCard({
   const [relaunchOpen, setRelaunchOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [duplicateTargetIds, setDuplicateTargetIds] = useState<string[]>([])
+  const [duplicating, setDuplicating] = useState(false)
+  const otherAccounts = allAccounts.filter((a) => a.id !== channelAccountId)
+
+  function toggleDuplicateTarget(accountId: string) {
+    setDuplicateTargetIds((prev) => (prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]))
+  }
+
+  async function duplicateToAccounts() {
+    if (duplicateTargetIds.length === 0) return
+    setDuplicating(true)
+    try {
+      const res = await fetch(`/api/campaigns/${campaign.id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountIds: duplicateTargetIds }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success(
+        `Dupliquée vers ${duplicateTargetIds.length} compte(s) — pensez à choisir une audience pour chaque copie.`
+      )
+      setDuplicateTargetIds([])
+      router.refresh()
+    } catch {
+      toast.error('Impossible de dupliquer la campagne')
+    } finally {
+      setDuplicating(false)
+    }
+  }
 
   async function handleUpdate(data: Partial<Campaign> & { channel_account_id: string }) {
     const res = await fetch(`/api/campaigns/${campaign.id}`, {
@@ -284,18 +318,44 @@ export function CampaignCard({
 
         {/* Footer actions */}
         <div className="flex items-center justify-between border-t border-border px-4 py-2">
-          {EDITABLE_STATUSES.includes(campaign.status) ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-              aria-label="Modifier"
-            >
-              <Edit2 className="size-3.5" />
-              Modifier
-            </button>
-          ) : (
-            <span />
-          )}
+          <div className="flex items-center gap-1">
+            {EDITABLE_STATUSES.includes(campaign.status) && (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-label="Modifier"
+              >
+                <Edit2 className="size-3.5" />
+                Modifier
+              </button>
+            )}
+            {otherAccounts.length > 0 && (
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <button
+                      className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                      aria-label="Dupliquer vers un autre compte"
+                    />
+                  }
+                >
+                  <Copy className="size-3.5" />
+                  Dupliquer
+                </PopoverTrigger>
+                <PopoverContent align="start">
+                  <p className="font-semibold text-foreground">Dupliquer vers…</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Le message et la carte sont copiés ; l&apos;audience devra être reconfigurée pour chaque copie.
+                  </p>
+                  <AccountChipPicker accounts={otherAccounts} selectedIds={duplicateTargetIds} onToggle={toggleDuplicateTarget} />
+                  <Button size="sm" onClick={duplicateToAccounts} disabled={duplicating || duplicateTargetIds.length === 0}>
+                    {duplicating ? <Loader2 className="size-3 animate-spin" /> : <Copy className="size-3" />}
+                    Dupliquer ({duplicateTargetIds.length})
+                  </Button>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
           <button
             onClick={() => setConfirmOpen(true)}
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"

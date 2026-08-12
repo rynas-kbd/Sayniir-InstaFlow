@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Trash2, Pencil, ArrowRight, MessageSquare, GitBranch, Clock, Zap, Bot, Tag } from 'lucide-react'
+import { Trash2, Pencil, ArrowRight, MessageSquare, GitBranch, Clock, Zap, Bot, Tag, Users } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { AccountChipPicker, type PickableAccount } from '@/components/shared/account-chip-picker'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,10 +49,46 @@ const NODE_ICONS: Partial<Record<FlowNodeType, React.ElementType>> = {
   remove_tag: Tag,
 }
 
-export function FlowCard({ flow: initialFlow, accountName, insights = [] }: { flow: FlowSummary; accountName?: string | null; insights?: AiInsight[] }) {
+export function FlowCard({
+  flow: initialFlow,
+  accountName,
+  insights = [],
+  allAccounts = [],
+  initialTargetAccountIds = [],
+}: {
+  flow: FlowSummary
+  accountName?: string | null
+  insights?: AiInsight[]
+  /** Every account the caller can assign this flow to, besides its owner — see PUT /api/flows/[id]/accounts. */
+  allAccounts?: PickableAccount[]
+  initialTargetAccountIds?: string[]
+}) {
   const [flow, setFlow] = useState(initialFlow)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toggling, setToggling] = useState(false)
+  const [targetAccountIds, setTargetAccountIds] = useState(initialTargetAccountIds)
+  const [savingAccounts, setSavingAccounts] = useState(false)
+
+  const otherAccounts = allAccounts.filter((a) => a.id !== flow.channel_account_id)
+
+  async function toggleTargetAccount(accountId: string) {
+    const next = targetAccountIds.includes(accountId) ? targetAccountIds.filter((id) => id !== accountId) : [...targetAccountIds, accountId]
+    setTargetAccountIds(next)
+    setSavingAccounts(true)
+    try {
+      const res = await fetch(`/api/flows/${flow.id}/accounts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountIds: next }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setTargetAccountIds(targetAccountIds) // rollback
+      toast.error("Impossible de mettre à jour les comptes de ce flow")
+    } finally {
+      setSavingAccounts(false)
+    }
+  }
 
   const cfg = STATUS_CONFIG[flow.status] ?? STATUS_CONFIG.draft
 
@@ -124,11 +162,32 @@ export function FlowCard({ flow: initialFlow, accountName, insights = [] }: { fl
               {getTriggerLabel(flow)}
             </p>
             {accountName && (
-              <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground/70">
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
                 <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 font-medium">
                   {accountName}
                 </span>
-              </p>
+                {otherAccounts.length > 0 && (
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/60 px-2 py-0.5 font-medium transition-colors hover:border-primary/40 hover:text-primary"
+                        />
+                      }
+                    >
+                      <Users className="size-3" />
+                      {targetAccountIds.length > 0 ? `+${targetAccountIds.length} compte(s)` : 'Ajouter un compte'}
+                    </PopoverTrigger>
+                    <PopoverContent align="start">
+                      <p className="font-semibold text-foreground">Comptes additionnels</p>
+                      <p className="text-[11px] text-muted-foreground">Ce flow se déclenchera aussi sur les comptes sélectionnés.</p>
+                      <AccountChipPicker accounts={otherAccounts} selectedIds={targetAccountIds} onToggle={toggleTargetAccount} />
+                      {savingAccounts && <p className="text-[11px] text-muted-foreground">Enregistrement…</p>}
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
             )}
           </div>
 

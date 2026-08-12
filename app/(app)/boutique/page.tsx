@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { resolveWorkspace, getWorkspaceAccountIds } from '@/lib/workspace/resolve'
 import { decryptApiKey, isEncrypted } from '@/lib/crypto'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { BoutiqueClient } from '@/components/boutique/boutique-client'
+import { BoutiqueSyncToggle } from '@/components/boutique/boutique-sync-toggle'
 import type { AgentSettings, AbandonedSession } from '@/components/boutique/types'
 
 export default async function BoutiquePage() {
@@ -51,6 +53,13 @@ export default async function BoutiquePage() {
       supabase.from('discount_codes').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }),
     ])
 
+  // Sync toggle only makes sense (and is only ever shown) when the active
+  // account is owned by the current user AND that owner has more than one
+  // account in their own workspace — see lib/boutique/sync.ts.
+  const { workspace } = await resolveWorkspace()
+  const workspaceAccountIds = workspace ? await getWorkspaceAccountIds(workspace.id) : []
+  const showSyncToggle = workspace !== null && workspaceAccountIds.includes(account.id) && workspaceAccountIds.length > 1
+
   let apiKey = rawSettings?.ai_api_key ?? ''
   if (apiKey && isEncrypted(apiKey)) {
     try {
@@ -95,6 +104,11 @@ export default async function BoutiquePage() {
   return (
     <div className="flex min-h-full flex-col">
       <div className="flex-1 p-4 sm:p-6">
+        {showSyncToggle && workspace && (
+          <div className="mb-4">
+            <BoutiqueSyncToggle sourceAccountId={account.id} initialEnabled={workspace.boutiqueSyncEnabled} />
+          </div>
+        )}
         <BoutiqueClient
           channelAccountId={account.id}
           products={products ?? []}

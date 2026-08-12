@@ -42,6 +42,7 @@ export function BoutiqueClient({
   discountCodes: DiscountCode[]
 }) {
   const [tab, setTab] = useState<TabKey>('products')
+  const [hoveredTab, setHoveredTab] = useState<TabKey | null>(null)
 
   const counts: Partial<Record<TabKey, number>> = {
     products: products.length,
@@ -110,9 +111,13 @@ export function BoutiqueClient({
       {/* ── Tab Navigation ── */}
       <div>
         {/* Mobile tabs: icon + short label, scrollable */}
-        <div className="relative flex items-center gap-1 overflow-x-auto rounded-2xl border border-border/80 bg-muted/30 p-1 backdrop-blur-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-1.5 sm:p-1.5">
+        <div 
+          className="relative flex items-center gap-1 overflow-x-auto rounded-2xl border border-border/50 bg-background/50 p-1.5 backdrop-blur-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-2 shadow-sm"
+          onMouseLeave={() => setHoveredTab(null)}
+        >
           {TABS.map(({ key, label, icon: Icon }) => {
             const isActive = tab === key
+            const isHovered = hoveredTab === key
             const count = counts[key]
             // Short labels for mobile
             const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label
@@ -120,31 +125,49 @@ export function BoutiqueClient({
               <button
                 key={key}
                 onClick={() => setTab(key)}
+                onMouseEnter={() => setHoveredTab(key)}
                 style={{ minHeight: '44px' }}
                 className={cn(
-                  'relative z-10 flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer select-none',
-                  'sm:flex-1 sm:px-4 sm:py-2.5',
+                  'group relative z-10 flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer select-none',
+                  'sm:flex-1 sm:px-4 sm:py-3 sm:text-sm',
                   isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeBoutiqueTab"
-                    className="absolute inset-0 z-0 rounded-xl bg-card shadow-md border border-border/60"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    className="absolute inset-0 z-0 rounded-xl bg-card border border-border shadow-[0_4px_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)]"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
-                <Icon className={cn('relative z-10 size-4 shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                {isActive && (
+                  <motion.div
+                    layoutId="activeBoutiqueTabLine"
+                    className="absolute bottom-1.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                {isHovered && !isActive && (
+                  <motion.div
+                    layoutId="hoverBoutiqueTab"
+                    className="absolute inset-0 z-0 rounded-xl bg-muted/50 border border-border/30"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  />
+                )}
+                <Icon className={cn('relative z-10 size-4 shrink-0 transition-transform duration-300 group-hover:scale-110', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
                 {/* Full label on sm+, short label on mobile */}
-                <span className="relative z-10 hidden sm:block text-[12px] sm:text-sm">{label}</span>
-                <span className="relative z-10 block sm:hidden text-[11px]">{shortLabel}</span>
+                <span className="relative z-10 hidden sm:block text-[12px] sm:text-sm font-semibold tracking-tight">{label}</span>
+                <span className="relative z-10 block sm:hidden text-[11px] font-semibold tracking-tight">{shortLabel}</span>
                 {count !== undefined && count > 0 && (
                   <span
                     className={cn(
-                      'relative z-10 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums transition-colors',
+                      'relative z-10 rounded-full px-1.5 py-0.5 text-[9.5px] font-extrabold tabular-nums transition-colors duration-300',
                       isActive
-                        ? 'bg-primary/12 text-primary border border-primary/20'
-                        : 'bg-muted/80 text-muted-foreground',
+                        ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm shadow-primary/5'
+                        : 'bg-muted/80 text-muted-foreground group-hover:bg-muted group-hover:text-foreground',
                     )}
                   >
                     {count}

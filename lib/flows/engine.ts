@@ -28,6 +28,19 @@ async function loadGraph(flowId: string): Promise<{ nodes: FlowNode[]; edges: Fl
   return { nodes: (nodes ?? []) as FlowNode[], edges: (edges ?? []) as FlowEdge[] }
 }
 
+/**
+ * Ids of flows that list this account as an additional target, besides its
+ * owner (see migration 20260903000000 and PUT /api/flows/[id]/accounts).
+ * Kept separate from the main `.select(literal)` query at each call site
+ * (rather than accepting `columns: string`) so supabase-js can still infer
+ * the row type from a literal column list instead of degrading to
+ * GenericStringError.
+ */
+async function findTargetFlowIds(supabase: ReturnType<typeof createDispatchAdminClient>, accountId: string): Promise<string[]> {
+  const { data: targetRows } = await supabase.from('flow_target_accounts').select('flow_id').eq('channel_account_id', accountId)
+  return (targetRows ?? []).map((r) => r.flow_id)
+}
+
 function findEdgeTarget(edges: FlowEdge[], fromKey: string, handle: string): string | null {
   return edges.find((e) => e.source_node_key === fromKey && e.source_handle === handle)?.target_node_key ?? null
 }
@@ -174,12 +187,13 @@ export async function runFlowsForInbound(input: {
   agentArgs: AgentArgs
 }): Promise<boolean> {
   const supabase = createDispatchAdminClient()
-  const { data: flows } = await supabase
-    .from('flows')
-    .select('id, trigger_type, trigger_keywords')
-    .eq('channel_account_id', input.account.id)
-    .eq('status', 'active')
-    .order('priority', { ascending: false })
+  const targetFlowIds = await findTargetFlowIds(supabase, input.account.id)
+  let flowsQuery = supabase.from('flows').select('id, trigger_type, trigger_keywords').eq('status', 'active')
+  flowsQuery =
+    targetFlowIds.length > 0
+      ? flowsQuery.or(`channel_account_id.eq.${input.account.id},id.in.(${targetFlowIds.join(',')})`)
+      : flowsQuery.eq('channel_account_id', input.account.id)
+  const { data: flows } = await flowsQuery.order('priority', { ascending: false })
 
   const matched = (flows ?? []).find((f) => matchesMessageTrigger(f, input.messageText, input.storyEventType))
   if (!matched) return false
@@ -199,12 +213,13 @@ export async function runFlowsForInboundComment(input: {
   agentArgs: AgentArgs
 }): Promise<boolean> {
   const supabase = createDispatchAdminClient()
-  const { data: flows } = await supabase
-    .from('flows')
-    .select('id, trigger_type, trigger_keywords, target_post_ids')
-    .eq('channel_account_id', input.account.id)
-    .eq('status', 'active')
-    .order('priority', { ascending: false })
+  const targetFlowIds = await findTargetFlowIds(supabase, input.account.id)
+  let flowsQuery = supabase.from('flows').select('id, trigger_type, trigger_keywords, target_post_ids').eq('status', 'active')
+  flowsQuery =
+    targetFlowIds.length > 0
+      ? flowsQuery.or(`channel_account_id.eq.${input.account.id},id.in.(${targetFlowIds.join(',')})`)
+      : flowsQuery.eq('channel_account_id', input.account.id)
+  const { data: flows } = await flowsQuery.order('priority', { ascending: false })
 
   const matched = (flows ?? []).find((f) => matchesCommentTrigger(f, input.commentText, input.mediaId))
   if (!matched) return false
