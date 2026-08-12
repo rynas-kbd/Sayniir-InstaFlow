@@ -161,7 +161,29 @@ export function WelcomeForm() {
     if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
   }, [])
 
-  const visibleGoals = businessType === 'ecommerce' ? [...PRIMARY_GOALS, SELL_MORE_GOAL] : PRIMARY_GOALS
+  // Filtrer les objectifs selon le type de business sélectionné
+  const getGoalsForBusinessType = (type: BusinessType | null): typeof PRIMARY_GOALS => {
+    if (!type) return PRIMARY_GOALS
+    
+    switch (type) {
+      case 'ecommerce':
+        // E-commerce : tous les objectifs + vendre plus
+        return [...PRIMARY_GOALS, SELL_MORE_GOAL]
+      case 'coaching':
+        // Coaching : réponse rapide, FAQ, qualifier
+        return PRIMARY_GOALS.filter(g => ['reply_faster', 'automate_faq', 'qualify_leads'].includes(g.value))
+      case 'agency':
+        // Agence : réponse rapide, convertir commentaires, qualifier leads
+        return PRIMARY_GOALS.filter(g => ['reply_faster', 'convert_comments', 'qualify_leads'].includes(g.value))
+      case 'generic':
+        // Autre : tous sauf vendre plus
+        return PRIMARY_GOALS
+      default:
+        return PRIMARY_GOALS
+    }
+  }
+
+  const visibleGoals = getGoalsForBusinessType(businessType)
   const canFinish = businessType !== null && teamSize !== null
 
   function goTo(nextStep: number, dir: 1 | -1) {
@@ -177,7 +199,9 @@ export function WelcomeForm() {
 
   function handleBusinessTypeSelect(value: BusinessType) {
     setBusinessType(value)
-    if (value !== 'ecommerce' && primaryGoal === 'sell_more') {
+    // Réinitialiser l'objectif si le nouveau type de business ne le supporte plus
+    const goalsForType = getGoalsForBusinessType(value)
+    if (primaryGoal && !goalsForType.some(g => g.value === primaryGoal)) {
       setPrimaryGoal(null)
     }
     autoAdvance(1)

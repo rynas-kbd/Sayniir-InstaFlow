@@ -27,13 +27,45 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { data: flow } = await supabase
+  
+  console.log('PUT /api/flows/[id]/graph called with:', { id, userId: user.id })
+  
+  // First, get the flow
+  const { data: flow, error: flowError } = await supabase
     .from('flows')
-    .select('id, channel_account_id, channel_accounts!inner(user_id)')
+    .select('id, channel_account_id')
     .eq('id', id)
-    .eq('channel_accounts.user_id', user.id)
     .single()
-  if (!flow) return NextResponse.json({ error: 'Flow not found' }, { status: 404 })
+  
+  if (flowError || !flow) {
+    console.error('Flow lookup failed:', { id, flowError, userId: user.id })
+    return NextResponse.json({ 
+      error: 'Flow not found', 
+      details: flowError?.message || 'Flow does not exist' 
+    }, { status: 404 })
+  }
+  
+  // Then verify the user owns the channel_account
+  const { data: channelAccount, error: accountError } = await supabase
+    .from('channel_accounts')
+    .select('id, user_id')
+    .eq('id', flow.channel_account_id)
+    .eq('user_id', user.id)
+    .single()
+  
+  if (accountError || !channelAccount) {
+    console.error('Channel account access denied:', { 
+      channelAccountId: flow.channel_account_id, 
+      userId: user.id, 
+      accountError 
+    })
+    return NextResponse.json({ 
+      error: 'Flow not found', 
+      details: 'You do not have access to this flow' 
+    }, { status: 404 })
+  }
+  
+  console.log('Flow found and access verified:', { flowId: flow.id, channelAccountId: flow.channel_account_id })
 
   const body = await request.json().catch(() => null)
   if (!body || typeof body !== 'object') return badRequest('Corps de requête invalide')

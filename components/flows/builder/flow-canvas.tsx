@@ -345,6 +345,8 @@ export function FlowCanvas({
   async function handleSave() {
     setSaving(true)
     try {
+      console.log('Saving flow:', { flowId: flow.id, nodeCount: nodes.length, edgeCount: edges.length })
+      
       const payload = {
         nodes: nodes.map((n) => ({
           node_key: n.id,
@@ -358,19 +360,28 @@ export function FlowCanvas({
           source_handle: e.sourceHandle ?? 'default',
         })),
       }
+      
+      console.log('Payload:', payload)
+      
       const res = await fetch(`/api/flows/${flow.id}/graph`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      
+      console.log('Response status:', res.status)
+      
       if (!res.ok) {
         const data = await res.json()
+        console.error('Save failed:', data)
         throw new Error(data.error || 'Erreur')
       }
+      
       toast.success('Flow sauvegardé')
       setLastSavedAt(new Date())
       setHasUnsavedChanges(false)
     } catch (err) {
+      console.error('Save error:', err)
       toast.error(err instanceof Error ? err.message : 'Impossible de sauvegarder le flow')
     } finally {
       setSaving(false)

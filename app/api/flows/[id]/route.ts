@@ -17,7 +17,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     supabase.from('flow_edges').select('*').eq('flow_id', id),
   ])
 
-  if (error || !flow) return NextResponse.json({ error: 'Flow not found' }, { status: 404 })
+  if (error || !flow) {
+    console.error('Flow GET failed:', { id, error, flow, userId: user.id })
+    return NextResponse.json({ 
+      error: 'Flow not found',
+      details: error?.message || 'Flow does not exist'
+    }, { status: 404 })
+  }
   return NextResponse.json({ ...flow, nodes: nodes ?? [], edges: edges ?? [] })
 }
 
