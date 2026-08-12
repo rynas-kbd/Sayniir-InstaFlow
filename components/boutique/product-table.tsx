@@ -4,10 +4,9 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Package, Plus, Edit2, Trash2, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Package, Plus, Edit2, Trash2, Search, SlidersHorizontal, X, Check, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import {
@@ -27,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { cn } from '@/lib/utils'
 import { ProductFormDialog } from './product-form-dialog'
 import { ProductCard } from './product-card'
 import { productToCardView } from './product-card-view'
@@ -77,6 +77,13 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
 
   const visible = filtered.slice(0, visibleCount)
 
+  // Selects/deselects every FILTERED product (search + active filters), not
+  // just the currently-paginated `visible` slice — a product revealed later
+  // via "Charger plus" just reads `selected.has(id)` like any other card, so
+  // it shows up already checked with no extra wiring.
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id))
+  const someFilteredSelected = filtered.some((p) => selected.has(p.id))
+
   function toggleSelected(id: string) {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -85,6 +92,24 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       return next
     })
   }
+
+  function toggleSelectAll() {
+    setSelected(allFilteredSelected ? new Set() : new Set(filtered.map((p) => p.id)))
+  }
+
+  // Shared tri-state icon (checked / indeterminate / empty) for the two
+  // "Tout sélectionner" controls below — a plain button rather than the
+  // Checkbox primitive, which doesn't expose an indeterminate state.
+  const selectAllIcon = (
+    <span
+      className={cn(
+        'flex size-4 shrink-0 items-center justify-center rounded-[4px] border',
+        allFilteredSelected ? 'border-primary bg-primary text-primary-foreground' : someFilteredSelected ? 'border-primary/60 bg-primary/15 text-primary' : 'border-input',
+      )}
+    >
+      {allFilteredSelected ? <Check className="size-3" strokeWidth={3} /> : someFilteredSelected ? <Minus className="size-3" strokeWidth={3} /> : null}
+    </span>
+  )
 
   async function handleUpdate(data: Partial<Product> & { channel_account_id: string }) {
     if (!editing) return
@@ -246,6 +271,19 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
 
       {/* ── Search + filter controls ── */}
       <div className="mb-4 flex items-center gap-2">
+        {/* Always-available "select all" — doesn't require selecting a card by hand first. */}
+        {filtered.length > 0 && (
+          <button
+            type="button"
+            onClick={toggleSelectAll}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-2 text-muted-foreground transition-colors hover:text-foreground sm:px-3"
+            aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+          >
+            {selectAllIcon}
+            <span className="hidden text-[11px] font-extrabold uppercase tracking-wider sm:inline">Tout sélectionner</span>
+          </button>
+        )}
+
         {/* Search — full width on mobile */}
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -323,7 +361,10 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         <>
           {/* Mobile sticky bar */}
           <div className="fixed bottom-0 inset-x-0 z-50 flex sm:hidden items-center gap-2 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 shadow-2xl">
-            <span className="text-xs font-bold text-foreground">{selected.size} sél.</span>
+            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}>
+              {selectAllIcon}
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{selected.size} sél.</span>
+            </button>
             <div className="ml-auto flex gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
               <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>Suppr.</Button>
@@ -331,8 +372,11 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
             </div>
           </div>
           {/* Desktop inline bar */}
-          <div className="hidden sm:flex mb-4 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-            <span className="text-xs font-medium text-foreground">{selected.size} sélectionné(s)</span>
+          <div className="hidden sm:flex mb-4 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3.5 py-2.5">
+            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}>
+              {selectAllIcon}
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{selected.size} sélectionné(s)</span>
+            </button>
             <div className="ml-auto flex gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>Désactiver</Button>
@@ -375,17 +419,14 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                     delay: Math.min(idx * 0.04, 0.3),
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="relative group/wrapper"
+                  className="relative"
                 >
-                  <Checkbox
-                    checked={selected.has(product.id)}
-                    onCheckedChange={() => toggleSelected(product.id)}
-                    className="absolute left-3 top-3 z-20 bg-card shadow-sm border-border/80 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    aria-label={`Sélectionner ${product.name}`}
-                  />
                   <ProductCard
                     view={productToCardView(product)}
                     onToggleActive={(next: boolean) => handleToggleActive(product, next)}
+                    selectable
+                    selected={selected.has(product.id)}
+                    onToggleSelected={() => toggleSelected(product.id)}
                     actions={
                       <>
                         <button

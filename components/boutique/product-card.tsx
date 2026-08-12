@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Layers } from 'lucide-react'
+import { Layers, Check } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -14,10 +14,38 @@ export interface ProductCardProps {
   placeholder?: boolean
   className?: string
   onToggleActive?: (nextActive: boolean) => void
+  /** Bulk-selection — see product-table.tsx. Rendered inline (mobile) / as a corner pill (desktop) instead of an external overlay, so it never collides with the cover image, kind badge, or active switch. */
+  selectable?: boolean
+  selected?: boolean
+  onToggleSelected?: () => void
 }
 
-export function ProductCard({ view, actions, placeholder, className, onToggleActive }: ProductCardProps) {
+export function ProductCard({ view, actions, placeholder, className, onToggleActive, selectable, selected, onToggleSelected }: ProductCardProps) {
   const [imgBroken, setImgBroken] = useState(false)
+
+  const SelectionPill = selectable ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onToggleSelected?.()
+      }}
+      aria-pressed={selected}
+      aria-label={selected ? `Désélectionner ${view.name}` : `Sélectionner ${view.name}`}
+      className={cn(
+        'flex size-7 shrink-0 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all duration-150',
+        // Always visible on mobile (no hover state to reveal it on touch) —
+        // fades in on hover only from sm: up, where the desktop cover image
+        // has room to keep the grid uncluttered when nothing is selected.
+        selected
+          ? 'border-primary bg-primary text-primary-foreground opacity-100'
+          : 'border-border/60 bg-background/80 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-primary/50',
+      )}
+    >
+      <Check className="size-3.5" strokeWidth={2.5} />
+    </button>
+  ) : null
   const isPhysical = view.kind === 'physical'
   const hasStock = view.stockQuantity > 0
   const meta = PRODUCT_KIND_META[view.kind]
@@ -59,6 +87,7 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
 
       {/* ── Mobile Layout (Horizontal compact row) ── */}
       <div className="flex sm:hidden items-center gap-3.5 p-3">
+        {SelectionPill}
         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
           {renderCover()}
         </div>
@@ -108,7 +137,10 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
         {/* Card Cover Image Header */}
         <div className="relative w-full aspect-[16/10] overflow-hidden rounded-t-2xl bg-muted/20 border-b border-border/40">
           {renderCover()}
-          
+
+          {/* Selection pill overlay — top-left, mirrors the active-switch pill's top-right position */}
+          {selectable && <div className="absolute left-3 top-3 z-20">{SelectionPill}</div>}
+
           {/* Badge kind overlay */}
           <div className="absolute left-3 bottom-3 z-15">
             <Badge className="rounded-full bg-background/90 text-foreground border border-border/50 px-2.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
