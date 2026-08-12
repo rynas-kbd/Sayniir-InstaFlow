@@ -18,15 +18,6 @@ export interface ColorThemeOption {
 
 export const COLOR_THEMES: ColorThemeOption[] = [
   {
-    id: 'terracotta',
-    name: 'Terracotta',
-    description: 'Chaleureux & naturel (Organique)',
-    primaryColor: '#c67139',
-    gradient: 'linear-gradient(135deg, #f6a06b 0%, #c67139 100%)',
-    darkGradient: 'linear-gradient(135deg, #e2884d 0%, #b2622d 100%)',
-    previewBorder: '#c67139',
-  },
-  {
     id: 'ocean',
     name: 'Océan Cyber',
     description: 'Bleu cobalt & indigo vibrant',
@@ -34,6 +25,15 @@ export const COLOR_THEMES: ColorThemeOption[] = [
     gradient: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)',
     darkGradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
     previewBorder: '#3b82f6',
+  },
+  {
+    id: 'terracotta',
+    name: 'Terracotta',
+    description: 'Chaleureux & naturel (Organique)',
+    primaryColor: '#c67139',
+    gradient: 'linear-gradient(135deg, #f6a06b 0%, #c67139 100%)',
+    darkGradient: 'linear-gradient(135deg, #e2884d 0%, #b2622d 100%)',
+    previewBorder: '#c67139',
   },
   {
     id: 'emerald',
@@ -111,12 +111,12 @@ function getCookie(name: string): string | null {
 }
 
 export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
-  const [colorTheme, setColorThemeState] = useState<ColorTheme>('terracotta')
+  const [colorTheme, setColorThemeState] = useState<ColorTheme>('ocean')
   const [wallpaper, setWallpaperState] = useState<WallpaperId>('none')
   const [bgOpacity, setBgOpacityState] = useState<number>(40)
   const [customImageUrl, setCustomImageUrlState] = useState<string>('')
-  const [customPrimaryColor, setCustomPrimaryColorState] = useState<string>('#c67139')
-  const [customSecondaryColor, setCustomSecondaryColorState] = useState<string>('#8fa073')
+  const [customPrimaryColor, setCustomPrimaryColorState] = useState<string>('#3b82f6')
+    const [customSecondaryColor, setCustomSecondaryColorState] = useState<string>('#1d4ed8')
   const [mounted, setMounted] = useState(false)
 
   const applyColorThemeToDOM = (themeName: ColorTheme) => {
@@ -142,8 +142,8 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       const cookiePrimary = getCookie('instaflow_custom_primary')
       const cookieSecondary = getCookie('instaflow_custom_secondary')
 
-      let activePrimary = '#c67139'
-      let activeSecondary = '#8fa073'
+      let activePrimary = '#3b82f6'
+      let activeSecondary = '#1d4ed8'
 
       if (cookieTheme && COLOR_THEMES.some((t) => t.id === cookieTheme)) {
         setColorThemeState(cookieTheme)
@@ -266,7 +266,7 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
   return (
     <CustomThemeContext.Provider
       value={{
-        colorTheme: mounted ? colorTheme : 'terracotta',
+        colorTheme: mounted ? colorTheme : 'ocean',
         setColorTheme,
         wallpaper,
         setWallpaper,
