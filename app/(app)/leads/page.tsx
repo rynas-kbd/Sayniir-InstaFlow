@@ -31,7 +31,7 @@ export default async function LeadsPage() {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader title="Leads" description="Qualification automatique des prospects par l'IA." />
-      <div className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6">
+      <div className="flex-1 space-y-5 p-4 md:p-6">
         {safeLeads.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatCard title="Total leads" value={safeLeads.length} icon={Users} />

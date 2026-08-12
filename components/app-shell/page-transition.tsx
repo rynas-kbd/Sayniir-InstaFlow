@@ -33,7 +33,7 @@ export function PageTransitionWrapper({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="flex flex-1 flex-col min-h-full h-full w-full"
+        className="flex flex-1 flex-col min-h-full w-full"
       >
         {children}
       </motion.div>

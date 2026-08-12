@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -35,6 +36,8 @@ import {
   SplitSquareHorizontal,
   Workflow,
   HelpCircle,
+  X,
+  Link2,
 } from 'lucide-react'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
@@ -172,6 +175,7 @@ export function FlowCanvas({
   )
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [postPickerOpen, setPostPickerOpen] = useState(false)
@@ -193,6 +197,33 @@ export function FlowCanvas({
     (connection: Connection) => setEdges((eds) => addEdge({ ...connection, sourceHandle: connection.sourceHandle ?? 'default' }, eds)),
     [setEdges]
   )
+
+  function deleteEdge(edgeId: string) {
+    const edgeToDelete = edges.find((e) => e.id === edgeId)
+    if (!edgeToDelete) return
+    setEdges((eds) => eds.filter((e) => e.id !== edgeId))
+    setSelectedEdgeId(null)
+    toast.success('Lien supprimé', {
+      action: {
+        label: 'Annuler',
+        onClick: () => setEdges((eds) => [...eds, edgeToDelete]),
+      },
+    })
+  }
+
+  // Highlight selected edge visually with animation and terracotta stroke
+  const styledEdges = edges.map((e) => {
+    const isSelected = e.id === selectedEdgeId
+    return {
+      ...e,
+      animated: isSelected ? true : e.animated,
+      style: {
+        ...e.style,
+        strokeWidth: isSelected ? 4 : 2.5,
+        stroke: isSelected ? 'var(--organic-terracotta)' : undefined,
+      },
+    }
+  })
 
   function addNode(type: FlowNodeType) {
     const nodeKey = `${type}-${crypto.randomUUID()}`
@@ -420,28 +451,68 @@ export function FlowCanvas({
 
         {/* Canvas */}
         <div className="relative h-full flex-1">
+          {/* Floating banner when an edge / link is selected */}
+          <AnimatePresence>
+            {selectedEdgeId && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-2xl border border-destructive/30 bg-card/95 px-3 py-1.5 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="flex items-center gap-1.5 pl-1">
+                  <span className="size-2 rounded-full bg-destructive animate-pulse" />
+                  <span className="text-xs font-bold text-foreground">Lien sélectionné</span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteEdge(selectedEdgeId)}
+                  className="h-7 rounded-xl px-2.5 font-bold text-[11px] gap-1 shadow-sm"
+                >
+                  <Trash2 className="size-3" /> Supprimer
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedEdgeId(null)}
+                  className="rounded-full p-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={styledEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
-            onNodeClick={(_, node) => setSelectedId(node.id)}
-            onPaneClick={() => setSelectedId(null)}
+            onNodeClick={(_, node) => {
+              setSelectedId(node.id)
+              setSelectedEdgeId(null)
+            }}
+            onEdgeClick={(_, edge) => {
+              setSelectedId(null)
+              setSelectedEdgeId(edge.id)
+            }}
+            onPaneClick={() => {
+              setSelectedId(null)
+              setSelectedEdgeId(null)
+            }}
             fitView
             fitViewOptions={{ padding: 0.3 }}
             panOnDrag
             zoomOnPinch
             minZoom={0.25}
             maxZoom={2}
-            // Default 20px is a near-miss on a fingertip; widen the radius a
-            // dragged connection snaps within so wiring nodes on touch
-            // doesn't need pixel-precise accuracy.
             connectionRadius={40}
           >
             <Background />
-            <Controls />
+            <Controls position="bottom-left" showInteractive={true} />
             <MiniMap className="!hidden !bg-card md:!block" />
           </ReactFlow>
 

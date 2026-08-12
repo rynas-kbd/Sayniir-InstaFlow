@@ -1195,8 +1195,54 @@ h1, h2, h3, h4, h5, h6 {
   height: 14px;
 }
 
-.react-flow__controls-button {
-  width: 32px;
-  height: 32px;
+/* ─────────────────────────────────────────────
+   Flow builder — Mobile Controls & Edge Styling
+   ───────────────────────────────────────────── */
+.react-flow__controls {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.25), 0 0 0 1px color-mix(in srgb, var(--organic-terracotta) 25%, transparent) !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  background: color-mix(in srgb, var(--card) 95%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  padding: 3px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
 }
+
+.react-flow__controls-button {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+  background: color-mix(in srgb, var(--muted) 40%, transparent) !important;
+  color: var(--foreground) !important;
+  fill: currentColor !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.react-flow__controls-button:hover,
+.react-flow__controls-button:active {
+  background: color-mix(in srgb, var(--organic-terracotta) 20%, transparent) !important;
+  color: var(--organic-terracotta) !important;
+  transform: scale(1.05);
+}
+
+.react-flow__controls-button svg {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+}
+
+@media (max-width: 767px) {
+  .react-flow__controls {
+    bottom: 5.5rem !important;
+    left: 1rem !important;
+  }
+}
+
 

@@ -105,7 +105,7 @@ export default async function AppLayout({
           activeAccountId={active?.id ?? null}
           accountScope={scope}
         />
-        <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto pb-16 md:pb-0">
+        <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto pb-28 md:pb-0">
           <PageTransitionWrapper accountKey={scope === 'all' ? 'all' : active?.id ?? 'none'}>{children}</PageTransitionWrapper>
         </main>
       </div>
