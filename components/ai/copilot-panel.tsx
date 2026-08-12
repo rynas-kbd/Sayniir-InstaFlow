@@ -78,12 +78,87 @@ export function CopilotPanel({
   const [input, setInput] = useState('')
   const [progressStep, setProgressStep] = useState<{ step: string; detail?: string } | null>(null)
   const [isThinking, setIsThinking] = useState(false)
+  const [loading, setLoading] = useState(false)
   const conversationIdRef = useRef<string | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, pendingConfirm, progressStep, isThinking])
+
+  // Charger la dernière conversation au montage
+  useEffect(() => {
+    async function loadLastConversation() {
+      if (!open || hasLoadedRef.current) return
+      hasLoadedRef.current = true
+      setLoading(true)
+
+      try {
+        // Récupérer la dernière conversation
+        const conversationsRes = await fetch(`/api/ai/conversations?channelAccountId=${channelAccountId}`)
+        if (!conversationsRes.ok) {
+          setLoading(false)
+          return
+        }
+
+        const { conversations } = await conversationsRes.json()
+        if (!conversations || conversations.length === 0) {
+          setLoading(false)
+          return
+        }
+
+        const lastConversation = conversations[0]
+        conversationIdRef.current = lastConversation.id
+
+        // Charger les messages de cette conversation
+        const messagesRes = await fetch(`/api/ai/conversations/${lastConversation.id}/messages`)
+        if (!messagesRes.ok) {
+          setLoading(false)
+          return
+        }
+
+        const { messages: historyMessages } = await messagesRes.json()
+        
+        // Convertir les messages de la base de données au format d'affichage
+        const displayMessages: DisplayMessage[] = []
+        for (const msg of historyMessages) {
+          if (msg.role === 'user') {
+            displayMessages.push({
+              id: msg.id,
+              role: 'user',
+              text: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
+            })
+          } else if (msg.role === 'assistant') {
+            const content = Array.isArray(msg.content) ? msg.content : []
+            const parts: AssistantPart[] = []
+            
+            for (const block of content) {
+              if (block.type === 'text' && block.text) {
+                parts.push({ type: 'text', text: block.text })
+              } else if (block.type === 'tool_result' && block.output) {
+                parts.push({ type: 'tool_result', name: block.name || 'tool', output: block.output })
+              }
+            }
+            
+            displayMessages.push({
+              id: msg.id,
+              role: 'assistant',
+              parts,
+            })
+          }
+        }
+
+        setMessages(displayMessages)
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'historique:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadLastConversation()
+  }, [open, channelAccountId])
 
   useEffect(() => {
     if (open && initialMessage) {
@@ -97,6 +172,14 @@ export function CopilotPanel({
     const id = crypto.randomUUID()
     setMessages((prev) => [...prev, { id, role: 'assistant', parts: [] }])
     return id
+  }
+
+  function startNewConversation() {
+    conversationIdRef.current = undefined
+    hasLoadedRef.current = false
+    setMessages([])
+    setPendingConfirm(null)
+    setInput('')
   }
 
   function updateAssistantParts(assistantId: string, update: (parts: AssistantPart[]) => AssistantPart[]) {
@@ -260,31 +343,48 @@ export function CopilotPanel({
                 the visual identity block below is a sibling, not nested inside it, since
                 Base UI's Title renders a heading element that shouldn't contain a <div>. */}
             <SheetTitle className="sr-only">Copilote</SheetTitle>
-            <div className="flex items-center gap-2.5">
-              {/* Mini orb — same layered treatment as the FAB, scaled down */}
-              <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
-                <span
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
-                />
-                <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
-                <span
-                  className={cn(
-                    'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
-                    isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
-                  )}
-                  aria-hidden="true"
-                />
-              </span>
-              <div className="flex flex-col leading-tight">
-                <span className="text-sm font-semibold text-foreground">Copilote</span>
-                <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2.5">
+                {/* Mini orb — same layered treatment as the FAB, scaled down */}
+                <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
+                  <span
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                  />
+                  <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
+                  <span
+                    className={cn(
+                      'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                      isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-sm font-semibold text-foreground">Copilote</span>
+                  <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+                </div>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={startNewConversation}
+                disabled={sending || confirming}
+                className="text-xs"
+              >
+                Nouveau
+              </Button>
             </div>
           </SheetHeader>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-          {messages.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              <span>Chargement de l'historique...</span>
+            </div>
+          ) : messages.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Demandez-moi de diagnostiquer un flow, chercher un contact, ou résumer votre activité récente.
             </p>
@@ -405,30 +505,47 @@ export function CopilotPanel({
           <div className="glass-card flex h-full flex-col gap-0 overflow-hidden rounded-none sm:rounded-l-2xl">
             <SheetHeader className="border-b border-border/50 px-4 py-3.5">
               <SheetTitle className="sr-only">Copilote</SheetTitle>
-              <div className="flex items-center gap-2.5">
-                <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
-                  />
-                  <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
-                  <span
-                    className={cn(
-                      'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
-                      isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
-                    )}
-                    aria-hidden="true"
-                  />
-                </span>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-semibold text-foreground">Copilote</span>
-                  <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
+                    <span
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                    />
+                    <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
+                    <span
+                      className={cn(
+                        'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                        isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-sm font-semibold text-foreground">Copilote</span>
+                    <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+                  </div>
                 </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={startNewConversation}
+                  disabled={sending || confirming}
+                  className="text-xs"
+                >
+                  Nouveau
+                </Button>
               </div>
             </SheetHeader>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-              {messages.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>Chargement de l'historique...</span>
+                </div>
+              ) : messages.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   Demandez-moi de diagnostiquer un flow, chercher un contact, ou résumer votre activité récente.
                 </p>

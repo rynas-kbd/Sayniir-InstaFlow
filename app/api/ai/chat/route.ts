@@ -57,9 +57,16 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
     if (!conversation) return NextResponse.json({ error: 'Conversation introuvable' }, { status: 404 })
   } else {
+    // Générer un titre basé sur les premiers mots du message (max 50 caractères)
+    const title = message.trim().slice(0, 50) + (message.trim().length > 50 ? '...' : '')
+    
     const { data: conversation, error } = await supabase
       .from('ai_conversations')
-      .insert({ channel_account_id: channelAccountId, user_id: user.id })
+      .insert({ 
+        channel_account_id: channelAccountId, 
+        user_id: user.id,
+        title 
+      })
       .select('id')
       .single()
     if (error || !conversation) return NextResponse.json({ error: 'Impossible de créer la conversation' }, { status: 500 })

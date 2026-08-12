@@ -162,6 +162,11 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         role: 'user',
         content: input.userMessage,
       })
+      // Mettre à jour la date de dernière modification de la conversation
+      await supabase
+        .from('ai_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', input.conversationId)
     }
 
     const providerTools = buildProviderTools(tools)
@@ -219,6 +224,11 @@ export async function runCopilotTurn(options: RunCopilotTurnOptions): Promise<vo
         role: 'assistant',
         content: assistantContent,
       })
+      // Mettre à jour la date de dernière modification de la conversation
+      await supabase
+        .from('ai_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', input.conversationId)
       messages.push({ role: 'assistant', content: assistantContent })
 
       if (turnResult.stopReason !== 'tool_use') {
