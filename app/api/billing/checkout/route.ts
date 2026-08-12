@@ -85,7 +85,10 @@ export async function POST(request: NextRequest) {
   const checkoutResult = await createChargilyCheckout({
     amountDzd,
     successUrl: `${origin}/settings?billing=success`,
-    failureUrl: `${origin}/settings?billing=failed`,
+    // plan/period are threaded through so the failure dialog's "Réessayer"
+    // (components/settings/billing-result-dialog.tsx) knows what to relaunch
+    // without having to remember client-side state across the redirect.
+    failureUrl: `${origin}/settings?billing=failed&plan=${plan}&period=${period}`,
     webhookEndpoint: `${process.env.NEXT_PUBLIC_APP_URL ?? origin}/api/webhooks/chargily`,
     customerId: chargilyCustomerId ?? undefined,
     locale: 'fr',
