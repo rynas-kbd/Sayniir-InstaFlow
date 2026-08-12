@@ -85,21 +85,28 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
         <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[var(--organic-terracotta)] via-[var(--organic-sage)] to-[var(--organic-terracotta)] opacity-80" />
       )}
 
-      {/* ── Mobile Layout (Horizontal compact row) ── */}
-      <div className="flex sm:hidden items-center gap-3.5 p-3">
+      {/* ── Mobile Layout (Streamlined, readable row) ── */}
+      <div className="flex sm:hidden items-center gap-3 p-3">
         {SelectionPill}
-        <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
+        <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
           {renderCover()}
         </div>
         
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge variant="outline" className="rounded-full border-border/60 bg-muted/40 px-2 py-0 text-[8.5px] font-bold text-muted-foreground uppercase tracking-wider">
-              {meta.label}
-            </Badge>
+        <div className="min-w-0 flex-1 space-y-1">
+          {/* Product Name — top priority, up to 2 lines */}
+          <h3 className="line-clamp-2 text-sm font-bold tracking-tight text-foreground leading-snug group-hover:text-primary transition-colors">
+            {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
+          </h3>
+          
+          {/* Price & Stock info row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-black text-[var(--organic-terracotta)] tabular-nums">
+              {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'} <span className="text-[9px] font-extrabold text-muted-foreground uppercase">{view.currency}</span>
+            </span>
+
             {isPhysical && (
               <span className={cn(
-                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-wide',
+                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide',
                 hasStock 
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
                   : 'bg-destructive/10 text-destructive'
@@ -109,22 +116,12 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
               </span>
             )}
           </div>
-          
-          <h3 className="line-clamp-1 text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">
-            {view.name || (placeholder && <span className="italic text-muted-foreground/40">Nom du produit</span>)}
-          </h3>
-          
-          <div className="flex items-baseline gap-1">
-            <span className="text-base font-black text-[var(--organic-terracotta)] tabular-nums">
-              {view.price !== null ? view.price.toLocaleString('fr-FR') : '—'}
-            </span>
-            <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-wider">{view.currency}</span>
-          </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        {/* Right side: Switch & Actions */}
+        <div className="flex flex-col items-end gap-1.5 shrink-0 pl-1">
           {onToggleActive && (
-            <label style={{ minHeight: '36px', minWidth: '36px' }} className="flex items-center justify-center cursor-pointer select-none">
+            <label className="flex items-center justify-center cursor-pointer select-none">
               <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? 'Désactiver' : 'Activer'} />
             </label>
           )}
