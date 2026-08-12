@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 import { propagateProductUpsert, propagateProductDelete } from '@/lib/boutique/sync'
@@ -22,6 +22,13 @@ export async function PATCH(
   }
   updates.updated_at = new Date().toISOString()
 
+  // Read the name BEFORE updating — a rename needs the sibling lookup in
+  // propagateProductUpsert to still find the old row by its old name.
+  const previousName: string | null =
+    typeof updates.name === 'string'
+      ? (await supabase.from('products').select('name').eq('id', id).maybeSingle()).data?.name ?? null
+      : null
+
   // RLS ensures user can only update their own products
   const { data: product, error } = await supabase
     .from('products')
@@ -32,24 +39,32 @@ export async function PATCH(
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
 
-  after(() =>
-    propagateProductUpsert(supabase, product.channel_account_id, {
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      currency: product.currency,
-      kind: product.kind,
-      sizes: product.sizes,
-      colors: product.colors,
-      image_url: product.image_url,
-      images: product.images,
-      category: product.category,
-      metadata: product.metadata,
-      track_stock: product.track_stock,
-      stock_quantity: product.stock_quantity,
-      is_active: product.is_active,
-    }).catch((err) => console.error('[products] Boutique sync propagation failed:', err))
-  )
+  // Awaited directly — see app/api/products/route.ts's comment on why after() isn't used here.
+  try {
+    await propagateProductUpsert(
+      supabase,
+      product.channel_account_id,
+      {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        kind: product.kind,
+        sizes: product.sizes,
+        colors: product.colors,
+        image_url: product.image_url,
+        images: product.images,
+        category: product.category,
+        metadata: product.metadata,
+        track_stock: product.track_stock,
+        stock_quantity: product.stock_quantity,
+        is_active: product.is_active,
+      },
+      previousName
+    )
+  } catch (err) {
+    console.error('[products] Boutique sync propagation failed:', err)
+  }
 
   return NextResponse.json(product)
 }
@@ -75,11 +90,11 @@ export async function DELETE(
   if (!deleted || deleted.length === 0) return jsonError(404, 'Produit introuvable')
 
   const [removed] = deleted
-  after(() =>
-    propagateProductDelete(supabase, removed.channel_account_id, removed.name).catch((err) =>
-      console.error('[products] Boutique sync propagation failed:', err)
-    )
-  )
+  try {
+    await propagateProductDelete(supabase, removed.channel_account_id, removed.name)
+  } catch (err) {
+    console.error('[products] Boutique sync propagation failed:', err)
+  }
 
   return NextResponse.json({ success: true })
 }

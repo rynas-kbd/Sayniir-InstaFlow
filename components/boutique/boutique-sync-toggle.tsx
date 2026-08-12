@@ -48,7 +48,18 @@ export function BoutiqueSyncToggle({ sourceAccountId, initialEnabled }: { source
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
-      toast.success(`Synchronisé vers ${data.targets} compte(s) — ${data.products} produit(s).`)
+      if (data.status === 'no_op') {
+        // Distinguishing this from a real sync matters — this used to report
+        // "Synchronisé vers 0 compte(s)" as a success toast, which looked
+        // exactly like a working sync from the user's side.
+        toast.warning(
+          data.reason === 'no_siblings'
+            ? 'Aucun autre compte à synchroniser dans votre espace de travail.'
+            : "La synchronisation est désactivée ou aucun espace de travail n'a été trouvé pour ce compte."
+        )
+      } else {
+        toast.success(`Synchronisé vers ${data.targets} compte(s) — ${data.products} produit(s).`)
+      }
     } catch {
       toast.error('La synchronisation a échoué')
     } finally {

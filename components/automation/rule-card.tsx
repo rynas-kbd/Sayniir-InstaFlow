@@ -80,6 +80,11 @@ export function RuleCard({
                 <h3 className="line-clamp-1 text-[13.5px] font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
                   {rule.name}
                 </h3>
+                {rule.account_name && (
+                  <span className="mt-0.5 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    {rule.account_name}
+                  </span>
+                )}
               </div>
             </div>
             <Switch

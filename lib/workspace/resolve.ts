@@ -43,10 +43,11 @@ export async function resolveWorkspace(): Promise<ResolvedWorkspace> {
   } = await supabase.auth.getUser()
   if (!user) return { workspace: null, accounts: [] }
 
-  const [{ data: workspaceRow }, accounts] = await Promise.all([
+  const [{ data: workspaceRow, error: workspaceError }, accounts] = await Promise.all([
     supabase.from('workspaces').select('id, owner_user_id, name, boutique_sync_enabled').eq('owner_user_id', user.id).maybeSingle(),
     listUserAccounts(),
   ])
+  if (workspaceError) console.error('[resolveWorkspace] Failed to load workspace:', workspaceError)
 
   const workspace: Workspace | null = workspaceRow
     ? {
@@ -69,6 +70,7 @@ export async function resolveWorkspace(): Promise<ResolvedWorkspace> {
  */
 export async function getWorkspaceAccountIds(workspaceId: string): Promise<string[]> {
   const supabase = await createClient()
-  const { data } = await supabase.from('channel_accounts').select('id').eq('workspace_id', workspaceId)
+  const { data, error } = await supabase.from('channel_accounts').select('id').eq('workspace_id', workspaceId)
+  if (error) console.error('[getWorkspaceAccountIds] Failed to list workspace accounts:', error)
   return (data ?? []).map((row) => row.id as string)
 }

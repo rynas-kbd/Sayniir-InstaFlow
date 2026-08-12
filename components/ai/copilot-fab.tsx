@@ -12,6 +12,10 @@ import {
 
 interface CopilotFABProps {
   onClick: () => void
+  /** When true, hides the FAB on mobile screens (e.g. flow builder where the
+   * canvas already has its own "+" FAB at the bottom-right). The FAB remains
+   * visible on desktop at all times. */
+  hideOnMobile?: boolean
 }
 
 /**
@@ -23,21 +27,23 @@ interface CopilotFABProps {
  * The permanent icon-rotation of the previous version is gone — motion is
  * reserved for hover, so the orb doesn't compete for attention on every page.
  */
-export function CopilotFAB({ onClick }: CopilotFABProps) {
-  // MobileBottomNav (app/(app)/layout.tsx) renders on every mobile page, not
-  // just the flow builder — bottom-20 clears its ~62px height (+ safe-area)
-  // everywhere. The old bottom-6 default only avoided the nav on the one
-  // route (/flows/[id]) that had been separately patched to bottom-20;
-  // every other page still had the FAB sitting on top of the nav bar,
-  // covering and swallowing taps on its rightmost "Plus" tab.
-  const positionClasses = 'bottom-20 right-6 pb-safe'
+export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
+  // On mobile we park the FAB in the top-right corner, well away from:
+  //   • The MobileBottomNav bar (fixed bottom-0)
+  //   • Any canvas-level FABs (absolute bottom-4 right-4 in the flow builder)
+  //   • The Topbar (top-0, height ~56px → top-16 clears it with a small gap)
+  // On desktop the position is irrelevant since we use the sidebar.
+  const mobilePositionClasses = 'top-[4.5rem] right-3'
+  // Desktop keeps the classic bottom-right above the sidebar
+  const desktopPositionClasses = 'md:bottom-6 md:right-6 md:top-auto'
+  const positionClasses = `${mobilePositionClasses} ${desktopPositionClasses}`
 
   return (
     <TooltipProvider delay={300}>
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.div
-            className={`fixed z-40 ${positionClasses}`}
+            className={`fixed z-40 ${positionClasses} ${hideOnMobile ? 'hidden md:flex' : ''}`}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={springs.snappy}

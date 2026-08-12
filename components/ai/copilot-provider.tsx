@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { CopilotPanel } from './copilot-panel'
 import { CopilotFAB } from './copilot-fab'
 import type { AiContext } from '@/lib/ai/context/types'
@@ -45,12 +46,20 @@ export function CopilotProvider({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  const pathname = usePathname()
+  // Hide the FAB on mobile on the flow builder — it clashes with the canvas
+  // "+" button and the node palette. On desktop it stays visible at all times.
+  const hideOnMobile = pathname?.includes('/flows/') ?? false
+
   return (
     <CopilotContext.Provider value={{ openCopilot }}>
       {children}
       {channelAccountId && (
         <>
-          <CopilotFAB onClick={() => setOpen((prev) => !prev)} />
+          <CopilotFAB
+            onClick={() => setOpen((prev) => !prev)}
+            hideOnMobile={hideOnMobile}
+          />
           <CopilotPanel
             channelAccountId={channelAccountId}
             open={open}

@@ -32,6 +32,8 @@ export interface AutomationRule {
   is_active: boolean
   /** Accounts besides `channel_account_id` this rule also matches on — see rule_target_accounts. */
   target_account_ids?: string[]
+  /** Owner account's display label — populated by the page so the card can show which account a rule belongs to in 'Tous les canaux' scope. */
+  account_name?: string | null
 }
 
 export interface RuleFormPayload {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
 import { propagateProductUpsert } from '@/lib/boutique/sync'
@@ -75,8 +75,14 @@ export async function POST(request: NextRequest) {
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)
 
-  after(() =>
-    propagateProductUpsert(supabase, channel_account_id, {
+  // Awaited directly rather than deferred to after() — after() is
+  // best-effort on serverless (the instance can be torn down before it
+  // runs), which is fine for telemetry but not for a feature whose entire
+  // point is "this must actually happen". The product is already saved at
+  // this point, so a propagation failure is only logged, never surfaced as
+  // an error for this request.
+  try {
+    await propagateProductUpsert(supabase, channel_account_id, {
       name: product.name,
       description: product.description,
       price: product.price,
@@ -91,8 +97,10 @@ export async function POST(request: NextRequest) {
       track_stock: product.track_stock,
       stock_quantity: product.stock_quantity,
       is_active: product.is_active,
-    }).catch((err) => console.error('[products] Boutique sync propagation failed:', err))
-  )
+    })
+  } catch (err) {
+    console.error('[products] Boutique sync propagation failed:', err)
+  }
 
   return NextResponse.json(product, { status: 201 })
 }
