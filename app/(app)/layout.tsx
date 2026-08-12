@@ -80,20 +80,20 @@ export default async function AppLayout({
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── Aurora blobs — the "light source" behind glass panels ── */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          {/* Terracotta top-right */}
+        {/* Decorative top-right (uses custom primary fallback so Ocean shows by default) */}
           <div
             className="absolute -top-32 -right-24 size-[520px] rounded-full blur-[140px]"
-            style={{ background: 'color-mix(in srgb, var(--organic-terracotta) 22%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--custom-primary-color, #3b82f6) 22%, transparent)' }}
           />
-          {/* Sage mid-left */}
+        {/* Decorative mid-left (uses custom secondary fallback) */}
           <div
             className="absolute top-1/3 -left-32 size-[420px] rounded-full blur-[120px]"
-            style={{ background: 'color-mix(in srgb, var(--organic-sage) 16%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--custom-secondary-color, #1d4ed8) 16%, transparent)' }}
           />
-          {/* Warm terracotta bottom-center */}
+        {/* Decorative bottom-center (uses custom primary fallback) */}
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 size-[380px] rounded-full blur-[110px]"
-            style={{ background: 'color-mix(in srgb, var(--organic-terracotta-300) 18%, transparent)' }}
+          style={{ background: 'color-mix(in srgb, var(--custom-primary-color, #3b82f6) 18%, transparent)' }}
           />
         </div>
 
