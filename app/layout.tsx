@@ -60,6 +60,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${caprasimo.variable} ${outfit.variable} ${figtree.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
+        <script dangerouslySetInnerHTML={{ __html: "(function(){try{var cookies=document.cookie.split('; ').reduce(function(acc,c){var p=c.split('=');acc[p[0]]=decodeURIComponent(p[1]||'');return acc},{});var theme=cookies['instaflow_color_theme']||'ocean';document.documentElement.setAttribute('data-color-theme', theme);var prim=cookies['instaflow_custom_primary']||'#3b82f6';var sec=cookies['instaflow_custom_secondary']||'#1d4ed8';document.documentElement.style.setProperty('--custom-primary-color', prim);document.documentElement.style.setProperty('--custom-secondary-color', sec);}catch(e){} })();" }} />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
