@@ -51,7 +51,7 @@ export function UserMenu({ email }: { email: string | null }) {
         >
           {/* Avatar circle */}
           <div
-            className="flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold shadow-sm"
+            className="flex size-9 sm:size-7 shrink-0 items-center justify-center rounded-full text-xs sm:text-[11px] font-extrabold shadow-sm transition-transform duration-200 group-hover:scale-105"
             style={{
               background: 'linear-gradient(135deg, var(--organic-terracotta-300), var(--organic-terracotta-600))',
               color: 'white',

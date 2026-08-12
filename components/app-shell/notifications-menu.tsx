@@ -48,7 +48,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="relative flex size-8 cursor-pointer items-center justify-center rounded-xl text-muted-foreground outline-none transition-all duration-200 hover:text-foreground active:scale-95"
+        className="relative flex size-9 sm:size-8 cursor-pointer items-center justify-center rounded-xl text-muted-foreground outline-none transition-all duration-200 hover:text-foreground active:scale-95"
         style={{
           background: total > 0
             ? 'color-mix(in srgb, var(--organic-terracotta) 8%, transparent)'
@@ -57,7 +57,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
         aria-label="Notifications"
       >
         <Bell
-          className={cn('size-4 transition-all duration-200', total > 0 && 'text-[color-mix(in_srgb,var(--organic-terracotta-700)_90%,transparent)]')}
+          className={cn('size-5 sm:size-4 transition-all duration-200', total > 0 && 'text-[color-mix(in_srgb,var(--organic-terracotta-700)_90%,transparent)]')}
           strokeWidth={1.75}
         />
         {total > 0 && (
