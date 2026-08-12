@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ReactFlow,
@@ -177,6 +177,8 @@ export function FlowCanvas({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [postPickerOpen, setPostPickerOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -192,6 +194,25 @@ export function FlowCanvas({
   })
 
   const selectedNode = nodes.find((n) => n.id === selectedId)
+
+  // Détecter les changements non sauvegardés
+  useEffect(() => {
+    setHasUnsavedChanges(true)
+  }, [nodes, edges])
+
+  // Raccourci clavier Ctrl+S / Cmd+S pour sauvegarder
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
 
   const onConnect = useCallback(
     (connection: Connection) => setEdges((eds) => addEdge({ ...connection, sourceHandle: connection.sourceHandle ?? 'default' }, eds)),
@@ -347,6 +368,8 @@ export function FlowCanvas({
         throw new Error(data.error || 'Erreur')
       }
       toast.success('Flow sauvegardé')
+      setLastSavedAt(new Date())
+      setHasUnsavedChanges(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Impossible de sauvegarder le flow')
     } finally {
@@ -356,29 +379,6 @@ export function FlowCanvas({
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as FlowNodeData) : null
   const isTriggerSelected = selectedId === 'trigger'
-
-  const paletteContent = (
-    <>
-      <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
-      {ADDABLE.map(({ type, icon: Icon, label }) => (
-        <Button
-          key={type}
-          variant="outline"
-          size="sm"
-          className="justify-start"
-          onClick={() => {
-            addNode(type)
-            setPaletteOpen(false)
-          }}
-        >
-          <Icon className="size-3.5" /> {label}
-        </Button>
-      ))}
-      <Button size="sm" className="mt-3" onClick={handleSave} disabled={saving}>
-        <Save className="size-3.5" /> {saving ? 'Sauvegarde…' : 'Sauvegarder'}
-      </Button>
-    </>
-  )
 
   const inspectorContent = isTriggerSelected ? (
     <div className="space-y-4">
@@ -443,10 +443,59 @@ export function FlowCanvas({
 
   return (
     <ReactFlowProvider>
-      <div className="flex h-full w-full">
+      <div className="flex h-full w-full flex-col">
+        {/* Top toolbar avec bouton Save */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-sidebar px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <Workflow className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">{flow.name}</h2>
+            {hasUnsavedChanges && (
+              <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-500">
+                <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse" />
+                Non sauvegardé
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {lastSavedAt && !hasUnsavedChanges && (
+              <span className="hidden sm:block text-[11px] text-muted-foreground">
+                Sauvegardé à {lastSavedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || !hasUnsavedChanges}
+              className="gap-1.5 shadow-sm"
+            >
+              <Save className="size-3.5" />
+              <span className="hidden sm:inline">
+                {saving ? 'Sauvegarde…' : hasUnsavedChanges ? 'Sauvegarder' : 'Sauvegardé'}
+              </span>
+              <span className="sm:hidden">
+                {saving ? '…' : 'Save'}
+              </span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex h-full w-full flex-1 overflow-hidden">
         {/* Left sidebar — add nodes (desktop only) */}
         <div className="hidden h-full w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3 md:flex">
-          {paletteContent}
+          <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
+          {ADDABLE.map(({ type, icon: Icon, label }) => (
+            <Button
+              key={type}
+              variant="outline"
+              size="sm"
+              className="justify-start"
+              onClick={() => {
+                addNode(type)
+              }}
+            >
+              <Icon className="size-3.5" /> {label}
+            </Button>
+          ))}
         </div>
 
         {/* Canvas */}
@@ -530,29 +579,83 @@ export function FlowCanvas({
           </ReactFlow>
 
           {/* Mobile FAB — opens node palette */}
-          <Button
-            size="icon"
+          <motion.button
             onClick={() => setPaletteOpen(true)}
-            className="absolute bottom-4 right-4 z-10 size-12 rounded-full shadow-lg md:hidden"
+            className="absolute bottom-20 right-4 z-10 md:hidden flex size-14 items-center justify-center rounded-full shadow-2xl"
+            style={{
+              background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)',
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             aria-label="Ajouter un nœud"
           >
-            <Plus className="size-5" />
-          </Button>
+            {/* Outer glow */}
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-2 rounded-full"
+              style={{
+                background:
+                  'radial-gradient(circle, color-mix(in srgb, var(--organic-terracotta) 50%, transparent) 0%, transparent 70%)',
+              }}
+              animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.95, 1, 0.95] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <Plus className="size-6 text-white" strokeWidth={2.5} />
+          </motion.button>
         </div>
 
         {/* Right sidebar — inspector (desktop only) */}
         <div className="hidden h-full w-80 shrink-0 overflow-y-auto border-l border-[color-mix(in_srgb,var(--organic-sand-400)_30%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_70%,transparent)] backdrop-blur-xl p-4 md:block">
           {inspectorContent}
         </div>
+        </div>
       </div>
 
       {/* Mobile: node palette sheet */}
       <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
-        <SheetContent side="bottom" className="max-h-[70vh] gap-1 overflow-y-auto">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Ajouter un nœud</SheetTitle>
+        <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto pb-safe">
+          <SheetHeader>
+            <SheetTitle className="text-base font-semibold">Ajouter un nœud</SheetTitle>
           </SheetHeader>
-          {paletteContent}
+          
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {ADDABLE.map(({ type, icon: Icon, label }) => (
+              <button
+                key={type}
+                onClick={() => {
+                  addNode(type)
+                  setPaletteOpen(false)
+                }}
+                className="group relative flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-card p-4 transition-all duration-200 active:scale-95 hover:border-primary/40 hover:bg-primary/5"
+              >
+                {/* Icon container */}
+                <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 transition-colors group-hover:from-primary/20 group-hover:to-primary/10">
+                  <Icon className="size-5 text-primary" strokeWidth={2} />
+                </div>
+                
+                {/* Label */}
+                <span className="text-center text-xs font-medium leading-tight text-foreground">
+                  {label}
+                </span>
+              </button>
+            ))}
+          </div>
+          
+          {/* Save button at bottom */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button
+              onClick={() => {
+                handleSave()
+                setPaletteOpen(false)
+              }}
+              disabled={saving}
+              className="w-full gap-2"
+              size="lg"
+            >
+              <Save className="size-4" />
+              {saving ? 'Sauvegarde en cours…' : 'Sauvegarder le flow'}
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
