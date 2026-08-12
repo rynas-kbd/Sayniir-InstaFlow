@@ -13,12 +13,17 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
     channels: 1,
     replies: 100, // per month
   },
+  starter: {
+    contacts: 3000,
+    channels: 1,
+    replies: 1000,
+  },
   pro: {
     contacts: 10000,
     channels: 3,
     replies: Infinity,
   },
-  premium: {
+  business: {
     contacts: Infinity,
     channels: Infinity,
     replies: Infinity,

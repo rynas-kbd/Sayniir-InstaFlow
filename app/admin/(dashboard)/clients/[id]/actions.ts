@@ -28,6 +28,8 @@ export async function updateSubscription(
     expires_at: string | null
     amount_paid: number | null
     payment_notes: string | null
+    custom_price_monthly_dzd: number | null
+    custom_price_annual_dzd: number | null
   }
 ) {
   await requireAdmin()
@@ -49,6 +51,8 @@ export async function updateSubscription(
         expires_at: data.expires_at,
         amount_paid: data.amount_paid,
         payment_notes: data.payment_notes,
+        custom_price_monthly_dzd: data.custom_price_monthly_dzd,
+        custom_price_annual_dzd: data.custom_price_annual_dzd,
         started_at: data.status === 'active' ? new Date().toISOString() : undefined,
         updated_at: new Date().toISOString(),
       })
@@ -64,6 +68,8 @@ export async function updateSubscription(
         expires_at: data.expires_at,
         amount_paid: data.amount_paid,
         payment_notes: data.payment_notes,
+        custom_price_monthly_dzd: data.custom_price_monthly_dzd,
+        custom_price_annual_dzd: data.custom_price_annual_dzd,
         started_at: data.status === 'active' ? new Date().toISOString() : undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

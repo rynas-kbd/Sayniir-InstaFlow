@@ -31,11 +31,11 @@ export function TeamMembersCard({
   const [role, setRole] = useState<'admin' | 'agent'>('agent')
   const [saving, setSaving] = useState(false)
 
-  const isPremium = userPlan === 'premium'
+  const isBusiness = userPlan === 'business'
   const isLimitReached = members.length >= 10
 
   async function addMember() {
-    if (!name.trim() || !email.trim() || !isPremium || isLimitReached) return
+    if (!name.trim() || !email.trim() || !isBusiness || isLimitReached) return
     setSaving(true)
     try {
       // Real invite (Supabase Auth login, not just a directory entry) — see
@@ -118,13 +118,13 @@ export function TeamMembersCard({
           </div>
         </FormSection>
 
-        {!isPremium ? (
+        {!isBusiness ? (
           <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
-            ⚠️ Le partage d&apos;inbox et l&apos;ajout de membres d&apos;équipe sont réservés au plan <strong>Premium</strong>.
+            ⚠️ Le partage d&apos;inbox et l&apos;ajout de membres d&apos;équipe sont réservés au plan <strong>Business</strong>.
           </div>
         ) : isLimitReached ? (
           <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
-            ⚠️ Limite de 10 membres d&apos;équipe atteinte pour votre plan Premium.
+            ⚠️ Limite de 10 membres d&apos;équipe atteinte pour votre plan Business.
           </div>
         ) : (
           <FormSection icon={UserPlus} label="Inviter un membre">

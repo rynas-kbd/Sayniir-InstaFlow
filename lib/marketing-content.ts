@@ -1,4 +1,5 @@
 import { MessageCircle, Zap, Users, BarChart3, Megaphone, Bot } from 'lucide-react'
+import { PLAN_CONFIG, formatDzd, type PlanKey } from '@/lib/plans'
 
 export const FEATURES = [
   {
@@ -49,61 +50,28 @@ export const SCREENSHOTS = [
   { src: '/screenshots/inbox.png', alt: 'Inbox unifié Instaflow' },
 ]
 
-export const PRICING_TIERS = [
-  {
-    name: 'Starter',
-    price: '4 900',
-    period: 'DZD/mois',
-    // -20% annual discount: 4 900 × 12 = 58 800 undiscounted → 47 040.
-    priceAnnual: '47 040',
-    priceAnnualCrossedOut: '58 800',
-    periodAnnual: 'DZD/an',
-    description: 'Pour démarrer et automatiser votre premier compte.',
-    features: [
-      '1 compte connecté (Instagram, Messenger ou WhatsApp)',
-      'Inbox unifié',
-      'Flows illimités',
-      'CRM basique (contacts, tags)',
-    ],
-    highlighted: false,
-  },
-  {
-    name: 'Pro',
-    price: '12 900',
-    period: 'DZD/mois',
-    // -20% annual discount: 12 900 × 12 = 154 800 undiscounted → 123 840.
-    priceAnnual: '123 840',
-    priceAnnualCrossedOut: '154 800',
-    periodAnnual: 'DZD/an',
-    description: "Pour les boutiques et créateurs actifs qui veulent l'IA.",
-    features: [
-      '3 comptes connectés',
-      'Agents IA (Q&A, qualification, prise de commande)',
-      'Campagnes de diffusion',
-      'Analytics avancées',
-      'Tout Starter inclus',
-    ],
-    highlighted: true,
-  },
-  {
-    name: 'Business',
-    price: 'Sur devis',
-    period: '',
-    // No fixed price to discount — quote-based regardless of billing period.
-    priceAnnual: 'Sur devis',
-    priceAnnualCrossedOut: undefined,
-    periodAnnual: '',
-    description: 'Pour les agences et comptes multiples.',
-    features: [
-      'Comptes illimités',
-      'Plusieurs utilisateurs',
-      'Support prioritaire',
-      'Intégrations sur mesure',
-      'Tout Pro inclus',
-    ],
-    highlighted: false,
-  },
-]
+// Dérivé de lib/plans.ts::PLAN_CONFIG — celui-ci est la seule source de
+// vérité tarifaire (utilisée aussi par le checkout et le gating de quotas).
+// Ne redéclare jamais un prix ici : deux grilles séparées avaient dérivé
+// (Starter/Pro/Business en DZD vs free/pro/premium en $) avant cette page.
+const MARKETING_TIER_KEYS: PlanKey[] = ['starter', 'pro', 'business']
+
+export const PRICING_TIERS = MARKETING_TIER_KEYS.map((key) => {
+  const cfg = PLAN_CONFIG[key]
+  const isQuote = cfg.priceMonthlyDzd === null
+  return {
+    key,
+    name: cfg.label,
+    price: isQuote ? 'Sur devis' : formatDzd(cfg.priceMonthlyDzd!),
+    period: isQuote ? '' : cfg.period,
+    priceAnnual: isQuote ? 'Sur devis' : formatDzd(cfg.priceAnnualDzd!),
+    priceAnnualCrossedOut: isQuote ? undefined : formatDzd(cfg.priceMonthlyDzd! * 12),
+    periodAnnual: isQuote ? '' : cfg.periodAnnual,
+    description: cfg.description,
+    features: cfg.features,
+    highlighted: cfg.highlighted ?? false,
+  }
+})
 
 export const FAQ_ITEMS = [
   {
@@ -140,7 +108,7 @@ export const FAQ_ITEMS = [
     theme: 'Facturation',
     question: 'Quels moyens de paiement sont acceptés ?',
     answer:
-      'Nous nous adaptons aux moyens de paiement disponibles en Algérie (CCP, Edahabia, virement). Contactez-nous pour organiser le règlement qui vous convient.',
+      'Le paiement se fait en ligne par carte EDAHABIA ou CIB via Chargily. Le plan Business, à tarif négocié, peut être réglé directement depuis votre espace client une fois votre tarif défini avec notre équipe.',
   },
   {
     theme: 'Support',

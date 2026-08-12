@@ -8,14 +8,14 @@ interface Input {
 /**
  * Adds a directory entry only (no login/auth granted — see the migration
  * comment on team_members), hence write_reversible. Still gated by plan:
- * app/api/team-members/route.ts blocks free/pro plans from adding members,
- * and this tool must enforce the exact same restriction rather than
- * bypassing it just because it writes directly via ctx.supabase instead of
- * going through that route.
+ * app/api/team-members/route.ts blocks non-business plans from adding
+ * members, and this tool must enforce the exact same restriction rather
+ * than bypassing it just because it writes directly via ctx.supabase
+ * instead of going through that route.
  */
 export const inviteTeamMemberTool: AiTool<Input, { memberId: string }> = {
   name: 'invite_team_member',
-  description: "Ajoute un membre à l'annuaire d'équipe (nom + email). Réservé aux plans Premium et supérieurs.",
+  description: "Ajoute un membre à l'annuaire d'équipe (nom + email). Réservé au plan Business.",
   risk: 'write_reversible',
   inputSchema: {
     type: 'object',
@@ -26,8 +26,8 @@ export const inviteTeamMemberTool: AiTool<Input, { memberId: string }> = {
   run: async (input, ctx) => {
     const { getUserPlanAndSubscription } = await import('../../plans/restrictions')
     const { plan } = await getUserPlanAndSubscription(ctx.userId)
-    if (plan === 'free' || plan === 'pro') {
-      throw new Error("Le plan actuel ne permet pas d'ajouter des membres d'équipe. Passez à l'abonnement Premium.")
+    if (plan !== 'business') {
+      throw new Error("Le plan actuel ne permet pas d'ajouter des membres d'équipe. Passez à l'abonnement Business.")
     }
 
     const { data, error } = await ctx.supabase

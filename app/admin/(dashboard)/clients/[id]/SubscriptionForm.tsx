@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Check, Sparkles, Loader2 } from 'lucide-react'
-import { PLAN_CONFIG, PLAN_KEYS, type PlanKey } from '@/lib/plans'
+import { PLAN_CONFIG, PLAN_KEYS, formatDzd, type PlanKey } from '@/lib/plans'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,8 @@ interface Props {
   expiresAt: string
   amountPaid: number | null
   paymentNotes: string | null
+  customPriceMonthlyDzd: number | null
+  customPriceAnnualDzd: number | null
 }
 
 const STATUS_OPTIONS = [
@@ -32,12 +34,16 @@ export default function SubscriptionForm({
   expiresAt,
   amountPaid,
   paymentNotes,
+  customPriceMonthlyDzd,
+  customPriceAnnualDzd,
 }: Props) {
   const [plan, setPlan] = useState<PlanKey>(currentPlan)
   const [status, setStatus] = useState<'active' | 'inactive' | 'expired'>(currentStatus)
   const [expires, setExpires] = useState(expiresAt)
   const [amount, setAmount] = useState(amountPaid?.toString() ?? '')
   const [notes, setNotes] = useState(paymentNotes ?? '')
+  const [priceMonthly, setPriceMonthly] = useState(customPriceMonthlyDzd?.toString() ?? '')
+  const [priceAnnual, setPriceAnnual] = useState(customPriceAnnualDzd?.toString() ?? '')
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent) {
@@ -50,6 +56,8 @@ export default function SubscriptionForm({
           expires_at: expires || null,
           amount_paid: amount ? Number(amount) : null,
           payment_notes: notes || null,
+          custom_price_monthly_dzd: plan === 'business' && priceMonthly ? Number(priceMonthly) : null,
+          custom_price_annual_dzd: plan === 'business' && priceAnnual ? Number(priceAnnual) : null,
         })
         toast.success('Abonnement mis à jour !')
       } catch (err) {
@@ -63,7 +71,7 @@ export default function SubscriptionForm({
       {/* ── Plan selector — visual cards ── */}
       <div>
         <Label className="mb-3 block text-sm font-semibold">Plan</Label>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {PLAN_KEYS.map((key) => {
             const cfg = PLAN_CONFIG[key]
             const isSelected = key === plan
@@ -98,8 +106,10 @@ export default function SubscriptionForm({
                 <span className={cn('text-sm font-bold', isSelected ? 'text-foreground' : 'text-foreground/80')}>
                   {cfg.label}
                 </span>
-                <span className="mt-0.5 text-xl font-black text-foreground">{cfg.priceMonthly}</span>
-                <span className="text-[10px] text-muted-foreground">{cfg.period}</span>
+                <span className="mt-0.5 text-xl font-black text-foreground">
+                  {cfg.priceMonthlyDzd === null ? 'Sur devis' : `${formatDzd(cfg.priceMonthlyDzd)} DZD`}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{cfg.priceMonthlyDzd === null ? '' : cfg.period}</span>
 
                 <ul className="mt-3 space-y-1.5">
                   {cfg.features.map((f) => (
@@ -177,6 +187,31 @@ export default function SubscriptionForm({
             placeholder="Payé cash le 20/05"
           />
         </div>
+
+        {plan === 'business' && (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="custom_price_monthly">Prix mensuel Business (DZD)</Label>
+              <Input
+                id="custom_price_monthly"
+                type="number"
+                value={priceMonthly}
+                onChange={(e) => setPriceMonthly(e.target.value)}
+                placeholder="ex: 25000"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="custom_price_annual">Prix annuel Business (DZD)</Label>
+              <Input
+                id="custom_price_annual"
+                type="number"
+                value={priceAnnual}
+                onChange={(e) => setPriceAnnual(e.target.value)}
+                placeholder="ex: 240000"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Summary before save */}

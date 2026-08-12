@@ -55,7 +55,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
   const [{ data: profile }, { data: subscription }, { data: channelAccounts }] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, role, admin_notes, created_at').eq('id', userId).single(),
     supabase.from('subscriptions').select('*').eq('user_id', userId).maybeSingle(),
-    // A user can have several accounts (1 free / 3 pro / unlimited premium — see
+    // A user can have several accounts (1 free / 1 starter / 3 pro / unlimited business — see
     // lib/plans/restrictions.ts) — .maybeSingle() here used to throw PGRST116 for
     // any client with more than one. This picks the first for the header/keyword
     // panels below; a fuller multi-account admin view is future work.
@@ -222,6 +222,8 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
               expiresAt={expiresAt}
               amountPaid={subscription?.amount_paid ?? null}
               paymentNotes={subscription?.payment_notes ?? null}
+              customPriceMonthlyDzd={subscription?.custom_price_monthly_dzd ?? null}
+              customPriceAnnualDzd={subscription?.custom_price_annual_dzd ?? null}
             />
           </CardContent>
         </Card>

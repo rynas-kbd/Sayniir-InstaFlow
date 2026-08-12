@@ -50,7 +50,7 @@ export default async function SettingsPage() {
 
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('status, expires_at, plan')
+    .select('status, expires_at, plan, custom_price_monthly_dzd, custom_price_annual_dzd')
     .eq('user_id', user!.id)
     .maybeSingle()
 
@@ -114,7 +114,13 @@ export default async function SettingsPage() {
 
           <AppearanceCard />
 
-          <BillingCard status={subscription?.status ?? null} expiresAt={subscription?.expires_at ?? null} />
+          <BillingCard
+            plan={subscription?.plan ?? null}
+            status={subscription?.status ?? null}
+            expiresAt={subscription?.expires_at ?? null}
+            customPriceMonthlyDzd={subscription?.custom_price_monthly_dzd ?? null}
+            customPriceAnnualDzd={subscription?.custom_price_annual_dzd ?? null}
+          />
 
           {account && (
             <CopilotSettingsCard

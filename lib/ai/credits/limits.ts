@@ -13,6 +13,7 @@ export interface AiPlanLimits {
 // hazard to avoid (see docs/AI_NATIVE_DESIGN.md §8.11).
 export const AI_PLAN_LIMITS: Record<PlanKey, AiPlanLimits> = {
   free: { monthlyCredits: 30, maxToolCallsPerTurn: 3, maxIterationsPerTurn: 5, contextTier: 'compact', byokAllowed: false },
+  starter: { monthlyCredits: 150, maxToolCallsPerTurn: 5, maxIterationsPerTurn: 6, contextTier: 'compact', byokAllowed: false },
   pro: { monthlyCredits: 500, maxToolCallsPerTurn: 8, maxIterationsPerTurn: 10, contextTier: 'full', byokAllowed: true },
-  premium: { monthlyCredits: 3000, maxToolCallsPerTurn: 12, maxIterationsPerTurn: 12, contextTier: 'full', byokAllowed: true },
+  business: { monthlyCredits: 3000, maxToolCallsPerTurn: 12, maxIterationsPerTurn: 12, contextTier: 'full', byokAllowed: true },
 }

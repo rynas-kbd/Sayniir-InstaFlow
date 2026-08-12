@@ -46,14 +46,14 @@ export async function POST(request: NextRequest) {
   const { getUserPlanAndSubscription } = await import('@/lib/plans/restrictions')
   const { plan } = await getUserPlanAndSubscription(user.id)
 
-  if (plan === 'free' || plan === 'pro') {
+  if (plan !== 'business') {
     return NextResponse.json(
-      { error: "Votre plan actuel ne permet pas d'ajouter des membres d'équipe. Veuillez passer à l'abonnement Premium." },
+      { error: "Votre plan actuel ne permet pas d'ajouter des membres d'équipe. Veuillez passer à l'abonnement Business." },
       { status: 403 }
     )
   }
 
-  if (plan === 'premium') {
+  {
     const { count } = await supabase
       .from('team_members')
       .select('*', { count: 'exact', head: true })
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (count && count >= 10) {
       return NextResponse.json(
-        { error: "Limite de 10 membres d'équipe atteinte pour le plan Premium." },
+        { error: "Limite de 10 membres d'équipe atteinte pour le plan Business." },
         { status: 403 }
       )
     }

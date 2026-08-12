@@ -20,8 +20,9 @@ export default async function AdminDashboardPage() {
     { count: expiringSoon },
     { count: inactiveClients },
     { count: freeClients },
+    { count: starterClients },
     { count: proClients },
-    { count: premiumClients }
+    { count: businessClients }
   ] = await Promise.all([
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
@@ -32,8 +33,9 @@ export default async function AdminDashboardPage() {
       .lte('expires_at', in7days.toISOString()),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).neq('status', 'active'),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'free'),
+    supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'starter'),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
-    supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'premium'),
+    supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'business'),
   ])
 
   return (
@@ -70,10 +72,11 @@ export default async function AdminDashboardPage() {
         {/* Plan Stats breakdown */}
         <div>
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Répartition par Plan</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatCard title="Clients Free" value={freeClients ?? 0} icon={Gift} />
+            <StatCard title="Clients Starter" value={starterClients ?? 0} icon={Sparkles} />
             <StatCard title="Clients Pro" value={proClients ?? 0} icon={Zap} />
-            <StatCard title="Clients Premium" value={premiumClients ?? 0} icon={Crown} />
+            <StatCard title="Clients Business" value={businessClients ?? 0} icon={Crown} />
           </div>
         </div>
 
@@ -83,7 +86,7 @@ export default async function AdminDashboardPage() {
             <div>
               <h2 className="text-[13px] font-semibold tracking-tight text-foreground">Gérer les clients</h2>
               <p className="mt-0.5 max-w-md text-xs text-muted-foreground">
-                Activer ou désactiver les abonnements, attribuer des plans (Free, Pro, Premium), enregistrer des paiements et gérer les mots-clés.
+                Activer ou désactiver les abonnements, attribuer des plans (Free, Starter, Pro, Business), enregistrer des paiements et gérer les mots-clés.
               </p>
             </div>
             <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/admin/clients" />}>

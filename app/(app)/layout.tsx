@@ -7,6 +7,8 @@ import { MobileBottomNav } from '@/components/app-shell/mobile-bottom-nav'
 import type { BusinessType } from '@/components/app-shell/nav-config'
 import { PageTransitionWrapper } from '@/components/app-shell/page-transition'
 import { CopilotProvider } from '@/components/ai/copilot-provider'
+import { RenewalBanner } from '@/components/billing/renewal-banner'
+import type { PlanKey, BillingPeriod } from '@/lib/plans'
 
 export default async function AppLayout({
   children,
@@ -22,13 +24,14 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const [{ data: profile }, { accounts, active, scope }] = await Promise.all([
+  const [{ data: profile }, { accounts, active, scope }, { data: subscription }] = await Promise.all([
     supabase
       .from('profiles')
       .select('business_type, onboarding_completed_at, onboarding_skipped_at')
       .eq('id', user.id)
       .single(),
     resolveActiveAccount(),
+    supabase.from('subscriptions').select('plan, status, expires_at, billing_period').eq('user_id', user.id).maybeSingle(),
   ])
 
   // First visit ever — route through the 30-second questionnaire before any
@@ -104,6 +107,12 @@ export default async function AppLayout({
           accounts={accounts}
           activeAccountId={active?.id ?? null}
           accountScope={scope}
+        />
+        <RenewalBanner
+          plan={(subscription?.plan as PlanKey | undefined) ?? null}
+          status={subscription?.status ?? null}
+          expiresAt={subscription?.expires_at ?? null}
+          billingPeriod={(subscription?.billing_period as BillingPeriod | undefined) ?? null}
         />
         <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto overflow-x-hidden">
           <PageTransitionWrapper accountKey={scope === 'all' ? 'all' : active?.id ?? 'none'}>{children}</PageTransitionWrapper>

@@ -1,12 +1,18 @@
 import Link from 'next/link'
 import { Check, ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { PageHero } from '@/components/marketing/page-hero'
+import { PricingCta } from '@/components/marketing/pricing-cta'
 import { PRICING_TIERS, FAQ_ITEMS } from '@/lib/marketing-content'
+import { createClient } from '@/lib/supabase/server'
 
 const BILLING_FAQ = FAQ_ITEMS.filter((item) => item.theme === 'Facturation')
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <>
       <PageHero
@@ -48,15 +54,13 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Button
-                size="lg"
-                variant={tier.highlighted ? 'default' : 'outline'}
-                nativeButton={false}
-                render={<Link href="/register" />}
-                className="mt-8 cursor-pointer"
-              >
-                {tier.price === 'Sur devis' ? 'Nous contacter' : 'Commencer'}
-              </Button>
+              <PricingCta
+                planKey={tier.key}
+                isQuote={tier.price === 'Sur devis'}
+                isAuthenticated={!!user}
+                label="Commencer"
+                highlighted={tier.highlighted}
+              />
             </div>
           ))}
         </div>
