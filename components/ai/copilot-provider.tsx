@@ -56,10 +56,12 @@ export function CopilotProvider({
       {children}
       {channelAccountId && (
         <>
-          <CopilotFAB
-            onClick={() => setOpen((prev) => !prev)}
-            hideOnMobile={hideOnMobile}
-          />
+          {!open && (
+            <CopilotFAB
+              onClick={() => setOpen((prev) => !prev)}
+              hideOnMobile={hideOnMobile}
+            />
+          )}
           <CopilotPanel
             channelAccountId={channelAccountId}
             open={open}

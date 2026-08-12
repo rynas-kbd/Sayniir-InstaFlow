@@ -120,7 +120,7 @@ export function MobileBottomNav({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="fixed inset-0 z-40 md:hidden"
-              style={{ background: 'color-mix(in srgb, var(--organic-bg) 10%, black)' }}
+              style={{ background: 'rgba(0, 0, 0, 0.4)' }}
               onClick={() => setMoreOpen(false)}
             />
             {/* Sheet */}
