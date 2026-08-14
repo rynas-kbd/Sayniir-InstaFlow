@@ -523,8 +523,12 @@ export function FlowCanvas({
           ))}
         </div>
 
-        {/* Canvas */}
-        <div className="relative h-full flex-1">
+        {/* Canvas — forced LTR: @xyflow/react has no RTL support (physical
+            left/right CSS baked into its stylesheet, no `dir` prop), so a
+            mirrored node graph would just be broken, not "translated". The
+            toolbar/palette/inspector around it keep the inherited direction
+            and flip normally; only this wrapper and its children stay LTR. */}
+        <div dir="ltr" className="relative h-full flex-1">
           {/* Floating banner when an edge / link is selected */}
           <AnimatePresence>
             {selectedEdgeId && (

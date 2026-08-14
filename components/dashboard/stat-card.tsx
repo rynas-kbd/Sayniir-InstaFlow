@@ -72,7 +72,7 @@ export function StatCard({
     >
       {/* Colored aurora glow — top-right quadrant */}
       <div
-        className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full blur-[48px] opacity-60 transition-opacity duration-500 group-hover:opacity-90"
+        className="pointer-events-none absolute -end-8 -top-8 size-32 rounded-full blur-[48px] opacity-60 transition-opacity duration-500 group-hover:opacity-90"
         style={{ background: a.glow }}
       />
       {/* Hover gradient sweep bottom-left */}
@@ -121,7 +121,7 @@ export function StatCard({
               <span>{isPositive ? '↑' : '↓'}</span>
               <span>{Math.abs(trend.value)}%</span>
               {trend.label && (
-                <span className="font-normal text-muted-foreground ml-0.5">{trend.label}</span>
+                <span className="font-normal text-muted-foreground ms-0.5">{trend.label}</span>
               )}
             </p>
           )}
@@ -135,7 +135,7 @@ export function StatCard({
 
       {/* Thin colored bottom line — accent signature */}
       <div
-        className="pointer-events-none absolute bottom-0 left-5 right-5 h-px opacity-50 transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute bottom-0 start-5 end-5 h-px opacity-50 transition-opacity duration-300 group-hover:opacity-100"
         style={{ background: `linear-gradient(90deg, transparent, ${a.glow}, transparent)` }}
       />
     </div>

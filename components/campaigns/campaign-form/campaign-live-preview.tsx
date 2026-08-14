@@ -30,7 +30,7 @@ export function CampaignLivePreview({ form, tags, segments }: { form: CampaignFo
 
   return (
     <div className="flex flex-col gap-2.5">
-      <span className="flex items-center gap-1.5 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+      <span className="flex items-center gap-1.5 ps-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
         <Eye className="size-3" /> {t('campaigns.livePreview.previewLabel')}
       </span>
       <MessagePreview

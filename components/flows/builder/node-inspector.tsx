@@ -559,7 +559,7 @@ export function NodeInspector({
       >
         {/* Glow orb */}
         <div
-          className="pointer-events-none absolute -top-6 -right-6 size-24 rounded-full opacity-60"
+          className="pointer-events-none absolute -top-6 -end-6 size-24 rounded-full opacity-60"
           style={{ background: `radial-gradient(circle, ${meta.glow}, transparent 70%)` }}
         />
 

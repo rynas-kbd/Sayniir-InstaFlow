@@ -122,8 +122,8 @@ export default async function AdminClientsPage({
 
           <form method="GET" action="/admin/clients" className="relative max-w-70 flex-1">
             <input type="hidden" name="role" value={roleFilter} />
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input name="q" defaultValue={q} placeholder={t('admin.clients.list.searchPlaceholder')} className="pl-8" />
+            <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input name="q" defaultValue={q} placeholder={t('admin.clients.list.searchPlaceholder')} className="ps-8" />
           </form>
         </div>
 
@@ -142,7 +142,7 @@ export default async function AdminClientsPage({
                   <TableHead className="hidden md:table-cell">{t('admin.clients.list.colPlan')}</TableHead>
                   <TableHead className="hidden sm:table-cell">{t('admin.clients.list.colRole')}</TableHead>
                   <TableHead>{t('admin.clients.list.colStatus')}</TableHead>
-                  <TableHead className="text-right">{t('admin.clients.list.colAction')}</TableHead>
+                  <TableHead className="text-end">{t('admin.clients.list.colAction')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -211,7 +211,7 @@ export default async function AdminClientsPage({
                         />
                       </TableCell>
 
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/admin/clients/${user.id}`} />}>
                           {t('admin.clients.list.manageButton')}
                         </Button>

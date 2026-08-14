@@ -17,7 +17,7 @@ export default async function NewClientPage() {
       <PageHeader title={t('admin.clients.new.title')} description={t('admin.clients.new.description')} />
       <div className="p-4 sm:p-6">
         <Link href="/admin/clients" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" /> {t('admin.clients.new.backLink')}
+          <ArrowLeft className="size-3.5 rtl:-scale-x-100" /> {t('admin.clients.new.backLink')}
         </Link>
 
         <Card>

@@ -42,7 +42,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 
   return (
     <Sheet open={order !== null} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="inline-end" className="w-full sm:max-w-md">
         <SheetHeader className="border-b border-border/40 pb-4">
           <SheetTitle className="font-heading text-lg font-bold flex items-center gap-2">
             <ShoppingCart className="size-5 text-primary" />
@@ -92,7 +92,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-end shrink-0">
                     <p className="text-xs text-muted-foreground">{t('boutique.orderTable.detailSheet.totalLabel')}</p>
                     <p className="font-black text-foreground text-base tabular-nums mt-0.5">
                       {order.total_amount.toLocaleString(intlLocale)} {order.currency}
@@ -110,15 +110,15 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
                   <MapPin className="size-4 text-muted-foreground" />
                   <span className="font-semibold text-foreground">{order.wilaya ?? t('boutique.orderTable.detailSheet.wilayaUnspecified')}</span>
                   {order.delivery_mode && (
-                    <Badge className="ml-auto bg-[var(--organic-sage-100)] text-[var(--organic-sage-800)] border border-[var(--organic-sage-300)] rounded-md py-0 px-2 text-[10px] font-bold">
+                    <Badge className="ms-auto bg-[var(--organic-sage-100)] text-[var(--organic-sage-800)] border border-[var(--organic-sage-300)] rounded-md py-0 px-2 text-[10px] font-bold">
                       {order.delivery_mode === 'domicile' ? t('boutique.orderTable.detailSheet.deliveryModeHome') : t('boutique.orderTable.detailSheet.deliveryModePickup')}
                     </Badge>
                   )}
                 </div>
                 {order.shipping_address ? (
-                  <p className="text-muted-foreground text-xs leading-relaxed pl-5 mt-1">{order.shipping_address}</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed ps-5 mt-1">{order.shipping_address}</p>
                 ) : (
-                  <p className="text-muted-foreground text-xs italic pl-5 mt-1">{t('boutique.orderTable.detailSheet.noAddress')}</p>
+                  <p className="text-muted-foreground text-xs italic ps-5 mt-1">{t('boutique.orderTable.detailSheet.noAddress')}</p>
                 )}
               </div>
             </div>
@@ -306,12 +306,12 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
       {/* ── Filters bar ── */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setVisibleCount(PAGE_SIZE) }}
             placeholder={t('boutique.orderTable.filters.searchPlaceholder')}
-            className="pl-8 h-9 rounded-xl border-border bg-card/60 backdrop-blur-sm"
+            className="ps-8 h-9 rounded-xl border-border bg-card/60 backdrop-blur-sm"
           />
         </div>
         <div className="flex items-center gap-1.5">
@@ -362,7 +362,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                       <button
                         type="button"
                         onClick={() => setDetailOrder(order)}
-                        className="flex min-w-0 items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-lg group/btn"
+                        className="flex min-w-0 items-center gap-2.5 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-lg group/btn"
                       >
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary border border-primary/20 transition-transform group-hover/btn:scale-105">
                           {initials}
@@ -372,7 +372,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                           <p className="truncate text-xs font-medium text-muted-foreground/80 font-mono mt-0.5">
                             {order.customer_phone}
                             {order.contact && (order.contact.username || order.contact.full_name) && (
-                              <span className="ml-1.5 rounded bg-muted/80 border border-border/40 px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
+                              <span className="ms-1.5 rounded bg-muted/80 border border-border/40 px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
                                 {t('boutique.orderTable.crmBadge')}
                               </span>
                             )}
@@ -395,7 +395,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                       {/* Total price */}
                       <p className="whitespace-nowrap text-sm font-black text-foreground tabular-nums">
                         {order.total_amount.toLocaleString(intlLocale)}
-                        <span className="ml-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
+                        <span className="ms-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
                       </p>
 
                       {/* Actions column */}
@@ -479,7 +479,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                         <button 
                           type="button" 
                           onClick={() => setDetailOrder(order)} 
-                          className="flex min-w-0 items-center gap-2.5 text-left"
+                          className="flex min-w-0 items-center gap-2.5 text-start"
                         >
                           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary border border-primary/20">
                             {initials}
@@ -490,10 +490,10 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                           </div>
                         </button>
                         
-                        <div className="text-right shrink-0">
+                        <div className="text-end shrink-0">
                           <p className="text-sm font-black text-foreground tabular-nums">
                             {order.total_amount.toLocaleString(intlLocale)}
-                            <span className="ml-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
+                            <span className="ms-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
                           </p>
                           <p className="text-[10px] text-muted-foreground/80 font-bold tabular-nums mt-0.5">{dateLabel}</p>
                         </div>
@@ -525,7 +525,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               onClick={() => updateOrderStatus(order.id, { shipping_status: 'cancelled' })}
                               className="h-8 text-muted-foreground hover:text-destructive border-border rounded-lg flex items-center justify-center px-3"
                             >
-                              <X className="size-3.5 stroke-[2.5] mr-1" />
+                              <X className="size-3.5 stroke-[2.5] me-1" />
                               {t('boutique.orderTable.actions.cancelButton')}
                             </Button>
                           </>

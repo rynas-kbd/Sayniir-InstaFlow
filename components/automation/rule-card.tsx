@@ -66,7 +66,7 @@ export function RuleCard({
         {/* Glow effect when active */}
         {rule.is_active && (
           <div 
-            className="absolute -right-16 -top-16 size-32 rounded-full blur-2xl opacity-10 pointer-events-none transition-all duration-300 group-hover:opacity-15"
+            className="absolute -end-16 -top-16 size-32 rounded-full blur-2xl opacity-10 pointer-events-none transition-all duration-300 group-hover:opacity-15"
             style={{ background: 'var(--organic-terracotta)' }}
           />
         )}
@@ -162,7 +162,7 @@ export function RuleCard({
                   </Badge>
                 )}
               </div>
-              <div className="mt-1 text-[12px] text-foreground/80 leading-relaxed font-serif italic border-l-2 border-primary/20 pl-2.5 py-0.5">
+              <div className="mt-1 text-[12px] text-foreground/80 leading-relaxed font-serif italic border-s-2 border-primary/20 ps-2.5 py-0.5">
                 {rule.response_type === 'card' ? (
                   <p className="line-clamp-2">&ldquo;{rule.card_title || t('automation.ruleCard.untitled')}&rdquo;</p>
                 ) : (

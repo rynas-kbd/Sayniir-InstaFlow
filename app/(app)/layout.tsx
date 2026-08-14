@@ -90,17 +90,17 @@ export default async function AppLayout({
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         {/* Decorative top-right (uses custom primary fallback so Ocean shows by default) */}
           <div
-            className="absolute -top-32 -right-24 size-[520px] rounded-full blur-[140px]"
+            className="absolute -top-32 -end-24 size-[520px] rounded-full blur-[140px]"
           style={{ background: 'color-mix(in srgb, var(--custom-primary-color, #3b82f6) 22%, transparent)' }}
           />
         {/* Decorative mid-left (uses custom secondary fallback) */}
           <div
-            className="absolute top-1/3 -left-32 size-[420px] rounded-full blur-[120px]"
+            className="absolute top-1/3 -start-32 size-[420px] rounded-full blur-[120px]"
           style={{ background: 'color-mix(in srgb, var(--custom-secondary-color, #1d4ed8) 16%, transparent)' }}
           />
         {/* Decorative bottom-center (uses custom primary fallback) */}
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 size-[380px] rounded-full blur-[110px]"
+            className="absolute bottom-0 start-1/2 -translate-x-1/2 size-[380px] rounded-full blur-[110px]"
           style={{ background: 'color-mix(in srgb, var(--custom-primary-color, #3b82f6) 18%, transparent)' }}
           />
         </div>

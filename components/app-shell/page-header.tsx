@@ -13,7 +13,7 @@ export function PageHeader({
     <div className="relative flex flex-col gap-3 border-b border-[color-mix(in_srgb,var(--organic-terracotta)_12%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_50%,transparent)] px-4 py-3 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_40%,transparent)] dark:border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)] sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
       {/* Subtle terracotta aurora — top right */}
       <div
-        className="pointer-events-none absolute right-0 top-0 h-full w-48 opacity-[0.06]"
+        className="pointer-events-none absolute end-0 top-0 h-full w-48 opacity-[0.06]"
         style={{
           background: 'linear-gradient(to left, var(--organic-terracotta), transparent)',
         }}

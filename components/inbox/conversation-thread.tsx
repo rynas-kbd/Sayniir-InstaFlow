@@ -230,7 +230,7 @@ export function ConversationThread({
       >
         {/* Subtle aurora in header */}
         <div
-          className="pointer-events-none absolute right-0 top-0 h-full w-40 opacity-[0.05]"
+          className="pointer-events-none absolute end-0 top-0 h-full w-40 opacity-[0.05]"
           style={{ background: 'linear-gradient(to left, var(--organic-terracotta), transparent)' }}
         />
 
@@ -240,7 +240,7 @@ export function ConversationThread({
             className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-muted-foreground transition-colors hover:text-foreground md:hidden"
             style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--organic-sand-400) 18%, transparent)' }}
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4 rtl:-scale-x-100" />
             <span className="text-[12px] font-medium">{t('inbox.thread.back')}</span>
           </Link>
         )}
@@ -518,7 +518,7 @@ export function ConversationThread({
                         setDraft(s.text)
                         setSnippetsOpen(false)
                       }}
-                      className="flex-1 truncate rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_18%,transparent)]"
+                      className="flex-1 truncate rounded-lg px-2.5 py-2 text-start text-xs transition-colors hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_18%,transparent)]"
                     >
                       <span className="font-bold" style={{ color: 'var(--organic-terracotta-600)' }}>
                         /{s.shortcut}
@@ -528,7 +528,7 @@ export function ConversationThread({
                     <button
                       type="button"
                       onClick={() => deleteSnippet(s.id)}
-                      className="mr-1 shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
+                      className="me-1 shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
                       aria-label={t('inbox.thread.deleteSnippetAria')}
                     >
                       <Trash2 className="size-3" />

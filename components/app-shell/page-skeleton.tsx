@@ -154,8 +154,8 @@ export function DashboardSkeleton() {
                       <Skeleton className="size-2 rounded-full" />
                     </div>
                     <div className="flex flex-col gap-2.5">
-                      <Skeleton className="h-8 w-3/4 rounded-[14px] rounded-bl-[2px]" />
-                      <Skeleton className="h-8 w-2/3 self-end rounded-[14px] rounded-br-[2px]" />
+                      <Skeleton className="h-8 w-3/4 rounded-[14px] rounded-es-[2px]" />
+                      <Skeleton className="h-8 w-2/3 self-end rounded-[14px] rounded-ee-[2px]" />
                     </div>
                   </div>
                 ))}
@@ -230,7 +230,7 @@ export function InboxSkeleton() {
     <div className="flex h-full min-h-0 overflow-hidden">
       {/* ─── Left sidebar skeleton ─── */}
       <div
-        className="hidden w-[300px] shrink-0 flex-col overflow-hidden border-r md:flex"
+        className="hidden w-[300px] shrink-0 flex-col overflow-hidden border-e md:flex"
         style={{
           background: 'color-mix(in srgb, var(--organic-bg, var(--background)) 55%, transparent)',
           borderColor: 'color-mix(in srgb, var(--organic-terracotta, var(--border)) 10%, transparent)',
@@ -317,7 +317,7 @@ export function InboxSkeleton() {
           {/* Incoming bubble */}
           <div className="flex justify-start">
             <div className="flex max-w-[60%] flex-col gap-1 items-start">
-              <Skeleton className="h-11 w-[220px] rounded-2xl rounded-tl-[4px]" />
+              <Skeleton className="h-11 w-[220px] rounded-2xl rounded-ss-[4px]" />
               <Skeleton className="h-2.5 w-10" />
             </div>
           </div>
@@ -326,7 +326,7 @@ export function InboxSkeleton() {
           <div className="flex justify-end mt-1">
             <div className="flex max-w-[60%] flex-col gap-1 items-end">
               <Skeleton
-                className="h-9 w-[180px] rounded-2xl rounded-tr-[4px]"
+                className="h-9 w-[180px] rounded-2xl rounded-se-[4px]"
                 style={{ opacity: 0.7 }}
               />
               <Skeleton className="h-2.5 w-10" />
@@ -337,7 +337,7 @@ export function InboxSkeleton() {
           <div className="flex justify-end mt-4">
             <div className="flex max-w-[60%] flex-col gap-1 items-end">
               <Skeleton className="h-3 w-28 mb-0.5" />
-              <Skeleton className="h-16 w-[260px] rounded-2xl rounded-tr-[4px]" style={{ opacity: 0.6 }} />
+              <Skeleton className="h-16 w-[260px] rounded-2xl rounded-se-[4px]" style={{ opacity: 0.6 }} />
               <Skeleton className="h-2.5 w-10" />
             </div>
           </div>
@@ -345,7 +345,7 @@ export function InboxSkeleton() {
           {/* Another incoming bubble */}
           <div className="flex justify-start mt-4">
             <div className="flex max-w-[60%] flex-col gap-1 items-start">
-              <Skeleton className="h-14 w-[280px] rounded-2xl rounded-tl-[4px]" />
+              <Skeleton className="h-14 w-[280px] rounded-2xl rounded-ss-[4px]" />
               <Skeleton className="h-2.5 w-10" />
             </div>
           </div>
@@ -757,8 +757,8 @@ export function AutomationSkeleton() {
                 <Skeleton className="h-5 w-10 rounded-full" />
               </div>
               <div className="space-y-2 border-t border-border/40 pt-3.5">
-                <Skeleton className="h-8 w-5/6 rounded-[14px] rounded-bl-[2px]" />
-                <Skeleton className="h-8 w-2/3 self-end rounded-[14px] rounded-br-[2px]" />
+                <Skeleton className="h-8 w-5/6 rounded-[14px] rounded-es-[2px]" />
+                <Skeleton className="h-8 w-2/3 self-end rounded-[14px] rounded-ee-[2px]" />
               </div>
               <div className="flex items-center justify-between pt-1 border-t border-border/20">
                 <Skeleton className="h-3.5 w-24" />

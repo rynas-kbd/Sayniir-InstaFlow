@@ -24,7 +24,7 @@ export default async function NewCampaignPage() {
       <div className="flex-1 p-4 sm:p-6">
         <div className="mx-auto w-full max-w-5xl">
           <Link href="/campaigns" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-3.5" /> {t('campaigns.newPage.backLink')}
+            <ArrowLeft className="size-3.5 rtl:-scale-x-100" /> {t('campaigns.newPage.backLink')}
           </Link>
           <CreateCampaignForm channelAccountId={account.id} tags={tags ?? []} segments={segments ?? []} />
         </div>

@@ -123,7 +123,7 @@ export function TagInput({ id, value, onChange, placeholder, maxTags, invalid, d
 function TagChip({ tag, onRemove }: { tag: string; onRemove: () => void }) {
   const t = useT()
   return (
-    <span className="flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 py-0.5 pl-2.5 pr-1 text-[11px] font-medium">
+    <span className="flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 py-0.5 ps-2.5 pe-1 text-[11px] font-medium">
       {tag}
       <button
         type="button"

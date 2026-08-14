@@ -22,7 +22,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
-      className={cn("flex flex-1 text-left", className)}
+      className={cn("flex flex-1 text-start", className)}
       {...props}
     />
   )
@@ -120,7 +120,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-2 rounded-xl py-2 pr-8 pl-2.5 text-xs font-medium outline-none transition-all duration-150 select-none hover:bg-primary/10 hover:text-foreground focus:bg-primary/10 focus:text-foreground active:scale-[0.98] data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-pointer items-center gap-2 rounded-xl py-2 pe-8 ps-2.5 text-xs font-medium outline-none transition-all duration-150 select-none hover:bg-primary/10 hover:text-foreground focus:bg-primary/10 focus:text-foreground active:scale-[0.98] data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}
@@ -130,7 +130,7 @@ function SelectItem({
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
         render={
-          <span className="pointer-events-none absolute right-2.5 flex size-4 items-center justify-center text-primary" />
+          <span className="pointer-events-none absolute end-2.5 flex size-4 items-center justify-center text-primary" />
         }
       >
         <CheckIcon className="pointer-events-none size-3.5 stroke-[2.5]" />

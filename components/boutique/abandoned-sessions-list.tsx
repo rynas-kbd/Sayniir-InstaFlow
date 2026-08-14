@@ -76,7 +76,7 @@ export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 ml-auto sm:ml-0">
+              <div className="flex items-center gap-3 ms-auto sm:ms-0">
                 <span className="text-xs font-medium text-muted-foreground/80 bg-muted/50 px-2.5 py-1 rounded-md">
                   {timeAgo(s.last_message_at, t)}
                 </span>

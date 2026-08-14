@@ -21,8 +21,8 @@ body[data-scroll-locked],
 body[style*='overflow: hidden'],
 body[style*='overflow:hidden'] {
   overflow: auto !important;
-  padding-right: 0 !important;
-  margin-right: 0 !important;
+  padding-inline-end: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 /* Ensure pointer-events are never removed from body */
@@ -930,14 +930,14 @@ h1, h2, h3, h4, h5, h6 {
 .copilot-markdown ul,
 .copilot-markdown ol {
   margin: 0.4em 0;
-  padding-left: 1.25em;
+  padding-inline-start: 1.25em;
 }
 .copilot-markdown ul { list-style: none; }
 .copilot-markdown ul > li { position: relative; }
 .copilot-markdown ul > li::before {
   content: '';
   position: absolute;
-  left: -1.1em;
+  inset-inline-start: -1.1em;
   top: 0.62em;
   width: 4px;
   height: 4px;
@@ -963,7 +963,7 @@ h1, h2, h3, h4, h5, h6 {
 .copilot-markdown blockquote {
   margin: 0.5em 0;
   padding: 0.1em 0 0.1em 0.85em;
-  border-left: 2px solid color-mix(in srgb, var(--organic-terracotta) 45%, transparent);
+  border-inline-start: 2px solid color-mix(in srgb, var(--organic-terracotta) 45%, transparent);
   color: var(--muted-foreground);
 }
 
@@ -992,7 +992,7 @@ h1, h2, h3, h4, h5, h6 {
 .copilot-markdown td {
   border: 1px solid color-mix(in srgb, var(--organic-sand-500) 35%, transparent);
   padding: 0.35em 0.6em;
-  text-align: left;
+  text-align: start;
 }
 .copilot-markdown th {
   background: color-mix(in srgb, var(--organic-sand-500) 12%, transparent);
@@ -1246,7 +1246,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 767px) {
   .react-flow__controls {
     bottom: 5.5rem !important;
-    left: 1rem !important;
+    inset-inline-start: 1rem !important;
   }
 }
 
@@ -1280,7 +1280,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 767px) {
   .react-flow__minimap {
     bottom: 5.5rem !important;
-    right: 1rem !important;
+    inset-inline-end: 1rem !important;
     width: 155px !important;
     height: 110px !important;
   }

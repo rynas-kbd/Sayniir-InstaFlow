@@ -87,7 +87,7 @@ export default function SubscriptionForm({
                 type="button"
                 onClick={() => setPlan(key)}
                 className={cn(
-                  'group relative flex cursor-pointer flex-col rounded-2xl border-2 p-4 text-left transition-all duration-200',
+                  'group relative flex cursor-pointer flex-col rounded-2xl border-2 p-4 text-start transition-all duration-200',
                   isSelected
                     ? cn(cfg.borderClass, 'bg-primary/3')
                     : 'border-border hover:border-primary/30'

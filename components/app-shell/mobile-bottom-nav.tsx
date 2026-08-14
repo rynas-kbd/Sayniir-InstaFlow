@@ -116,7 +116,7 @@ export function MobileBottomNav({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={springs.playful}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe touch-none md:hidden"
+              className="fixed bottom-0 start-0 end-0 z-50 rounded-t-3xl pb-safe touch-none md:hidden"
               style={{
                 background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
                 backdropFilter: 'blur(32px) saturate(1.8)',
@@ -204,7 +204,7 @@ export function MobileBottomNav({
       >
         {/* Top gradient line */}
         <div
-          className="pointer-events-none absolute left-0 right-0 top-0 h-px"
+          className="pointer-events-none absolute start-0 end-0 top-0 h-px"
           style={{
             background:
               'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-terracotta) 20%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 15%, transparent) 70%, transparent)',
@@ -248,7 +248,7 @@ export function MobileBottomNav({
                   {/* Badge */}
                   {badge != null && badge > 0 && (
                     <span
-                      className="absolute -right-1.5 -top-1 flex min-w-[16px] items-center justify-center rounded-full px-[3px] text-[9px] font-bold leading-[16px] text-white"
+                      className="absolute -end-1.5 -top-1 flex min-w-[16px] items-center justify-center rounded-full px-[3px] text-[9px] font-bold leading-[16px] text-white"
                       style={{ background: 'var(--organic-terracotta-600)' }}
                     >
                       {badge > 99 ? '99+' : badge}

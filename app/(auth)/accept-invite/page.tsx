@@ -73,7 +73,7 @@ export default function AcceptInvitePage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               aria-label={showPassword ? t('auth.common.hidePassword') : t('auth.common.showPassword')}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

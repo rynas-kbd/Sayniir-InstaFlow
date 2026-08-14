@@ -130,7 +130,7 @@ export function ContactTable({
             <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnClient')}</TableHead>
             <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnTags')}</TableHead>
             <TableHead className="hidden font-semibold text-foreground/80 px-5 py-4 sm:table-cell">{t('contacts.table.columnLastInbound')}</TableHead>
-            <TableHead className="text-right font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnActions')}</TableHead>
+            <TableHead className="text-end font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnActions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-border/40">
@@ -199,7 +199,7 @@ export function ContactTable({
                                 <button
                                   key={tag.id}
                                   onClick={() => toggleTag(contact, tag)}
-                                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs hover:bg-muted transition-all"
+                                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-xs hover:bg-muted transition-all"
                                 >
                                   <span className="flex items-center gap-2 font-medium">
                                     <span className="size-2 rounded-full" style={{ backgroundColor: tag.color }} />
@@ -230,7 +230,7 @@ export function ContactTable({
                 </TableCell>
 
                 {/* Action buttons */}
-                <TableCell className="px-3 sm:px-5 py-3.5 text-right">
+                <TableCell className="px-3 sm:px-5 py-3.5 text-end">
                   <div className="flex items-center justify-end gap-1">
                     <CustomFieldsPopover contact={contact} onSave={(fields) => saveCustomFields(contact.id, fields)} />
                     <Button
@@ -338,7 +338,7 @@ export function ContactTable({
                             <button
                               key={tag.id}
                               onClick={() => toggleTag(contact, tag)}
-                              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs hover:bg-muted transition-all"
+                              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-xs hover:bg-muted transition-all"
                             >
                               <span className="flex items-center gap-2 font-medium">
                                 <span className="size-2 rounded-full" style={{ backgroundColor: tag.color }} />
@@ -431,7 +431,7 @@ function CustomFieldsPopover({
       >
         <ListPlus className="size-4" />
         {count > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+          <span className="absolute -end-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
             {count}
           </span>
         )}

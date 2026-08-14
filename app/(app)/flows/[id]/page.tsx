@@ -79,7 +79,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
       <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border px-4 py-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link href="/flows" className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-3.5" /> {t('flows.builderPage.backLink')}
+            <ArrowLeft className="size-3.5 rtl:-scale-x-100" /> {t('flows.builderPage.backLink')}
           </Link>
           <span className="min-w-0 truncate text-sm font-semibold text-foreground">{flow.name}</span>
           {flowLevelInsights.length > 0 && <InsightBadge insights={flowLevelInsights} />}

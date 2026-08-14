@@ -155,9 +155,9 @@ export default async function DashboardPage() {
         {/* Welcome Premium Banner */}
         <DashboardItem className="glass-banner relative overflow-hidden rounded-2xl px-6 py-6 sm:px-8">
           {/* Inner aurora spots */}
-          <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full blur-[80px]"
+          <div className="pointer-events-none absolute -end-16 -top-16 size-56 rounded-full blur-[80px]"
             style={{ background: 'color-mix(in srgb, var(--organic-terracotta) 25%, transparent)' }} />
-          <div className="pointer-events-none absolute -left-16 -bottom-16 size-48 rounded-full blur-[70px]"
+          <div className="pointer-events-none absolute -start-16 -bottom-16 size-48 rounded-full blur-[70px]"
             style={{ background: 'color-mix(in srgb, var(--organic-sage) 18%, transparent)' }} />
 
           <div className="relative z-10 max-w-xl">
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
               {t('dashboard.banner.description')}
             </p>
           </div>
-          <div className="absolute right-6 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-[0.05] lg:flex">
+          <div className="absolute end-6 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-[0.05] lg:flex">
             <Zap className="size-36 text-primary" strokeWidth={1} />
           </div>
         </DashboardItem>
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
                     render={<Link href="/inbox" />}
                     className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8 hover:text-primary"
                   >
-                    {t('dashboard.activity.viewAll')} <ChevronRight className="size-3.5" />
+                    {t('dashboard.activity.viewAll')} <ChevronRight className="size-3.5 rtl:-scale-x-100" />
                   </Button>
                 </div>
               </CardHeader>
@@ -311,7 +311,7 @@ export default async function DashboardPage() {
                       render={<Link href="/accounts" />}
                       className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8"
                     >
-                      {t('dashboard.connectedAccounts.manage')} <ChevronRight className="size-3.5" />
+                      {t('dashboard.connectedAccounts.manage')} <ChevronRight className="size-3.5 rtl:-scale-x-100" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -394,7 +394,7 @@ export default async function DashboardPage() {
                       render={<Link href="/automation" />}
                       className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8"
                     >
-                      {t('dashboard.rules.manage')} <ChevronRight className="size-3.5" />
+                      {t('dashboard.rules.manage')} <ChevronRight className="size-3.5 rtl:-scale-x-100" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -426,14 +426,14 @@ export default async function DashboardPage() {
                           {/* DM Conversation Thread Preview */}
                           <div className="flex flex-col gap-2.5 text-xs">
                             {/* User trigger message (Left side bubble) */}
-                            <div className="self-start max-w-[85%] rounded-[14px] rounded-bl-[2px] bg-muted/70 px-3 py-2 text-muted-foreground border border-border/40 font-medium">
+                            <div className="self-start max-w-[85%] rounded-[14px] rounded-es-[2px] bg-muted/70 px-3 py-2 text-muted-foreground border border-border/40 font-medium">
                               {r.trigger_type === 'any_message'
                                 ? t('dashboard.rules.newMessageTrigger')
                                 : t('dashboard.rules.keywordTrigger', { keyword: r.trigger_keywords?.slice(0, 1).join('') ?? '' })}
                             </div>
                             
                             {/* IA Auto reply message (Right side bubble) */}
-                            <div className="self-end max-w-[85%] rounded-[14px] rounded-br-[2px] bg-primary/10 text-primary px-3 py-2 border border-primary/20 leading-relaxed font-semibold">
+                            <div className="self-end max-w-[85%] rounded-[14px] rounded-ee-[2px] bg-primary/10 text-primary px-3 py-2 border border-primary/20 leading-relaxed font-semibold">
                               {r.response_text}
                             </div>
                           </div>

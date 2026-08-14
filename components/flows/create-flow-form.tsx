@@ -126,7 +126,7 @@ export function CreateFlowForm({
                 key={opt.id}
                 type="button"
                 onClick={() => setTemplateId(opt.id)}
-                className={`flex cursor-pointer flex-col gap-1.5 rounded-lg border p-3 text-left transition-all ${
+                className={`flex cursor-pointer flex-col gap-1.5 rounded-lg border p-3 text-start transition-all ${
                   selected
                     ? 'border-primary bg-primary/6 text-primary'
                     : 'border-border bg-card text-foreground hover:border-primary/30 hover:bg-muted/50'

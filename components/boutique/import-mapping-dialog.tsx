@@ -24,7 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { useT } from '@/components/i18n-provider'
+import { useLocale, useT } from '@/components/i18n-provider'
+import { getDir } from '@/lib/i18n/config'
 import type { DetectionResult, FieldMatch, ProductField } from '@/lib/import/column-detector'
 
 interface ImportMappingDialogProps {
@@ -116,6 +117,11 @@ export function ImportMappingDialog({
   onCancel,
 }: ImportMappingDialogProps) {
   const t = useT()
+  const locale = useLocale()
+  // Tab-switch slide: "mapping" (first tab) enters from the reading-start
+  // side, "preview" (second tab) from the reading-end side — physically
+  // flips under RTL.
+  const dirSign = getDir(locale) === 'rtl' ? -1 : 1
   const FIELD_LABELS = (Object.keys(FIELD_LABEL_KEYS) as ProductField[]).reduce((acc, field) => {
     acc[field] = t(FIELD_LABEL_KEYS[field])
     return acc
@@ -288,9 +294,9 @@ export function ImportMappingDialog({
             {activeTab === 'mapping' ? (
               <motion.div
                 key="mapping"
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -10 * dirSign }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: -10 * dirSign }}
                 transition={{ duration: 0.2 }}
                 className="space-y-3"
               >
@@ -342,7 +348,7 @@ export function ImportMappingDialog({
                               </p>
                             </div>
                             {sampleVal !== undefined && String(sampleVal) !== '' && (
-                              <p className="text-[11px] text-muted-foreground truncate mt-0.5 pl-3">
+                              <p className="text-[11px] text-muted-foreground truncate mt-0.5 ps-3">
                                 {t('boutique.importMappingDialog.card.samplePrefix')} <span className="font-medium">{String(sampleVal)}</span>
                               </p>
                             )}
@@ -373,7 +379,7 @@ export function ImportMappingDialog({
 
                         {/* Mapping select */}
                         <div className="flex items-center gap-2">
-                          <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/60" />
+                          <ArrowRight className="size-3.5 shrink-0 rtl:-scale-x-100 text-muted-foreground/60" />
                           <Select
                             value={currentField ?? 'none'}
                             onValueChange={(value) => handleFieldChange(columnName, value as ProductField | 'none')}
@@ -398,12 +404,12 @@ export function ImportMappingDialog({
                                       <span>{FIELD_ICONS[field]}</span>
                                       {FIELD_LABELS[field]}
                                       {FIELD_REQUIRED[field] && (
-                                        <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-destructive bg-destructive/10 rounded px-1 py-0.5">
+                                        <span className="ms-auto text-[9px] font-bold uppercase tracking-wide text-destructive bg-destructive/10 rounded px-1 py-0.5">
                                           {t('boutique.importMappingDialog.card.requiredBadge')}
                                         </span>
                                       )}
                                       {isUsed && (
-                                        <span className="ml-auto text-[9px] font-semibold text-muted-foreground">
+                                        <span className="ms-auto text-[9px] font-semibold text-muted-foreground">
                                           {t('boutique.importMappingDialog.card.alreadyMapped')}
                                         </span>
                                       )}
@@ -418,7 +424,7 @@ export function ImportMappingDialog({
                         {/* Suggestion chips */}
                         {!currentField && suggestion && suggestion.possibleFields.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/40">
-                            <span className="text-[10px] text-muted-foreground mr-0.5 self-center">
+                            <span className="text-[10px] text-muted-foreground me-0.5 self-center">
                               {t('boutique.importMappingDialog.card.suggestionsLabel')}
                             </span>
                             {suggestion.possibleFields.slice(0, 3).map(({ field, confidence }) => (
@@ -443,7 +449,7 @@ export function ImportMappingDialog({
                               {FIELD_ICONS[currentField]} {FIELD_LABELS[currentField]}
                             </span>
                             {FIELD_REQUIRED[currentField] && (
-                              <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                              <span className="ms-auto text-[9px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
                                 {t('boutique.importMappingDialog.card.requiredCheck')}
                               </span>
                             )}
@@ -457,9 +463,9 @@ export function ImportMappingDialog({
             ) : (
               <motion.div
                 key="preview"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 10 * dirSign }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+                exit={{ opacity: 0, x: 10 * dirSign }}
                 transition={{ duration: 0.2 }}
               >
                 {sampleData.length === 0 ? (
@@ -474,7 +480,7 @@ export function ImportMappingDialog({
                         <thead>
                           <tr className="bg-muted/50 border-b border-border/60">
                             {columns.map(col => (
-                              <th key={col} className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">
+                              <th key={col} className="px-3 py-2.5 text-start font-semibold whitespace-nowrap">
                                 <div className="flex items-center gap-1.5">
                                   <span>{col}</span>
                                   {mapping[col] && (

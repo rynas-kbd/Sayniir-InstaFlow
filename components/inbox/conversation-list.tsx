@@ -97,7 +97,7 @@ export function ConversationList({
             <button
               onClick={() => select(conv.id)}
               className={cn(
-                'relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                'relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
                 isActive ? 'shadow-sm' : 'hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_15%,transparent)]'
               )}
               style={
@@ -112,7 +112,7 @@ export function ConversationList({
               {/* Active left accent */}
               {isActive && (
                 <div
-                  className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full"
+                  className="absolute start-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-e-full"
                   style={{ background: 'var(--organic-terracotta-600)' }}
                 />
               )}
@@ -142,7 +142,7 @@ export function ConversationList({
                 )}
                 {/* Platform badge */}
                 <span
-                  className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full"
+                  className="absolute -bottom-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full"
                   style={{
                     background: 'var(--organic-bg, var(--background))',
                     boxShadow: '0 0 0 1px color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
@@ -154,7 +154,7 @@ export function ConversationList({
                 {/* Unreplied dot */}
                 {conv.hasUnreplied && (
                   <span
-                    className="absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full"
+                    className="absolute -end-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full"
                     style={{ background: 'var(--organic-bg, var(--background))' }}
                   >
                     <span

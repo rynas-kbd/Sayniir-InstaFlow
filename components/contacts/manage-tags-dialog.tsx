@@ -108,7 +108,7 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
                   type="button"
                   onClick={() => deleteTag(tag.id)}
                   aria-label={t('contacts.tagsDialog.deleteAria')}
-                  className="-my-1 -mr-1 cursor-pointer rounded-full p-1.5"
+                  className="-my-1 -me-1 cursor-pointer rounded-full p-1.5"
                 >
                   <Trash2 className="size-3" />
                 </button>

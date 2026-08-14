@@ -107,7 +107,7 @@ function CardShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-background/50 p-3">
+    <div className="max-w-[85%] rounded-2xl rounded-es-[4px] border border-border/50 bg-background/50 p-3">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         <Icon className="size-3.5" />
         {title}

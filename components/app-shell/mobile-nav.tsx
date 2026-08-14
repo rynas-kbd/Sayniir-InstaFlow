@@ -23,7 +23,7 @@ export function MobileNav({ businessType }: { businessType: BusinessType }) {
       >
         <Menu className="size-4" />
       </SheetTrigger>
-      <SheetContent side="left" className="w-[264px] bg-sidebar p-0">
+      <SheetContent side="inline-start" className="w-[264px] bg-sidebar p-0">
         <SheetHeader className="border-b border-sidebar-border px-4 py-3.5">
           <SheetTitle
             render={

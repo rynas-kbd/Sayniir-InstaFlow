@@ -37,7 +37,7 @@ export function RuleFormDialog({
     <ResponsiveDialog open={open} onOpenChange={(next) => !next && onClose()}>
       <ResponsiveDialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         {!postSelectorActive && (
-          <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
+          <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pe-12 backdrop-blur-sm">
             <FormDialogHeader
               icon={Zap}
               title={rule ? t('automation.ruleFormDialog.editTitle') : t('automation.ruleFormDialog.newTitle')}

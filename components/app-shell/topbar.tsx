@@ -51,7 +51,7 @@ export function Topbar({
     <header className="relative z-[60] flex min-h-16 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-4 pt-safe pb-2 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
       {/* Bottom border — terracotta gradient line */}
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px"
+        className="pointer-events-none absolute bottom-0 start-0 end-0 h-px"
         style={{
           background:
             'linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--organic-terracotta) 25%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 20%, transparent) 70%, transparent 100%)',

@@ -99,7 +99,7 @@ export function TeamMembersCard({
                     <p className="text-[13px] font-semibold text-foreground">
                       {m.name}
                       {m.role && (
-                        <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
+                        <span className="ms-1.5 text-[10px] font-normal text-muted-foreground">
                           ({m.role === 'admin' ? t('teamMembers.roleLabelAdmin') : t('teamMembers.roleLabelAgent')})
                         </span>
                       )}

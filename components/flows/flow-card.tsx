@@ -218,7 +218,7 @@ export function FlowCard({
           >
             <Pencil className="size-3.5" />
             {t('flows.flowCard.edit')}
-            <ArrowRight className="size-3" />
+            <ArrowRight className="size-3 rtl:-scale-x-100" />
           </Link>
         </div>
       </div>

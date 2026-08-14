@@ -83,7 +83,7 @@ export function AppearanceCard() {
                   type="button"
                   onClick={() => setColorTheme(opt.id as ColorTheme)}
                   className={cn(
-                    'flex items-center justify-between rounded-2xl border p-3 text-left transition-all duration-150 active:scale-[0.98]',
+                    'flex items-center justify-between rounded-2xl border p-3 text-start transition-all duration-150 active:scale-[0.98]',
                     isSelected
                       ? 'border-primary bg-primary/10 shadow-xs'
                       : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
@@ -180,7 +180,7 @@ export function AppearanceCard() {
                   )}
                 >
                   {isSelected && (
-                    <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                    <span className="absolute end-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
                       <Check className="size-2.5" strokeWidth={3} />
                     </span>
                   )}
@@ -200,7 +200,7 @@ export function AppearanceCard() {
               )}
             >
               {wallpaper === 'custom' && (
-                <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                <span className="absolute end-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
                   <Check className="size-2.5" strokeWidth={3} />
                 </span>
               )}

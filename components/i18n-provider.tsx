@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { DirectionProvider } from '@base-ui/react/direction-provider'
 import { createClient } from '@/lib/supabase/client'
 import { setCookie } from '@/lib/cookies'
 import { getDir, isLocale, LOCALE_COOKIE, type Locale } from '@/lib/i18n/config'
@@ -85,7 +86,15 @@ export function I18nProvider({
 
   const t = createTranslator(DICTIONARIES[locale], locale)
 
-  return <I18nContext.Provider value={{ locale, t, setLocale }}>{children}</I18nContext.Provider>
+  return (
+    <I18nContext.Provider value={{ locale, t, setLocale }}>
+      {/* Base UI (the primitive library behind components/ui/*) defaults every
+          popover/menu/select to LTR positioning unless told otherwise — it
+          doesn't sniff the `dir` attribute on its own. This is what makes
+          `align="start"/"end"` on Base UI primitives actually mirror in RTL. */}
+      <DirectionProvider direction={getDir(locale)}>{children}</DirectionProvider>
+    </I18nContext.Provider>
+  )
 }
 
 function useI18nContext(): I18nContextType {

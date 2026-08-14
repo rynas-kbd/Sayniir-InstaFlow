@@ -178,7 +178,7 @@ function FlowsEmptyState({ t }: { t: Translator }) {
         </Button>
       </div>
       {/* Tips */}
-      <div className="mt-8 grid max-w-lg gap-3 text-left sm:grid-cols-3">
+      <div className="mt-8 grid max-w-lg gap-3 text-start sm:grid-cols-3">
         {tips.map((tip) => (
           <div key={tip.title} className="glass-stat rounded-2xl p-3.5">
             <div className="text-xl">{tip.emoji}</div>

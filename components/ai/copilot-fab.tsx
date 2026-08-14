@@ -35,9 +35,9 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
   //   • Any canvas-level FABs (absolute bottom-4 right-4 in the flow builder)
   //   • The Topbar (top-0, height ~56px → top-16 clears it with a small gap)
   // On desktop the position is irrelevant since we use the sidebar.
-  const mobilePositionClasses = 'top-[4.5rem] right-3'
+  const mobilePositionClasses = 'top-[4.5rem] end-3'
   // Desktop keeps the classic bottom-right above the sidebar
-  const desktopPositionClasses = 'md:bottom-6 md:right-6 md:top-auto'
+  const desktopPositionClasses = 'md:bottom-6 md:end-6 md:top-auto'
   const positionClasses = `${mobilePositionClasses} ${desktopPositionClasses}`
 
   return (
@@ -45,7 +45,7 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.div
-            className="hidden md:flex fixed bottom-6 right-6 z-40"
+            className="hidden md:flex fixed bottom-6 end-6 z-40"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={springs.snappy}

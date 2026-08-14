@@ -7,12 +7,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { springs } from '@/lib/motion/springs'
 import { useSidebarStore } from '@/lib/stores/sidebar-store'
-import { useT } from '@/components/i18n-provider'
+import { useLocale, useT } from '@/components/i18n-provider'
+import { getDir } from '@/lib/i18n/config'
 import { getNavSections, type BusinessType } from './nav-config'
 
 export function AppSidebar({ businessType }: { businessType: BusinessType }) {
   const pathname = usePathname()
   const t = useT()
+  const locale = useLocale()
+  // These labels slide in from the reading-start side as the sidebar
+  // expands — that's screen-right in RTL, not screen-left.
+  const slideSign = getDir(locale) === 'rtl' ? 1 : -1
   const sections = getNavSections(businessType, t)
   const { collapsed, toggle } = useSidebarStore()
 
@@ -20,7 +25,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
     <motion.aside
       animate={{ width: collapsed ? 76 : 255 }}
       transition={springs.smooth}
-      className="hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-5 pb-3 md:flex h-full overflow-hidden"
+      className="hidden shrink-0 flex-col border-e border-sidebar-border bg-sidebar px-3 pt-5 pb-3 md:flex h-full overflow-hidden"
     >
       {/* Logo */}
       <Link
@@ -37,9 +42,9 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
         <AnimatePresence mode="wait">
           {!collapsed && (
             <motion.span
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: 10 * slideSign }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
+              exit={{ opacity: 0, x: 10 * slideSign }}
               transition={{ duration: 0.15 }}
               className="text-base font-bold tracking-tight text-sidebar-foreground"
             >
@@ -92,7 +97,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                     {isActive && (
                       <motion.span 
                         layoutId="active-sidebar-indicator"
-                        className="absolute -left-3 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary z-10"
+                        className="absolute -start-3 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary z-10"
                         transition={springs.smooth}
                       />
                     )}
@@ -108,9 +113,9 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                     <AnimatePresence mode="wait">
                       {!collapsed && (
                         <motion.span
-                          initial={{ opacity: 0, x: -8 }}
+                          initial={{ opacity: 0, x: 8 * slideSign }}
                           animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -8 }}
+                          exit={{ opacity: 0, x: 8 * slideSign }}
                           transition={{ duration: 0.15 }}
                           className="z-10 text-[13.5px] text-ellipsis overflow-hidden whitespace-nowrap"
                         >
@@ -136,13 +141,17 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
         )}
       >
         <div className="z-10 flex items-center gap-2.5">
-          {collapsed ? <ChevronsRight className="size-4" strokeWidth={1.75} /> : <ChevronsLeft className="size-4" strokeWidth={1.75} />}
+          {collapsed ? (
+            <ChevronsRight className="size-4 rtl:-scale-x-100" strokeWidth={1.75} />
+          ) : (
+            <ChevronsLeft className="size-4 rtl:-scale-x-100" strokeWidth={1.75} />
+          )}
           <AnimatePresence mode="wait">
             {!collapsed && (
               <motion.span
-                initial={{ opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: 8 * slideSign }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
+                exit={{ opacity: 0, x: 8 * slideSign }}
                 transition={{ duration: 0.15 }}
                 className="text-xs"
               >

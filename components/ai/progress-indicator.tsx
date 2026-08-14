@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
-import { useT } from '@/components/i18n-provider'
+import { useLocale, useT } from '@/components/i18n-provider'
+import { getDir } from '@/lib/i18n/config'
 
 interface ProgressIndicatorProps {
   step: string
@@ -10,6 +11,9 @@ interface ProgressIndicatorProps {
 }
 
 export function ProgressIndicator({ step, detail }: ProgressIndicatorProps) {
+  const locale = useLocale()
+  const slideSign = getDir(locale) === 'rtl' ? 1 : -1
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -20,7 +24,7 @@ export function ProgressIndicator({ step, detail }: ProgressIndicatorProps) {
           duration: 0.3,
           ease: [0.4, 0, 0.2, 1],
         }}
-        className="flex items-start gap-3 rounded-2xl rounded-bl-[4px] border border-primary/25 bg-primary/10 px-4 py-3"
+        className="flex items-start gap-3 rounded-2xl rounded-es-[4px] border border-primary/25 bg-primary/10 px-4 py-3"
         role="status"
         aria-live="polite"
         aria-busy="true"
@@ -42,7 +46,7 @@ export function ProgressIndicator({ step, detail }: ProgressIndicatorProps) {
         <div className="flex-1 space-y-1">
           {/* Main step message */}
           <motion.p
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: 10 * slideSign }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
             className="text-sm font-medium text-foreground"
@@ -53,7 +57,7 @@ export function ProgressIndicator({ step, detail }: ProgressIndicatorProps) {
           {/* Optional detail message */}
           {detail && (
             <motion.p
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: 10 * slideSign }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.3 }}
               className="text-xs text-muted-foreground"

@@ -357,7 +357,7 @@ export function CopilotPanel({
                   <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
                   <span
                     className={cn(
-                      'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                      'absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
                       isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
                     )}
                     aria-hidden="true"
@@ -398,7 +398,7 @@ export function CopilotPanel({
                   return (
                     <div
                       key={m.id}
-                      className="ml-auto max-w-[85%] rounded-2xl rounded-br-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
+                      className="ms-auto max-w-[85%] rounded-2xl rounded-ee-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
                     >
                       {m.text}
                     </div>
@@ -410,7 +410,7 @@ export function CopilotPanel({
                   return (
                     <div
                       key={m.id}
-                      className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground"
+                      className="me-auto max-w-[85%] rounded-2xl rounded-es-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground"
                     >
                       {sending && <Loader2 className="size-3.5 animate-spin" />}
                     </div>
@@ -424,7 +424,7 @@ export function CopilotPanel({
                         part.text.trim() && (
                           <div
                             key={i}
-                            className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
+                            className="me-auto max-w-[85%] rounded-2xl rounded-es-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground"
                           >
                             <Streamdown className="copilot-markdown">{part.text}</Streamdown>
                           </div>
@@ -439,20 +439,20 @@ export function CopilotPanel({
 
               {/* Progress indicator - shown when a tool is being executed */}
               {progressStep && (
-                <div className="mr-auto max-w-[85%]">
+                <div className="me-auto max-w-[85%]">
                   <ProgressIndicator step={progressStep.step} detail={progressStep.detail} />
                 </div>
               )}
 
               {/* Thinking indicator - shown when waiting for LLM response */}
               {isThinking && !progressStep && (
-                <div className="mr-auto max-w-[85%] px-1">
+                <div className="me-auto max-w-[85%] px-1">
                   <ThinkingIndicator />
                 </div>
               )}
 
               {pendingConfirm && (
-                <div className="mr-auto max-w-[85%] rounded-2xl border border-primary/30 bg-card p-3 shadow-sm ring-1 ring-primary/20">
+                <div className="me-auto max-w-[85%] rounded-2xl border border-primary/30 bg-card p-3 shadow-sm ring-1 ring-primary/20">
                   <div className="flex items-start gap-2">
                     <ShieldAlert className="mt-0.5 size-4 shrink-0 text-primary" />
                     <p className="text-sm text-foreground">{pendingConfirm.preview}</p>
@@ -505,7 +505,7 @@ export function CopilotPanel({
         </motion.div>
         ) : (
           /* Desktop: static right panel */
-          <div className="glass-card flex h-full flex-col gap-0 overflow-hidden rounded-none sm:rounded-l-2xl">
+          <div className="glass-card flex h-full flex-col gap-0 overflow-hidden rounded-none sm:rounded-s-2xl">
             <SheetHeader className="border-b border-border/50 px-4 py-3.5">
               <SheetTitle className="sr-only">Copilote</SheetTitle>
               <div className="flex items-center justify-between gap-2.5">
@@ -518,7 +518,7 @@ export function CopilotPanel({
                     <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
                     <span
                       className={cn(
-                        'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
+                        'absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
                         isLive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
                       )}
                       aria-hidden="true"
@@ -557,14 +557,14 @@ export function CopilotPanel({
                   {messages.map((m) => {
                     if (m.role === 'user') {
                       return (
-                        <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                        <div key={m.id} className="ms-auto max-w-[85%] rounded-2xl rounded-ee-[4px] bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
                           {m.text}
                         </div>
                       )
                     }
                     if (m.parts.length === 0) {
                       return (
-                        <div key={m.id} className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground">
+                        <div key={m.id} className="me-auto max-w-[85%] rounded-2xl rounded-es-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm text-foreground">
                           {sending && <Loader2 className="size-3.5 animate-spin" />}
                         </div>
                       )
@@ -574,7 +574,7 @@ export function CopilotPanel({
                         {m.parts.map((part, i) =>
                           part.type === 'text' ? (
                             part.text.trim() && (
-                              <div key={i} className="mr-auto max-w-[85%] rounded-2xl rounded-bl-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                              <div key={i} className="me-auto max-w-[85%] rounded-2xl rounded-es-[4px] border border-border/50 bg-muted/50 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
                                 <Streamdown className="copilot-markdown">{part.text}</Streamdown>
                               </div>
                             )

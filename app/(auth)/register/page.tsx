@@ -147,13 +147,13 @@ export default function RegisterPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t('auth.register.passwordPlaceholder')}
                     required
-                    className="pr-10"
+                    className="pe-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? t('auth.common.hidePassword') : t('auth.common.showPassword')}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
+                    className="absolute end-1 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -193,7 +193,7 @@ export default function RegisterPage() {
         href="/"
         className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft size={13} /> {t('auth.common.backToHome')}
+        <ArrowLeft size={13} className="rtl:-scale-x-100" /> {t('auth.common.backToHome')}
       </Link>
     </AuthCard>
   )

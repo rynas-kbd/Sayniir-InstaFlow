@@ -83,7 +83,7 @@ export default function SuggestedRulePreview({
         {Array.isArray(actions) && actions.length > 0 && (
           <div>
             <p className="text-xs font-medium text-foreground">{t('automation.suggestedRulePreview.actions')}</p>
-            <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-muted-foreground">
+            <ul className="mt-1 list-disc space-y-1 ps-4 text-sm text-muted-foreground">
               {actions.map((a, i) => (
                 <li key={i}>{describeAction(a, t)}</li>
               ))}
@@ -94,7 +94,7 @@ export default function SuggestedRulePreview({
         {Array.isArray(examples) && examples.length > 0 && (
           <div>
             <p className="text-xs font-medium text-foreground">{t('automation.suggestedRulePreview.examples')}</p>
-            <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-muted-foreground">
+            <ul className="mt-1 list-disc space-y-1 ps-4 text-sm text-muted-foreground">
               {examples.map((e, i) => (
                 <li key={i}>{e}</li>
               ))}

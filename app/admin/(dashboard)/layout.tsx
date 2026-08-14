@@ -41,11 +41,11 @@ export default async function AdminLayout({
             <AdminNav />
           </nav>
           <Link href="/dashboard" className="flex items-center gap-1 text-[12px] text-sidebar-foreground/65" aria-label={t('admin.layout.backToDashboardAria')}>
-            <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+            <ArrowLeft className="size-3.5 shrink-0 rtl:-scale-x-100" strokeWidth={1.75} />
           </Link>
         </div>
 
-        <aside className="hidden w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 pt-4 pb-3 md:flex">
+        <aside className="hidden w-[232px] shrink-0 flex-col border-e border-sidebar-border bg-sidebar px-3 pt-4 pb-3 md:flex">
           <Link
             href="/admin"
             className="mb-5 flex h-8 items-center gap-2 rounded-md px-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground hover:bg-sidebar-accent/60"
@@ -64,7 +64,7 @@ export default async function AdminLayout({
             href="/dashboard"
             className="flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
           >
-            <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+            <ArrowLeft className="size-3.5 shrink-0 rtl:-scale-x-100" strokeWidth={1.75} />
             {t('admin.layout.backToDashboard')}
           </Link>
         </aside>

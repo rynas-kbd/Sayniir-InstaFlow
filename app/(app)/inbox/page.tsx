@@ -139,7 +139,7 @@ export default async function InboxPage({
       <div
         className={cn(
           'w-full shrink-0 flex-col overflow-hidden md:flex md:w-[300px]',
-          'border-r border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)]',
+          'border-e border-[color-mix(in_srgb,var(--organic-terracotta)_10%,transparent)]',
           'bg-[color-mix(in_srgb,var(--organic-bg)_55%,transparent)] backdrop-blur-md',
           activeConvId ? 'hidden md:flex' : 'flex'
         )}

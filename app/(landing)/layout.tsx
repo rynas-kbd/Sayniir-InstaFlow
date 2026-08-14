@@ -12,8 +12,12 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
   return (
     // Was `lang="en"`, overriding the root layout's `lang="fr"` for this entire
     // subtree — every screen reader and browser translate prompt treated the
-    // (now fully French) landing page as English.
-    <div lang="fr" style={{ overflowX: 'clip' }}>
+    // (now fully French) landing page as English. `dir="ltr"` for the same
+    // reason: this page is French-only and untranslated, but the root
+    // layout's inline script still flips `<html dir>` to "rtl" for any
+    // visitor whose locale cookie is "ar" — without this override the French
+    // copy here would render mirrored.
+    <div lang="fr" dir="ltr" style={{ overflowX: 'clip' }}>
       <RevealScope>{children}</RevealScope>
     </div>
   )

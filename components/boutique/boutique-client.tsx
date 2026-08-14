@@ -61,8 +61,8 @@ export function BoutiqueClient({
           background: 'linear-gradient(135deg, var(--organic-terracotta) 0%, var(--organic-terracotta-600) 55%, var(--organic-sage-700) 100%)',
         }}
       >
-        <div className="pointer-events-none absolute -right-12 -top-12 size-56 rounded-full bg-white/10 blur-3xl animate-pulse" />
-        <div className="pointer-events-none absolute -bottom-14 right-24 size-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -end-12 -top-12 size-56 rounded-full bg-white/10 blur-3xl animate-pulse" />
+        <div className="pointer-events-none absolute -bottom-14 end-24 size-40 rounded-full bg-white/10 blur-2xl" />
 
         <div className="relative flex items-center justify-between gap-4">
           <div className="min-w-0">
@@ -146,7 +146,7 @@ export function BoutiqueClient({
                 {isActive && (
                   <motion.div
                     layoutId="activeBoutiqueTabLine"
-                    className="absolute bottom-1.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary"
+                    className="absolute bottom-1.5 start-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}

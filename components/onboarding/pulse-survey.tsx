@@ -55,11 +55,11 @@ export function PulseSurvey() {
             type="button"
             onClick={() => submit(null)}
             aria-label={t('onboardingActivation.pulseSurvey.dismissAriaLabel')}
-            className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute end-3 top-3 text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-3.5" />
           </button>
-          <p className="pr-6 text-[13px] font-semibold text-foreground">
+          <p className="pe-6 text-[13px] font-semibold text-foreground">
             {t('onboardingActivation.pulseSurvey.question')}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

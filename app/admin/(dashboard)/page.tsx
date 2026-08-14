@@ -55,7 +55,7 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             {t('admin.dashboard.panelDescription')}
           </p>
-          <div className="absolute right-0 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-10 lg:flex">
+          <div className="absolute end-0 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-10 lg:flex">
             <ShieldCheck className="size-40 text-primary" strokeWidth={1} />
           </div>
         </div>
@@ -92,7 +92,7 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
             <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/admin/clients" />}>
-              {t('admin.dashboard.viewClientsButton')} <ArrowRight className="size-3.5" />
+              {t('admin.dashboard.viewClientsButton')} <ArrowRight className="size-3.5 rtl:-scale-x-100" />
             </Button>
           </CardContent>
         </Card>

@@ -27,7 +27,7 @@ function StatBadge({ value, label, icon: Icon, accent }: { value: string | numbe
     >
       {/* Soft glow corner */}
       <div
-        className="pointer-events-none absolute -right-4 -top-4 size-20 rounded-full blur-2xl opacity-20"
+        className="pointer-events-none absolute -end-4 -top-4 size-20 rounded-full blur-2xl opacity-20"
         style={{ background: accent ?? 'var(--color-primary)' }}
       />
       <div className="flex items-start justify-between">

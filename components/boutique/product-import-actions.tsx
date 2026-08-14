@@ -199,7 +199,7 @@ export function ProductImportActions({
           {importing
             ? t('boutique.productImportActions.buttons.analyzing')
             : t('boutique.productImportActions.buttons.importCsvJson')}
-          <Sparkles className="absolute -right-1 -top-1 size-3 text-primary animate-pulse" />
+          <Sparkles className="absolute -end-1 -top-1 size-3 text-primary animate-pulse" />
         </Button>
         <input
           ref={fileInputRef}
@@ -212,7 +212,7 @@ export function ProductImportActions({
         <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
           <DialogTrigger render={<Button type="button" variant="outline" size="sm" className="relative" />}>
             <FileSpreadsheet className="size-3.5" /> {t('boutique.productImportActions.buttons.syncGoogleSheet')}
-            <Sparkles className="absolute -right-1 -top-1 size-3 text-primary animate-pulse" />
+            <Sparkles className="absolute -end-1 -top-1 size-3 text-primary animate-pulse" />
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

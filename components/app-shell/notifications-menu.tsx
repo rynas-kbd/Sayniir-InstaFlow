@@ -64,7 +64,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
         />
         {total > 0 && (
           <span
-            className="absolute -right-0.5 -top-0.5 flex size-[18px] items-center justify-center rounded-full text-[9px] font-bold text-white shadow-sm"
+            className="absolute -end-0.5 -top-0.5 flex size-[18px] items-center justify-center rounded-full text-[9px] font-bold text-white shadow-sm"
             style={{ background: 'var(--organic-terracotta-700)' }}
           >
             {total > 9 ? '9+' : total}

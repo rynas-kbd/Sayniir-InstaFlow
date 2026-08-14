@@ -158,10 +158,10 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
           {renderCover()}
 
           {/* Selection pill overlay — top-left, mirrors the active-switch pill's top-right position */}
-          {selectable && <div className="absolute left-3 top-3 z-20">{SelectionPill}</div>}
+          {selectable && <div className="absolute start-3 top-3 z-20">{SelectionPill}</div>}
 
           {/* Badge kind overlay */}
-          <div className="absolute left-3 bottom-3 z-15">
+          <div className="absolute start-3 bottom-3 z-15">
             <Badge className="rounded-full bg-background/90 text-foreground border border-border/50 px-2.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
               {t(meta.label)}
             </Badge>
@@ -169,7 +169,7 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
 
           {/* Active/Inactive Switch overlay */}
           {onToggleActive && (
-            <div className="absolute right-3 top-3 z-15">
+            <div className="absolute end-3 top-3 z-15">
               <label className="flex items-center gap-2 rounded-full bg-background/80 hover:bg-background/95 transition-colors duration-200 border border-border/60 shadow-md backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-foreground select-none cursor-pointer">
                 <span className={cn('transition-colors tracking-tight uppercase text-[9px]', view.isActive ? 'text-primary' : 'text-muted-foreground')}>
                   {view.isActive ? t('boutique.productCard.statusActive') : t('boutique.productCard.statusHidden')}

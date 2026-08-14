@@ -18,7 +18,7 @@ export default async function NewFlowPage() {
       <div className="flex-1 p-4 sm:p-6">
         <div className="mx-auto max-w-lg">
           <Link href="/flows" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-3.5" /> {t('flows.newPage.backLink')}
+            <ArrowLeft className="size-3.5 rtl:-scale-x-100" /> {t('flows.newPage.backLink')}
           </Link>
           <Card>
             <CardContent className="pt-2">

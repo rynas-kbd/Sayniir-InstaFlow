@@ -127,8 +127,8 @@ export function ConversationSimulator({
                 className={cn(
                   'max-w-[80%] rounded-[14px] px-3 py-2 text-xs leading-relaxed',
                   m.from === 'user'
-                    ? 'rounded-br-[3px] bg-primary/10 text-foreground'
-                    : 'rounded-bl-[3px] border border-border/50 bg-muted/50 text-foreground'
+                    ? 'rounded-ee-[3px] bg-primary/10 text-foreground'
+                    : 'rounded-es-[3px] border border-border/50 bg-muted/50 text-foreground'
                 )}
               >
                 {m.text}

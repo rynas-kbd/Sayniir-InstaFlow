@@ -51,7 +51,7 @@ export function OptionPicker<T extends string>({ value, onChange, options, name,
               aria-checked={selected}
               onClick={() => onChange(v)}
               className={cn(
-                'relative flex rounded-2xl border text-left transition-colors',
+                'relative flex rounded-2xl border text-start transition-colors',
                 compact ? 'flex-1 items-center justify-center gap-1.5 px-3 py-2' : 'flex-col items-start gap-1 p-3',
                 selected ? 'border-primary/30' : 'border-border hover:border-primary/20 hover:bg-muted/30',
               )}

@@ -41,7 +41,7 @@ export function LanguagePicker({ labelClassName }: { labelClassName?: string }) 
                   : 'border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40'
               )}
             >
-              {isSelected && <Check className="absolute left-2 size-3" strokeWidth={3} />}
+              {isSelected && <Check className="absolute start-2 size-3" strokeWidth={3} />}
               <span>{t(`languagePicker.${id}`)}</span>
             </button>
           )

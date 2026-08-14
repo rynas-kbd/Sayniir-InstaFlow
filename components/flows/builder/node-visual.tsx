@@ -64,7 +64,7 @@ export function FlowNodeVisual({ data, selected }: NodeProps) {
       )}
     >
       {nodeData.insights && nodeData.insights.length > 0 && (
-        <InsightBadge insights={nodeData.insights} className="absolute -right-2 -top-2 z-10 bg-card" />
+        <InsightBadge insights={nodeData.insights} className="absolute -end-2 -top-2 z-10 bg-card" />
       )}
       {!isTrigger && <Handle type="target" position={Position.Top} className="!bg-muted-foreground" />}
 

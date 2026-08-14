@@ -118,7 +118,7 @@ export function ThemeCustomizerModal({
                       >
                         {isSelected && <Check className="size-3 text-white" strokeWidth={3} />}
                       </div>
-                      <div className="text-left">
+                      <div className="text-start">
                         <p className={cn('text-xs font-semibold', isSelected ? 'text-foreground' : 'text-foreground/90')}>
                           {t(`appearance.themes.${item.id}.name`)}
                         </p>
@@ -203,7 +203,7 @@ export function ThemeCustomizerModal({
                     )}
                   >
                     {isSelected && (
-                      <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                      <span className="absolute end-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
                         <Check className="size-2.5" strokeWidth={3} />
                       </span>
                     )}
@@ -223,7 +223,7 @@ export function ThemeCustomizerModal({
                 )}
               >
                 {wallpaper === 'custom' && (
-                  <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                  <span className="absolute end-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
                     <Check className="size-2.5" strokeWidth={3} />
                   </span>
                 )}

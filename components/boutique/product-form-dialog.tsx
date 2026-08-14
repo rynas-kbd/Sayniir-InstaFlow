@@ -34,7 +34,7 @@ export function ProductFormDialog({
       {/* Popup defaults to grid gap-4 overflow-y-auto p-4 (dialog.tsx) — all four are overridden
        * here so the header/footer can stay pinned while only the body scrolls. */}
       <ResponsiveDialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
+        <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pe-12 backdrop-blur-sm">
           <FormDialogHeader
             icon={Package}
             title={product ? t('boutique.productFormDialog.editTitle') : t('boutique.productFormDialog.createTitle')}

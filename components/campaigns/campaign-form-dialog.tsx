@@ -39,7 +39,7 @@ export function CampaignFormDialog({
   return (
     <ResponsiveDialog open={open} onOpenChange={(next) => !next && onClose()}>
       <ResponsiveDialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
+        <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pe-12 backdrop-blur-sm">
           <FormDialogHeader
             icon={Megaphone}
             title={campaign ? t('campaigns.formDialog.editTitle') : t('campaigns.formDialog.createTitle')}

@@ -38,16 +38,33 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   )
 }
 
+type SheetSide = "top" | "right" | "bottom" | "left" | "inline-start" | "inline-end"
+
+// Base UI's Dialog primitive has no concept of "side" — it's implemented
+// here as plain physical `data-[side=left/right]` CSS, and Base UI's
+// DirectionProvider (wired in components/i18n-provider.tsx) doesn't reach
+// it either. Resolving "inline-start"/"inline-end" here — by reading `dir`
+// directly off <html> instead of via useLocale()/useT() — means this stays
+// usable from routes with no I18nProvider mounted (e.g. the marketing
+// navbar's mobile sheet), which would otherwise throw.
+function resolvePhysicalSide(side: SheetSide): "top" | "right" | "bottom" | "left" {
+  if (side !== "inline-start" && side !== "inline-end") return side
+  const isRtl = typeof document !== "undefined" && document.documentElement.dir === "rtl"
+  if (side === "inline-start") return isRtl ? "right" : "left"
+  return isRtl ? "left" : "right"
+}
+
 function SheetContent({
   className,
   children,
-  side = "right",
+  side: sideProp = "right",
   showCloseButton = true,
   ...props
 }: SheetPrimitive.Popup.Props & {
-  side?: "top" | "right" | "bottom" | "left"
+  side?: SheetSide
   showCloseButton?: boolean
 }) {
+  const side = resolvePhysicalSide(sideProp)
   // Only bottom sheets get a drag handle for now — that's the one side
   // actually used with tall, scrollable content (flow-canvas.tsx) in this
   // app, so the drag gesture is scoped to a small handle instead of the
@@ -106,7 +123,7 @@ function SheetContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3"
+                className="absolute top-3 end-3"
                 size="icon-sm"
               />
             }

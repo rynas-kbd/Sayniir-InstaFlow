@@ -81,7 +81,7 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
         <Switch
           checked={flow.status === 'active'}
           onCheckedChange={toggleActive}
-          className="ml-1.5"
+          className="ms-1.5"
         />
       </div>
 

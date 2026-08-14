@@ -292,7 +292,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
 
         {/* Search — full width on mobile */}
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => {
@@ -300,7 +300,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
               setVisibleCount(PAGE_SIZE)
             }}
             placeholder={t('boutique.productTable.searchPlaceholder')}
-            className="pl-8"
+            className="ps-8"
           />
         </div>
 
@@ -314,7 +314,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         >
           <SlidersHorizontal className="size-4" />
           {activeFilterCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground">
+            <span className="absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground">
               {activeFilterCount}
             </span>
           )}
@@ -352,7 +352,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           )}
         </div>
 
-        <div className="ml-auto hidden sm:block">
+        <div className="ms-auto hidden sm:block">
           <ProductImportActions channelAccountId={channelAccountId} onImported={handleImported} />
         </div>
       </div>
@@ -371,7 +371,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
               {selectAllIcon}
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{t('boutique.productTable.bulkBar.selectedCountMobile', { count: selected.size })}</span>
             </button>
-            <div className="ml-auto flex gap-2">
+            <div className="ms-auto flex gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>{t('boutique.productTable.bulkBar.activate')}</Button>
               <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>{t('boutique.productTable.bulkBar.deleteShort')}</Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}><X className="size-3.5" /></Button>
@@ -383,7 +383,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
               {selectAllIcon}
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{t.plural('boutique.productTable.bulkBar.selectedCount', selected.size)}</span>
             </button>
-            <div className="ml-auto flex gap-2">
+            <div className="ms-auto flex gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>{t('boutique.productTable.bulkBar.activate')}</Button>
               <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>{t('boutique.productTable.bulkBar.deactivate')}</Button>
               <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>{t('boutique.productTable.bulkBar.delete')}</Button>

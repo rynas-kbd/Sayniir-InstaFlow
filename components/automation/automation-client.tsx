@@ -127,7 +127,7 @@ export function AutomationClient({
               <Icon className="size-3.5" />
               {label}
               <span
-                className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
+                className="ms-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
                 style={{
                   background: activeTab === key ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)' : 'var(--muted)',
                   color: activeTab === key ? 'var(--color-primary)' : 'color-mix(in srgb, var(--foreground) 40%, transparent)',

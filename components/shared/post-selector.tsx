@@ -10,14 +10,14 @@ import { useT } from '@/components/i18n-provider'
 function MediaTypeBadge({ mediaType }: { mediaType?: string }) {
   if (mediaType === 'VIDEO') {
     return (
-      <div className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-black/55 text-white">
+      <div className="absolute top-1.5 start-1.5 flex size-5 items-center justify-center rounded-full bg-black/55 text-white">
         <Film className="size-3" />
       </div>
     )
   }
   if (mediaType === 'CAROUSEL_ALBUM') {
     return (
-      <div className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-black/55 text-white">
+      <div className="absolute top-1.5 start-1.5 flex size-5 items-center justify-center rounded-full bg-black/55 text-white">
         <Layers className="size-3" />
       </div>
     )
@@ -61,7 +61,7 @@ export function PostSelector({
           </div>
         ) : (
           <>
-            <div className="grid max-h-90 grid-cols-2 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-3">
+            <div className="grid max-h-90 grid-cols-2 gap-2.5 overflow-y-auto pe-1 sm:grid-cols-3">
               {media.map((m) => {
                 const isSelected = localSelected.includes(m.id)
                 return (
@@ -82,7 +82,7 @@ export function PostSelector({
                     />
                     <MediaTypeBadge mediaType={m.media_type} />
                     {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                      <div className="absolute top-1.5 end-1.5 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
                         <Check className="size-3.5" strokeWidth={3} />
                       </div>
                     )}

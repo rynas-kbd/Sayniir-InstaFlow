@@ -191,7 +191,7 @@ export function AgentSettingsCard({
   return (
     <div className="mt-4 grid grid-cols-1 lg:grid-cols-[290px_1fr] gap-6 items-start">
       {/* ── Sidebar Navigation ── */}
-      <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b lg:border-b-0 lg:border-r border-border/60 pr-0 lg:pr-4">
+      <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b lg:border-b-0 lg:border-e border-border/60 pe-0 lg:pe-4">
         {SUB_TABS.map((subTab) => {
           const isActive = activeTab === subTab.key
           const Icon = subTab.icon
@@ -200,7 +200,7 @@ export function AgentSettingsCard({
               key={subTab.key}
               onClick={() => setActiveTab(subTab.key)}
               className={cn(
-                'group relative flex items-center gap-3 shrink-0 lg:w-full text-left px-4 py-3 rounded-2xl transition-all duration-300 focus-visible:outline-none cursor-pointer select-none',
+                'group relative flex items-center gap-3 shrink-0 lg:w-full text-start px-4 py-3 rounded-2xl transition-all duration-300 focus-visible:outline-none cursor-pointer select-none',
                 isActive 
                   ? 'bg-card border border-border shadow-[0_4px_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] text-foreground font-bold' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 border border-transparent'
@@ -209,7 +209,7 @@ export function AgentSettingsCard({
               {isActive && (
                 <motion.div
                   layoutId="activeSubTabIndicator"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary hidden lg:block"
+                  className="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-e-full bg-primary hidden lg:block"
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
@@ -485,7 +485,7 @@ export function AgentSettingsCard({
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pe-1">
                       <AnimatePresence>
                         {faqs.map((faq, idx) => (
                           <motion.div 
@@ -515,7 +515,7 @@ export function AgentSettingsCard({
                                     {t('boutique.agentSettings.knowledge.cancel')}
                                   </Button>
                                   <Button size="sm" className="h-7 text-[10px] px-2.5" onClick={saveFaq} disabled={saving}>
-                                    <CheckCircle2 className="size-3 mr-1" /> {t('boutique.agentSettings.knowledge.save')}
+                                    <CheckCircle2 className="size-3 me-1" /> {t('boutique.agentSettings.knowledge.save')}
                                   </Button>
                                 </div>
                               </div>
@@ -715,12 +715,12 @@ export function AgentSettingsCard({
                         value={settings.ai_api_key}
                         onChange={(e) => setSettings((s) => ({ ...s, ai_api_key: e.target.value }))}
                         placeholder="••••••••••••••••••••••••••••••••"
-                        className="rounded-xl border-border bg-card shadow-sm h-10 pr-10 font-mono text-xs"
+                        className="rounded-xl border-border bg-card shadow-sm h-10 pe-10 font-mono text-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer select-none"
+                        className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer select-none"
                       >
                         {showApiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>

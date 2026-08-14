@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { COLOR_THEMES, useCustomTheme, type ColorTheme } from '@/components/custom-theme-provider'
 import { LanguagePicker } from '@/components/settings/language-picker'
-import { useT } from '@/components/i18n-provider'
+import { useLocale, useT } from '@/components/i18n-provider'
+import { getDir } from '@/lib/i18n/config'
 import type { Translator } from '@/lib/i18n/translate'
 import { springs } from '@/lib/motion/springs'
 import {
@@ -108,7 +109,7 @@ function OptionTile<T extends string>({
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={springs.snappy}
-          className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+          className="absolute -end-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
         >
           <Check className="size-3" strokeWidth={3} />
         </motion.span>
@@ -146,6 +147,11 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 export function WelcomeForm() {
   const router = useRouter()
   const t = useT()
+  const locale = useLocale()
+  // The step wizard slides toward reading direction: +1 always means "the
+  // direction text advances in", not "screen-right" — so it must flip under
+  // RTL or steps would visually slide backward relative to the arabic reader.
+  const dirMultiplier = getDir(locale) === 'rtl' ? -1 : 1
   const { theme, setTheme } = useTheme()
   const { colorTheme, setColorTheme } = useCustomTheme()
 
@@ -279,7 +285,7 @@ export function WelcomeForm() {
                 onClick={() => goTo(step - 1, -1)}
                 className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <ArrowLeft className="size-3" /> {t('onboarding.back')}
+                <ArrowLeft className="size-3 rtl:-scale-x-100" /> {t('onboarding.back')}
               </button>
             ) : (
               <span />
@@ -293,9 +299,9 @@ export function WelcomeForm() {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            initial={{ opacity: 0, x: direction * 28 }}
+            initial={{ opacity: 0, x: direction * dirMultiplier * 28 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -direction * 28 }}
+            exit={{ opacity: 0, x: -direction * dirMultiplier * 28 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="mb-3.5 text-center text-[14px] font-semibold text-foreground">{stepTitles[step]}</p>
@@ -378,7 +384,7 @@ export function WelcomeForm() {
                           type="button"
                           onClick={() => setColorTheme(opt.id as ColorTheme)}
                           className={cn(
-                            'flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all duration-150',
+                            'flex items-center justify-between rounded-xl border px-3 py-2 text-start transition-all duration-150',
                             isSelected
                               ? 'border-primary bg-primary/10 text-foreground font-semibold shadow-xs'
                               : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-border hover:bg-muted/40'

@@ -89,7 +89,7 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
         }}
       >
         <Search className="size-3.5 shrink-0 opacity-60" strokeWidth={1.75} />
-        <span className="flex-1 text-left opacity-60">{t('nav.search.placeholder')}</span>
+        <span className="flex-1 text-start opacity-60">{t('nav.search.placeholder')}</span>
         <kbd
           className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-50"
           style={{

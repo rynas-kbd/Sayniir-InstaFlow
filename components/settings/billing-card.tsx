@@ -130,7 +130,7 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
                       aria-checked={isSelected}
                       onClick={() => setSelectedPlan(key)}
                       className={cn(
-                        'relative flex flex-col items-start gap-0.5 rounded-2xl border p-2.5 text-left transition-colors',
+                        'relative flex flex-col items-start gap-0.5 rounded-2xl border p-2.5 text-start transition-colors',
                         isSelected ? 'border-primary/30' : 'border-border hover:border-primary/20 hover:bg-muted/30'
                       )}
                     >
@@ -157,7 +157,7 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
                         {planAmount === null ? t('billing.quotePrice') : `${formatDzd(planAmount)} DZD`}
                       </span>
                       {isSelected && (
-                        <span className="absolute right-2 top-2 z-10 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <span className="absolute end-2 top-2 z-10 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
                           <Check className="size-2.5" strokeWidth={3} />
                         </span>
                       )}
