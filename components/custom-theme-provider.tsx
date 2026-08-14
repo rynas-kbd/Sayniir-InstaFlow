@@ -29,12 +29,12 @@ export const COLOR_THEMES: ColorThemeOption[] = [
   },
   {
     id: 'terracotta',
-    name: 'Terracotta',
-    description: 'Chaleureux & naturel (Organique)',
-    primaryColor: '#c67139',
-    gradient: 'linear-gradient(135deg, #f6a06b 0%, #c67139 100%)',
-    darkGradient: 'linear-gradient(135deg, #e2884d 0%, #b2622d 100%)',
-    previewBorder: '#c67139',
+    name: 'Ardoise',
+    description: 'Sobre & épuré (gris neutre)',
+    primaryColor: '#27272a',
+    gradient: 'linear-gradient(135deg, #52525b 0%, #27272a 100%)',
+    darkGradient: 'linear-gradient(135deg, #e4e4e7 0%, #a1a1aa 100%)',
+    previewBorder: '#27272a',
   },
   {
     id: 'emerald',

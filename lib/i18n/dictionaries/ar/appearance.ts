@@ -21,7 +21,7 @@ export const appearance = {
   themeToggleAriaLabel: 'تبديل المظهر',
   themes: {
     ocean: { name: 'المحيط السيبراني', description: 'أزرق كوبالت ونيلي زاهٍ' },
-    terracotta: { name: 'تيراكوتا', description: 'دافئ وطبيعي (عضوي)' },
+    terracotta: { name: 'رمادي أردوازي', description: 'أنيق وبسيط (رمادي محايد)' },
     emerald: { name: 'زمردي', description: 'أخضر غابي ومريمية منعشة' },
     sunset: { name: 'غروب الشمس', description: 'وردي زاهٍ وجمشتي' },
     midnight: { name: 'منتصف الليل الذهبي', description: 'كهرماني دافئ وأسود أنيق' },

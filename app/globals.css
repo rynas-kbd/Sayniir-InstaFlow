@@ -68,34 +68,39 @@ body:has(.app-shell-root) {
      leaving the browser free to guess from prefers-color-scheme and
      double-invert an already-themed page. */
   color-scheme: light;
-  --organic-bg: #f5ead8;
-  --organic-surface: #ebddc5;
-  --organic-text: #201e1d;
-  --organic-terracotta: #c67139;
+  /* 2026-08: base palette moved from warm cream/terracotta to a neutral
+     white/zinc scale (see plan "Passer le fond de l'appli du beige au
+     blanc/gris neutre"). Variable names below (--organic-*, --*-sand-*,
+     --organic-terracotta*) are kept as-is to avoid touching the ~137
+     direct var() call sites across the app — only the values changed. */
+  --organic-bg: #ffffff;
+  --organic-surface: #fafafa;
+  --organic-text: #18181b;
+  --organic-terracotta: #27272a;
   --organic-sage: #7a8a5e;
-  --organic-divider: color-mix(in srgb, #201e1d 16%, transparent);
+  --organic-divider: color-mix(in srgb, #18181b 12%, transparent);
 
   /* Tonal ramps — same shared-lightness-scale idea as Organic's source:
      the same step of any role should read as the same visual weight. */
-  --organic-sand-100: #f9f4ed;
-  --organic-sand-200: #eee7db;
-  --organic-sand-300: #dcd3c4;
-  --organic-sand-400: #c0b6a5;
-  --organic-sand-500: #a19786;
-  --organic-sand-600: #82796a;
-  --organic-sand-700: #645c50;
-  --organic-sand-800: #474238;
-  --organic-sand-900: #2e2b25;
+  --organic-sand-100: #fafafa;
+  --organic-sand-200: #f4f4f5;
+  --organic-sand-300: #e4e4e7;
+  --organic-sand-400: #a1a1aa;
+  --organic-sand-500: #71717a;
+  --organic-sand-600: #52525b;
+  --organic-sand-700: #3f3f46;
+  --organic-sand-800: #27272a;
+  --organic-sand-900: #18181b;
 
-  --organic-terracotta-100: #fff2eb;
-  --organic-terracotta-200: #ffe1d0;
-  --organic-terracotta-300: #ffc6a5;
-  --organic-terracotta-400: #f6a06b;
-  --organic-terracotta-500: #d67f48;
-  --organic-terracotta-600: #b2622d;
-  --organic-terracotta-700: #8c491a;
-  --organic-terracotta-800: #643312;
-  --organic-terracotta-900: #402310;
+  --organic-terracotta-100: #f4f4f5;
+  --organic-terracotta-200: #e4e4e7;
+  --organic-terracotta-300: #d4d4d8;
+  --organic-terracotta-400: #a1a1aa;
+  --organic-terracotta-500: #71717a;
+  --organic-terracotta-600: #52525b;
+  --organic-terracotta-700: #3f3f46;
+  --organic-terracotta-800: #27272a;
+  --organic-terracotta-900: #18181b;
 
   --organic-sage-100: #f0fae1;
   --organic-sage-200: #e1eecc;
@@ -130,39 +135,39 @@ body:has(.app-shell-root) {
   --organic-radius-md: 16px;
   --organic-radius-lg: 28px;
 
-  --organic-shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
-  --organic-shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
-  --organic-shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+  --organic-shadow-sm: 0 1px 2px color-mix(in srgb, #18181b 14%, transparent);
+  --organic-shadow-md: 0 3px 10px color-mix(in srgb, #18181b 16%, transparent);
+  --organic-shadow-lg: 0 12px 32px color-mix(in srgb, #18181b 22%, transparent);
 }
 
 .dark {
   color-scheme: dark;
-  --organic-bg: #1b1714;
-  --organic-surface: #241e19;
-  --organic-text: #f3e8da;
-  --organic-terracotta: #e2884d;
+  --organic-bg: #09090b;
+  --organic-surface: #18181b;
+  --organic-text: #fafafa;
+  --organic-terracotta: #e4e4e7;
   --organic-sage: #9ab27a;
-  --organic-divider: color-mix(in srgb, #f3e8da 14%, transparent);
+  --organic-divider: color-mix(in srgb, #fafafa 14%, transparent);
 
-  --organic-sand-100: #17130f;
-  --organic-sand-200: #1f1a15;
-  --organic-sand-300: #2c2620;
-  --organic-sand-400: #3c342b;
-  --organic-sand-500: #524739;
-  --organic-sand-600: #6e5f4d;
-  --organic-sand-700: #93816a;
-  --organic-sand-800: #bcac92;
-  --organic-sand-900: #e8dcc6;
+  --organic-sand-100: #0f0f10;
+  --organic-sand-200: #18181b;
+  --organic-sand-300: #27272a;
+  --organic-sand-400: #3f3f46;
+  --organic-sand-500: #52525b;
+  --organic-sand-600: #71717a;
+  --organic-sand-700: #a1a1aa;
+  --organic-sand-800: #d4d4d8;
+  --organic-sand-900: #fafafa;
 
-  --organic-terracotta-100: #3a2416;
-  --organic-terracotta-200: #4d2f1a;
-  --organic-terracotta-300: #653c1f;
-  --organic-terracotta-400: #855025;
-  --organic-terracotta-500: #a8672e;
-  --organic-terracotta-600: #cf8442;
-  --organic-terracotta-700: #e2a06a;
-  --organic-terracotta-800: #f0c199;
-  --organic-terracotta-900: #f9e0c8;
+  --organic-terracotta-100: #1c1c1f;
+  --organic-terracotta-200: #27272a;
+  --organic-terracotta-300: #3f3f46;
+  --organic-terracotta-400: #52525b;
+  --organic-terracotta-500: #71717a;
+  --organic-terracotta-600: #a1a1aa;
+  --organic-terracotta-700: #d4d4d8;
+  --organic-terracotta-800: #e4e4e7;
+  --organic-terracotta-900: #f4f4f5;
 
   --organic-sage-100: #1a2213;
   --organic-sage-200: #232e19;
@@ -177,9 +182,9 @@ body:has(.app-shell-root) {
   --organic-destructive-500: #d9695a;
   --organic-destructive-700: #f0958a;
 
-  --organic-shadow-sm: 0 0 0 1px color-mix(in srgb, #f3e8da 8%, transparent), 0 1px 2px color-mix(in srgb, #000000 35%, transparent);
-  --organic-shadow-md: 0 0 0 1px color-mix(in srgb, #f3e8da 8%, transparent), 0 3px 10px color-mix(in srgb, #000000 45%, transparent);
-  --organic-shadow-lg: 0 0 0 1px color-mix(in srgb, #f3e8da 10%, transparent), 0 12px 32px color-mix(in srgb, #000000 55%, transparent);
+  --organic-shadow-sm: 0 0 0 1px color-mix(in srgb, #fafafa 8%, transparent), 0 1px 2px color-mix(in srgb, #000000 35%, transparent);
+  --organic-shadow-md: 0 0 0 1px color-mix(in srgb, #fafafa 8%, transparent), 0 3px 10px color-mix(in srgb, #000000 45%, transparent);
+  --organic-shadow-lg: 0 0 0 1px color-mix(in srgb, #fafafa 10%, transparent), 0 12px 32px color-mix(in srgb, #000000 55%, transparent);
 }
 
 /* ─────────────────────────────────────────────
@@ -520,10 +525,10 @@ html[data-color-theme="custom"] .dark {
   --sidebar-primary: var(--custom-primary-color, #c67139);
   --sidebar-ring: var(--custom-primary-color, #c67139);
   --organic-terracotta: var(--custom-primary-color, #c67139);
-  --organic-terracotta-100: color-mix(in srgb, var(--custom-primary-color, #c67139) 15%, #1b1714);
-  --organic-terracotta-200: color-mix(in srgb, var(--custom-primary-color, #c67139) 30%, #1b1714);
-  --organic-terracotta-300: color-mix(in srgb, var(--custom-primary-color, #c67139) 45%, #1b1714);
-  --organic-terracotta-400: color-mix(in srgb, var(--custom-primary-color, #c67139) 60%, #1b1714);
+  --organic-terracotta-100: color-mix(in srgb, var(--custom-primary-color, #c67139) 15%, #09090b);
+  --organic-terracotta-200: color-mix(in srgb, var(--custom-primary-color, #c67139) 30%, #09090b);
+  --organic-terracotta-300: color-mix(in srgb, var(--custom-primary-color, #c67139) 45%, #09090b);
+  --organic-terracotta-400: color-mix(in srgb, var(--custom-primary-color, #c67139) 60%, #09090b);
   --organic-terracotta-500: var(--custom-primary-color, #c67139);
   --organic-terracotta-600: color-mix(in srgb, var(--custom-primary-color, #c67139) 85%, #ffffff);
   --organic-terracotta-700: color-mix(in srgb, var(--custom-primary-color, #c67139) 70%, #ffffff);
@@ -531,10 +536,10 @@ html[data-color-theme="custom"] .dark {
   --organic-terracotta-900: color-mix(in srgb, var(--custom-primary-color, #c67139) 40%, #ffffff);
 
   --organic-sage: var(--custom-secondary-color, #8fa073);
-  --organic-sage-100: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 15%, #1b1714);
-  --organic-sage-200: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 30%, #1b1714);
-  --organic-sage-300: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 45%, #1b1714);
-  --organic-sage-400: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 60%, #1b1714);
+  --organic-sage-100: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 15%, #09090b);
+  --organic-sage-200: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 30%, #09090b);
+  --organic-sage-300: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 45%, #09090b);
+  --organic-sage-400: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 60%, #09090b);
   --organic-sage-500: var(--custom-secondary-color, #8fa073);
   --organic-sage-600: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 85%, #ffffff);
   --organic-sage-700: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 70%, #ffffff);
@@ -1174,10 +1179,10 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (prefers-contrast: more) {
   :root {
-    --organic-divider: color-mix(in srgb, #201e1d 45%, transparent);
+    --organic-divider: color-mix(in srgb, #18181b 45%, transparent);
   }
   .dark {
-    --organic-divider: color-mix(in srgb, #f5ead8 45%, transparent);
+    --organic-divider: color-mix(in srgb, #fafafa 45%, transparent);
   }
   * {
     --tw-ring-color: currentColor;

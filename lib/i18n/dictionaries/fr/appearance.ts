@@ -21,7 +21,7 @@ export const appearance = {
   themeToggleAriaLabel: 'Changer de thème',
   themes: {
     ocean: { name: 'Océan Cyber', description: 'Bleu cobalt & indigo vibrant' },
-    terracotta: { name: 'Terracotta', description: 'Chaleureux & naturel (Organique)' },
+    terracotta: { name: 'Ardoise', description: 'Sobre & épuré (gris neutre)' },
     emerald: { name: 'Émeraude', description: 'Vert forêt & sauge rafraîchissant' },
     sunset: { name: 'Coucher de soleil', description: 'Rose vibrant & améthyste' },
     midnight: { name: 'Minuit Doré', description: 'Ambre chaud & onyx élégant' },
