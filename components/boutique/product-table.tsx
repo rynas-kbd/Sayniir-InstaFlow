@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import { ProductFormDialog } from './product-form-dialog'
 import { ProductCard } from './product-card'
 import { productToCardView } from './product-card-view'
@@ -39,6 +40,7 @@ type ActiveFilter = 'all' | 'active' | 'inactive'
 type KindFilter = 'all' | ProductKind
 
 export function ProductTable({ channelAccountId, initialProducts }: { channelAccountId: string; initialProducts: Product[] }) {
+  const t = useT()
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [editing, setEditing] = useState<Product | undefined>(undefined)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -142,10 +144,10 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         body: JSON.stringify({ is_active: nextActive }),
       })
       if (!res.ok) throw new Error()
-      toast.success(nextActive ? 'Produit activé' : 'Produit désactivé — masqué du catalogue proposé par l’IA')
+      toast.success(nextActive ? t('boutique.productTable.toast.activated') : t('boutique.productTable.toast.deactivated'))
     } catch {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, is_active: product.is_active } : p)))
-      toast.error('Impossible de mettre à jour le produit')
+      toast.error(t('boutique.productTable.toast.toggleError'))
     }
   }
 
@@ -154,9 +156,9 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Erreur')
       setProducts((prev) => prev.filter((p) => p.id !== id))
-      toast.success('📦 Produit supprimé')
+      toast.success(t('boutique.productTable.toast.deleted'))
     } catch {
-      toast.error('Impossible de supprimer le produit')
+      toast.error(t('boutique.productTable.toast.deleteError'))
     } finally {
       setDeletingId(null)
     }
@@ -177,8 +179,12 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       ),
     )
     const failed = results.filter((r) => r.status === 'rejected').length
-    if (failed > 0) toast.error(`${failed} produit(s) n'ont pas pu être mis à jour`)
-    else toast.success(`${ids.length} produit(s) ${nextActive ? 'activés' : 'désactivés'}`)
+    if (failed > 0) toast.error(t.plural('boutique.productTable.toast.bulkUpdateError', failed))
+    else toast.success(
+      nextActive
+        ? t.plural('boutique.productTable.toast.bulkActivateSuccess', ids.length)
+        : t.plural('boutique.productTable.toast.bulkDeactivateSuccess', ids.length),
+    )
     setSelected(new Set())
   }
 
@@ -189,8 +195,8 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
     })))
     const failedIds = ids.filter((_, i) => results[i].status === 'rejected')
     setProducts((prev) => prev.filter((p) => !ids.includes(p.id) || failedIds.includes(p.id)))
-    if (failedIds.length > 0) toast.error(`${failedIds.length} produit(s) n'ont pas pu être supprimés`)
-    else toast.success(`${ids.length} produit(s) supprimé(s)`)
+    if (failedIds.length > 0) toast.error(t.plural('boutique.productTable.toast.bulkDeleteError', failedIds.length))
+    else toast.success(t.plural('boutique.productTable.toast.bulkDeleteSuccess', ids.length))
     setSelected(new Set())
     setBulkDeleteOpen(false)
   }
@@ -211,46 +217,46 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 pt-4 max-h-[80dvh] overflow-y-auto">
           <SheetHeader className="mb-4 flex-row items-center justify-between">
-            <SheetTitle className="text-base font-extrabold">Filtres</SheetTitle>
+            <SheetTitle className="text-base font-extrabold">{t('boutique.productTable.filters.sheetTitle')}</SheetTitle>
             <button
               onClick={() => setFilterSheetOpen(false)}
               className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/60 transition-colors"
-              aria-label="Fermer"
+              aria-label={t('boutique.productTable.filters.closeAria')}
             >
               <X className="size-4" />
             </button>
           </SheetHeader>
           <div className="flex flex-col gap-3">
             <div>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Type de produit</p>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t('boutique.productTable.filters.kindLabel')}</p>
               <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder={t('boutique.productTable.filters.kindPlaceholder')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
+                  <SelectItem value="all">{t('boutique.productTable.filters.kindAll')}</SelectItem>
                   {PRODUCT_KINDS.map((k) => (
-                    <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
+                    <SelectItem key={k.key} value={k.key}>{t(k.label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Statut</p>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t('boutique.productTable.filters.statusLabel')}</p>
               <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Statut" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder={t('boutique.productTable.filters.statusPlaceholder')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="active">Actifs</SelectItem>
-                  <SelectItem value="inactive">Inactifs</SelectItem>
+                  <SelectItem value="all">{t('boutique.productTable.filters.statusAll')}</SelectItem>
+                  <SelectItem value="active">{t('boutique.productTable.filters.statusActive')}</SelectItem>
+                  <SelectItem value="inactive">{t('boutique.productTable.filters.statusInactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {categories.length > 0 && (
               <div>
-                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Catégorie</p>
+                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t('boutique.productTable.filters.categoryLabel')}</p>
                 <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder={t('boutique.productTable.filters.categoryPlaceholder')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Toutes catégories</SelectItem>
+                    <SelectItem value="all">{t('boutique.productTable.filters.categoryAll')}</SelectItem>
                     {categories.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
@@ -263,7 +269,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
               className="mt-2 w-full"
               onClick={() => { setKindFilter('all'); setActiveFilter('all'); setCategoryFilter('all'); setVisibleCount(PAGE_SIZE) }}
             >
-              Réinitialiser les filtres
+              {t('boutique.productTable.filters.reset')}
             </Button>
           </div>
         </SheetContent>
@@ -277,10 +283,10 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
             type="button"
             onClick={toggleSelectAll}
             className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-2 text-muted-foreground transition-colors hover:text-foreground sm:px-3"
-            aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+            aria-label={allFilteredSelected ? t('boutique.productTable.deselectAll') : t('boutique.productTable.selectAll')}
           >
             {selectAllIcon}
-            <span className="hidden text-[11px] font-extrabold uppercase tracking-wider sm:inline">Tout sélectionner</span>
+            <span className="hidden text-[11px] font-extrabold uppercase tracking-wider sm:inline">{t('boutique.productTable.selectAll')}</span>
           </button>
         )}
 
@@ -293,7 +299,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
               setSearch(e.target.value)
               setVisibleCount(PAGE_SIZE)
             }}
-            placeholder="Rechercher un produit…"
+            placeholder={t('boutique.productTable.searchPlaceholder')}
             className="pl-8"
           />
         </div>
@@ -304,7 +310,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           size="icon"
           className="relative shrink-0 sm:hidden"
           onClick={() => setFilterSheetOpen(true)}
-          aria-label="Ouvrir les filtres"
+          aria-label={t('boutique.productTable.filters.openAria')}
         >
           <SlidersHorizontal className="size-4" />
           {activeFilterCount > 0 && (
@@ -317,27 +323,27 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         {/* Desktop: inline filters */}
         <div className="hidden sm:flex items-center gap-2 flex-wrap">
           <Select value={kindFilter} onValueChange={(v) => { setKindFilter(v as KindFilter); setVisibleCount(PAGE_SIZE) }}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectTrigger className="w-[150px]"><SelectValue placeholder={t('boutique.productTable.filters.kindPlaceholder')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les types</SelectItem>
+              <SelectItem value="all">{t('boutique.productTable.filters.kindAll')}</SelectItem>
               {PRODUCT_KINDS.map((k) => (
-                <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
+                <SelectItem key={k.key} value={k.key}>{t(k.label)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v as ActiveFilter); setVisibleCount(PAGE_SIZE) }}>
-            <SelectTrigger className="w-[130px]"><SelectValue placeholder="Statut" /></SelectTrigger>
+            <SelectTrigger className="w-[130px]"><SelectValue placeholder={t('boutique.productTable.filters.statusPlaceholder')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="active">Actifs</SelectItem>
-              <SelectItem value="inactive">Inactifs</SelectItem>
+              <SelectItem value="all">{t('boutique.productTable.filters.statusAll')}</SelectItem>
+              <SelectItem value="active">{t('boutique.productTable.filters.statusActive')}</SelectItem>
+              <SelectItem value="inactive">{t('boutique.productTable.filters.statusInactive')}</SelectItem>
             </SelectContent>
           </Select>
           {categories.length > 0 && (
             <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v ?? 'all'); setVisibleCount(PAGE_SIZE) }}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder={t('boutique.productTable.filters.categoryPlaceholder')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes catégories</SelectItem>
+                <SelectItem value="all">{t('boutique.productTable.filters.categoryAll')}</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))}
@@ -361,27 +367,27 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
         <>
           {/* Mobile sticky bar */}
           <div className="fixed bottom-0 inset-x-0 z-50 flex sm:hidden items-center gap-2 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 shadow-2xl">
-            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}>
+            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? t('boutique.productTable.deselectAll') : t('boutique.productTable.selectAll')}>
               {selectAllIcon}
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{selected.size} sél.</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{t('boutique.productTable.bulkBar.selectedCountMobile', { count: selected.size })}</span>
             </button>
             <div className="ml-auto flex gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
-              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>Suppr.</Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>{t('boutique.productTable.bulkBar.activate')}</Button>
+              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>{t('boutique.productTable.bulkBar.deleteShort')}</Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}><X className="size-3.5" /></Button>
             </div>
           </div>
           {/* Desktop inline bar */}
           <div className="hidden sm:flex mb-4 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3.5 py-2.5">
-            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? 'Tout désélectionner' : 'Tout sélectionner'}>
+            <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5" aria-label={allFilteredSelected ? t('boutique.productTable.deselectAll') : t('boutique.productTable.selectAll')}>
               {selectAllIcon}
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{selected.size} sélectionné(s)</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">{t.plural('boutique.productTable.bulkBar.selectedCount', selected.size)}</span>
             </button>
             <div className="ml-auto flex gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>Activer</Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>Désactiver</Button>
-              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>Supprimer</Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Annuler</Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(true)}>{t('boutique.productTable.bulkBar.activate')}</Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => handleBulkSetActive(false)}>{t('boutique.productTable.bulkBar.deactivate')}</Button>
+              <Button type="button" size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setBulkDeleteOpen(true)}>{t('boutique.productTable.bulkBar.delete')}</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{t('boutique.productTable.bulkBar.cancel')}</Button>
             </div>
           </div>
         </>
@@ -390,16 +396,16 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       {products.length === 0 ? (
         <EmptyState
           icon={Package}
-          title="Aucun produit dans le catalogue"
-          description="Créez votre premier produit pour que l'IA puisse le proposer à vos clients dans le chat, ou importez un fichier CSV/JSON et un Google Sheet ci-dessus."
+          title={t('boutique.productTable.emptyState.noProductsTitle')}
+          description={t('boutique.productTable.emptyState.noProductsDescription')}
           action={
             <Button render={<Link href="/boutique/products/new" />}>
-              <Plus className="size-4" /> Ajouter mon premier produit
+              <Plus className="size-4" /> {t('boutique.productTable.emptyState.addFirstProduct')}
             </Button>
           }
         />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={Search} title="Aucun résultat" description="Aucun produit ne correspond à ces filtres." />
+        <EmptyState icon={Search} title={t('boutique.productTable.emptyState.noResultsTitle')} description={t('boutique.productTable.emptyState.noResultsDescription')} />
       ) : (
         <>
           <motion.div
@@ -422,7 +428,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                   className="relative"
                 >
                   <ProductCard
-                    view={productToCardView(product)}
+                    view={productToCardView(product, t)}
                     onToggleActive={(next: boolean) => handleToggleActive(product, next)}
                     selectable
                     selected={selected.has(product.id)}
@@ -432,19 +438,19 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                         <button
                           onClick={() => setDeletingId(product.id)}
                           className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 cursor-pointer"
-                          aria-label="Supprimer produit"
+                          aria-label={t('boutique.productTable.actions.deleteAria')}
                         >
                           <Trash2 className="size-3.5" />
-                          Supprimer
+                          {t('boutique.productTable.actions.delete')}
                         </button>
 
                         <button
                           onClick={() => setEditing(product)}
                           className="flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 px-3.5 py-1.5 text-[11px] font-extrabold text-primary transition-all active:scale-95 cursor-pointer"
-                          aria-label="Modifier produit"
+                          aria-label={t('boutique.productTable.actions.editAria')}
                         >
                           <Edit2 className="size-3.5" />
-                          Modifier
+                          {t('boutique.productTable.actions.edit')}
                         </button>
                       </>
                     }
@@ -468,8 +474,8 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
                   <Plus className="size-6" />
                 </div>
                 <div className="text-center">
-                  <span className="block text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary">Nouveau produit</span>
-                  <span className="mt-0.5 block text-[11px] font-medium text-muted-foreground">Ajouter manuellement au catalogue</span>
+                  <span className="block text-sm font-extrabold tracking-tight text-foreground group-hover:text-primary">{t('boutique.productTable.addTile.title')}</span>
+                  <span className="mt-0.5 block text-[11px] font-medium text-muted-foreground">{t('boutique.productTable.addTile.subtitle')}</span>
                 </div>
               </Link>
             </motion.div>
@@ -478,7 +484,7 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
           {visibleCount < filtered.length && (
             <div className="mt-4 flex justify-center">
               <Button type="button" variant="outline" size="sm" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                Charger plus ({filtered.length - visibleCount} restants)
+                {t.plural('boutique.productTable.loadMore', filtered.length - visibleCount)}
               </Button>
             </div>
           )}
@@ -488,18 +494,18 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       <AlertDialog open={deletingId !== null} onOpenChange={(next) => !next && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('boutique.productTable.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Le produit sera retiré du catalogue et l&apos;IA ne pourra plus le vendre.
+              {t('boutique.productTable.deleteDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('boutique.productTable.deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingId && handleDelete(deletingId)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Supprimer
+              {t('boutique.productTable.deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -508,13 +514,13 @@ export function ProductTable({ channelAccountId, initialProducts }: { channelAcc
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer {selected.size} produit(s) ?</AlertDialogTitle>
-            <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+            <AlertDialogTitle>{t.plural('boutique.productTable.bulkDeleteDialog.title', selected.size)}</AlertDialogTitle>
+            <AlertDialogDescription>{t('boutique.productTable.bulkDeleteDialog.description')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('boutique.productTable.bulkDeleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-white hover:bg-destructive/90">
-              Supprimer
+              {t('boutique.productTable.bulkDeleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

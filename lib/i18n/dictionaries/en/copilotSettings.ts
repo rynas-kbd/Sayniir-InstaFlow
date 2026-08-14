@@ -1,0 +1,15 @@
+export const copilotSettings = {
+  cardTitle: 'AI Copilot',
+  cardDescription: 'The built-in assistant that helps you build and troubleshoot your account.',
+  useOwnKeyTitle: 'Use my own API key',
+  useOwnKeyDescription: 'Bypasses the monthly quota — usage is still billed to your own account.',
+  providerLabel: 'Provider',
+  modelLabel: 'Model',
+  apiKeyLabel: '{provider} API key',
+  apiKeyPlaceholder: '••••••••',
+  save: 'Save',
+  saved: 'Saved',
+  keyEncryptedNote: 'The key is encrypted before storage and will never be shown in plain text.',
+  upgradeToProNote: 'Upgrade to the Pro plan to use your own API key and lift the monthly quota.',
+  saveError: 'Failed to save',
+}

@@ -18,8 +18,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import type { FlowSummary } from './types'
+import { useT } from '@/components/i18n-provider'
 
 export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
+  const t = useT()
   const [flow, setFlow] = useState(initialFlow)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -33,9 +35,9 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
       })
       if (!res.ok) throw new Error('Erreur')
       setFlow((prev) => ({ ...prev, status: nextStatus }))
-      toast.success(checked ? 'Flow activé' : 'Flow mis en pause')
+      toast.success(checked ? t('flows.flowRow.activated') : t('flows.flowRow.paused'))
     } catch {
-      toast.error('Impossible de mettre à jour le flow')
+      toast.error(t('flows.flowRow.updateError'))
     }
   }
 
@@ -45,7 +47,7 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
       if (!res.ok) throw new Error('Erreur')
       window.location.reload()
     } catch {
-      toast.error('Impossible de supprimer le flow')
+      toast.error(t('flows.flowRow.deleteError'))
     }
   }
 
@@ -58,11 +60,11 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
           </Link>
           <StatusDot
             tone={flow.status === 'active' ? 'success' : flow.status === 'paused' ? 'warning' : 'neutral'}
-            label={flow.status === 'active' ? 'Actif' : flow.status === 'paused' ? 'En pause' : 'Brouillon'}
+            label={flow.status === 'active' ? t('flows.flowRow.statusActive') : flow.status === 'paused' ? t('flows.flowRow.statusPaused') : t('flows.flowRow.statusDraft')}
           />
         </div>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {flow.trigger_type === 'any_message' ? 'Tout message' : flow.trigger_keywords?.join(', ')}
+          {flow.trigger_type === 'any_message' ? t('flows.flowRow.anyMessage') : flow.trigger_keywords?.join(', ')}
         </p>
       </div>
 
@@ -71,7 +73,7 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
           variant="ghost"
           size="icon-sm"
           onClick={() => setConfirmOpen(true)}
-          aria-label="Supprimer"
+          aria-label={t('flows.flowRow.deleteAria')}
           className="text-muted-foreground hover:text-destructive md:opacity-0 md:transition-opacity md:group-focus-within:opacity-100 md:group-hover:opacity-100"
         >
           <Trash2 className="size-3.5" />
@@ -86,13 +88,13 @@ export function FlowRow({ flow: initialFlow }: { flow: FlowSummary }) {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce flow ?</AlertDialogTitle>
-            <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+            <AlertDialogTitle>{t('flows.flowRow.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('flows.flowRow.deleteDescription')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('flows.flowRow.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
-              Supprimer
+              {t('flows.flowRow.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

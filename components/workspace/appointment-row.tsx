@@ -6,6 +6,7 @@ import { Check, X, CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
+import { useT } from '@/components/i18n-provider'
 
 export interface Appointment {
   id: string
@@ -25,20 +26,22 @@ const STATUS_TONE: Record<string, StatusTone> = {
   cancelled: 'destructive',
   no_show: 'destructive',
 }
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'En attente',
-  confirmed: 'Confirmé',
-  completed: 'Terminé',
-  cancelled: 'Annulé',
-  no_show: 'Absent',
-}
 const STATUS_BAR: Record<string, string> = {
   confirmed: 'from-success/60 via-success to-success/60',
 }
 
 export function AppointmentRow({ appointment }: { appointment: Appointment }) {
+  const t = useT()
   const [status, setStatus] = useState(appointment.status)
   const [loading, setLoading] = useState(false)
+
+  const STATUS_LABEL: Record<string, string> = {
+    pending: t('rdv.row.statusPending'),
+    confirmed: t('rdv.row.statusConfirmed'),
+    completed: t('rdv.row.statusCompleted'),
+    cancelled: t('rdv.row.statusCancelled'),
+    no_show: t('rdv.row.statusNoShow'),
+  }
 
   async function updateStatus(next: 'confirmed' | 'cancelled') {
     setLoading(true)
@@ -50,9 +53,9 @@ export function AppointmentRow({ appointment }: { appointment: Appointment }) {
       })
       if (!res.ok) throw new Error('Erreur')
       setStatus(next)
-      toast.success(next === 'confirmed' ? 'Rendez-vous confirmé' : 'Rendez-vous annulé')
+      toast.success(next === 'confirmed' ? t('rdv.row.toastConfirmed') : t('rdv.row.toastCancelled'))
     } catch {
-      toast.error('Impossible de mettre à jour le rendez-vous')
+      toast.error(t('rdv.row.toastUpdateError'))
     } finally {
       setLoading(false)
     }
@@ -82,7 +85,7 @@ export function AppointmentRow({ appointment }: { appointment: Appointment }) {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-sm font-semibold text-foreground">{appointment.client_name}</h3>
-            <p className="truncate text-xs text-muted-foreground">{appointment.client_phone ?? 'Aucun numéro'}</p>
+            <p className="truncate text-xs text-muted-foreground">{appointment.client_phone ?? t('rdv.row.noPhone')}</p>
           </div>
         </div>
 
@@ -90,7 +93,7 @@ export function AppointmentRow({ appointment }: { appointment: Appointment }) {
           <CalendarClock className="size-3 shrink-0" />
           {appointment.scheduled_at
             ? new Date(appointment.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
-            : 'Créneau non confirmé'}{' '}
+            : t('rdv.row.unconfirmedSlot')}{' '}
           · {appointment.duration_minutes} min
         </p>
       </div>
@@ -103,11 +106,11 @@ export function AppointmentRow({ appointment }: { appointment: Appointment }) {
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <X className="size-3.5" />
-            Annuler
+            {t('rdv.row.cancelButton')}
           </button>
           <Button size="sm" variant="outline" onClick={() => updateStatus('confirmed')} disabled={loading} className="h-7 gap-1.5 text-xs">
             <Check className="size-3.5" />
-            Confirmer
+            {t('rdv.row.confirmButton')}
           </Button>
         </div>
       )}

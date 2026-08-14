@@ -10,6 +10,7 @@ import { getAccountLabel, PLATFORM_ICON, PLATFORM_LABEL } from '@/lib/channels/l
 import { getAvatarColor } from '@/lib/avatar-color'
 import { ALL_ACCOUNTS_SCOPE } from '@/lib/accounts/select-active-account'
 import type { ActiveAccount } from '@/lib/accounts/active-account'
+import { useT } from '@/components/i18n-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ export function AccountSwitcher({
 }) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const t = useT()
 
   if (accounts.length <= 1) return null
 
@@ -55,7 +57,7 @@ export function AccountSwitcher({
     startTransition(async () => {
       const ok = await setActiveAccount(accountId)
       if (!ok) {
-        toast.error('Impossible de changer de compte')
+        toast.error(t('nav.accountSwitcher.changeError'))
         return
       }
       router.refresh()
@@ -76,13 +78,13 @@ export function AccountSwitcher({
             'color-mix(in srgb, var(--organic-sand-300) 0%, transparent)'
         }}
         disabled={isPending}
-        aria-label="Changer de compte"
+        aria-label={t('nav.accountSwitcher.ariaLabel')}
       >
         <div className={`flex size-6 shrink-0 items-center justify-center rounded-full ${getAvatarColor(isAllScope ? 'all' : active.id)}`}>
           {isAllScope ? <Layers className="size-3" strokeWidth={1.75} /> : <ActiveIcon className="size-3" strokeWidth={1.75} />}
         </div>
         <span className="hidden max-w-[120px] truncate text-[12.5px] font-medium text-foreground/80 sm:block">
-          {isAllScope ? 'Tous les canaux' : getAccountLabel(active)}
+          {isAllScope ? t('nav.accountSwitcher.allChannels') : getAccountLabel(active)}
         </span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -107,8 +109,8 @@ export function AccountSwitcher({
               <Layers className="size-3.5" strokeWidth={1.75} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-foreground">Tous les canaux</p>
-              <p className="truncate text-[11px] text-muted-foreground">Boîte de réception unifiée</p>
+              <p className="truncate text-foreground">{t('nav.accountSwitcher.allChannels')}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{t('nav.accountSwitcher.allChannelsSub')}</p>
             </div>
             {isAllScope && <Check className="size-4 shrink-0 text-primary" />}
           </DropdownMenuItem>
@@ -136,7 +138,7 @@ export function AccountSwitcher({
                   <p className="truncate text-foreground">{getAccountLabel(account)}</p>
                   <p className="truncate text-[11px] text-muted-foreground">
                     {PLATFORM_LABEL[account.platform]}
-                    {!account.is_active && ' · Inactif'}
+                    {!account.is_active && t('nav.accountSwitcher.inactiveSuffix')}
                   </p>
                 </div>
                 {isActive && <Check className="size-4 shrink-0 text-primary" />}
@@ -161,7 +163,7 @@ export function AccountSwitcher({
             >
               <Plus className="size-3.5" strokeWidth={1.75} />
             </div>
-            Connecter un compte
+            {t('nav.accountSwitcher.connectAccount')}
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>

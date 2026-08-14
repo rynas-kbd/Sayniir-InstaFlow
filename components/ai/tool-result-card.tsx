@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { Workflow, Package, ShoppingCart, Users, Zap, Megaphone } from 'lucide-react'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 interface FlowRow {
   id: string
@@ -52,33 +54,41 @@ interface CampaignRow {
 }
 
 // Mirrors components/flows/flow-row.tsx's status → tone/label mapping.
-const FLOW_STATUS: Record<string, { tone: StatusTone; label: string }> = {
-  active: { tone: 'success', label: 'Actif' },
-  paused: { tone: 'warning', label: 'En pause' },
-  draft: { tone: 'neutral', label: 'Brouillon' },
+function getFlowStatus(t: Translator): Record<string, { tone: StatusTone; label: string }> {
+  return {
+    active: { tone: 'success', label: t('copilot.toolResult.flowStatusActive') },
+    paused: { tone: 'warning', label: t('copilot.toolResult.flowStatusPaused') },
+    draft: { tone: 'neutral', label: t('copilot.toolResult.flowStatusDraft') },
+  }
 }
 
 // Mirrors components/boutique/order-table.tsx's status → label mapping.
-const PAYMENT_STATUS: Record<string, { tone: StatusTone; label: string }> = {
-  pending: { tone: 'warning', label: 'En attente' },
-  paid: { tone: 'success', label: 'Payé' },
-  failed: { tone: 'destructive', label: 'Échoué' },
-  refunded: { tone: 'neutral', label: 'Remboursé' },
+function getPaymentStatus(t: Translator): Record<string, { tone: StatusTone; label: string }> {
+  return {
+    pending: { tone: 'warning', label: t('copilot.toolResult.paymentPending') },
+    paid: { tone: 'success', label: t('copilot.toolResult.paymentPaid') },
+    failed: { tone: 'destructive', label: t('copilot.toolResult.paymentFailed') },
+    refunded: { tone: 'neutral', label: t('copilot.toolResult.paymentRefunded') },
+  }
 }
-const SHIPPING_STATUS: Record<string, { tone: StatusTone; label: string }> = {
-  pending: { tone: 'neutral', label: 'À expédier' },
-  shipped: { tone: 'primary', label: 'Expédié' },
-  delivered: { tone: 'success', label: 'Livré' },
-  cancelled: { tone: 'destructive', label: 'Annulé' },
+function getShippingStatus(t: Translator): Record<string, { tone: StatusTone; label: string }> {
+  return {
+    pending: { tone: 'neutral', label: t('copilot.toolResult.shippingPending') },
+    shipped: { tone: 'primary', label: t('copilot.toolResult.shippingShipped') },
+    delivered: { tone: 'success', label: t('copilot.toolResult.shippingDelivered') },
+    cancelled: { tone: 'destructive', label: t('copilot.toolResult.shippingCancelled') },
+  }
 }
 
-const CAMPAIGN_STATUS: Record<string, { tone: StatusTone; label: string }> = {
-  draft: { tone: 'neutral', label: 'Brouillon' },
-  scheduled: { tone: 'primary', label: 'Planifiée' },
-  sending: { tone: 'warning', label: 'Envoi en cours' },
-  sent: { tone: 'success', label: 'Envoyée' },
-  cancelled: { tone: 'destructive', label: 'Annulée' },
-  failed: { tone: 'destructive', label: 'Échouée' },
+function getCampaignStatus(t: Translator): Record<string, { tone: StatusTone; label: string }> {
+  return {
+    draft: { tone: 'neutral', label: t('copilot.toolResult.campaignDraft') },
+    scheduled: { tone: 'primary', label: t('copilot.toolResult.campaignScheduled') },
+    sending: { tone: 'warning', label: t('copilot.toolResult.campaignSending') },
+    sent: { tone: 'success', label: t('copilot.toolResult.campaignSent') },
+    cancelled: { tone: 'destructive', label: t('copilot.toolResult.campaignCancelled') },
+    failed: { tone: 'destructive', label: t('copilot.toolResult.campaignFailed') },
+  }
 }
 
 function CardShell({
@@ -121,9 +131,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function FlowsCard({ output }: { output: unknown }) {
+  const t = useT()
   const flows: FlowRow[] = isRecord(output) && Array.isArray(output.flows) ? (output.flows as FlowRow[]) : []
+  const FLOW_STATUS = getFlowStatus(t)
   return (
-    <CardShell icon={Workflow} title="Flows" count={flows.length} isEmpty={flows.length === 0} emptyLabel="Aucun flow pour le moment.">
+    <CardShell icon={Workflow} title={t('copilot.toolResult.flowsTitle')} count={flows.length} isEmpty={flows.length === 0} emptyLabel={t('copilot.toolResult.flowsEmpty')}>
       {flows.map((flow) => {
         const status = FLOW_STATUS[flow.status] ?? FLOW_STATUS.draft
         return (
@@ -140,9 +152,10 @@ function FlowsCard({ output }: { output: unknown }) {
 }
 
 function ProductsCard({ output }: { output: unknown }) {
+  const t = useT()
   const products: ProductRow[] = Array.isArray(output) ? (output as ProductRow[]) : []
   return (
-    <CardShell icon={Package} title="Produits" count={products.length} isEmpty={products.length === 0} emptyLabel="Aucun produit pour le moment.">
+    <CardShell icon={Package} title={t('copilot.toolResult.productsTitle')} count={products.length} isEmpty={products.length === 0} emptyLabel={t('copilot.toolResult.productsEmpty')}>
       {products.map((p) => (
         <Row key={p.id}>
           <span className="min-w-0 flex-1 truncate font-medium text-foreground">{p.name}</span>
@@ -152,7 +165,7 @@ function ProductsCard({ output }: { output: unknown }) {
             </span>
             {!p.is_active && (
               <Badge variant="secondary" className="text-[10px]">
-                Inactif
+                {t('copilot.toolResult.productInactive')}
               </Badge>
             )}
           </div>
@@ -163,9 +176,12 @@ function ProductsCard({ output }: { output: unknown }) {
 }
 
 function OrdersCard({ output }: { output: unknown }) {
+  const t = useT()
   const orders: OrderRow[] = Array.isArray(output) ? (output as OrderRow[]) : []
+  const PAYMENT_STATUS = getPaymentStatus(t)
+  const SHIPPING_STATUS = getShippingStatus(t)
   return (
-    <CardShell icon={ShoppingCart} title="Commandes" count={orders.length} isEmpty={orders.length === 0} emptyLabel="Aucune commande pour le moment.">
+    <CardShell icon={ShoppingCart} title={t('copilot.toolResult.ordersTitle')} count={orders.length} isEmpty={orders.length === 0} emptyLabel={t('copilot.toolResult.ordersEmpty')}>
       {orders.map((o) => {
         const payment = PAYMENT_STATUS[o.payment_status] ?? PAYMENT_STATUS.pending
         const shipping = SHIPPING_STATUS[o.shipping_status] ?? SHIPPING_STATUS.pending
@@ -189,17 +205,18 @@ function OrdersCard({ output }: { output: unknown }) {
 }
 
 function ContactsCard({ output }: { output: unknown }) {
+  const t = useT()
   const contacts: ContactRow[] = isRecord(output) && Array.isArray(output.contacts) ? (output.contacts as ContactRow[]) : []
   return (
-    <CardShell icon={Users} title="Contacts" count={contacts.length} isEmpty={contacts.length === 0} emptyLabel="Aucun contact trouvé.">
+    <CardShell icon={Users} title={t('copilot.toolResult.contactsTitle')} count={contacts.length} isEmpty={contacts.length === 0} emptyLabel={t('copilot.toolResult.contactsEmpty')}>
       {contacts.map((c) => (
         <Row key={c.id}>
           <span className="min-w-0 flex-1 truncate font-medium text-foreground">
-            {c.full_name ?? (c.username ? `@${c.username}` : 'Sans nom')}
+            {c.full_name ?? (c.username ? `@${c.username}` : t('copilot.toolResult.contactNoName'))}
           </span>
           <StatusDot
             tone={c.is_subscribed ? 'success' : 'neutral'}
-            label={c.is_subscribed ? 'Abonné' : 'Désabonné'}
+            label={c.is_subscribed ? t('copilot.toolResult.contactSubscribed') : t('copilot.toolResult.contactUnsubscribed')}
             className="shrink-0"
           />
         </Row>
@@ -209,16 +226,17 @@ function ContactsCard({ output }: { output: unknown }) {
 }
 
 function AutomationRulesCard({ output }: { output: unknown }) {
+  const t = useT()
   const rules: AutomationRuleRow[] = isRecord(output) && Array.isArray(output.rules) ? (output.rules as AutomationRuleRow[]) : []
   return (
-    <CardShell icon={Zap} title="Règles d'automatisation" count={rules.length} isEmpty={rules.length === 0} emptyLabel="Aucune règle pour le moment.">
+    <CardShell icon={Zap} title={t('copilot.toolResult.rulesTitle')} count={rules.length} isEmpty={rules.length === 0} emptyLabel={t('copilot.toolResult.rulesEmpty')}>
       {rules.map((rule) => (
         <Link key={rule.id} href="/automation" className="block">
           <Row>
             <span className="min-w-0 flex-1 truncate font-medium text-foreground">{rule.name}</span>
             <StatusDot
               tone={rule.is_active ? 'success' : 'neutral'}
-              label={rule.is_active ? 'Active' : 'Inactive'}
+              label={rule.is_active ? t('copilot.toolResult.ruleActive') : t('copilot.toolResult.ruleInactive')}
               className="shrink-0"
             />
           </Row>
@@ -229,9 +247,11 @@ function AutomationRulesCard({ output }: { output: unknown }) {
 }
 
 function CampaignsCard({ output }: { output: unknown }) {
+  const t = useT()
   const campaigns: CampaignRow[] = isRecord(output) && Array.isArray(output.campaigns) ? (output.campaigns as CampaignRow[]) : []
+  const CAMPAIGN_STATUS = getCampaignStatus(t)
   return (
-    <CardShell icon={Megaphone} title="Campagnes" count={campaigns.length} isEmpty={campaigns.length === 0} emptyLabel="Aucune campagne pour le moment.">
+    <CardShell icon={Megaphone} title={t('copilot.toolResult.campaignsTitle')} count={campaigns.length} isEmpty={campaigns.length === 0} emptyLabel={t('copilot.toolResult.campaignsEmpty')}>
       {campaigns.map((c) => {
         const status = CAMPAIGN_STATUS[c.status] ?? CAMPAIGN_STATUS.draft
         return (

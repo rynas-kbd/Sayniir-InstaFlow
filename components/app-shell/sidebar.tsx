@@ -7,11 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { springs } from '@/lib/motion/springs'
 import { useSidebarStore } from '@/lib/stores/sidebar-store'
+import { useT } from '@/components/i18n-provider'
 import { getNavSections, type BusinessType } from './nav-config'
 
 export function AppSidebar({ businessType }: { businessType: BusinessType }) {
   const pathname = usePathname()
-  const sections = getNavSections(businessType)
+  const t = useT()
+  const sections = getNavSections(businessType, t)
   const { collapsed, toggle } = useSidebarStore()
 
   return (
@@ -23,7 +25,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
       {/* Logo */}
       <Link
         href="/dashboard"
-        title="Instaflow"
+        title={t('nav.sidebar.logoTitle')}
         className={cn(
           'mb-7 flex h-10 cursor-pointer items-center gap-2.5 rounded-lg transition-colors hover:bg-sidebar-accent/60',
           collapsed ? 'justify-center px-0' : 'px-2.5'
@@ -127,7 +129,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
       <button
         type="button"
         onClick={toggle}
-        title={collapsed ? 'Étendre la sidebar' : 'Réduire la sidebar'}
+        title={collapsed ? t('nav.sidebar.expandTitle') : t('nav.sidebar.collapseTitle')}
         className={cn(
           'mt-2 flex h-9 cursor-pointer items-center gap-2 rounded-lg text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
           collapsed ? 'justify-center px-0' : 'px-3'
@@ -144,7 +146,7 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                 transition={{ duration: 0.15 }}
                 className="text-xs"
               >
-                Réduire
+                {t('nav.sidebar.collapse')}
               </motion.span>
             )}
           </AnimatePresence>

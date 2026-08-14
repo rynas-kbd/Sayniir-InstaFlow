@@ -1,0 +1,15 @@
+export const copilotSettings = {
+  cardTitle: 'Copilote IA',
+  cardDescription: "L'assistant intégré qui vous aide à construire et diagnostiquer votre compte.",
+  useOwnKeyTitle: 'Utiliser ma propre clé API',
+  useOwnKeyDescription: "Contourne le quota mensuel — l'usage reste facturé sur votre propre compte.",
+  providerLabel: 'Fournisseur',
+  modelLabel: 'Modèle',
+  apiKeyLabel: 'Clé API {provider}',
+  apiKeyPlaceholder: '••••••••',
+  save: 'Sauvegarder',
+  saved: 'Sauvegardé',
+  keyEncryptedNote: 'La clé est chiffrée avant stockage et ne sera jamais affichée en clair.',
+  upgradeToProNote: 'Passez au plan Pro pour utiliser votre propre clé API et lever le quota mensuel.',
+  saveError: 'Impossible de sauvegarder',
+}

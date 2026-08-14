@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components
 import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
 import type { Tag } from '@/components/contacts/types'
 import type { Segment } from './types'
+import { useT } from '@/components/i18n-provider'
 
 export function ManageSegmentsDialog({
   channelAccountId,
@@ -23,6 +24,7 @@ export function ManageSegmentsDialog({
   segments: Segment[]
   onChange: (segments: Segment[]) => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [segments, setSegments] = useState(initialSegments)
   const [name, setName] = useState('')
@@ -62,9 +64,9 @@ export function ManageSegmentsDialog({
       setFieldKey('')
       setFieldValue('')
       setMinDays('')
-      toast.success('Segment créé')
+      toast.success(t('campaigns.segmentsDialog.toastCreateSuccess'))
     } catch {
-      toast.error('Impossible de créer le segment')
+      toast.error(t('campaigns.segmentsDialog.toastCreateError'))
     } finally {
       setSaving(false)
     }
@@ -77,42 +79,42 @@ export function ManageSegmentsDialog({
       const next = segments.filter((s) => s.id !== id)
       setSegments(next)
       onChange(next)
-      toast.success('Segment supprimé')
+      toast.success(t('campaigns.segmentsDialog.toastDeleteSuccess'))
     } catch {
-      toast.error('Impossible de supprimer le segment')
+      toast.error(t('campaigns.segmentsDialog.toastDeleteError'))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button type="button" variant="outline" size="sm" />}>
-        <Layers className="size-3.5" /> Gérer les segments
+        <Layers className="size-3.5" /> {t('campaigns.segmentsDialog.trigger')}
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <FormDialogHeader icon={Layers} title="Segments" description="Ciblez vos campagnes avec des filtres combinés." />
+          <FormDialogHeader icon={Layers} title={t('campaigns.segmentsDialog.title')} description={t('campaigns.segmentsDialog.description')} />
         </DialogHeader>
 
-        <FormSection icon={List} label="Segments existants">
+        <FormSection icon={List} label={t('campaigns.segmentsDialog.existingLabel')}>
           <div className="space-y-2">
             {segments.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">Aucun segment créé.</p>
+              <p className="text-xs text-muted-foreground italic">{t('campaigns.segmentsDialog.empty')}</p>
             ) : (
               segments.map((s) => (
                 <div key={s.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-card p-2.5">
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold text-foreground">{s.name}</p>
                     <p className="truncate text-[11px] text-muted-foreground">
-                      {s.tag_ids.length} tag(s)
-                      {s.custom_field_key && ` · ${s.custom_field_key}=${s.custom_field_value}`}
-                      {s.min_days_since_last_inbound != null && ` · inactif ${s.min_days_since_last_inbound}j+`}
+                      {t.plural('campaigns.segmentsDialog.tagCount', s.tag_ids.length)}
+                      {s.custom_field_key && t('campaigns.segmentsDialog.customFieldSuffix', { key: s.custom_field_key, value: s.custom_field_value ?? '' })}
+                      {s.min_days_since_last_inbound != null && t('campaigns.segmentsDialog.inactiveSuffix', { days: s.min_days_since_last_inbound })}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => deleteSegment(s.id)}
                     className="-m-1 shrink-0 cursor-pointer rounded-full p-1 text-muted-foreground hover:text-destructive"
-                    aria-label="Supprimer"
+                    aria-label={t('campaigns.segmentsDialog.deleteAria')}
                   >
                     <Trash2 className="size-3.5" />
                   </button>
@@ -122,9 +124,9 @@ export function ManageSegmentsDialog({
           </div>
         </FormSection>
 
-        <FormSection icon={Filter} label="Nouveau segment">
+        <FormSection icon={Filter} label={t('campaigns.segmentsDialog.newLabel')}>
           <div className="space-y-2.5">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du segment" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('campaigns.segmentsDialog.namePlaceholder')} />
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-3">
                 {tags.map((tag) => (
@@ -136,15 +138,15 @@ export function ManageSegmentsDialog({
               </div>
             )}
             <div className="flex gap-2">
-              <Input value={fieldKey} onChange={(e) => setFieldKey(e.target.value)} placeholder="Champ perso (ex: budget)" className="text-xs" />
-              <Input value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} placeholder="= valeur" className="text-xs" />
+              <Input value={fieldKey} onChange={(e) => setFieldKey(e.target.value)} placeholder={t('campaigns.segmentsDialog.fieldKeyPlaceholder')} className="text-xs" />
+              <Input value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} placeholder={t('campaigns.segmentsDialog.fieldValuePlaceholder')} className="text-xs" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Inactif depuis au moins (jours, optionnel)</Label>
-              <Input type="number" min={1} value={minDays} onChange={(e) => setMinDays(e.target.value)} placeholder="ex: 7" />
+              <Label className="text-xs">{t('campaigns.segmentsDialog.inactiveLabel')}</Label>
+              <Input type="number" min={1} value={minDays} onChange={(e) => setMinDays(e.target.value)} placeholder={t('campaigns.segmentsDialog.inactivePlaceholder')} />
             </div>
             <Button type="button" size="sm" onClick={createSegment} disabled={saving || !name.trim()} className="w-full">
-              <Plus className="size-3.5" /> {saving ? 'Création…' : 'Créer le segment'}
+              <Plus className="size-3.5" /> {saving ? t('campaigns.segmentsDialog.creating') : t('campaigns.segmentsDialog.createButton')}
             </Button>
           </div>
         </FormSection>

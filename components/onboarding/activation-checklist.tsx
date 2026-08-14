@@ -11,6 +11,7 @@ import { ConnectPanel } from '@/components/accounts/connect-panel'
 import { CreateFlowForm } from '@/components/flows/create-flow-form'
 import { ConversationSimulator } from '@/components/onboarding/conversation-simulator'
 import { ONBOARDING_STEPS, type OnboardingStepId } from '@/lib/onboarding/steps'
+import { useT } from '@/components/i18n-provider'
 
 interface ActivationChecklistProps {
   currentStepId: OnboardingStepId
@@ -35,6 +36,7 @@ export function ActivationChecklist({
   whatsappConfigId,
 }: ActivationChecklistProps) {
   const router = useRouter()
+  const t = useT()
   const [skipping, setSkipping] = useState(false)
 
   const currentIndex = STEP_ORDER.indexOf(currentStepId)
@@ -59,9 +61,9 @@ export function ActivationChecklist({
         <CardContent className="p-5 sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <p className="font-heading text-base text-foreground">Mettons votre automatisation en route</p>
+              <p className="font-heading text-base text-foreground">{t('onboardingActivation.checklist.title')}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Trois étapes, {currentIndex + 1}/{STEP_ORDER.length} — vous verrez une vraie réponse partir à la fin.
+                {t('onboardingActivation.checklist.stepCounter', { current: currentIndex + 1, total: STEP_ORDER.length })}
               </p>
             </div>
             <button
@@ -70,7 +72,7 @@ export function ActivationChecklist({
               disabled={skipping}
               className="shrink-0 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
             >
-              Explorer par moi-même
+              {t('onboardingActivation.checklist.exploreSelf')}
             </button>
           </div>
 
@@ -117,9 +119,9 @@ export function ActivationChecklist({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className={cn('text-[13px] font-semibold', isLocked ? 'text-muted-foreground' : 'text-foreground')}>
-                        {step.title}
+                        {t(step.titleKey)}
                       </p>
-                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{step.description}</p>
+                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t(step.descriptionKey)}</p>
 
                       <AnimatePresence>
                         {isCurrent && (
@@ -162,7 +164,7 @@ export function ActivationChecklist({
             disabled={skipping}
             className="mt-4 w-full text-xs text-muted-foreground"
           >
-            Passer l&apos;introduction
+            {t('onboardingActivation.checklist.skipIntro')}
           </Button>
         </CardContent>
       </Card>

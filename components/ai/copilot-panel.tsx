@@ -11,8 +11,10 @@ import { ToolResultCard } from './tool-result-card'
 import { appendTextDelta, appendToolResult, type AssistantPart } from '@/lib/ai/copilot-message-parts'
 import { cn } from '@/lib/utils'
 import { useMediaQuery } from '@/lib/use-media-query'
+import { useT } from '@/components/i18n-provider'
 import type { AiStreamEvent } from '@/lib/ai/types'
 import type { AiContext } from '@/lib/ai/context/types'
+import type { Translator } from '@/lib/i18n/translate'
 
 type DisplayMessage =
   | { id: string; role: 'user'; text: string }
@@ -24,17 +26,17 @@ interface PendingConfirm {
   preview: string
 }
 
-async function readNdjsonStream(res: Response, onEvent: (event: AiStreamEvent) => void): Promise<void> {
+async function readNdjsonStream(res: Response, onEvent: (event: AiStreamEvent) => void, t: Translator): Promise<void> {
   if (!res.ok) {
     // A non-2xx (402 quota, 404, 429 rate limit, 503 provider down, 500) has
     // a JSON error body, not an ndjson stream — reading it as one silently
     // no-ops (no `t` field matches) and the user sees an empty bubble with
     // no explanation. Surface it as a normal error event instead.
     const body = await res.json().catch(() => null)
-    onEvent({ t: 'error', message: body?.error ?? `Erreur serveur (${res.status})` })
+    onEvent({ t: 'error', message: body?.error ?? t('copilot.panel.serverErrorFallback', { status: res.status }) })
     return
   }
-  if (!res.body) throw new Error('Pas de réponse du serveur')
+  if (!res.body) throw new Error(t('copilot.panel.noResponseBody'))
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -71,6 +73,7 @@ export function CopilotPanel({
   initialMessage?: string
   onInitialMessageSent?: () => void
 }) {
+  const t = useT()
   const [messages, setMessages] = useState<DisplayMessage[]>([])
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null)
   const [sending, setSending] = useState(false)
@@ -245,9 +248,9 @@ export function CopilotPanel({
       })
       const headerConversationId = res.headers.get('X-Conversation-Id')
       if (headerConversationId) conversationIdRef.current = headerConversationId
-      await readNdjsonStream(res, (event) => applyEvent(event, assistantId))
+      await readNdjsonStream(res, (event) => applyEvent(event, assistantId), t)
     } catch {
-      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: 'Une erreur est survenue.' }]))
+      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: t('copilot.panel.genericError') }]))
     } finally {
       setSending(false)
       setProgressStep(null)
@@ -261,7 +264,7 @@ export function CopilotPanel({
     setPendingConfirm(null)
 
     if (!confirmed) {
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', parts: [{ type: 'text', text: 'Action annulée.' }] }])
+      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', parts: [{ type: 'text', text: t('copilot.panel.cancelledAction') }] }])
       // Must reach the server: it patches the placeholder tool_result left
       // by the paused turn so the conversation stays well-formed for the
       // next message. A purely local cancel (the previous behavior) left
@@ -287,9 +290,9 @@ export function CopilotPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toolCallId }),
       })
-      await readNdjsonStream(res, (event) => applyEvent(event, assistantId))
+      await readNdjsonStream(res, (event) => applyEvent(event, assistantId), t)
     } catch {
-      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: 'Une erreur est survenue.' }]))
+      updateAssistantParts(assistantId, (parts) => (parts.length > 0 ? parts : [{ type: 'text', text: t('copilot.panel.genericError') }]))
     } finally {
       setConfirming(false)
       setProgressStep(null)
@@ -342,7 +345,7 @@ export function CopilotPanel({
             {/* SheetTitle stays text-only (screen readers need an accessible dialog title) —
                 the visual identity block below is a sibling, not nested inside it, since
                 Base UI's Title renders a heading element that shouldn't contain a <div>. */}
-            <SheetTitle className="sr-only">Copilote</SheetTitle>
+            <SheetTitle className="sr-only">{t('copilot.panel.title')}</SheetTitle>
             <div className="flex items-center justify-between gap-2.5">
               <div className="flex items-center gap-2.5">
                 {/* Mini orb — same layered treatment as the FAB, scaled down */}
@@ -361,8 +364,8 @@ export function CopilotPanel({
                   />
                 </span>
                 <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-semibold text-foreground">Copilote</span>
-                  <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+                  <span className="text-sm font-semibold text-foreground">{t('copilot.panel.title')}</span>
+                  <span className="text-[11px] text-muted-foreground">{isLive ? t('copilot.panel.statusResponding') : t('copilot.panel.statusOnline')}</span>
                 </div>
               </div>
               <Button
@@ -373,7 +376,7 @@ export function CopilotPanel({
                 disabled={sending || confirming}
                 className="text-xs"
               >
-                Nouveau
+                {t('copilot.panel.newButton')}
               </Button>
             </div>
           </SheetHeader>
@@ -382,11 +385,11 @@ export function CopilotPanel({
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
-              <span>Chargement de l'historique...</span>
+              <span>{t('copilot.panel.loadingHistory')}</span>
             </div>
           ) : messages.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Demandez-moi de diagnostiquer un flow, chercher un contact, ou résumer votre activité récente.
+              {t('copilot.panel.emptyPrompt')}
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -456,10 +459,10 @@ export function CopilotPanel({
                   </div>
                   <div className="mt-3 flex justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => respondToConfirm(false)} disabled={confirming}>
-                      Annuler
+                      {t('copilot.panel.cancelButton')}
                     </Button>
                     <Button size="sm" onClick={() => respondToConfirm(true)} disabled={confirming}>
-                      {confirming ? <Loader2 className="size-3.5 animate-spin" /> : 'Confirmer'}
+                      {confirming ? <Loader2 className="size-3.5 animate-spin" /> : t('copilot.panel.confirmButton')}
                     </Button>
                   </div>
                 </div>
@@ -481,7 +484,7 @@ export function CopilotPanel({
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Écrire au copilote…"
+            placeholder={t('copilot.panel.inputPlaceholder')}
             disabled={sending || Boolean(pendingConfirm)}
             className={cn(
               'flex-1 rounded-full border border-border bg-background/80 px-3.5 text-sm outline-none transition-colors focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/25',
@@ -493,7 +496,7 @@ export function CopilotPanel({
             size="icon"
             disabled={sending || !input.trim() || Boolean(pendingConfirm)}
             className={cn('shrink-0', isMobile ? 'size-11' : 'size-9')}
-            aria-label="Envoyer"
+            aria-label={t('copilot.panel.sendAriaLabel')}
           >
             <Send className={isMobile ? 'size-5' : 'size-4'} />
           </Button>
@@ -522,8 +525,10 @@ export function CopilotPanel({
                     />
                   </span>
                   <div className="flex flex-col leading-tight">
-                    <span className="text-sm font-semibold text-foreground">Copilote</span>
-                    <span className="text-[11px] text-muted-foreground">{isLive ? 'En train de répondre…' : 'En ligne'}</span>
+                    <span className="text-sm font-semibold text-foreground">{t('copilot.panel.title')}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {isLive ? t('copilot.panel.statusResponding') : t('copilot.panel.statusOnline')}
+                    </span>
                   </div>
                 </div>
                 <Button
@@ -534,7 +539,7 @@ export function CopilotPanel({
                   disabled={sending || confirming}
                   className="text-xs"
                 >
-                  Nouveau
+                  {t('copilot.panel.newButton')}
                 </Button>
               </div>
             </SheetHeader>
@@ -543,12 +548,10 @@ export function CopilotPanel({
               {loading ? (
                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
-                  <span>Chargement de l'historique...</span>
+                  <span>{t('copilot.panel.loadingHistory')}</span>
                 </div>
               ) : messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Demandez-moi de diagnostiquer un flow, chercher un contact, ou résumer votre activité récente.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('copilot.panel.emptyPrompt')}</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {messages.map((m) => {

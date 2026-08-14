@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getCookie, setCookie } from '@/lib/cookies'
 
 export type ColorTheme = 'terracotta' | 'ocean' | 'emerald' | 'sunset' | 'midnight' | 'custom'
 export type WallpaperId = 'none' | 'aurora' | 'cyber' | 'waves' | 'cosmic' | 'sunset' | 'custom'
@@ -97,18 +98,6 @@ interface CustomThemeContextType {
 }
 
 const CustomThemeContext = createContext<CustomThemeContextType | undefined>(undefined)
-
-function setCookie(name: string, value: string, days = 365) {
-  if (typeof document === 'undefined') return
-  const expires = new Date(Date.now() + days * 864e5).toUTCString()
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`
-}
-
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const matches = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1')}=([^;]*)`))
-  return matches ? decodeURIComponent(matches[1]) : null
-}
 
 export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorTheme, setColorThemeState] = useState<ColorTheme>('ocean')

@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/api/auth'
 import { checkRateLimit } from '@/lib/api/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createChargilyCheckout, createChargilyCustomer } from '@/lib/integrations/chargily/client'
-import { PLAN_CONFIG, resolvePlanAmount, type PlanKey, type BillingPeriod } from '@/lib/plans'
+import { resolvePlanAmount, getPlanDisplayFr, type PlanKey, type BillingPeriod } from '@/lib/plans'
 
 const CHECKOUT_RATE_LIMIT = 10
 const CHECKOUT_RATE_WINDOW_MS = 60_000
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     webhookEndpoint: `${process.env.NEXT_PUBLIC_APP_URL ?? origin}/api/webhooks/chargily`,
     customerId: chargilyCustomerId ?? undefined,
     locale: 'fr',
-    description: `Abonnement Instaflow — ${PLAN_CONFIG[plan].label} (${period === 'annual' ? 'annuel' : 'mensuel'})`,
+    description: `Abonnement Instaflow — ${getPlanDisplayFr(plan).label} (${period === 'annual' ? 'annuel' : 'mensuel'})`,
     metadata: { user_id: user.id, plan, period },
   })
 

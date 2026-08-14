@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { AuthCard, GoogleIcon } from '@/components/auth/auth-card'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/components/i18n-provider'
 
 export default function LoginPage() {
+  const t = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -30,7 +32,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Email ou mot de passe incorrect.')
+      setError(t('auth.login.errorInvalidCredentials'))
       setLoading(false)
       return
     }
@@ -48,13 +50,13 @@ export default function LoginPage() {
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) {
-      setError('Impossible de se connecter avec Google. Réessayez.')
+      setError(t('auth.login.errorGoogleFailed'))
       setGoogleLoading(false)
     }
   }
 
   return (
-    <AuthCard tagline="Connectez-vous à votre compte">
+    <AuthCard tagline={t('auth.login.tagline')}>
       <AnimatePresence>
         {error && (
           <motion.div
@@ -78,46 +80,46 @@ export default function LoginPage() {
         className="w-full"
       >
         <GoogleIcon />
-        {googleLoading ? 'Redirection…' : 'Continuer avec Google'}
+        {googleLoading ? t('auth.common.redirecting') : t('auth.common.continueWithGoogle')}
       </Button>
 
       <div className="my-5 flex items-center gap-3">
         <Separator className="flex-1" />
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          ou
+          {t('auth.common.or')}
         </span>
         <Separator className="flex-1" />
       </div>
 
       <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Adresse email</Label>
+          <Label htmlFor="email">{t('auth.login.emailLabel')}</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="vous@exemple.com"
+            placeholder={t('auth.common.emailPlaceholder')}
             required
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password">{t('auth.login.passwordLabel')}</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t('auth.common.passwordPlaceholder')}
               required
               className="pr-10"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-label={showPassword ? t('auth.common.hidePassword') : t('auth.common.showPassword')}
               className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -126,16 +128,16 @@ export default function LoginPage() {
         </div>
 
         <Button type="submit" size="lg" disabled={loading || googleLoading} className="mt-1 w-full">
-          {loading ? 'Connexion…' : 'Se connecter'}
+          {loading ? t('auth.login.submitting') : t('auth.login.submitButton')}
         </Button>
       </form>
 
       <Separator className="my-6" />
 
       <p className="mb-3 text-center text-[13px] text-muted-foreground">
-        Pas encore de compte ?{' '}
+        {t('auth.login.noAccountYet')}{' '}
         <Link href="/register" className="font-semibold text-primary hover:underline">
-          Créer un compte
+          {t('auth.login.createAccount')}
         </Link>
       </p>
 
@@ -143,7 +145,7 @@ export default function LoginPage() {
         href="/"
         className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft size={13} /> Retour à l&apos;accueil
+        <ArrowLeft size={13} /> {t('auth.common.backToHome')}
       </Link>
     </AuthCard>
   )

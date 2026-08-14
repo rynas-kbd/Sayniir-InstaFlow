@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 import { Zap } from 'lucide-react'
+import { useT } from '@/components/i18n-provider'
 
 export function FlowsEnabledToggle({
   channelAccountId,
@@ -12,6 +13,7 @@ export function FlowsEnabledToggle({
   channelAccountId: string
   initialEnabled: boolean
 }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(initialEnabled)
   const [loading, setLoading] = useState(false)
 
@@ -25,10 +27,10 @@ export function FlowsEnabledToggle({
         body: JSON.stringify({ channel_account_id: channelAccountId, flows_enabled: checked }),
       })
       if (!res.ok) throw new Error()
-      toast.success(checked ? '⚡ Flows activés' : 'Flows désactivés')
+      toast.success(checked ? t('flows.flowsEnabledToggle.enabledToast') : t('flows.flowsEnabledToggle.disabledToast'))
     } catch {
       setEnabled(!checked)
-      toast.error('Impossible de mettre à jour le réglage')
+      toast.error(t('flows.flowsEnabledToggle.updateError'))
     } finally {
       setLoading(false)
     }
@@ -52,12 +54,12 @@ export function FlowsEnabledToggle({
         </div>
         <div>
           <p className={`text-sm font-medium ${enabled ? 'text-foreground' : 'text-foreground'}`}>
-            {enabled ? 'Flows activés pour ce compte' : 'Flows désactivés'}
+            {enabled ? t('flows.flowsEnabledToggle.enabledTitle') : t('flows.flowsEnabledToggle.disabledTitle')}
           </p>
           <p className="text-xs text-muted-foreground">
             {enabled
-              ? 'Les flows prennent le contrôle des messages entrants.'
-              : 'Activez pour que les flows gèrent les messages entrants.'}
+              ? t('flows.flowsEnabledToggle.enabledDescription')
+              : t('flows.flowsEnabledToggle.disabledDescription')}
           </p>
         </div>
       </div>
@@ -66,7 +68,7 @@ export function FlowsEnabledToggle({
         onCheckedChange={toggle}
         disabled={loading}
         id="flows-enabled"
-        aria-label="Activer les flows"
+        aria-label={t('flows.flowsEnabledToggle.ariaLabel')}
       />
     </div>
   )

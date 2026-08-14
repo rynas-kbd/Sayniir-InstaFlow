@@ -6,6 +6,7 @@ import { LogOut, Palette, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeCustomizerModal } from '@/components/theme-customizer-modal'
+import { useT } from '@/components/i18n-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ import {
 
 export function UserMenu({ email }: { email: string | null }) {
   const router = useRouter()
+  const t = useT()
   const [themeModalOpen, setThemeModalOpen] = useState(false)
 
   async function handleSignOut() {
@@ -27,7 +29,7 @@ export function UserMenu({ email }: { email: string | null }) {
 
   const initial = email?.[0]?.toUpperCase() ?? '?'
   // Derive a short display name from the email
-  const displayName = email ? email.split('@')[0] : 'Compte'
+  const displayName = email ? email.split('@')[0] : t('nav.userMenu.defaultName')
 
   return (
     <>
@@ -47,7 +49,7 @@ export function UserMenu({ email }: { email: string | null }) {
             ;(e.currentTarget as HTMLElement).style.background =
               'color-mix(in srgb, var(--organic-sand-300) 0%, transparent)'
           }}
-          aria-label="Menu du compte"
+          aria-label={t('nav.userMenu.ariaLabel')}
         >
           {/* Avatar circle */}
           <div
@@ -110,7 +112,7 @@ export function UserMenu({ email }: { email: string | null }) {
               >
                 <Settings className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
               </div>
-              Paramètres
+              {t('nav.userMenu.settings')}
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -123,7 +125,7 @@ export function UserMenu({ email }: { email: string | null }) {
               >
                 <Palette className="size-3.5 text-primary" strokeWidth={1.75} />
               </div>
-              Personnalisation
+              {t('nav.userMenu.personalization')}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator
@@ -142,7 +144,7 @@ export function UserMenu({ email }: { email: string | null }) {
               >
                 <LogOut className="size-3.5" strokeWidth={1.75} />
               </div>
-              Déconnexion
+              {t('nav.userMenu.signOut')}
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>

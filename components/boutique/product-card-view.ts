@@ -1,3 +1,4 @@
+import type { Translator } from '@/lib/i18n/translate'
 import type { Product, ProductKind, ProductMetadata } from './types'
 import type { ProductFormState } from './product-form/types'
 import { buildMetadata } from './product-form/product-form-schema'
@@ -26,34 +27,39 @@ interface OptionBadgeInput {
 }
 
 /** Lifted verbatim from product-table.tsx — the single copy. Note `!= null` (not truthiness) on
- * `remaining`: a sold-out event (remaining: 0) must still surface "0 places restantes". */
-export function deriveOptionBadges({ kind, sizes, colors, metadata }: OptionBadgeInput): string[] {
+ * `remaining`: a sold-out event (remaining: 0) must still surface a "places restantes" badge —
+ * CLDR French treats 0 as the `one` plural category, so `t.plural` renders it as the singular form. */
+export function deriveOptionBadges({ kind, sizes, colors, metadata }: OptionBadgeInput, t: Translator): string[] {
   switch (kind) {
     case 'physical':
       return [...sizes, ...colors]
     case 'service':
       return [
-        ...(metadata.duration_minutes ? [`${metadata.duration_minutes} min`] : []),
+        ...(metadata.duration_minutes ? [t('boutique.productCardView.durationMinutes', { count: metadata.duration_minutes })] : []),
         ...(metadata.location ? [metadata.location] : []),
       ]
     case 'subscription':
-      return [metadata.billing_period === 'yearly' ? 'Facturation annuelle' : 'Facturation mensuelle']
+      return [
+        metadata.billing_period === 'yearly'
+          ? t('boutique.productCardView.billingYearly')
+          : t('boutique.productCardView.billingMonthly'),
+      ]
     case 'event':
       return [
         ...(metadata.event_date ? [metadata.event_date] : []),
-        ...(metadata.remaining != null ? [`${metadata.remaining} places restantes`] : []),
+        ...(metadata.remaining != null ? [t.plural('boutique.productCardView.remainingSpots', metadata.remaining)] : []),
       ]
     case 'digital':
       return [
-        ...(metadata.file_url ? ['Fichier lié'] : []),
-        ...(metadata.download_limit ? [`${metadata.download_limit} téléch. max`] : []),
+        ...(metadata.file_url ? [t('boutique.productCardView.fileLinked')] : []),
+        ...(metadata.download_limit ? [t('boutique.productCardView.downloadLimit', { count: metadata.download_limit })] : []),
       ]
     default:
       return []
   }
 }
 
-export function productToCardView(p: Product): ProductCardView {
+export function productToCardView(p: Product, t: Translator): ProductCardView {
   return {
     kind: p.kind,
     name: p.name,
@@ -68,13 +74,13 @@ export function productToCardView(p: Product): ProductCardView {
       sizes: p.kind === 'physical' ? p.sizes : [],
       colors: p.kind === 'physical' ? p.colors : [],
       metadata: p.metadata,
-    }),
+    }, t),
   }
 }
 
 /** Reuses the real `buildMetadata` (not a copy) so the preview's badges can never diverge from
  * what will actually be saved. */
-export function formToCardView(f: ProductFormState, product?: Product): ProductCardView {
+export function formToCardView(f: ProductFormState, t: Translator, product?: Product): ProductCardView {
   const price = Number.parseFloat(f.price)
   return {
     kind: f.kind,
@@ -90,6 +96,6 @@ export function formToCardView(f: ProductFormState, product?: Product): ProductC
       sizes: f.kind === 'physical' ? f.sizes : [],
       colors: f.kind === 'physical' ? f.colors : [],
       metadata: buildMetadata(f, product),
-    }),
+    }, t),
   }
 }

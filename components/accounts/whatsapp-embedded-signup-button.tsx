@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFacebookSDK } from '@/hooks/use-facebook-sdk'
+import { useT } from '@/components/i18n-provider'
 
 /**
  * WhatsApp Embedded Signup — unlike Instagram/Messenger's server redirect,
@@ -19,14 +20,9 @@ import { useFacebookSDK } from '@/hooks/use-facebook-sdk'
 // connect.facebook.net est massivement présent sur les listes de blocage
 // (bloqueurs de pub, protection anti-pistage des navigateurs) — c'est le cas
 // le plus fréquent en pratique, distinct d'un vrai problème de config.
-const SDK_ERROR_MESSAGES: Record<'network-error' | 'timeout', string> = {
-  'network-error':
-    "Votre navigateur bloque le SDK Facebook (bloqueur de publicités ou protection anti-pistage), requis par Meta pour connecter WhatsApp. Autorisez connect.facebook.net pour ce site, ou essayez un autre navigateur, puis réessayez.",
-  timeout:
-    "Le SDK Facebook n'a pas répondu à temps — souvent le signe d'un bloqueur de publicités ou d'une protection anti-pistage qui bloque connect.facebook.net. Autorisez ce domaine pour ce site, ou essayez un autre navigateur, puis réessayez.",
-}
 
 export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: string | null; configId: string | null }) {
+  const t = useT()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const signupData = useRef<{ phoneNumberId?: string; wabaId?: string }>({})
@@ -34,14 +30,20 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
   // Utiliser le hook pour gérer le chargement du SDK
   const { status: sdkStatus, reason: sdkErrorReason, retry: retrySdk } = useFacebookSDK(appId)
 
+  const sdkErrorMessages: Record<'network-error' | 'timeout', string> = {
+    'network-error': t('accounts.whatsappSignup.sdkNetworkError'),
+    timeout: t('accounts.whatsappSignup.sdkTimeout'),
+  }
+
   // Afficher un message d'erreur explicite et actionnable si le SDK échoue à charger
   useEffect(() => {
     if (sdkStatus !== 'error') return
     if (sdkErrorReason === 'missing-config') {
-      toast.error("WhatsApp Embedded Signup n'est pas configuré (variables d'environnement manquantes)", { duration: 6000 })
+      toast.error(t('accounts.whatsappSignup.missingConfig'), { duration: 6000 })
       return
     }
-    toast.error(SDK_ERROR_MESSAGES[sdkErrorReason ?? 'network-error'], { duration: 8000 })
+    toast.error(sdkErrorMessages[sdkErrorReason ?? 'network-error'], { duration: 8000 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sdkStatus, sdkErrorReason])
 
   useEffect(() => {
@@ -66,11 +68,11 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
 
   async function connect() {
     if (!appId || !configId) {
-      toast.error("WhatsApp Embedded Signup n'est pas configuré (variables d'environnement manquantes)")
+      toast.error(t('accounts.whatsappSignup.missingConfig'))
       return
     }
     if (sdkStatus !== 'ready') {
-      toast.error('Le SDK Facebook n\'est pas encore prêt — veuillez patienter')
+      toast.error(t('accounts.whatsappSignup.sdkNotReady'))
       return
     }
 
@@ -85,7 +87,7 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
     async function handleLoginResponse(response: { authResponse?: { code?: string } }) {
       const code = response.authResponse?.code
       if (!code) {
-        toast.error('Connexion WhatsApp annulée ou refusée')
+        toast.error(t('accounts.whatsappSignup.loginCancelled'))
         setLoading(false)
         return
       }
@@ -98,7 +100,7 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
 
       const { phoneNumberId, wabaId } = signupData.current
       if (!phoneNumberId || !wabaId) {
-        toast.error("Aucun numéro n'a été configuré dans le popup WhatsApp")
+        toast.error(t('accounts.whatsappSignup.noPhoneConfigured'))
         setLoading(false)
         return
       }
@@ -110,11 +112,11 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
           body: JSON.stringify({ code, phoneNumberId, wabaId }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Échec de la connexion')
-        toast.success('Compte WhatsApp connecté')
+        if (!res.ok) throw new Error(data.error || t('accounts.whatsappSignup.connectionFailed'))
+        toast.success(t('accounts.whatsappSignup.connected'))
         router.refresh()
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Erreur inconnue')
+        toast.error(err instanceof Error ? err.message : t('accounts.whatsappSignup.unknownError'))
       } finally {
         setLoading(false)
       }
@@ -136,11 +138,11 @@ export function WhatsAppEmbeddedSignupButton({ appId, configId }: { appId: strin
 
   // Déterminer le texte du bouton selon l'état
   function getButtonText() {
-    if (loading) return 'Connexion…'
-    if (sdkStatus === 'loading') return 'Chargement du SDK…'
-    if (isMissingConfig) return 'WhatsApp indisponible'
-    if (isRecoverableError) return 'Réessayer'
-    return 'Connecter WhatsApp'
+    if (loading) return t('accounts.whatsappSignup.buttonConnecting')
+    if (sdkStatus === 'loading') return t('accounts.whatsappSignup.buttonLoadingSdk')
+    if (isMissingConfig) return t('accounts.whatsappSignup.buttonUnavailable')
+    if (isRecoverableError) return t('accounts.whatsappSignup.buttonRetry')
+    return t('accounts.whatsappSignup.buttonConnect')
   }
 
   // Le bouton est désactivé si:

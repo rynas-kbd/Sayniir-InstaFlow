@@ -2,11 +2,13 @@
 
 import { usePathname } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
+import { useT } from '@/components/i18n-provider'
 import { getNavSections, type BusinessType } from './nav-config'
 
 export function Breadcrumb({ businessType }: { businessType: BusinessType }) {
   const pathname = usePathname()
-  const sections = getNavSections(businessType)
+  const t = useT()
+  const sections = getNavSections(businessType, t)
 
   for (const section of sections) {
     const item = section.items.find((i) => pathname === i.href || pathname.startsWith(`${i.href}/`))

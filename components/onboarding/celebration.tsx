@@ -4,9 +4,12 @@ import { motion } from 'framer-motion'
 import { PartyPopper } from 'lucide-react'
 import { useEffect } from 'react'
 import { haptic } from '@/lib/motion/haptics'
+import { useT } from '@/components/i18n-provider'
 
 /** Shown for a couple of seconds right after the first simulated reply lands — the "aha" payoff. */
 export function Celebration() {
+  const t = useT()
+
   useEffect(() => {
     haptic('success')
   }, [])
@@ -27,9 +30,9 @@ export function Celebration() {
         <PartyPopper className="size-5 text-success" />
       </motion.div>
       <div>
-        <p className="text-[15px] font-bold text-foreground">Ça fonctionne !</p>
+        <p className="text-[15px] font-bold text-foreground">{t('onboardingActivation.celebration.title')}</p>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          Votre automatisation vient de répondre. C&apos;est exactement ce qui se passera avec vos vrais clients.
+          {t('onboardingActivation.celebration.description')}
         </p>
       </div>
     </motion.div>

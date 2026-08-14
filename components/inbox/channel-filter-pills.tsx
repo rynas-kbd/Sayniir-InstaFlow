@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { PLATFORM_ICON, PLATFORM_LABEL } from '@/lib/channels/labels'
+import { useT } from '@/components/i18n-provider'
 import type { Platform } from '@/lib/channels/types'
 
 /**
@@ -25,6 +26,7 @@ export function ChannelFilterPills({
   activeConvId: string | null
 }) {
   const router = useRouter()
+  const t = useT()
   const [isPending, startTransition] = useTransition()
 
   if (platforms.length <= 1) return null
@@ -64,7 +66,7 @@ export function ChannelFilterPills({
             }
           >
             {Icon && <Icon className="size-3" strokeWidth={1.75} />}
-            {key === 'all' ? 'Tous' : PLATFORM_LABEL[key]}
+            {key === 'all' ? t('inbox.channelFilter.all') : PLATFORM_LABEL[key]}
           </button>
         )
       })}

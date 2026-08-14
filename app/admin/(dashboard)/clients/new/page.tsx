@@ -6,15 +6,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { getT } from '@/lib/i18n/server'
 import { createUser } from './actions'
 
-export default function NewClientPage() {
+export default async function NewClientPage() {
+  const t = await getT()
+
   return (
     <div className="mx-auto max-w-lg">
-      <PageHeader title="Nouvel utilisateur" description="Créer un compte client ou administrateur." />
+      <PageHeader title={t('admin.clients.new.title')} description={t('admin.clients.new.description')} />
       <div className="p-4 sm:p-6">
         <Link href="/admin/clients" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" /> Retour aux utilisateurs
+          <ArrowLeft className="size-3.5" /> {t('admin.clients.new.backLink')}
         </Link>
 
         <Card>
@@ -32,31 +35,31 @@ export default function NewClientPage() {
               className="flex flex-col gap-4"
             >
               <div className="space-y-1.5">
-                <Label htmlFor="full_name">Nom complet</Label>
+                <Label htmlFor="full_name">{t('admin.clients.new.fullNameLabel')}</Label>
                 <Input id="full_name" name="full_name" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email">Adresse email</Label>
+                <Label htmlFor="email">{t('admin.clients.new.emailLabel')}</Label>
                 <Input id="email" name="email" type="email" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">{t('admin.clients.new.passwordLabel')}</Label>
                 <Input id="password" name="password" type="password" required minLength={8} />
               </div>
               <div className="space-y-1.5">
-                <Label>Rôle</Label>
+                <Label>{t('admin.clients.new.roleLabel')}</Label>
                 <Select name="role" defaultValue="client">
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
+                    <SelectItem value="client">{t('admin.clients.new.roleClientOption')}</SelectItem>
+                    <SelectItem value="admin">{t('admin.clients.new.roleAdminOption')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <Button type="submit" className="mt-1">
-                Créer le compte
+                {t('admin.clients.new.submitButton')}
               </Button>
             </form>
           </CardContent>

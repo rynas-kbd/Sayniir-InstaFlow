@@ -8,8 +8,10 @@ import { ConnectPanel } from '@/components/accounts/connect-panel'
 import { ConnectResultToast } from '@/components/accounts/connect-result-toast'
 import { AccountCard, type ChannelAccount } from '@/components/accounts/account-card'
 import { resolveOnboardingState } from '@/lib/onboarding/state'
+import { getT } from '@/lib/i18n/server'
 
 export default async function AccountsPage() {
+  const t = await getT()
   const supabase = await createClient()
   const {
     data: { user },
@@ -45,8 +47,8 @@ export default async function AccountsPage() {
       </Suspense>
       <div className="mx-auto max-w-4xl">
         <PageHeader
-          title="Comptes connectés"
-          description="Gérez vos comptes Instagram, Messenger et WhatsApp."
+          title={t('accounts.header.title')}
+          description={t('accounts.header.description')}
           actions={
             <ConnectPanel
               whatsappAppId={process.env.NEXT_PUBLIC_META_WHATSAPP_APP_ID ?? null}
@@ -58,17 +60,17 @@ export default async function AccountsPage() {
         <div className="space-y-5 p-4 md:p-6">
         {safeAccounts.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <StatCard title="Comptes connectés" value={safeAccounts.length} icon={Link2} />
-            <StatCard title="Actifs" value={activeCount} icon={CheckCircle2} />
-            <StatCard title="Expirés" value={expiredCount} icon={XCircle} />
+            <StatCard title={t('accounts.stats.connected')} value={safeAccounts.length} icon={Link2} />
+            <StatCard title={t('accounts.stats.active')} value={activeCount} icon={CheckCircle2} />
+            <StatCard title={t('accounts.stats.expired')} value={expiredCount} icon={XCircle} />
           </div>
         )}
 
         {safeAccounts.length === 0 ? (
           <EmptyState
             icon={Camera}
-            title="Aucun compte connecté"
-            description="Connectez un compte Instagram, Messenger ou WhatsApp pour commencer à automatiser vos conversations."
+            title={t('accounts.emptyState.title')}
+            description={t('accounts.emptyState.description')}
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

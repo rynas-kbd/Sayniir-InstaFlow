@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { ImportMappingDialog } from './import-mapping-dialog'
 import { detectColumnMapping, createMappingDictionary, type ProductField, type DetectionResult } from '@/lib/import/column-detector'
+import { useT } from '@/components/i18n-provider'
 import type { Product } from './types'
 
 /**
@@ -30,6 +31,7 @@ export function ProductImportActions({
   channelAccountId: string
   onImported: (products: Product[]) => void
 }) {
+  const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -61,11 +63,11 @@ export function ProductImportActions({
     } else if (fileName.endsWith('.csv')) {
       rows = parseCSV(text)
     } else {
-      throw new Error('Format non supporté')
+      throw new Error(t('boutique.productImportActions.errors.unsupportedFormat'))
     }
 
     if (rows.length === 0) {
-      throw new Error('Aucune donnée trouvée')
+      throw new Error(t('boutique.productImportActions.errors.noDataFound'))
     }
 
     const columns = Object.keys(rows[0])
@@ -95,7 +97,7 @@ export function ProductImportActions({
       })
       setMappingDialogOpen(true)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Impossible d\'analyser le fichier')
+      toast.error(err instanceof Error ? err.message : t('boutique.productImportActions.errors.parseFileFailed'))
     } finally {
       setImporting(false)
     }
@@ -113,7 +115,7 @@ export function ProductImportActions({
         body: JSON.stringify({ sheetUrl: sheetUrl.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Impossible de lire le Google Sheet')
+      if (!res.ok) throw new Error(data.error ?? t('boutique.productImportActions.errors.sheetReadFailed'))
 
       const { columns, sampleData } = data
       const detectionResult = detectColumnMapping(columns, sampleData[0])
@@ -128,7 +130,7 @@ export function ProductImportActions({
       setMappingDialogOpen(true)
       setSheetOpen(false)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Impossible d\'analyser le Google Sheet')
+      toast.error(err instanceof Error ? err.message : t('boutique.productImportActions.errors.sheetParseFailed'))
     } finally {
       setSyncing(false)
     }
@@ -147,10 +149,10 @@ export function ProductImportActions({
 
         const res = await fetch('/api/products/import', { method: 'POST', body: formData })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Import impossible')
-        
+        if (!res.ok) throw new Error(data.error ?? t('boutique.productImportActions.errors.importFailed'))
+
         onImported(data.products ?? [])
-        toast.success(`✨ ${data.imported} produit(s) importé(s) avec succès`)
+        toast.success(t.plural('boutique.productImportActions.toast.importSuccess', data.imported))
       } else if (pendingImportData.type === 'sheet') {
         // Synchronisation du Google Sheet avec le mapping personnalisé
         const res = await fetch('/api/products/sync-sheet', {
@@ -163,17 +165,17 @@ export function ProductImportActions({
           }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Synchronisation impossible')
-        
+        if (!res.ok) throw new Error(data.error ?? t('boutique.productImportActions.errors.syncFailed'))
+
         onImported(data.products ?? [])
-        toast.success(`✨ ${data.synced} produit(s) synchronisé(s) depuis le Google Sheet`)
+        toast.success(t.plural('boutique.productImportActions.toast.syncSuccess', data.synced))
         setSheetUrl('')
       }
 
       setMappingDialogOpen(false)
       setPendingImportData(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur lors de l\'import')
+      toast.error(err instanceof Error ? err.message : t('boutique.productImportActions.errors.genericImportError'))
     }
   }
 
@@ -194,7 +196,9 @@ export function ProductImportActions({
           className="relative"
         >
           <Upload className="size-3.5" />
-          {importing ? 'Analyse…' : 'Importer CSV/JSON'}
+          {importing
+            ? t('boutique.productImportActions.buttons.analyzing')
+            : t('boutique.productImportActions.buttons.importCsvJson')}
           <Sparkles className="absolute -right-1 -top-1 size-3 text-primary animate-pulse" />
         </Button>
         <input
@@ -207,22 +211,21 @@ export function ProductImportActions({
 
         <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
           <DialogTrigger render={<Button type="button" variant="outline" size="sm" className="relative" />}>
-            <FileSpreadsheet className="size-3.5" /> Synchroniser un Google Sheet
+            <FileSpreadsheet className="size-3.5" /> {t('boutique.productImportActions.buttons.syncGoogleSheet')}
             <Sparkles className="absolute -right-1 -top-1 size-3 text-primary animate-pulse" />
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="size-5 text-primary" />
-                Synchroniser depuis Google Sheets
+                {t('boutique.productImportActions.sheetDialog.title')}
               </DialogTitle>
               <DialogDescription>
-                Le Sheet doit être partagé en public (« Tous les utilisateurs disposant du lien : lecteur »).
-                Nos algorithmes détecteront automatiquement vos colonnes, même avec des noms personnalisés !
+                {t('boutique.productImportActions.sheetDialog.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-1.5">
-              <Label htmlFor="sheet-url">URL du Google Sheet</Label>
+              <Label htmlFor="sheet-url">{t('boutique.productImportActions.sheetDialog.urlLabel')}</Label>
               <Input
                 id="sheet-url"
                 value={sheetUrl}
@@ -236,7 +239,9 @@ export function ProductImportActions({
                 onClick={handleSheetPreview}
                 disabled={syncing || !sheetUrl.trim()}
               >
-                {syncing ? 'Analyse…' : 'Analyser et continuer'}
+                {syncing
+                  ? t('boutique.productImportActions.buttons.analyzing')
+                  : t('boutique.productImportActions.buttons.analyzeAndContinue')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -11,6 +11,7 @@ import { FormDialogHeader } from '@/components/shared/form-section'
 import { FormFooter } from '@/components/shared/form-footer'
 import { useRuleForm } from './rule-form/use-rule-form'
 import { RuleFormBody } from './rule-form/rule-form-body'
+import { useT } from '@/components/i18n-provider'
 import type { AutomationRule, ChannelAccountLite, RuleFormPayload } from './types'
 
 export function RuleFormDialog({
@@ -28,6 +29,7 @@ export function RuleFormDialog({
   onSave: (data: RuleFormPayload) => Promise<void>
   onClose: () => void
 }) {
+  const t = useT()
   const api = useRuleForm({ accounts, rule, defaultTab, onSave, onSaved: onClose })
   const [postSelectorActive, setPostSelectorActive] = useState(false)
 
@@ -38,8 +40,8 @@ export function RuleFormDialog({
           <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
             <FormDialogHeader
               icon={Zap}
-              title={rule ? 'Modifier la règle' : 'Nouvelle règle'}
-              description="Réponse automatique par mot-clé, DM ou commentaire."
+              title={rule ? t('automation.ruleFormDialog.editTitle') : t('automation.ruleFormDialog.newTitle')}
+              description={t('automation.ruleFormDialog.description')}
             />
           </ResponsiveDialogHeader>
         )}
@@ -52,7 +54,7 @@ export function RuleFormDialog({
           {!postSelectorActive && (
             <FormFooter
               saving={api.saving}
-              submitLabel={rule ? 'Sauvegarder' : 'Créer'}
+              submitLabel={rule ? t('automation.ruleFormDialog.save') : t('automation.ruleFormDialog.create')}
               onCancel={onClose}
               className="shrink-0 justify-end border-t border-border bg-muted/40 px-5 py-3"
             />

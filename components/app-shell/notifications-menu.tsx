@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Bell, MessageSquare, Target, CalendarClock, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,27 +20,28 @@ export interface NotificationCounts {
 }
 
 export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
+  const t = useT()
   const total = counts.unrepliedMessages + counts.pendingLeads + counts.pendingAppointments
 
   const items = [
     {
       href: '/inbox?filter=unreplied',
       icon: MessageSquare,
-      label: 'Conversations sans réponse',
+      label: t('nav.notifications.unrepliedConversations'),
       count: counts.unrepliedMessages,
       accent: 'var(--organic-terracotta)',
     },
     {
       href: '/leads',
       icon: Target,
-      label: 'Leads en attente',
+      label: t('nav.notifications.pendingLeads'),
       count: counts.pendingLeads,
       accent: 'var(--organic-sage)',
     },
     {
       href: '/rdv',
       icon: CalendarClock,
-      label: 'Rendez-vous en attente',
+      label: t('nav.notifications.pendingAppointments'),
       count: counts.pendingAppointments,
       accent: 'var(--organic-sand-500)',
     },
@@ -54,7 +56,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
             ? 'color-mix(in srgb, var(--organic-terracotta) 8%, transparent)'
             : 'transparent',
         }}
-        aria-label="Notifications"
+        aria-label={t('nav.notifications.ariaLabel')}
       >
         <Bell
           className={cn('size-5 sm:size-4 transition-all duration-200', total > 0 && 'text-[color-mix(in_srgb,var(--organic-terracotta-700)_90%,transparent)]')}
@@ -86,7 +88,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
           style={{ borderBottom: '1px solid color-mix(in srgb, var(--organic-sand-300) 30%, transparent)' }}
         >
           <DropdownMenuLabel className="p-0 text-[13px] font-semibold text-foreground">
-            Notifications
+            {t('nav.notifications.title')}
           </DropdownMenuLabel>
           {total > 0 && (
             <span
@@ -96,7 +98,7 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
                 color: 'var(--organic-terracotta-700)',
               }}
             >
-              {total} en attente
+              {t('nav.notifications.pending', { count: total })}
             </span>
           )}
         </div>
@@ -111,8 +113,8 @@ export function NotificationsMenu({ counts }: { counts: NotificationCounts }) {
               >
                 <Check className="size-5" style={{ color: 'var(--organic-sage-700)' }} strokeWidth={2} />
               </div>
-              <p className="text-[12.5px] font-medium text-foreground">Tout est à jour</p>
-              <p className="text-[11px] text-muted-foreground">Aucune action requise</p>
+              <p className="text-[12.5px] font-medium text-foreground">{t('nav.notifications.allCaughtUpTitle')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('nav.notifications.allCaughtUpSub')}</p>
             </div>
           ) : (
             items.map(({ href, icon: Icon, label, count, accent }) => (

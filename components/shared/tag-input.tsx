@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 
 /** Splits raw input on commas/newlines/semicolons, trims, drops empties, and dedupes
  * case-insensitively against `existing` (and within the new batch). Pure — testable without DOM. */
@@ -35,6 +36,7 @@ export interface TagInputProps {
  * because globals.css forces `border-radius: 999px` on any `data-slot="input"|"badge"` via an
  * unlayered rule that beats every `rounded-*` utility. */
 export function TagInput({ id, value, onChange, placeholder, maxTags, invalid, describedBy }: TagInputProps) {
+  const t = useT()
   const [draft, setDraft] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const atLimit = maxTags !== undefined && value.length >= maxTags
@@ -112,20 +114,21 @@ export function TagInput({ id, value, onChange, placeholder, maxTags, invalid, d
         className="min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
       />
       <span className="sr-only" aria-live="polite">
-        {value.length} élément(s)
+        {t('shared.tagInput.itemCount', { count: value.length })}
       </span>
     </div>
   )
 }
 
 function TagChip({ tag, onRemove }: { tag: string; onRemove: () => void }) {
+  const t = useT()
   return (
     <span className="flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 py-0.5 pl-2.5 pr-1 text-[11px] font-medium">
       {tag}
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Retirer ${tag}`}
+        aria-label={t('shared.tagInput.remove', { tag })}
         className="rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
       >
         <X className="size-3" />

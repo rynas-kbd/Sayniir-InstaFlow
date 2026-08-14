@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useT } from '@/components/i18n-provider'
 import type { AutomationRule } from './types'
 
 export function RuleCard({
@@ -31,13 +32,14 @@ export function RuleCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const t = useT()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const triggerLabel =
     rule.trigger_type === 'any_message'
-      ? 'Tout message reçu'
+      ? t('automation.ruleCard.anyMessage')
       : rule.trigger_type === 'any_comment'
-        ? 'Tout commentaire'
+        ? t('automation.ruleCard.anyComment')
         : rule.trigger_keywords?.slice(0, 3).join(', ') ?? ''
 
   const hasMoreKeywords = rule.trigger_keywords && rule.trigger_keywords.length > 3
@@ -45,10 +47,10 @@ export function RuleCard({
 
   const replyLabel =
     rule.reply_method === 'both'
-      ? 'Commentaire + DM'
+      ? t('automation.ruleCard.replyBoth')
       : rule.reply_method === 'dm'
-        ? 'DM uniquement'
-        : 'Commentaire uniquement'
+        ? t('automation.ruleCard.replyDm')
+        : t('automation.ruleCard.replyComment')
 
   const isComment = rule.trigger_type.includes('comment')
 
@@ -91,7 +93,7 @@ export function RuleCard({
               checked={rule.is_active}
               onCheckedChange={onToggle}
               disabled={isToggling}
-              aria-label="Activer/désactiver la règle"
+              aria-label={t('automation.ruleCard.toggleAria')}
               className="shrink-0 data-[state=checked]:bg-primary"
             />
           </div>
@@ -106,7 +108,7 @@ export function RuleCard({
               }`}
             >
               <span className={`size-1.5 rounded-full ${rule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
-              {rule.is_active ? 'Active' : 'Inactive'}
+              {rule.is_active ? t('automation.ruleCard.active') : t('automation.ruleCard.inactive')}
             </span>
           </div>
 
@@ -116,7 +118,7 @@ export function RuleCard({
             {/* Step 1: Trigger */}
             <div className="flex flex-col gap-1.5 rounded-xl border border-border/30 bg-muted/20 p-3">
               <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                <Zap className="size-3 text-primary/70" /> Si le client écrit
+                <Zap className="size-3 text-primary/70" /> {t('automation.ruleCard.ifClientWrites')}
               </span>
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {rule.trigger_type === 'any_message' || rule.trigger_type === 'any_comment' ? (
@@ -152,17 +154,17 @@ export function RuleCard({
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   {rule.response_type === 'card' ? <ImageIcon className="size-3" /> : <Sparkles className="size-3" />}
-                  Alors l&apos;IA répond
+                  {t('automation.ruleCard.thenAiReplies')}
                 </span>
                 {rule.response_type === 'card' && (
                   <Badge variant="outline" className="border-primary/20 bg-primary/5 text-[9px] font-semibold text-primary py-0">
-                    Carte
+                    {t('automation.ruleCard.card')}
                   </Badge>
                 )}
               </div>
               <div className="mt-1 text-[12px] text-foreground/80 leading-relaxed font-serif italic border-l-2 border-primary/20 pl-2.5 py-0.5">
                 {rule.response_type === 'card' ? (
-                  <p className="line-clamp-2">&ldquo;{rule.card_title || 'Sans titre'}&rdquo;</p>
+                  <p className="line-clamp-2">&ldquo;{rule.card_title || t('automation.ruleCard.untitled')}&rdquo;</p>
                 ) : (
                   <p className="line-clamp-2">&ldquo;{rule.response_text}&rdquo;</p>
                 )}
@@ -176,7 +178,7 @@ export function RuleCard({
                   </span>
                   {rule.target_post_ids && rule.target_post_ids.length > 0 && (
                     <span className="flex items-center gap-1 font-semibold text-[10px]">
-                      <Hash className="size-2.5" /> {rule.target_post_ids.length} post(s)
+                      <Hash className="size-2.5" /> {t('automation.ruleCard.postsCount', { count: rule.target_post_ids.length })}
                     </span>
                   )}
                 </div>
@@ -192,23 +194,23 @@ export function RuleCard({
             onClick={() => setConfirmOpen(true)}
             disabled={isDeleting}
             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-destructive/8 hover:text-destructive active:scale-95 transition-all disabled:opacity-50"
-            aria-label="Supprimer"
+            aria-label={t('automation.ruleCard.deleteAria')}
           >
             {isDeleting ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <Trash2 className="size-3.5" />
             )}
-            Supprimer
+            {t('automation.ruleCard.delete')}
           </button>
 
           <button
             onClick={onEdit}
             className="flex items-center gap-1.5 rounded-lg bg-primary/8 hover:bg-primary/14 px-3.5 py-1.5 text-[11px] font-bold text-primary active:scale-95 transition-all"
-            aria-label="Modifier"
+            aria-label={t('automation.ruleCard.editAria')}
           >
             <Edit2 className="size-3.5" />
-            Modifier
+            {t('automation.ruleCard.edit')}
           </button>
         </div>
       </div>
@@ -216,13 +218,15 @@ export function RuleCard({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="rounded-2xl border-0 shadow-2xl bg-[color-mix(in_srgb,var(--organic-bg)_85%,var(--card))] backdrop-blur-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-heading text-lg font-normal">Supprimer « {rule.name} » ?</AlertDialogTitle>
+            <AlertDialogTitle className="font-heading text-lg font-normal">
+              {t('automation.ruleCard.deleteTitle', { name: rule.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
-              Cette action est irréversible. L&apos;automatisation associée sera définitivement supprimée.
+              {t('automation.ruleCard.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{t('automation.ruleCard.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setConfirmOpen(false)
@@ -230,7 +234,7 @@ export function RuleCard({
               }}
               className="bg-destructive text-white hover:bg-destructive/90 rounded-xl"
             >
-              Supprimer
+              {t('automation.ruleCard.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

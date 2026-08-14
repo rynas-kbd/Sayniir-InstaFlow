@@ -46,72 +46,82 @@ import { NodeInspector } from './node-inspector'
 import type { FlowNodeRecord, FlowEdgeRecord, FlowNodeType, FlowSummary } from '../types'
 import type { Tag as ContactTag } from '@/components/contacts/types'
 import type { AiInsight } from '@/components/ai/types'
+import { useT, useLocale } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 const nodeTypes = { flowNode: FlowNodeVisual }
 
-const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare; label: string }[] = [
-  { type: 'send_message', icon: MessageSquare, label: 'Message' },
-  { type: 'ai_reply', icon: Sparkles, label: 'Réponse IA' },
-  { type: 'capture_input', icon: ListPlus, label: 'Enregistrer réponse' },
-  { type: 'external_request', icon: Globe, label: 'Requête externe' },
-  { type: 'split_test', icon: SplitSquareHorizontal, label: 'Split A/B' },
-  { type: 'condition', icon: GitBranch, label: 'Condition' },
-  { type: 'delay', icon: Clock, label: 'Délai' },
-  { type: 'set_tag', icon: Tag, label: 'Ajouter tag' },
-  { type: 'remove_tag', icon: TagIcon, label: 'Retirer tag' },
-  { type: 'jump', icon: ArrowRightCircle, label: 'Aller vers' },
+const ADDABLE: { type: FlowNodeType; icon: typeof MessageSquare }[] = [
+  { type: 'send_message', icon: MessageSquare },
+  { type: 'ai_reply', icon: Sparkles },
+  { type: 'capture_input', icon: ListPlus },
+  { type: 'external_request', icon: Globe },
+  { type: 'split_test', icon: SplitSquareHorizontal },
+  { type: 'condition', icon: GitBranch },
+  { type: 'delay', icon: Clock },
+  { type: 'set_tag', icon: Tag },
+  { type: 'remove_tag', icon: TagIcon },
+  { type: 'jump', icon: ArrowRightCircle },
 ]
 
-function summaryFor(type: FlowNodeType, config: Record<string, unknown>): string {
+function summaryFor(type: FlowNodeType, config: Record<string, unknown>, t: Translator): string {
   switch (type) {
     case 'trigger': {
       const triggerType = (config.trigger_type as string) ?? 'any_message'
       const kws = (config.trigger_keywords as string[] | null) ?? []
       const postIds = (config.target_post_ids as string[] | null) ?? []
-      const postsSuffix = postIds.length > 0 ? ` · ${postIds.length} post(s)` : ' · tous les posts'
+      const postsSuffix =
+        postIds.length > 0
+          ? t('flows.builder.flowCanvas.summary.postsSuffixCount', { count: postIds.length })
+          : t('flows.builder.flowCanvas.summary.postsSuffixAll')
+      const none = t('flows.builder.flowCanvas.summary.none')
       if (triggerType === 'keyword') {
-        return `Mots-clés : ${kws.join(', ') || 'Aucun'}`
+        return t('flows.builder.flowCanvas.summary.keywordsPrefix', { keywords: kws.join(', ') || none })
       }
       if (triggerType === 'comment_keyword') {
-        return `Commentaire mots-clés : ${kws.join(', ') || 'Aucun'}${postsSuffix}`
+        return t('flows.builder.flowCanvas.summary.commentKeywordsPrefix', { keywords: kws.join(', ') || none }) + postsSuffix
       }
       if (triggerType === 'any_comment') {
-        return `Tout commentaire${postsSuffix}`
+        return t('flows.builder.flowCanvas.summary.anyComment') + postsSuffix
       }
-      return 'Tout message DM'
+      return t('flows.builder.flowCanvas.summary.anyMessageDm')
     }
     case 'send_message':
       return config.message_type === 'card'
-        ? `[Carte] ${config.card_title || 'Sans titre'}`
-        : (config.text as string) || 'Aucun message'
+        ? t('flows.builder.flowCanvas.summary.cardPrefix', { title: (config.card_title as string) || t('flows.builder.flowCanvas.summary.untitled') })
+        : (config.text as string) || t('flows.builder.flowCanvas.summary.noMessage')
     case 'ai_reply':
-      return (config.instructions as string) || 'Aucune instruction'
+      return (config.instructions as string) || t('flows.builder.flowCanvas.summary.noInstructions')
     case 'capture_input':
-      return config.variable_name ? `Variable : ${config.variable_name}` : 'Non configuré'
+      return config.variable_name
+        ? t('flows.builder.flowCanvas.summary.variablePrefix', { name: config.variable_name as string })
+        : t('flows.builder.flowCanvas.summary.notConfigured')
     case 'external_request':
-      return config.url ? String(config.url) : 'Non configuré'
-    case 'split_test':
-      return `${(config.percentage_a as number) ?? 50}% A / ${100 - ((config.percentage_a as number) ?? 50)}% B`
+      return config.url ? String(config.url) : t('flows.builder.flowCanvas.summary.notConfigured')
+    case 'split_test': {
+      const pctA = (config.percentage_a as number) ?? 50
+      return t('flows.builder.flowCanvas.summary.splitSummary', { pctA, pctB: 100 - pctA })
+    }
     case 'condition':
-      return config.field ? `${config.field} ${config.operator ?? 'equals'} ${config.value ?? ''}` : 'Non configuré'
+      return config.field ? `${config.field} ${config.operator ?? 'equals'} ${config.value ?? ''}` : t('flows.builder.flowCanvas.summary.notConfigured')
     case 'delay':
-      return `${config.seconds ?? 60}s`
+      return t('flows.builder.flowCanvas.summary.delaySeconds', { seconds: (config.seconds as number) ?? 60 })
     case 'set_tag':
     case 'remove_tag':
-      return config.tag_id ? 'Tag sélectionné' : 'Aucun tag'
+      return config.tag_id ? t('flows.builder.flowCanvas.summary.tagSelected') : t('flows.builder.flowCanvas.summary.noTag')
     case 'jump':
-      return config.target_flow_id ? 'Flow sélectionné' : 'Aucun flow'
+      return config.target_flow_id ? t('flows.builder.flowCanvas.summary.flowSelected') : t('flows.builder.flowCanvas.summary.noFlow')
     default:
       return ''
   }
 }
 
-function toReactFlowNode(record: FlowNodeRecord, insights: AiInsight[]): Node {
+function toReactFlowNode(record: FlowNodeRecord, insights: AiInsight[], t: Translator): Node {
   return {
     id: record.node_key,
     type: 'flowNode',
     position: record.position ?? { x: 0, y: 0 },
-    data: { nodeType: record.type, config: record.config, summary: summaryFor(record.type, record.config), insights },
+    data: { nodeType: record.type, config: record.config, summary: summaryFor(record.type, record.config, t), insights },
   }
 }
 
@@ -149,6 +159,8 @@ export function FlowCanvas({
   otherFlows: FlowSummary[]
   insightsByNodeKey?: Record<string, AiInsight[]>
 }) {
+  const t = useT()
+  const locale = useLocale()
   const [nodes, setNodes, onNodesChange] = useNodesState(
     initialNodes.map((n) => {
       if (n.node_key === 'trigger') {
@@ -165,12 +177,12 @@ export function FlowCanvas({
           data: {
             nodeType: n.type,
             config: enrichedConfig,
-            summary: summaryFor(n.type, enrichedConfig),
+            summary: summaryFor(n.type, enrichedConfig, t),
             insights: insightsByNodeKey[n.node_key] ?? [],
           },
         }
       }
-      return toReactFlowNode(n, insightsByNodeKey[n.node_key] ?? [])
+      return toReactFlowNode(n, insightsByNodeKey[n.node_key] ?? [], t)
     })
   )
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map(toReactFlowEdge))
@@ -224,9 +236,9 @@ export function FlowCanvas({
     if (!edgeToDelete) return
     setEdges((eds) => eds.filter((e) => e.id !== edgeId))
     setSelectedEdgeId(null)
-    toast.success('Lien supprimé', {
+    toast.success(t('flows.builder.flowCanvas.linkDeleted'), {
       action: {
-        label: 'Annuler',
+        label: t('flows.builder.flowCanvas.undo'),
         onClick: () => setEdges((eds) => [...eds, edgeToDelete]),
       },
     })
@@ -252,7 +264,7 @@ export function FlowCanvas({
       id: nodeKey,
       type: 'flowNode',
       position: { x: 100 + nodes.length * 40, y: 100 + nodes.length * 80 },
-      data: { nodeType: type, config: {}, summary: summaryFor(type, {}) },
+      data: { nodeType: type, config: {}, summary: summaryFor(type, {}, t) },
     }
     setNodes((nds) => [...nds, newNode])
   }
@@ -260,7 +272,7 @@ export function FlowCanvas({
   function updateSelectedConfig(config: Record<string, unknown>) {
     if (!selectedId) return
     setNodes((nds) =>
-      nds.map((n) => (n.id === selectedId ? { ...n, data: { ...n.data, config, summary: summaryFor((n.data as unknown as FlowNodeData).nodeType, config) } } : n))
+      nds.map((n) => (n.id === selectedId ? { ...n, data: { ...n.data, config, summary: summaryFor((n.data as unknown as FlowNodeData).nodeType, config, t) } } : n))
     )
   }
 
@@ -286,7 +298,7 @@ export function FlowCanvas({
                   trigger_type: next.trigger_type,
                   trigger_keywords: next.trigger_keywords,
                   target_post_ids: next.target_post_ids,
-                }),
+                }, t),
               },
             }
           : n
@@ -303,8 +315,8 @@ export function FlowCanvas({
           target_post_ids: next.target_post_ids,
         }),
       })
-      if (!res.ok) throw new Error('Erreur')
-      toast.success('Déclencheur mis à jour')
+      if (!res.ok) throw new Error(t('flows.builder.flowCanvas.genericError'))
+      toast.success(t('flows.builder.flowCanvas.triggerUpdated'))
     } catch {
       setTriggerConfig(triggerConfig) // rollback triggerConfig
       // rollback nodes state
@@ -325,13 +337,13 @@ export function FlowCanvas({
                     trigger_type: triggerConfig.trigger_type,
                     trigger_keywords: triggerConfig.trigger_keywords,
                     target_post_ids: triggerConfig.target_post_ids,
-                  }),
+                  }, t),
                 },
               }
             : n
         )
       )
-      toast.error('Impossible de mettre à jour le déclencheur')
+      toast.error(t('flows.builder.flowCanvas.triggerUpdateError'))
     }
   }
 
@@ -374,15 +386,15 @@ export function FlowCanvas({
       if (!res.ok) {
         const data = await res.json()
         console.error('Save failed:', data)
-        throw new Error(data.error || 'Erreur')
+        throw new Error(data.error || t('flows.builder.flowCanvas.genericError'))
       }
-      
-      toast.success('Flow sauvegardé')
+
+      toast.success(t('flows.builder.flowCanvas.flowSaved'))
       setLastSavedAt(new Date())
       setHasUnsavedChanges(false)
     } catch (err) {
       console.error('Save error:', err)
-      toast.error(err instanceof Error ? err.message : 'Impossible de sauvegarder le flow')
+      toast.error(err instanceof Error ? err.message : t('flows.builder.flowCanvas.saveError'))
     } finally {
       setSaving(false)
     }
@@ -394,7 +406,7 @@ export function FlowCanvas({
   const inspectorContent = isTriggerSelected ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between pb-2 border-b border-[color-mix(in_srgb,var(--organic-sand-400)_20%,transparent)]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Déclencheur</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{t('flows.builder.flowCanvas.triggerHeading')}</h3>
       </div>
       <NodeInspector
         nodeType="trigger"
@@ -415,7 +427,7 @@ export function FlowCanvas({
   ) : nodeData ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between pb-2 border-b border-[color-mix(in_srgb,var(--organic-sand-400)_20%,transparent)]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Configuration</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{t('flows.builder.flowCanvas.configHeading')}</h3>
       </div>
       <div className="flex flex-col gap-4">
         <NodeInspector
@@ -433,7 +445,7 @@ export function FlowCanvas({
           onClick={deleteSelected}
           className="w-full border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-200"
         >
-          <Trash2 className="size-3.5" /> Supprimer le nœud
+          <Trash2 className="size-3.5" /> {t('flows.builder.flowCanvas.deleteNode')}
         </Button>
       </div>
     </div>
@@ -444,9 +456,9 @@ export function FlowCanvas({
         <Workflow className="size-6 text-muted-foreground/60" />
       </div>
       <div className="space-y-1.5 max-w-[200px]">
-        <p className="text-xs font-bold text-foreground/80">Configuration</p>
+        <p className="text-xs font-bold text-foreground/80">{t('flows.builder.flowCanvas.emptyInspectorTitle')}</p>
         <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-          Sélectionnez un nœud dans le canvas pour afficher et modifier ses options.
+          {t('flows.builder.flowCanvas.emptyInspectorDescription')}
         </p>
       </div>
     </div>
@@ -463,14 +475,16 @@ export function FlowCanvas({
             {hasUnsavedChanges && (
               <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-500">
                 <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse" />
-                Non sauvegardé
+                {t('flows.builder.flowCanvas.unsaved')}
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {lastSavedAt && !hasUnsavedChanges && (
               <span className="hidden sm:block text-[11px] text-muted-foreground">
-                Sauvegardé à {lastSavedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {t('flows.builder.flowCanvas.savedAt', {
+                  time: lastSavedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+                })}
               </span>
             )}
             <Button
@@ -481,10 +495,10 @@ export function FlowCanvas({
             >
               <Save className="size-3.5" />
               <span className="hidden sm:inline">
-                {saving ? 'Sauvegarde…' : hasUnsavedChanges ? 'Sauvegarder' : 'Sauvegardé'}
+                {saving ? t('flows.builder.flowCanvas.saving') : hasUnsavedChanges ? t('flows.builder.flowCanvas.save') : t('flows.builder.flowCanvas.saved')}
               </span>
               <span className="sm:hidden">
-                {saving ? '…' : 'Save'}
+                {saving ? '…' : t('flows.builder.flowCanvas.saveShort')}
               </span>
             </Button>
           </div>
@@ -493,8 +507,8 @@ export function FlowCanvas({
         <div className="flex h-full w-full flex-1 overflow-hidden">
         {/* Left sidebar — add nodes (desktop only) */}
         <div className="hidden h-full w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-sidebar p-3 md:flex">
-          <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">Ajouter un nœud</p>
-          {ADDABLE.map(({ type, icon: Icon, label }) => (
+          <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">{t('flows.builder.flowCanvas.addNodeHeading')}</p>
+          {ADDABLE.map(({ type, icon: Icon }) => (
             <Button
               key={type}
               variant="outline"
@@ -504,7 +518,7 @@ export function FlowCanvas({
                 addNode(type)
               }}
             >
-              <Icon className="size-3.5" /> {label}
+              <Icon className="size-3.5" /> {t(`flows.nodeTypes.${type}.short`)}
             </Button>
           ))}
         </div>
@@ -522,7 +536,7 @@ export function FlowCanvas({
               >
                 <div className="flex items-center gap-1.5 pl-1">
                   <span className="size-2 rounded-full bg-destructive animate-pulse" />
-                  <span className="text-xs font-bold text-foreground">Lien sélectionné</span>
+                  <span className="text-xs font-bold text-foreground">{t('flows.builder.flowCanvas.edgeSelected')}</span>
                 </div>
                 <Button
                   type="button"
@@ -531,7 +545,7 @@ export function FlowCanvas({
                   onClick={() => deleteEdge(selectedEdgeId)}
                   className="h-7 rounded-xl px-2.5 font-bold text-[11px] gap-1 shadow-sm"
                 >
-                  <Trash2 className="size-3" /> Supprimer
+                  <Trash2 className="size-3" /> {t('flows.builder.flowCanvas.delete')}
                 </Button>
                 <button
                   type="button"
@@ -598,7 +612,7 @@ export function FlowCanvas({
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="Ajouter un nœud"
+            aria-label={t('flows.builder.flowCanvas.addNodeFabAria')}
           >
             {/* Outer glow */}
             <motion.span
@@ -626,11 +640,11 @@ export function FlowCanvas({
       <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
         <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto pb-safe">
           <SheetHeader>
-            <SheetTitle className="text-base font-semibold">Ajouter un nœud</SheetTitle>
+            <SheetTitle className="text-base font-semibold">{t('flows.builder.flowCanvas.addNodeHeading')}</SheetTitle>
           </SheetHeader>
-          
+
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {ADDABLE.map(({ type, icon: Icon, label }) => (
+            {ADDABLE.map(({ type, icon: Icon }) => (
               <button
                 key={type}
                 onClick={() => {
@@ -643,15 +657,15 @@ export function FlowCanvas({
                 <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 transition-colors group-hover:from-primary/20 group-hover:to-primary/10">
                   <Icon className="size-5 text-primary" strokeWidth={2} />
                 </div>
-                
+
                 {/* Label */}
                 <span className="text-center text-xs font-medium leading-tight text-foreground">
-                  {label}
+                  {t(`flows.nodeTypes.${type}.short`)}
                 </span>
               </button>
             ))}
           </div>
-          
+
           {/* Save button at bottom */}
           <div className="mt-4 pt-4 border-t border-border">
             <Button
@@ -664,7 +678,7 @@ export function FlowCanvas({
               size="lg"
             >
               <Save className="size-4" />
-              {saving ? 'Sauvegarde en cours…' : 'Sauvegarder le flow'}
+              {saving ? t('flows.builder.flowCanvas.mobileSheetSaving') : t('flows.builder.flowCanvas.mobileSheetSave')}
             </Button>
           </div>
         </SheetContent>
@@ -674,7 +688,7 @@ export function FlowCanvas({
       <Sheet open={isMobile && selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
           <SheetHeader className="sr-only">
-            <SheetTitle>Configuration du nœud</SheetTitle>
+            <SheetTitle>{t('flows.builder.flowCanvas.mobileInspectorTitle')}</SheetTitle>
           </SheetHeader>
           {inspectorContent}
         </SheetContent>

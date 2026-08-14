@@ -3,6 +3,7 @@
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { AiInsight } from './types'
+import { useT } from '@/components/i18n-provider'
 
 const SEVERITY_ICON = { error: AlertCircle, warning: AlertTriangle, info: Info } as const
 const SEVERITY_COLOR = {
@@ -12,6 +13,7 @@ const SEVERITY_COLOR = {
 } as const
 
 export function InsightCard({ insight, onDismiss }: { insight: AiInsight; onDismiss?: (insight: AiInsight) => void }) {
+  const t = useT()
   const Icon = SEVERITY_ICON[insight.severity]
 
   return (
@@ -25,7 +27,7 @@ export function InsightCard({ insight, onDismiss }: { insight: AiInsight; onDism
         <button
           type="button"
           onClick={() => onDismiss(insight)}
-          aria-label="Ignorer cette suggestion"
+          aria-label={t('copilot.insightCard.dismissAriaLabel')}
           className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-3" />

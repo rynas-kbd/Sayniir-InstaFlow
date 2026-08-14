@@ -8,6 +8,7 @@ import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Tras
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useT, useLocale } from '@/components/i18n-provider'
 import type { MessageItem } from './types'
 
 export interface Snippet {
@@ -62,6 +63,9 @@ export function ConversationThread({
   teamMembers: { name: string; email: string }[]
   initialAssignedTo: string
 }) {
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [localMessages, setLocalMessages] = useState(messages)
 
@@ -95,7 +99,7 @@ export function ConversationThread({
         body: JSON.stringify({ assigned_to: email || null }),
       })
     } catch {
-      toast.error("Impossible d'assigner la conversation")
+      toast.error(t('inbox.thread.toastAssignError'))
     }
   }
 
@@ -120,7 +124,7 @@ export function ConversationThread({
 
   const groups: { date: string; items: ExtendedMessageItem[] }[] = []
   for (const msg of displayItems) {
-    const day = new Date(msg.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    const day = new Date(msg.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })
     const last = groups[groups.length - 1]
     if (last && last.date === day) last.items.push(msg)
     else groups.push({ date: day, items: [msg] })
@@ -159,7 +163,7 @@ export function ConversationThread({
       ])
       setDraft('')
     } catch {
-      toast.error("Impossible d'envoyer le message")
+      toast.error(t('inbox.thread.toastSendError'))
     } finally {
       setSending(false)
     }
@@ -177,9 +181,9 @@ export function ConversationThread({
       const created: Snippet = await res.json()
       setSnippets((prev) => [created, ...prev])
       setNewShortcut('')
-      toast.success('Réponse rapide enregistrée')
+      toast.success(t('inbox.thread.toastSnippetSaved'))
     } catch {
-      toast.error("Impossible d'enregistrer la réponse rapide")
+      toast.error(t('inbox.thread.toastSnippetSaveError'))
     }
   }
 
@@ -189,7 +193,7 @@ export function ConversationThread({
       if (!res.ok) throw new Error()
       setSnippets((prev) => prev.filter((s) => s.id !== id))
     } catch {
-      toast.error('Impossible de supprimer')
+      toast.error(t('inbox.thread.toastSnippetDeleteError'))
     }
   }
 
@@ -205,9 +209,9 @@ export function ConversationThread({
       })
       if (!res.ok) throw new Error()
       setBotPaused(next)
-      toast.success(next ? 'Bot mis en pause pour ce contact' : 'Bot réactivé pour ce contact')
+      toast.success(next ? t('inbox.thread.toastBotPaused') : t('inbox.thread.toastBotResumed'))
     } catch {
-      toast.error('Impossible de changer le statut du bot')
+      toast.error(t('inbox.thread.toastBotToggleError'))
     } finally {
       setTogglingPause(false)
     }
@@ -237,7 +241,7 @@ export function ConversationThread({
             style={{ background: 'color-mix(in srgb, var(--organic-sand-300) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--organic-sand-400) 18%, transparent)' }}
           >
             <ChevronLeft className="size-4" />
-            <span className="text-[12px] font-medium">Retour</span>
+            <span className="text-[12px] font-medium">{t('inbox.thread.back')}</span>
           </Link>
         )}
 
@@ -269,7 +273,7 @@ export function ConversationThread({
           <p className="truncate text-[13.5px] font-semibold text-foreground">{senderName}</p>
           {accountUsername && (
             <p className="truncate text-[11px]" style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}>
-              via @{accountUsername}
+              {t('inbox.thread.viaAccount', { username: accountUsername })}
             </p>
           )}
         </div>
@@ -288,7 +292,7 @@ export function ConversationThread({
                 color: 'color-mix(in srgb, var(--foreground) 65%, transparent)',
               }}
             >
-              <option value="">Non assigné</option>
+              <option value="">{t('inbox.thread.unassigned')}</option>
               {teamMembers.map((m) => (
                 <option key={m.email} value={m.email}>{m.name}</option>
               ))}
@@ -317,7 +321,7 @@ export function ConversationThread({
               }
             >
               {botPaused ? <Pause className="size-3" /> : <Play className="size-3" />}
-              {botPaused ? 'Bot en pause' : 'Bot actif'}
+              {botPaused ? t('inbox.thread.botPaused') : t('inbox.thread.botActive')}
             </button>
           )}
 
@@ -331,7 +335,7 @@ export function ConversationThread({
             }}
           >
             <Bot className="size-3" strokeWidth={1.75} />
-            {sorted.length} msg{sorted.length !== 1 ? 's' : ''}
+            {t.plural('inbox.thread.messageCount', sorted.length)}
           </div>
         </div>
       </div>
@@ -385,7 +389,7 @@ export function ConversationThread({
                         style={{ color: 'var(--organic-terracotta-600)' }}
                       >
                         <Sparkles className="size-2.5" />
-                        Réponse automatique
+                        {t('inbox.thread.autoReplyLabel')}
                       </span>
                     )}
 
@@ -420,10 +424,10 @@ export function ConversationThread({
                       ) : (
                         <p className="text-xs italic opacity-70">
                           {msg.message_type === 'image'
-                            ? '🖼️ Image'
+                            ? t('inbox.thread.imageContent')
                             : msg.message_type === 'story_reply'
-                              ? '📖 Réponse à une story'
-                              : '(contenu non textuel)'}
+                              ? t('inbox.thread.storyReplyContent')
+                              : t('inbox.thread.nonTextContent')}
                         </p>
                       )}
                     </div>
@@ -433,10 +437,10 @@ export function ConversationThread({
                       className="px-0.5 text-[10.5px] tabular-nums"
                       style={{ color: 'color-mix(in srgb, var(--foreground) 32%, transparent)' }}
                     >
-                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.created_at).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                       {msg.auto_reply_sent && !isAutoReply && (
                         <span style={{ marginLeft: '4px', color: 'var(--organic-terracotta-600)' }}>
-                          · <Zap className="inline size-2.5" /> Répondu
+                          · <Zap className="inline size-2.5" /> {t('inbox.thread.repliedIndicator')}
                         </span>
                       )}
                     </span>
@@ -464,7 +468,7 @@ export function ConversationThread({
             render={
               <button
                 type="button"
-                aria-label="Réponses rapides"
+                aria-label={t('inbox.thread.quickReplies')}
                 className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-all duration-150"
                 style={{
                   background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
@@ -494,11 +498,11 @@ export function ConversationThread({
                 color: 'color-mix(in srgb, var(--foreground) 45%, transparent)',
               }}
             >
-              Réponses rapides
+              {t('inbox.thread.quickReplies')}
             </div>
             <div className="max-h-52 space-y-0.5 overflow-y-auto p-1.5">
               {snippets.length === 0 ? (
-                <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">Aucune réponse rapide.</p>
+                <p className="px-2 py-3 text-center text-xs italic text-muted-foreground">{t('inbox.thread.noQuickReplies')}</p>
               ) : (
                 snippets.map((s) => (
                   <div
@@ -525,7 +529,7 @@ export function ConversationThread({
                       type="button"
                       onClick={() => deleteSnippet(s.id)}
                       className="mr-1 shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
-                      aria-label="Supprimer"
+                      aria-label={t('inbox.thread.deleteSnippetAria')}
                     >
                       <Trash2 className="size-3" />
                     </button>
@@ -540,7 +544,7 @@ export function ConversationThread({
               <Input
                 value={newShortcut}
                 onChange={(e) => setNewShortcut(e.target.value)}
-                placeholder="raccourci (ex: prix)"
+                placeholder={t('inbox.thread.shortcutPlaceholder')}
                 className="h-7 text-xs"
               />
               <Button
@@ -548,7 +552,7 @@ export function ConversationThread({
                 size="icon-sm"
                 onClick={saveSnippet}
                 disabled={!newShortcut.trim() || !draft.trim()}
-                aria-label="Enregistrer"
+                aria-label={t('inbox.thread.saveSnippetAria')}
               >
                 <Plus className="size-3.5" />
               </Button>
@@ -566,7 +570,7 @@ export function ConversationThread({
               sendMessage()
             }
           }}
-          placeholder="Écrire un message…"
+          placeholder={t('inbox.thread.composerPlaceholder')}
           rows={1}
           className="max-h-32 min-h-9 flex-1 resize-none rounded-xl px-3.5 py-2 text-[13.5px] outline-none transition-all"
           style={{
@@ -589,7 +593,7 @@ export function ConversationThread({
           type="button"
           onClick={sendMessage}
           disabled={sending || !draft.trim()}
-          aria-label="Envoyer"
+          aria-label={t('inbox.thread.sendAria')}
           className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white shadow-md transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
           style={{
             background: draft.trim()

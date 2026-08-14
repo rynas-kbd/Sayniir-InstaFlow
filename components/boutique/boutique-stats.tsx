@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { TrendingUp, Wallet, Percent, Trophy, Sparkles, ArrowUpRight, ShoppingBag } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT, useLocale } from '@/components/i18n-provider'
 
 export interface BoutiqueStats {
   revenue: number
@@ -13,16 +14,20 @@ export interface BoutiqueStats {
 }
 
 export function BoutiqueStatsStrip({ stats }: { stats: BoutiqueStats }) {
+  const t = useT()
+  const locale = useLocale()
   const { revenue, aov, conversionRate, topProducts } = stats
+
+  const numberLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
 
   const items = [
     {
       id: 'revenue',
       icon: Wallet,
-      label: "Chiffre d'affaires",
-      value: `${revenue.toLocaleString('fr-FR')} DZD`,
-      subtext: 'Revenus validés',
-      badge: 'Global',
+      label: t('boutique.stats.revenue.label'),
+      value: `${revenue.toLocaleString(numberLocale)} DZD`,
+      subtext: t('boutique.stats.revenue.subtext'),
+      badge: t('boutique.stats.revenue.badge'),
       gradient: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
       borderColor: 'group-hover:border-emerald-500/40',
       iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -31,10 +36,10 @@ export function BoutiqueStatsStrip({ stats }: { stats: BoutiqueStats }) {
     {
       id: 'aov',
       icon: TrendingUp,
-      label: 'Panier moyen',
-      value: aov > 0 ? `${Math.round(aov).toLocaleString('fr-FR')} DZD` : '—',
-      subtext: 'Par commande',
-      badge: 'Moyenne',
+      label: t('boutique.stats.aov.label'),
+      value: aov > 0 ? `${Math.round(aov).toLocaleString(numberLocale)} DZD` : '—',
+      subtext: t('boutique.stats.aov.subtext'),
+      badge: t('boutique.stats.aov.badge'),
       gradient: 'from-blue-500/20 via-blue-500/5 to-transparent',
       borderColor: 'group-hover:border-blue-500/40',
       iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
@@ -43,10 +48,10 @@ export function BoutiqueStatsStrip({ stats }: { stats: BoutiqueStats }) {
     {
       id: 'conversion',
       icon: Percent,
-      label: 'Taux de conversion',
+      label: t('boutique.stats.conversion.label'),
       value: conversionRate !== null ? `${conversionRate.toFixed(1)}%` : '—',
-      subtext: 'Sessions converties',
-      badge: 'Performance',
+      subtext: t('boutique.stats.conversion.subtext'),
+      badge: t('boutique.stats.conversion.badge'),
       gradient: 'from-purple-500/20 via-purple-500/5 to-transparent',
       borderColor: 'group-hover:border-purple-500/40',
       iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
@@ -173,6 +178,7 @@ function StatCard({
 }
 
 function TopProductsCard({ topProducts }: { topProducts: Array<{ name: string; quantity: number }> }) {
+  const t = useT()
   const maxQty = topProducts.length > 0 ? Math.max(...topProducts.map((p) => p.quantity), 1) : 1
 
   return (
@@ -189,9 +195,9 @@ function TopProductsCard({ topProducts }: { topProducts: Array<{ name: string; q
             </div>
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground/80">
-                Top Produits
+                {t('boutique.stats.topProducts.title')}
               </p>
-              <p className="text-[10px] text-muted-foreground/70 font-semibold">Meilleures ventes</p>
+              <p className="text-[10px] text-muted-foreground/70 font-semibold">{t('boutique.stats.topProducts.subtitle')}</p>
             </div>
           </div>
           <Sparkles className="size-3.5 text-amber-500/60 animate-pulse" />
@@ -219,7 +225,7 @@ function TopProductsCard({ topProducts }: { topProducts: Array<{ name: string; q
                       <span className="truncate">{p.name}</span>
                     </span>
                     <span className="shrink-0 rounded-md bg-muted/60 px-1.5 py-0.5 text-[10px] font-extrabold text-foreground">
-                      {p.quantity} <span className="font-semibold text-muted-foreground">vdus</span>
+                      {p.quantity} <span className="font-semibold text-muted-foreground">{t('boutique.stats.topProducts.soldUnit')}</span>
                     </span>
                   </div>
                   {/* Progress bar */}
@@ -241,7 +247,7 @@ function TopProductsCard({ topProducts }: { topProducts: Array<{ name: string; q
         ) : (
           <div className="flex flex-col items-center justify-center py-3 text-center rounded-xl bg-muted/20 border border-dashed border-border/50">
             <ShoppingBag className="size-5 text-muted-foreground/40 mb-1" />
-            <p className="text-[11px] font-semibold text-muted-foreground/70">Aucune vente enregistrée</p>
+            <p className="text-[11px] font-semibold text-muted-foreground/70">{t('boutique.stats.topProducts.empty')}</p>
           </div>
         )}
       </div>

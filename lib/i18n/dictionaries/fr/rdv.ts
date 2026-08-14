@@ -1,0 +1,27 @@
+export const rdv = {
+  page: {
+    noAccountDescription: "Connectez un compte Instagram, Messenger ou WhatsApp pour que l'IA prenne des rendez-vous.",
+    loadError: 'Impossible de charger les rendez-vous',
+    title: 'Rendez-vous',
+    description: "Prises de rendez-vous automatisées par l'IA.",
+    statTotal: 'Total',
+    statPending: 'En attente',
+    statConfirmed: 'Confirmés',
+    emptyTitle: 'Aucun rendez-vous',
+    emptyDescription: "Les rendez-vous pris par l'IA apparaîtront ici.",
+  },
+  row: {
+    statusPending: 'En attente',
+    statusConfirmed: 'Confirmé',
+    statusCompleted: 'Terminé',
+    statusCancelled: 'Annulé',
+    statusNoShow: 'Absent',
+    noPhone: 'Aucun numéro',
+    unconfirmedSlot: 'Créneau non confirmé',
+    toastConfirmed: 'Rendez-vous confirmé',
+    toastCancelled: 'Rendez-vous annulé',
+    toastUpdateError: 'Impossible de mettre à jour le rendez-vous',
+    cancelButton: 'Annuler',
+    confirmButton: 'Confirmer',
+  },
+}

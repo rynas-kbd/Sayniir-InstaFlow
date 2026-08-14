@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RuleFormDialog } from './rule-form-dialog'
 import { RuleCard } from './rule-card'
+import { useT } from '@/components/i18n-provider'
 import type { AutomationRule, ChannelAccountLite, RuleFormPayload } from './types'
 
 export function AutomationClient({
@@ -18,6 +19,7 @@ export function AutomationClient({
   accounts: ChannelAccountLite[]
   initialRules: AutomationRule[]
 }) {
+  const t = useT()
   const [rules, setRules] = useState<AutomationRule[]>(initialRules)
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>(undefined)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -52,9 +54,9 @@ export function AutomationClient({
       if (!res.ok) throw new Error('Toggle request failed')
       const updated: AutomationRule = await res.json()
       setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-      toast.success(updated.is_active ? '✅ Règle activée' : '⏸️ Règle désactivée')
+      toast.success(updated.is_active ? t('automation.client.toggleActivated') : t('automation.client.toggleDeactivated'))
     } catch {
-      toast.error('Impossible de modifier la règle')
+      toast.error(t('automation.client.toggleError'))
     } finally {
       setBusyId(null)
     }
@@ -66,9 +68,9 @@ export function AutomationClient({
       const res = await fetch(`/api/rules/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete request failed')
       setRules((prev) => prev.filter((r) => r.id !== id))
-      toast.success('🗑️ Règle supprimée')
+      toast.success(t('automation.client.deleteSuccess'))
     } catch {
-      toast.error('Impossible de supprimer la règle')
+      toast.error(t('automation.client.deleteError'))
     } finally {
       setBusyId(null)
     }
@@ -93,10 +95,10 @@ export function AutomationClient({
 
       {/* Stats Header Summary */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard title="Règles totales" value={rules.length} />
-        <StatCard title="Règles actives" value={activeCount} />
-        <StatCard title="Automatisations DM" value={dmCount} />
-        <StatCard title="Commentaires" value={commentCount} />
+        <StatCard title={t('automation.client.stats.total')} value={rules.length} />
+        <StatCard title={t('automation.client.stats.active')} value={activeCount} />
+        <StatCard title={t('automation.client.stats.dm')} value={dmCount} />
+        <StatCard title={t('automation.client.stats.comments')} value={commentCount} />
       </div>
 
       {/* Tab switcher */}
@@ -111,8 +113,8 @@ export function AutomationClient({
             }}
           />
           {[
-            { key: 'dm' as const, label: `Messages privés`, count: dmCount, icon: MessageSquare },
-            { key: 'comment' as const, label: `Commentaires`, count: commentCount, icon: Hash },
+            { key: 'dm' as const, label: t('automation.client.tabs.dm'), count: dmCount, icon: MessageSquare },
+            { key: 'comment' as const, label: t('automation.client.tabs.comment'), count: commentCount, icon: Hash },
           ].map(({ key, label, count, icon: Icon }) => (
             <button
               key={key}
@@ -138,7 +140,7 @@ export function AutomationClient({
         </div>
         {accounts.length > 0 && (
           <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
-            <Plus className="size-4" /> Nouvelle règle
+            <Plus className="size-4" /> {t('automation.client.newRule')}
           </Button>
         )}
       </div>
@@ -151,17 +153,21 @@ export function AutomationClient({
         {accounts.length === 0 ? (
           <EmptyState
             icon={Zap}
-            title="Aucun compte connecté"
-            description="Connectez d'abord un compte pour créer des règles d'automatisation."
+            title={t('automation.client.emptyNoAccount.title')}
+            description={t('automation.client.emptyNoAccount.description')}
           />
         ) : filteredRules.length === 0 ? (
           <EmptyState
             icon={activeTab === 'dm' ? MessageSquare : Hash}
-            title={`Aucune règle ${activeTab === 'dm' ? 'DM' : 'commentaire'} configurée`}
-            description={`Créez votre première règle pour automatiser les réponses ${activeTab === 'dm' ? 'aux messages privés' : 'aux commentaires'}.`}
+            title={activeTab === 'dm' ? t('automation.client.emptyRules.titleDm') : t('automation.client.emptyRules.titleComment')}
+            description={
+              activeTab === 'dm'
+                ? t('automation.client.emptyRules.descriptionDm')
+                : t('automation.client.emptyRules.descriptionComment')
+            }
             action={
               <Button render={<Link href={`/automation/new?tab=${activeTab}`} />}>
-                <Plus className="size-4" /> Créer ma première règle
+                <Plus className="size-4" /> {t('automation.client.emptyRules.action')}
               </Button>
             }
           />
@@ -187,7 +193,7 @@ export function AutomationClient({
               <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
                 <Plus className="size-5" />
               </div>
-              <span className="text-sm font-medium">Nouvelle règle</span>
+              <span className="text-sm font-medium">{t('automation.client.newRule')}</span>
             </Link>
           </div>
         )}

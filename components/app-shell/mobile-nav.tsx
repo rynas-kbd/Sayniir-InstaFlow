@@ -7,17 +7,19 @@ import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import { getNavSections, type BusinessType } from './nav-config'
 
 export function MobileNav({ businessType }: { businessType: BusinessType }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const sections = getNavSections(businessType)
+  const t = useT()
+  const sections = getNavSections(businessType, t)
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        render={<Button variant="ghost" size="icon" className="md:hidden" aria-label="Ouvrir la navigation" />}
+        render={<Button variant="ghost" size="icon" className="md:hidden" aria-label={t('nav.mobileNav.openAriaLabel')} />}
       >
         <Menu className="size-4" />
       </SheetTrigger>
@@ -32,7 +34,7 @@ export function MobileNav({ businessType }: { businessType: BusinessType }) {
               />
             }
           >
-            Instaflow
+            {t('nav.sidebar.logoTitle')}
           </SheetTitle>
         </SheetHeader>
 

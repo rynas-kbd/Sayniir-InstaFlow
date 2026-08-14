@@ -16,6 +16,14 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { useT, useLocale } from '@/components/i18n-provider'
+import type { Locale } from '@/lib/i18n/config'
+
+function toIntlLocale(locale: Locale): string {
+  if (locale === 'ar') return 'ar'
+  if (locale === 'en') return 'en-US'
+  return 'fr-FR'
+}
 
 export interface DiscountCode {
   id: string
@@ -35,6 +43,9 @@ export interface DiscountCode {
  * the redeem_discount_code RPC (migration 20260822).
  */
 export function DiscountCodesManager({ channelAccountId, initialCodes }: { channelAccountId: string; initialCodes: DiscountCode[] }) {
+  const t = useT()
+  const locale = useLocale()
+  const intlLocale = toIntlLocale(locale)
   const [codes, setCodes] = useState<DiscountCode[]>(initialCodes)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -59,16 +70,16 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Erreur')
+      if (!res.ok) throw new Error(data.error ?? t('boutique.discountCodes.genericError'))
       setCodes((prev) => [data, ...prev])
-      toast.success('Code promo créé')
+      toast.success(t('boutique.discountCodes.toastCreateSuccess'))
       setOpen(false)
       setCode('')
       setPercentOff('')
       setAmountOff('')
       setMaxUses('')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Impossible de créer le code')
+      toast.error(err instanceof Error ? err.message : t('boutique.discountCodes.toastCreateError'))
     } finally {
       setSaving(false)
     }
@@ -83,58 +94,58 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
     })
     if (!res.ok) {
       setCodes((prev) => prev.map((c) => (c.id === id ? { ...c, is_active: !isActive } : c)))
-      toast.error('Impossible de mettre à jour le code')
+      toast.error(t('boutique.discountCodes.toastToggleError'))
     }
   }
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/discount-codes/${id}`, { method: 'DELETE' })
     if (!res.ok) {
-      toast.error('Impossible de supprimer le code')
+      toast.error(t('boutique.discountCodes.toastDeleteError'))
       return
     }
     setCodes((prev) => prev.filter((c) => c.id !== id))
-    toast.success('Code supprimé')
+    toast.success(t('boutique.discountCodes.toastDeleteSuccess'))
   }
 
   return (
     <div className="pt-2">
       <div className="mb-4 flex justify-between items-center">
         <div>
-          <h3 className="text-sm font-bold text-foreground">Codes promotionnels</h3>
-          <p className="text-xs text-muted-foreground">Créés pour être reconnus et appliqués automatiquement par l&apos;agent IA dans le chat.</p>
+          <h3 className="text-sm font-bold text-foreground">{t('boutique.discountCodes.title')}</h3>
+          <p className="text-xs text-muted-foreground">{t('boutique.discountCodes.description')}</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button type="button" size="sm" className="font-bold gap-1.5" />}>
-            <Plus className="size-4" /> Nouveau code promo
+            <Plus className="size-4" /> {t('boutique.discountCodes.newButton')}
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-heading">Créer un code promo</DialogTitle>
+              <DialogTitle className="font-heading">{t('boutique.discountCodes.dialogTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3.5 py-2">
               <div className="space-y-1.5">
-                <Label htmlFor="dc-code" className="text-xs font-bold">Code promo (ex: PROMO10)</Label>
-                <Input id="dc-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="BIENVENUE20" className="font-mono uppercase font-bold" />
+                <Label htmlFor="dc-code" className="text-xs font-bold">{t('boutique.discountCodes.codeLabel')}</Label>
+                <Input id="dc-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder={t('boutique.discountCodes.codePlaceholder')} className="font-mono uppercase font-bold" />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="dc-percent" className="text-xs font-bold">Réduction (%)</Label>
-                  <Input id="dc-percent" type="number" min="1" max="100" value={percentOff} onChange={(e) => { setPercentOff(e.target.value); setAmountOff('') }} placeholder="10" />
+                  <Label htmlFor="dc-percent" className="text-xs font-bold">{t('boutique.discountCodes.percentLabel')}</Label>
+                  <Input id="dc-percent" type="number" min="1" max="100" value={percentOff} onChange={(e) => { setPercentOff(e.target.value); setAmountOff('') }} placeholder={t('boutique.discountCodes.percentPlaceholder')} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="dc-amount" className="text-xs font-bold">Ou montant fixe (DZD)</Label>
-                  <Input id="dc-amount" type="number" min="1" value={amountOff} onChange={(e) => { setAmountOff(e.target.value); setPercentOff('') }} placeholder="500" />
+                  <Label htmlFor="dc-amount" className="text-xs font-bold">{t('boutique.discountCodes.amountLabel')}</Label>
+                  <Input id="dc-amount" type="number" min="1" value={amountOff} onChange={(e) => { setAmountOff(e.target.value); setPercentOff('') }} placeholder={t('boutique.discountCodes.amountPlaceholder')} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="dc-max-uses" className="text-xs font-bold">Nombre d&apos;utilisations max (facultatif)</Label>
-                <Input id="dc-max-uses" type="number" min="1" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} placeholder="Illimité" />
+                <Label htmlFor="dc-max-uses" className="text-xs font-bold">{t('boutique.discountCodes.maxUsesLabel')}</Label>
+                <Input id="dc-max-uses" type="number" min="1" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} placeholder={t('boutique.discountCodes.maxUsesPlaceholder')} />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" onClick={handleCreate} disabled={saving || !code.trim() || (!percentOff && !amountOff)} className="font-bold">
-                {saving ? 'Création…' : 'Créer le code'}
+                {saving ? t('boutique.discountCodes.creating') : t('boutique.discountCodes.createButton')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -144,8 +155,8 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
       {codes.length === 0 ? (
         <EmptyState
           icon={Tag}
-          title="Aucun code promo actif"
-          description="Créez un code promo pour stimuler vos ventes et permettre à l'IA d'offrir des réductions lors du closings."
+          title={t('boutique.discountCodes.emptyTitle')}
+          description={t('boutique.discountCodes.emptyDescription')}
         />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm divide-y divide-border/40">
@@ -160,12 +171,16 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-extrabold text-foreground">
-                      {c.percent_off ? `-${c.percent_off}% de réduction` : `-${c.amount_off?.toLocaleString('fr-FR')} DZD de réduction`}
+                      {c.percent_off
+                        ? t('boutique.discountCodes.percentOff', { percent: c.percent_off })
+                        : t('boutique.discountCodes.amountOff', { amount: c.amount_off?.toLocaleString(intlLocale) ?? '' })}
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {c.max_uses ? `${c.times_used} / ${c.max_uses} utilisations` : `${c.times_used} utilisation(s)`}
-                    {c.expires_at ? ` · Expire le ${new Date(c.expires_at).toLocaleDateString('fr-FR')}` : ''}
+                    {c.max_uses
+                      ? t('boutique.discountCodes.usageWithMax', { used: c.times_used, max: c.max_uses })
+                      : t.plural('boutique.discountCodes.usageCount', c.times_used)}
+                    {c.expires_at ? ` · ${t('boutique.discountCodes.expiresOn', { date: new Date(c.expires_at).toLocaleDateString(intlLocale) })}` : ''}
                   </p>
                 </div>
               </div>
@@ -173,15 +188,15 @@ export function DiscountCodesManager({ channelAccountId, initialCodes }: { chann
               <div className="flex shrink-0 items-center gap-3">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground select-none cursor-pointer">
                   <span className={c.is_active ? 'text-primary font-bold' : 'text-muted-foreground'}>
-                    {c.is_active ? 'Actif' : 'Inactif'}
+                    {c.is_active ? t('boutique.discountCodes.active') : t('boutique.discountCodes.inactive')}
                   </span>
-                  <Switch checked={c.is_active} onCheckedChange={(v) => handleToggle(c.id, v)} aria-label={c.is_active ? 'Désactiver' : 'Activer'} />
+                  <Switch checked={c.is_active} onCheckedChange={(v) => handleToggle(c.id, v)} aria-label={c.is_active ? t('boutique.discountCodes.deactivateAria') : t('boutique.discountCodes.activateAria')} />
                 </label>
                 <button
                   type="button"
                   onClick={() => handleDelete(c.id)}
                   className="rounded-lg p-1.5 text-muted-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
-                  aria-label={`Supprimer ${c.code}`}
+                  aria-label={t('boutique.discountCodes.deleteAria', { code: c.code })}
                 >
                   <Trash2 className="size-4" />
                 </button>

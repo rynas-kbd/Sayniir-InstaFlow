@@ -2,9 +2,11 @@
 
 import { useTheme } from 'next-themes'
 import { Moon, Sun } from 'lucide-react'
+import { useT } from '@/components/i18n-provider'
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const t = useT()
 
   const handleToggle = () => {
     const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
@@ -23,7 +25,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      aria-label="Changer de thème"
+      aria-label={t('appearance.themeToggleAriaLabel')}
       onClick={handleToggle}
       className="flex size-8 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
       style={{

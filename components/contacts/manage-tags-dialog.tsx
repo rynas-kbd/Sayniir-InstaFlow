@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components/ui/dialog'
 import { FormDialogHeader, FormSection } from '@/components/shared/form-section'
+import { useT } from '@/components/i18n-provider'
 import type { Tag } from './types'
 
 const COLORS = ['#b2622d', '#728157', '#645c50', '#b23a2e', '#643312', '#3d472b']
@@ -17,6 +18,7 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
+  const t = useT()
 
   async function createTag(e: React.FormEvent) {
     e.preventDefault()
@@ -28,13 +30,13 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ channel_account_id: channelAccountId, name: name.trim(), color }),
       })
-      if (!res.ok) throw new Error('Erreur')
+      if (!res.ok) throw new Error()
       const tag: Tag = await res.json()
       setTags((prev) => [...prev, tag])
       setName('')
-      toast.success('Tag créé')
+      toast.success(t('contacts.tagsDialog.toastCreated'))
     } catch {
-      toast.error('Impossible de créer le tag')
+      toast.error(t('contacts.tagsDialog.toastCreateError'))
     } finally {
       setSaving(false)
     }
@@ -43,31 +45,35 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
   async function deleteTag(id: string) {
     try {
       const res = await fetch(`/api/tags/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Erreur')
-      setTags((prev) => prev.filter((t) => t.id !== id))
-      toast.success('Tag supprimé')
+      if (!res.ok) throw new Error()
+      setTags((prev) => prev.filter((tag) => tag.id !== id))
+      toast.success(t('contacts.tagsDialog.toastDeleted'))
     } catch {
-      toast.error('Impossible de supprimer le tag')
+      toast.error(t('contacts.tagsDialog.toastDeleteError'))
     }
   }
 
   return (
     <Dialog>
       <DialogTrigger render={<Button variant="outline" />}>
-        <TagIcon className="size-4" /> Gérer les tags
+        <TagIcon className="size-4" /> {t('contacts.tagsDialog.trigger')}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <FormDialogHeader icon={TagIcon} title="Gérer les tags" description="Organisez vos contacts par étiquettes colorées." />
+          <FormDialogHeader
+            icon={TagIcon}
+            title={t('contacts.tagsDialog.title')}
+            description={t('contacts.tagsDialog.description')}
+          />
         </DialogHeader>
 
-        <FormSection icon={Palette} label="Nouveau tag">
+        <FormSection icon={Palette} label={t('contacts.tagsDialog.newTagSection')}>
           <form onSubmit={createTag} className="flex flex-wrap items-center gap-2.5">
             <Input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nom du tag"
+              placeholder={t('contacts.tagsDialog.namePlaceholder')}
               className="min-w-[140px] flex-1"
             />
             <div className="flex items-center gap-1.5">
@@ -82,13 +88,18 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
                 />
               ))}
             </div>
-            <Button type="submit" size="icon" disabled={saving || !name.trim()} aria-label="Créer le tag">
+            <Button
+              type="submit"
+              size="icon"
+              disabled={saving || !name.trim()}
+              aria-label={t('contacts.tagsDialog.createAria')}
+            >
               <Plus className="size-4" />
             </Button>
           </form>
         </FormSection>
 
-        <FormSection icon={List} label="Tags existants">
+        <FormSection icon={List} label={t('contacts.tagsDialog.existingSection')}>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <Badge key={tag.id} variant="outline" style={{ borderColor: tag.color, color: tag.color }} className="gap-1">
@@ -96,14 +107,14 @@ export function ManageTagsDialog({ channelAccountId, tags: initialTags }: { chan
                 <button
                   type="button"
                   onClick={() => deleteTag(tag.id)}
-                  aria-label="Supprimer"
+                  aria-label={t('contacts.tagsDialog.deleteAria')}
                   className="-my-1 -mr-1 cursor-pointer rounded-full p-1.5"
                 >
                   <Trash2 className="size-3" />
                 </button>
               </Badge>
             ))}
-            {tags.length === 0 && <p className="text-xs text-muted-foreground">Aucun tag pour l&apos;instant.</p>}
+            {tags.length === 0 && <p className="text-xs text-muted-foreground">{t('contacts.tagsDialog.noTags')}</p>}
           </div>
         </FormSection>
       </DialogContent>

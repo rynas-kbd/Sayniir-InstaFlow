@@ -23,6 +23,8 @@ import { mapAiInsightRow } from '@/components/ai/types'
 import { shouldShowPulseSurvey } from '@/lib/onboarding/pulse'
 import { PulseSurvey } from '@/components/onboarding/pulse-survey'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/server'
+import type { Translator } from '@/lib/i18n/translate'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { StatCard } from '@/components/dashboard/stat-card'
 import {
@@ -39,19 +41,20 @@ import { Button } from '@/components/ui/button'
 
 import { DashboardContainer, DashboardItem } from '@/components/dashboard/dashboard-animator'
 
-function formatTime(dateStr: string) {
+function formatTime(dateStr: string, t: Translator) {
   const d = new Date(dateStr)
   const now = new Date()
   const diffMs = now.getTime() - d.getTime()
   const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'à l\'instant'
-  if (diffMin < 60) return `il y a ${diffMin}m`
+  if (diffMin < 1) return t('dashboard.relativeTime.justNow')
+  if (diffMin < 60) return t('dashboard.relativeTime.minutesAgo', { count: diffMin })
   const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24) return `il y a ${diffH}h`
-  return `il y a ${Math.floor(diffH / 24)}j`
+  if (diffH < 24) return t('dashboard.relativeTime.hoursAgo', { count: diffH })
+  return t('dashboard.relativeTime.daysAgo', { count: Math.floor(diffH / 24) })
 }
 
 export default async function DashboardPage() {
+  const t = await getT()
   const supabase = await createClient()
   const {
     data: { user },
@@ -115,8 +118,8 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader
-        title="Dashboard"
-        description="Pilotez et analysez vos automatisations en temps réel."
+        title={t('dashboard.header.title')}
+        description={t('dashboard.header.description')}
         actions={
           <div className="flex items-center gap-2">
             <span
@@ -127,7 +130,7 @@ export default async function DashboardPage() {
               }`}
             >
               <span className={`size-2 rounded-full ${subOk ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
-              {subOk ? 'Plan Pro Actif' : 'Version Gratuite'}
+              {subOk ? t('dashboard.plan.pro') : t('dashboard.plan.free')}
             </span>
           </div>
         }
@@ -161,13 +164,13 @@ export default async function DashboardPage() {
             <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-primary"
               style={{ background: 'color-mix(in srgb, var(--organic-terracotta) 12%, transparent)' }}>
               <Sparkles className="size-3.5" />
-              Nouveauté : Refonte premium
+              {t('dashboard.banner.badge')}
             </div>
             <h2 className="mt-3 font-heading text-lg text-foreground sm:text-xl font-normal">
-              Bienvenue sur votre espace d&apos;automatisation !
+              {t('dashboard.banner.title')}
             </h2>
             <p className="mt-1.5 text-[13.5px] text-muted-foreground leading-relaxed">
-              Connectez votre compte Instagram, configurez vos règles de messagerie automatique, et créez des flows visuels pour piloter vos conversions DMs.
+              {t('dashboard.banner.description')}
             </p>
           </div>
           <div className="absolute right-6 bottom-0 top-0 hidden w-1/3 items-center justify-center opacity-[0.05] lg:flex">
@@ -179,38 +182,38 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <DashboardItem>
             <StatCard
-              title="Messages reçus"
+              title={t('dashboard.stats.messagesReceived.title')}
               value={totalMessages ?? 0}
               icon={MessageSquare}
               accent="terracotta"
-              description="Conversations DMs entrantes"
+              description={t('dashboard.stats.messagesReceived.description')}
             />
           </DashboardItem>
           <DashboardItem>
             <StatCard
-              title="Réponses auto"
+              title={t('dashboard.stats.autoReplies.title')}
               value={totalReplied}
               icon={Zap}
               accent="sage"
-              description="Traitées par vos automations"
+              description={t('dashboard.stats.autoReplies.description')}
             />
           </DashboardItem>
           <DashboardItem>
             <StatCard
-              title="Canaux actifs"
+              title={t('dashboard.stats.activeChannels.title')}
               value={`${activeAccounts} / ${safeAccounts.length}`}
               icon={Link2}
               accent="sand"
-              description="Comptes Meta connectés"
+              description={t('dashboard.stats.activeChannels.description')}
             />
           </DashboardItem>
           <DashboardItem>
             <StatCard
-              title="Taux de réponse"
+              title={t('dashboard.stats.replyRate.title')}
               value={`${replyRate}%`}
               icon={TrendingUp}
               accent="primary"
-              description="Efficacité de vos automations"
+              description={t('dashboard.stats.replyRate.description')}
             />
           </DashboardItem>
         </div>
@@ -226,8 +229,8 @@ export default async function DashboardPage() {
               <CardHeader className="border-b border-border/40 pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">Activité récente</CardTitle>
-                    <CardDescription className="text-xs">Derniers messages DMs entrants reçus</CardDescription>
+                    <CardTitle className="text-base">{t('dashboard.activity.title')}</CardTitle>
+                    <CardDescription className="text-xs">{t('dashboard.activity.description')}</CardDescription>
                   </div>
                   <Button
                     variant="ghost"
@@ -236,7 +239,7 @@ export default async function DashboardPage() {
                     render={<Link href="/inbox" />}
                     className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8 hover:text-primary"
                   >
-                    Voir tout <ChevronRight className="size-3.5" />
+                    {t('dashboard.activity.viewAll')} <ChevronRight className="size-3.5" />
                   </Button>
                 </div>
               </CardHeader>
@@ -246,9 +249,9 @@ export default async function DashboardPage() {
                     <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
                       <MessageSquare className="size-5" />
                     </div>
-                    <p className="text-sm font-semibold text-foreground">Aucun message</p>
+                    <p className="text-sm font-semibold text-foreground">{t('dashboard.activity.emptyTitle')}</p>
                     <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-                      Les interactions de vos clients s&apos;afficheront ici en temps réel.
+                      {t('dashboard.activity.emptyDescription')}
                     </p>
                   </div>
                 ) : (
@@ -270,15 +273,15 @@ export default async function DashboardPage() {
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           {m.auto_reply_sent ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success">
-                              <CheckCircle2 className="size-3 text-success" /> Répondu
+                              <CheckCircle2 className="size-3 text-success" /> {t('dashboard.activity.replied')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground">
-                              <Clock className="size-3" /> Reçu
+                              <Clock className="size-3" /> {t('dashboard.activity.received')}
                             </span>
                           )}
                           <span className="text-[10px] text-muted-foreground/60">
-                            {formatTime(m.created_at)}
+                            {formatTime(m.created_at, t)}
                           </span>
                         </div>
                       </li>
@@ -298,8 +301,8 @@ export default async function DashboardPage() {
                 <CardHeader className="border-b border-border/40 pb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-base">Comptes liés</CardTitle>
-                      <CardDescription className="text-xs">Statut de vos liaisons Meta</CardDescription>
+                      <CardTitle className="text-base">{t('dashboard.connectedAccounts.title')}</CardTitle>
+                      <CardDescription className="text-xs">{t('dashboard.connectedAccounts.description')}</CardDescription>
                     </div>
                     <Button
                       variant="ghost"
@@ -308,7 +311,7 @@ export default async function DashboardPage() {
                       render={<Link href="/accounts" />}
                       className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8"
                     >
-                      Gérer <ChevronRight className="size-3.5" />
+                      {t('dashboard.connectedAccounts.manage')} <ChevronRight className="size-3.5" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -318,14 +321,14 @@ export default async function DashboardPage() {
                       <div className="mb-3 flex size-10 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
                         <Link2 className="size-4.5" />
                       </div>
-                      <p className="text-xs text-muted-foreground">Aucun canal configuré.</p>
+                      <p className="text-xs text-muted-foreground">{t('dashboard.connectedAccounts.empty')}</p>
                       <Button
                         size="sm"
                         nativeButton={false}
                         render={<Link href="/accounts" />}
                         className="mt-3 cursor-pointer h-8 text-xs"
                       >
-                        Connecter un canal
+                        {t('dashboard.connectedAccounts.connect')}
                       </Button>
                     </div>
                   ) : (
@@ -363,7 +366,7 @@ export default async function DashboardPage() {
                                 <span className={`relative inline-flex size-2 rounded-full ${a.is_active ? 'bg-success' : 'bg-muted-foreground/50'}`} />
                               </span>
                               <span className="text-[11px] font-medium text-muted-foreground">
-                                {a.is_active ? 'Actif' : 'Hors ligne'}
+                                {a.is_active ? t('dashboard.connectedAccounts.statusActive') : t('dashboard.connectedAccounts.statusOffline')}
                               </span>
                             </div>
                           </li>
@@ -381,8 +384,8 @@ export default async function DashboardPage() {
                 <CardHeader className="border-b border-border/40 pb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-base">Règles actives</CardTitle>
-                      <CardDescription className="text-xs">Top automatisation en cours</CardDescription>
+                      <CardTitle className="text-base">{t('dashboard.rules.title')}</CardTitle>
+                      <CardDescription className="text-xs">{t('dashboard.rules.description')}</CardDescription>
                     </div>
                     <Button
                       variant="ghost"
@@ -391,7 +394,7 @@ export default async function DashboardPage() {
                       render={<Link href="/automation" />}
                       className="cursor-pointer gap-1.5 text-xs text-primary hover:bg-primary/8"
                     >
-                      Gérer <ChevronRight className="size-3.5" />
+                      {t('dashboard.rules.manage')} <ChevronRight className="size-3.5" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -401,14 +404,14 @@ export default async function DashboardPage() {
                       <div className="mb-3 flex size-10 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
                         <Zap className="size-4.5" />
                       </div>
-                      <p className="text-xs text-muted-foreground"> Aucune règle configurée.</p>
+                      <p className="text-xs text-muted-foreground"> {t('dashboard.rules.empty')}</p>
                       <Button
                         size="sm"
                         nativeButton={false}
                         render={<Link href="/automation" />}
                         className="mt-3 cursor-pointer h-8 text-xs"
                       >
-                        Créer une règle
+                        {t('dashboard.rules.create')}
                       </Button>
                     </div>
                   ) : (
@@ -425,8 +428,8 @@ export default async function DashboardPage() {
                             {/* User trigger message (Left side bubble) */}
                             <div className="self-start max-w-[85%] rounded-[14px] rounded-bl-[2px] bg-muted/70 px-3 py-2 text-muted-foreground border border-border/40 font-medium">
                               {r.trigger_type === 'any_message'
-                                ? '📩 [Nouveau message reçu]'
-                                : `🔑 Mot-clé : "${r.trigger_keywords?.slice(0, 1).join('')}"`}
+                                ? t('dashboard.rules.newMessageTrigger')
+                                : t('dashboard.rules.keywordTrigger', { keyword: r.trigger_keywords?.slice(0, 1).join('') ?? '' })}
                             </div>
                             
                             {/* IA Auto reply message (Right side bubble) */}

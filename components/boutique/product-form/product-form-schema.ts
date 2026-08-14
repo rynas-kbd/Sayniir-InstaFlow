@@ -1,3 +1,4 @@
+import type { Translator } from '@/lib/i18n/translate'
 import type { Product, ProductMetadata } from '../types'
 import type { ProductFormErrors, ProductFormState } from './types'
 
@@ -90,49 +91,49 @@ function isPositiveInt(value: string): boolean {
 
 /** Kind-aware: only inspects fields the current `kind` actually renders, so switching kind away
  * from a section with a stale error never blocks submission on an invisible field. */
-export function validateProductForm(f: ProductFormState): ProductFormErrors {
+export function validateProductForm(f: ProductFormState, t: Translator): ProductFormErrors {
   const errors: ProductFormErrors = {}
 
   const name = f.name.trim()
-  if (!name) errors.name = 'Le nom est obligatoire'
-  else if (name.length > 120) errors.name = '120 caractères maximum'
+  if (!name) errors.name = t('boutique.productForm.validation.nameRequired')
+  else if (name.length > 120) errors.name = t('boutique.productForm.validation.nameMax', { max: 120 })
 
   const price = Number.parseFloat(f.price)
   if (f.price.trim() === '' || !Number.isFinite(price) || price < 0) {
-    errors.price = 'Indiquez un prix valide'
+    errors.price = t('boutique.productForm.validation.priceInvalid')
   }
 
   if (!/^[A-Z]{3}$/.test(f.currency)) {
-    errors.currency = 'Devise sur 3 lettres (ex: DZD)'
+    errors.currency = t('boutique.productForm.validation.currencyInvalid')
   }
 
   if (f.kind === 'physical' && f.stock_quantity.trim() !== '' && !/^\d+$/.test(f.stock_quantity)) {
-    errors.stock_quantity = 'Stock invalide'
+    errors.stock_quantity = t('boutique.productForm.validation.stockInvalid')
   }
 
   if (f.image_url.trim() !== '' && !isHttpUrl(f.image_url.trim())) {
-    errors.image_url = "Lien d'image invalide (https://…)"
+    errors.image_url = t('boutique.productForm.validation.imageUrlInvalid')
   }
 
   if (f.kind === 'digital') {
     if (f.file_url.trim() !== '' && !isHttpUrl(f.file_url.trim())) {
-      errors.file_url = 'Lien de fichier invalide'
+      errors.file_url = t('boutique.productForm.validation.fileUrlInvalid')
     }
     if (f.download_limit.trim() !== '' && !isPositiveInt(f.download_limit)) {
-      errors.download_limit = 'Nombre invalide'
+      errors.download_limit = t('boutique.productForm.validation.downloadLimitInvalid')
     }
   }
 
   if (f.kind === 'service' && f.duration_minutes.trim() !== '' && !isPositiveInt(f.duration_minutes)) {
-    errors.duration_minutes = 'Durée invalide'
+    errors.duration_minutes = t('boutique.productForm.validation.durationInvalid')
   }
 
   if (f.kind === 'event') {
     if (f.capacity.trim() !== '' && !isPositiveInt(f.capacity)) {
-      errors.capacity = 'Capacité invalide'
+      errors.capacity = t('boutique.productForm.validation.capacityInvalid')
     }
     if (f.event_date.trim() !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(f.event_date)) {
-      errors.event_date = 'Date invalide'
+      errors.event_date = t('boutique.productForm.validation.eventDateInvalid')
     }
   }
 

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FormSection } from '@/components/shared/form-section'
 import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
 import { useInstagramMedia } from '@/lib/instagram/use-instagram-media'
+import { useT } from '@/components/i18n-provider'
 import type { ProductFormApi } from './types'
 
 interface LinkedPost {
@@ -26,6 +27,7 @@ interface LinkedPost {
  * decision to reuse the existing post picker rather than build a new one.
  */
 export function LinkedPostsField({ api }: { api: ProductFormApi }) {
+  const t = useT()
   const { productId, channelAccountId } = api
   const [posts, setPosts] = useState<LinkedPost[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,7 +48,7 @@ export function LinkedPostsField({ api }: { api: ProductFormApi }) {
         const data = await res.json()
         setPosts(data.data ?? [])
       } catch {
-        toast.error('Impossible de charger les posts liés')
+        toast.error(t('boutique.productForm.linkedPostsField.loadError'))
       } finally {
         setLoading(false)
       }
@@ -73,13 +75,13 @@ export function LinkedPostsField({ api }: { api: ProductFormApi }) {
       const data = await res.json()
       if (!res.ok) throw new Error('Erreur')
       if (data.skipped?.length) {
-        toast.warning(`${data.skipped.length} post(s) déjà liés à un autre produit — ignorés`)
+        toast.warning(t.plural('boutique.productForm.linkedPostsField.skippedWarning', data.skipped.length))
       }
       const reload = await fetch(`/api/products/${productId}/posts`).then((r) => r.json())
       setPosts(reload.data ?? [])
-      toast.success('Posts liés mis à jour')
+      toast.success(t('boutique.productForm.linkedPostsField.updateSuccess'))
     } catch {
-      toast.error("Impossible de mettre à jour les posts liés")
+      toast.error(t('boutique.productForm.linkedPostsField.updateError'))
     } finally {
       setSaving(false)
     }
@@ -91,16 +93,21 @@ export function LinkedPostsField({ api }: { api: ProductFormApi }) {
   }
 
   return (
-    <FormSection icon={Link2} label="Posts liés" description="Utilisés pour identifier ce produit quand un client partage un post en DM.">
+    <FormSection
+      icon={Link2}
+      label={t('boutique.productForm.linkedPostsField.sectionLabel')}
+      description={t('boutique.productForm.linkedPostsField.sectionDescription')}
+    >
       <div className="flex flex-wrap gap-2">
         {loading ? (
           <Loader2 className="size-4 animate-spin text-muted-foreground" />
         ) : posts.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Aucun post lié pour le moment.</p>
+          <p className="text-xs text-muted-foreground">{t('boutique.productForm.linkedPostsField.empty')}</p>
         ) : (
           posts.map((post) => (
             <span key={post.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs">
-              {post.source === 'manual' ? 'Manuel' : 'Auto'} · {post.media_id?.slice(0, 8) ?? post.shortcode}
+              {post.source === 'manual' ? t('boutique.productForm.linkedPostsField.manual') : t('boutique.productForm.linkedPostsField.auto')} ·{' '}
+              {post.media_id?.slice(0, 8) ?? post.shortcode}
               {post.source === 'manual' && (
                 <button type="button" onClick={() => removePost(post.media_id)} className="text-muted-foreground hover:text-foreground" disabled={saving}>
                   <X className="size-3" />
@@ -111,7 +118,7 @@ export function LinkedPostsField({ api }: { api: ProductFormApi }) {
         )}
       </div>
       <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setPickerOpen(true)} disabled={saving}>
-        Lier des posts
+        {t('boutique.productForm.linkedPostsField.linkPosts')}
       </Button>
       {pickerOpen && (
         <PostPickerDialog

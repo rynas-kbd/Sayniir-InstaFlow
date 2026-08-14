@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { getSubscriptionNotice } from '@/lib/billing/expiry'
 import type { PlanKey, BillingPeriod } from '@/lib/plans'
+import { useT } from '@/components/i18n-provider'
 
 interface RenewalBannerProps {
   plan: PlanKey | null
@@ -22,6 +23,7 @@ interface RenewalBannerProps {
  */
 export function RenewalBanner({ plan, status, expiresAt, billingPeriod }: RenewalBannerProps) {
   const [loading, setLoading] = useState(false)
+  const t = useT()
   const notice = getSubscriptionNotice({ status, expiresAt })
 
   if (!notice.kind || !plan || plan === 'free') return null
@@ -35,20 +37,20 @@ export function RenewalBanner({ plan, status, expiresAt, billingPeriod }: Renewa
         body: JSON.stringify({ plan, period: billingPeriod ?? 'monthly' }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur')
+      if (!res.ok) throw new Error(data.error || t('billingBanner.genericError'))
       window.location.href = data.url
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Impossible d'ouvrir le paiement")
+      toast.error(err instanceof Error ? err.message : t('billingBanner.openCheckoutError'))
       setLoading(false)
     }
   }
 
   const message =
     notice.kind === 'expired'
-      ? 'Votre abonnement a expiré.'
+      ? t('billingBanner.expired')
       : notice.daysLeft === 0
-        ? "Votre abonnement expire aujourd'hui."
-        : `Votre abonnement expire dans ${notice.daysLeft} jour${notice.daysLeft && notice.daysLeft > 1 ? 's' : ''}.`
+        ? t('billingBanner.expiresToday')
+        : t.plural('billingBanner.expiresInDays', notice.daysLeft ?? 0)
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-warning/20 bg-warning/10 px-4 py-2.5 sm:px-6">
@@ -57,7 +59,7 @@ export function RenewalBanner({ plan, status, expiresAt, billingPeriod }: Renewa
         {message}
       </div>
       <Button type="button" size="sm" variant="outline" onClick={handleRenew} disabled={loading} className="shrink-0">
-        Renouveler
+        {t('billingBanner.renewButton')}
       </Button>
     </div>
   )

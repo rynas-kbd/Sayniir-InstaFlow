@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import type { DetectionResult, FieldMatch, ProductField } from '@/lib/import/column-detector'
 
 interface ImportMappingDialogProps {
@@ -36,17 +37,17 @@ interface ImportMappingDialogProps {
   onCancel: () => void
 }
 
-const FIELD_LABELS: Record<ProductField, string> = {
-  name: 'Nom du produit',
-  description: 'Description',
-  price: 'Prix',
-  sizes: 'Tailles',
-  colors: 'Couleurs',
-  stock_quantity: 'Stock',
-  image_url: 'URL image',
-  category: 'Catégorie',
-  kind: 'Type',
-  currency: 'Devise',
+const FIELD_LABEL_KEYS: Record<ProductField, string> = {
+  name: 'boutique.importMappingDialog.fields.name',
+  description: 'boutique.importMappingDialog.fields.description',
+  price: 'boutique.importMappingDialog.fields.price',
+  sizes: 'boutique.importMappingDialog.fields.sizes',
+  colors: 'boutique.importMappingDialog.fields.colors',
+  stock_quantity: 'boutique.importMappingDialog.fields.stockQuantity',
+  image_url: 'boutique.importMappingDialog.fields.imageUrl',
+  category: 'boutique.importMappingDialog.fields.category',
+  kind: 'boutique.importMappingDialog.fields.kind',
+  currency: 'boutique.importMappingDialog.fields.currency',
 }
 
 const FIELD_ICONS: Record<ProductField, string> = {
@@ -81,23 +82,23 @@ function getConfidenceLevel(confidence: number) {
   return 'low' as const
 }
 
-const CONFIDENCE_CONFIG = {
+const CONFIDENCE_STYLES = {
   high: {
-    label: 'Détection automatique',
+    labelKey: 'boutique.importMappingDialog.confidence.high',
     dot: 'bg-emerald-500',
     bar: 'bg-emerald-500',
     badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     icon: <Sparkles className="size-3" />,
   },
   medium: {
-    label: 'Confiance moyenne',
+    labelKey: 'boutique.importMappingDialog.confidence.medium',
     dot: 'bg-amber-500',
     bar: 'bg-amber-500',
     badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     icon: <Zap className="size-3" />,
   },
   low: {
-    label: 'Faible confiance',
+    labelKey: 'boutique.importMappingDialog.confidence.low',
     dot: 'bg-orange-500',
     bar: 'bg-orange-500',
     badge: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
@@ -114,6 +115,11 @@ export function ImportMappingDialog({
   onConfirm,
   onCancel,
 }: ImportMappingDialogProps) {
+  const t = useT()
+  const FIELD_LABELS = (Object.keys(FIELD_LABEL_KEYS) as ProductField[]).reduce((acc, field) => {
+    acc[field] = t(FIELD_LABEL_KEYS[field])
+    return acc
+  }, {} as Record<ProductField, string>)
   const [mapping, setMapping] = useState<Record<string, ProductField>>(() => {
     const initial: Record<string, ProductField> = {}
     for (const match of detectionResult.matches) {
@@ -175,10 +181,10 @@ export function ImportMappingDialog({
                 </div>
                 <div>
                   <DialogTitle className="text-base font-bold leading-tight">
-                    Mapping des colonnes
+                    {t('boutique.importMappingDialog.header.title')}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                    Vérifiez les correspondances détectées automatiquement
+                    {t('boutique.importMappingDialog.header.description')}
                   </DialogDescription>
                 </div>
               </div>
@@ -188,13 +194,13 @@ export function ImportMappingDialog({
                 <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1">
                   <span className="size-1.5 rounded-full bg-emerald-500" />
                   <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    {autoDetectedCount} auto-détectées
+                    {t.plural('boutique.importMappingDialog.stats.autoDetected', autoDetectedCount)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1">
                   <Columns3 className="size-3 text-muted-foreground" />
                   <span className="text-[11px] font-semibold text-muted-foreground">
-                    {columns.length} colonnes
+                    {t.plural('boutique.importMappingDialog.stats.columnsCount', columns.length)}
                   </span>
                 </div>
               </div>
@@ -223,7 +229,9 @@ export function ImportMappingDialog({
                   )}
                   <span className="relative flex items-center gap-1.5">
                     {tab === 'mapping' ? <Columns3 className="size-3" /> : <Table2 className="size-3" />}
-                    {tab === 'mapping' ? 'Correspondances' : 'Aperçu données'}
+                    {tab === 'mapping'
+                      ? t('boutique.importMappingDialog.tabs.mapping')
+                      : t('boutique.importMappingDialog.tabs.preview')}
                   </span>
                 </button>
               ))}
@@ -243,9 +251,13 @@ export function ImportMappingDialog({
             >
               <AlertCircle className="size-4 shrink-0 text-destructive" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-destructive leading-tight">Champs requis manquants</p>
+                <p className="text-xs font-bold text-destructive leading-tight">
+                  {t('boutique.importMappingDialog.banner.errorTitle')}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Obligatoires : {missingRequired.map(f => FIELD_LABELS[f]).join(', ')}
+                  {t('boutique.importMappingDialog.banner.errorRequired', {
+                    fields: missingRequired.map(f => FIELD_LABELS[f]).join(', '),
+                  })}
                 </p>
               </div>
             </motion.div>
@@ -259,9 +271,11 @@ export function ImportMappingDialog({
             >
               <ShieldCheck className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 leading-tight">Mapping valide</p>
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 leading-tight">
+                  {t('boutique.importMappingDialog.banner.okTitle')}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {mappedCount} colonne(s) mappée(s) — prêt à importer.
+                  {t.plural('boutique.importMappingDialog.banner.okDescription', mappedCount)}
                 </p>
               </div>
             </motion.div>
@@ -283,10 +297,10 @@ export function ImportMappingDialog({
                 {/* Header row */}
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                    {columns.length} colonne(s) à mapper
+                    {t.plural('boutique.importMappingDialog.mappingList.columnsToMap', columns.length)}
                   </p>
                   <Button type="button" variant="ghost" size="sm" onClick={handleReset} className="h-7 gap-1.5 text-xs">
-                    <RefreshCw className="size-3" /> Réinitialiser
+                    <RefreshCw className="size-3" /> {t('boutique.importMappingDialog.mappingList.reset')}
                   </Button>
                 </div>
 
@@ -297,7 +311,9 @@ export function ImportMappingDialog({
                     const match = detectionResult.matches.find(m => m.columnName === columnName)
                     const suggestion = detectionResult.suggestions.find(s => s.columnName === columnName)
                     const confidenceLevel = match ? getConfidenceLevel(match.confidence) : undefined
-                    const conf = confidenceLevel ? CONFIDENCE_CONFIG[confidenceLevel] : undefined
+                    const conf = confidenceLevel
+                      ? { ...CONFIDENCE_STYLES[confidenceLevel], label: t(CONFIDENCE_STYLES[confidenceLevel].labelKey) }
+                      : undefined
                     const sampleVal = sampleData[0]?.[columnName]
 
                     return (
@@ -327,7 +343,7 @@ export function ImportMappingDialog({
                             </div>
                             {sampleVal !== undefined && String(sampleVal) !== '' && (
                               <p className="text-[11px] text-muted-foreground truncate mt-0.5 pl-3">
-                                ex: <span className="font-medium">{String(sampleVal)}</span>
+                                {t('boutique.importMappingDialog.card.samplePrefix')} <span className="font-medium">{String(sampleVal)}</span>
                               </p>
                             )}
                           </div>
@@ -366,11 +382,13 @@ export function ImportMappingDialog({
                               'flex-1 h-8 text-xs rounded-lg border-border/70 bg-muted/20 font-medium',
                               currentField && 'border-primary/30 bg-primary/5 text-foreground'
                             )}>
-                              <SelectValue placeholder="Non mappé" />
+                              <SelectValue placeholder={t('boutique.importMappingDialog.card.unmappedPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none" className="text-xs">
-                                <span className="text-muted-foreground italic">— Non mappé —</span>
+                                <span className="text-muted-foreground italic">
+                                  {t('boutique.importMappingDialog.card.unmappedOption')}
+                                </span>
                               </SelectItem>
                               {(Object.keys(FIELD_LABELS) as ProductField[]).map(field => {
                                 const isUsed = mappedFields.has(field) && currentField !== field
@@ -381,12 +399,12 @@ export function ImportMappingDialog({
                                       {FIELD_LABELS[field]}
                                       {FIELD_REQUIRED[field] && (
                                         <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-destructive bg-destructive/10 rounded px-1 py-0.5">
-                                          requis
+                                          {t('boutique.importMappingDialog.card.requiredBadge')}
                                         </span>
                                       )}
                                       {isUsed && (
                                         <span className="ml-auto text-[9px] font-semibold text-muted-foreground">
-                                          déjà mappé
+                                          {t('boutique.importMappingDialog.card.alreadyMapped')}
                                         </span>
                                       )}
                                     </span>
@@ -400,7 +418,9 @@ export function ImportMappingDialog({
                         {/* Suggestion chips */}
                         {!currentField && suggestion && suggestion.possibleFields.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/40">
-                            <span className="text-[10px] text-muted-foreground mr-0.5 self-center">Suggestions :</span>
+                            <span className="text-[10px] text-muted-foreground mr-0.5 self-center">
+                              {t('boutique.importMappingDialog.card.suggestionsLabel')}
+                            </span>
                             {suggestion.possibleFields.slice(0, 3).map(({ field, confidence }) => (
                               <button
                                 key={field}
@@ -424,7 +444,7 @@ export function ImportMappingDialog({
                             </span>
                             {FIELD_REQUIRED[currentField] && (
                               <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-                                ✓ requis
+                                {t('boutique.importMappingDialog.card.requiredCheck')}
                               </span>
                             )}
                           </div>
@@ -445,7 +465,7 @@ export function ImportMappingDialog({
                 {sampleData.length === 0 ? (
                   <div className="flex flex-col items-center gap-3 py-16 text-center">
                     <Table2 className="size-10 text-muted-foreground/30 stroke-[1.25]" />
-                    <p className="text-sm text-muted-foreground">Aucune donnée disponible pour l&apos;aperçu</p>
+                    <p className="text-sm text-muted-foreground">{t('boutique.importMappingDialog.preview.empty')}</p>
                   </div>
                 ) : (
                   <div className="rounded-xl border border-border/60 overflow-hidden">
@@ -482,7 +502,9 @@ export function ImportMappingDialog({
                     </div>
                     <div className="border-t border-border/40 bg-muted/20 px-3 py-2">
                       <p className="text-[10px] text-muted-foreground">
-                        Affichage de {Math.min(5, sampleData.length)} ligne(s) sur {sampleData.length}
+                        {t.plural('boutique.importMappingDialog.preview.showingRows', Math.min(5, sampleData.length), {
+                          total: sampleData.length,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -496,7 +518,7 @@ export function ImportMappingDialog({
         <div className="shrink-0 border-t border-border/60 bg-card px-6 py-4">
           <div className="flex items-center gap-3">
             <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl h-10">
-              Annuler
+              {t('boutique.importMappingDialog.footer.cancel')}
             </Button>
             <Button
               type="button"
@@ -505,9 +527,9 @@ export function ImportMappingDialog({
               className="flex-1 h-10 rounded-xl font-bold gap-2"
             >
               <Check className="size-4" />
-              Confirmer et importer
+              {t('boutique.importMappingDialog.footer.confirm')}
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-extrabold">
-                {mappedCount} col.
+                {t('boutique.importMappingDialog.footer.columnsBadge', { count: mappedCount })}
               </span>
             </Button>
           </div>

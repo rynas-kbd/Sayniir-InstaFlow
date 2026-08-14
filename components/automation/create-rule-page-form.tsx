@@ -12,9 +12,11 @@ import { useRuleForm } from './rule-form/use-rule-form'
 import { RuleFormBody } from './rule-form/rule-form-body'
 import { RuleLivePreview } from './rule-form/rule-live-preview'
 import SuggestedRulePreview, { type RuleSuggestion } from './suggested-rule-preview'
+import { useT } from '@/components/i18n-provider'
 import type { ChannelAccountLite, RuleFormPayload } from './types'
 
 export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[] }) {
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const defaultTab = searchParams.get('tab') === 'comment' ? 'comment' : 'dm'
@@ -37,7 +39,7 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
 
   async function handleSuggest() {
     if (!intent.trim() || !api.form.channel_account_id) {
-      if (!api.form.channel_account_id) toast.error('Sélectionnez un compte avant de générer une suggestion.')
+      if (!api.form.channel_account_id) toast.error(t('automation.createRulePage.selectAccountFirst'))
       return
     }
     setLoadingSuggestion(true)
@@ -49,12 +51,12 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
       })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
-        throw new Error(body?.error ?? 'Suggestion impossible')
+        throw new Error(body?.error ?? t('automation.createRulePage.suggestionUnavailable'))
       }
       const data = await res.json()
       setSuggestion(data)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Impossible de générer la suggestion. Réessayez.')
+      toast.error(err instanceof Error ? err.message : t('automation.createRulePage.suggestionErrorFallback'))
       setSuggestion(null)
     } finally {
       setLoadingSuggestion(false)
@@ -77,11 +79,11 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('Échec de la publication de la règle')
-      toast.success('Règle publiée.')
+      if (!res.ok) throw new Error(t('automation.createRulePage.publishError'))
+      toast.success(t('automation.createRulePage.publishSuccess'))
       router.push('/automation')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Échec de la publication. Réessayez.')
+      toast.error(err instanceof Error ? err.message : t('automation.createRulePage.publishErrorFallback'))
     }
   }
 
@@ -91,7 +93,7 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
     api.setField('trigger_keywords', s.trigger?.keywords ?? [])
     api.setField('response_text', s.actions?.find((a) => a.type === 'reply')?.payload?.text ?? s.summary ?? '')
     setSuggestion(null)
-    toast.success('Formulaire préempli depuis la suggestion.')
+    toast.success(t('automation.createRulePage.prefillSuccess'))
   }
 
   return (
@@ -105,26 +107,24 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
 
         <Card>
           <CardContent>
-            <h4 className="font-semibold">Suggérer depuis une phrase d'intention</h4>
-            <p className="text-sm text-muted-foreground">
-              Donne une phrase courte décrivant la règle (ex: "Répondre au mot 'prix' avec le tarif").
-            </p>
+            <h4 className="font-semibold">{t('automation.createRulePage.suggestHeading')}</h4>
+            <p className="text-sm text-muted-foreground">{t('automation.createRulePage.suggestDescription')}</p>
             <div className="mt-2 space-y-1.5">
               <Label htmlFor="rule-intent" className="sr-only">
-                Phrase d'intention
+                {t('automation.createRulePage.intentLabel')}
               </Label>
               <Textarea
                 id="rule-intent"
                 value={intent}
                 onChange={(e) => setIntent(e.target.value)}
-                placeholder="Ex : Répondre au mot 'prix' avec le tarif"
+                placeholder={t('automation.createRulePage.intentPlaceholder')}
                 rows={3}
                 maxLength={500}
               />
             </div>
             <div className="mt-2 flex gap-2">
               <Button type="button" onClick={handleSuggest} disabled={loadingSuggestion || !intent.trim()}>
-                {loadingSuggestion ? 'Génération...' : 'Suggérer'}
+                {loadingSuggestion ? t('automation.createRulePage.generating') : t('automation.createRulePage.suggest')}
               </Button>
               <Button
                 type="button"
@@ -134,14 +134,19 @@ export function CreateRulePageForm({ accounts }: { accounts: ChannelAccountLite[
                   setSuggestion(null)
                 }}
               >
-                Réinitialiser
+                {t('automation.createRulePage.reset')}
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {!postSelectorActive && (
-          <FormFooter saving={api.saving} submitLabel="Créer la règle" onCancel={() => router.push('/automation')} className="justify-end" />
+          <FormFooter
+            saving={api.saving}
+            submitLabel={t('automation.createRulePage.submit')}
+            onCancel={() => router.push('/automation')}
+            className="justify-end"
+          />
         )}
       </div>
       <aside className="lg:sticky lg:top-6 lg:self-start">

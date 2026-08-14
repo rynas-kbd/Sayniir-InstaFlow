@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { InsightCard } from './insight-card'
 import type { AiInsight } from './types'
+import { useT } from '@/components/i18n-provider'
 
 const SEVERITY_RANK: Record<AiInsight['severity'], number> = { error: 2, warning: 1, info: 0 }
 
@@ -27,6 +28,7 @@ function topSeverity(insights: AiInsight[]): AiInsight['severity'] {
 
 /** Compact badge shown on an existing UI element (node, card) — never a standalone "AI" affordance. */
 export function InsightBadge({ insights: initial, className }: { insights: AiInsight[]; className?: string }) {
+  const t = useT()
   const [insights, setInsights] = useState(initial)
   const [open, setOpen] = useState(false)
 
@@ -39,7 +41,7 @@ export function InsightBadge({ insights: initial, className }: { insights: AiIns
       if (!res.ok) throw new Error()
     } catch {
       setInsights((prev) => [...prev, insight])
-      toast.error('Impossible d\'ignorer cette suggestion')
+      toast.error(t('copilot.insightBadge.dismissError'))
     }
   }
 
@@ -54,7 +56,7 @@ export function InsightBadge({ insights: initial, className }: { insights: AiIns
           SEVERITY_STYLE[severity],
           className
         )}
-        aria-label={`${insights.length} suggestion(s) IA`}
+        aria-label={t.plural('copilot.insightBadge.ariaLabel', insights.length)}
         onClick={(e) => e.stopPropagation()}
       >
         <Icon className="size-3" />

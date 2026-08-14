@@ -52,10 +52,20 @@ interface StringOptions {
   min?: number
 }
 
-/** Validates a required string field, returning an error message (or null if valid). */
+/**
+ * Validates a required string field, returning a stable error CODE (or null
+ * if valid) — never render the return value directly, resolve it first via
+ * translateErrorCode() (lib/api/error-messages.ts), mirroring the CODE
+ * contract lib/api/errors.ts uses for jsonError/badRequest/etc. The codes
+ * returned here (REQUIRED_FIELD, FIELD_TOO_LONG, FIELD_TOO_SHORT) are
+ * generic/field-agnostic and already present in the `errors` dictionary
+ * namespace (lib/i18n/dictionaries/*\/errors.ts). `field` is kept in the
+ * signature for callers that want it for their own logging/context even
+ * though it no longer appears in the returned code.
+ */
 export function requireString(value: unknown, field: string, options: StringOptions = {}): string | null {
-  if (typeof value !== 'string' || !value.trim()) return `${field} requis`
-  if (options.max !== undefined && value.length > options.max) return `${field} dépasse ${options.max} caractères`
-  if (options.min !== undefined && value.length < options.min) return `${field} doit faire au moins ${options.min} caractères`
+  if (typeof value !== 'string' || !value.trim()) return 'REQUIRED_FIELD'
+  if (options.max !== undefined && value.length > options.max) return 'FIELD_TOO_LONG'
+  if (options.min !== undefined && value.length < options.min) return 'FIELD_TOO_SHORT'
   return null
 }

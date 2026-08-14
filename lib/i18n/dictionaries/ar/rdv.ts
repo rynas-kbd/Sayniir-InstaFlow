@@ -1,0 +1,27 @@
+export const rdv = {
+  page: {
+    noAccountDescription: 'اربط حساب إنستغرام أو ماسنجر أو واتساب حتى يتمكن الذكاء الاصطناعي من حجز المواعيد.',
+    loadError: 'تعذّر تحميل المواعيد',
+    title: 'المواعيد',
+    description: 'حجز المواعيد آليًا بواسطة الذكاء الاصطناعي.',
+    statTotal: 'الإجمالي',
+    statPending: 'قيد الانتظار',
+    statConfirmed: 'مؤكدة',
+    emptyTitle: 'لا توجد مواعيد',
+    emptyDescription: 'ستظهر هنا المواعيد التي يحجزها الذكاء الاصطناعي.',
+  },
+  row: {
+    statusPending: 'قيد الانتظار',
+    statusConfirmed: 'مؤكد',
+    statusCompleted: 'منتهٍ',
+    statusCancelled: 'ملغى',
+    statusNoShow: 'لم يحضر',
+    noPhone: 'لا يوجد رقم هاتف',
+    unconfirmedSlot: 'موعد غير مؤكد',
+    toastConfirmed: 'تم تأكيد الموعد',
+    toastCancelled: 'تم إلغاء الموعد',
+    toastUpdateError: 'تعذّر تحديث الموعد',
+    cancelButton: 'إلغاء',
+    confirmButton: 'تأكيد',
+  },
+}

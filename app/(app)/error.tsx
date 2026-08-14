@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { useT } from '@/components/i18n-provider'
 
 /**
  * Segment-level boundary for everything under app/(app) — renders inside
@@ -13,6 +14,8 @@ import { EmptyState } from '@/components/ui/empty-state'
  * empty list (see the `data ?? []` pattern flagged across app/(app)/*).
  */
 export default function AppSegmentError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const t = useT()
+
   useEffect(() => {
     console.error('[app/(app)/error]', error)
   }, [error])
@@ -21,11 +24,11 @@ export default function AppSegmentError({ error, reset }: { error: Error & { dig
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <EmptyState
         icon={AlertTriangle}
-        title="Impossible de charger cette page"
-        description="Une erreur est survenue en récupérant vos données. Réessayez dans quelques instants."
+        title={t('errors.boundary.title')}
+        description={t('errors.boundary.description')}
         action={
           <Button size="sm" onClick={reset}>
-            Réessayer
+            {t('errors.boundary.retry')}
           </Button>
         }
         className="max-w-md border-none"

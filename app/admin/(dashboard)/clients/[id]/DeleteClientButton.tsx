@@ -14,8 +14,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { deleteClient } from './actions'
+import { useT } from '@/components/i18n-provider'
 
 export default function DeleteClientButton({ userId }: { userId: string }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -28,25 +30,25 @@ export default function DeleteClientButton({ userId }: { userId: string }) {
         }}
       >
         <Button type="button" variant="destructive" onClick={() => setOpen(true)}>
-          <Trash2 className="size-4" /> Supprimer ce client
+          <Trash2 className="size-4" /> {t('admin.clients.detail.deleteButton.triggerButton')}
         </Button>
       </form>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce client ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('admin.clients.detail.deleteButton.dialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est définitive. Son abonnement, ses règles et ses comptes connectés seront supprimés.
+              {t('admin.clients.detail.deleteButton.dialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('admin.clients.detail.deleteButton.cancelButton')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => formRef.current?.requestSubmit()}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Supprimer
+              {t('admin.clients.detail.deleteButton.confirmButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

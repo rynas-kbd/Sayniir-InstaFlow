@@ -12,6 +12,7 @@ import {
   CommandItem,
 } from '@/components/ui/command'
 import { useCopilot } from '@/components/ai/copilot-provider'
+import { useT } from '@/components/i18n-provider'
 import { getNavSections, type BusinessType } from './nav-config'
 
 export function CommandMenu({ businessType }: { businessType: BusinessType }) {
@@ -19,7 +20,8 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
   const [search, setSearch] = useState('')
   const router = useRouter()
   const { openCopilot } = useCopilot()
-  const sections = getNavSections(businessType)
+  const t = useT()
+  const sections = getNavSections(businessType, t)
   const hasNavMatch = sections.some((s) =>
     s.items.some((i) => i.label.toLowerCase().includes(search.trim().toLowerCase()))
   )
@@ -54,7 +56,7 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Rechercher"
+        aria-label={t('nav.search.ariaLabel')}
         className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:text-foreground md:hidden"
         style={{
           background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
@@ -87,7 +89,7 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
         }}
       >
         <Search className="size-3.5 shrink-0 opacity-60" strokeWidth={1.75} />
-        <span className="flex-1 text-left opacity-60">Rechercher…</span>
+        <span className="flex-1 text-left opacity-60">{t('nav.search.placeholder')}</span>
         <kbd
           className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-50"
           style={{
@@ -99,10 +101,10 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} title="Navigation" description="Aller à une page">
-        <CommandInput placeholder="Aller à… ou demander au copilote" value={search} onValueChange={setSearch} />
+      <CommandDialog open={open} onOpenChange={setOpen} title={t('nav.search.dialogTitle')} description={t('nav.search.dialogDescription')}>
+        <CommandInput placeholder={t('nav.search.inputPlaceholder')} value={search} onValueChange={setSearch} />
         <CommandList>
-          <CommandEmpty>Aucun résultat.</CommandEmpty>
+          <CommandEmpty>{t('nav.search.empty')}</CommandEmpty>
           {sections.map((section) => (
             <CommandGroup key={section.label} heading={section.label}>
               {section.items.map(({ href, label, icon: Icon }) => (
@@ -114,10 +116,10 @@ export function CommandMenu({ businessType }: { businessType: BusinessType }) {
             </CommandGroup>
           ))}
           {search.trim().length > 0 && !hasNavMatch && (
-            <CommandGroup heading="Actions">
+            <CommandGroup heading={t('nav.search.actionsGroup')}>
               <CommandItem value={`copilot-${search}`} onSelect={askCopilot}>
                 <Sparkles className="size-4 text-primary" strokeWidth={1.75} />
-                Demander au copilote : « {search.trim()} »
+                {t('nav.search.askCopilot', { query: search.trim() })}
               </CommandItem>
             </CommandGroup>
           )}

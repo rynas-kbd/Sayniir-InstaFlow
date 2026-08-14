@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
+import { getT } from '@/lib/i18n/server'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { ContactTable } from '@/components/contacts/contact-table'
@@ -9,13 +10,14 @@ import type { Contact, Tag } from '@/components/contacts/types'
 
 export default async function ContactsPage() {
   const supabase = await createClient()
+  const t = await getT()
   const { active: account } = await resolveActiveAccount()
 
   if (!account) {
     return (
       <div className="flex min-h-full flex-col">
-        <PageHeader title="Contacts" description="Votre CRM : contacts, tags et historique." />
-        <NoAccountState description="Connectez un compte pour commencer à recevoir des contacts." />
+        <PageHeader title={t('contacts.pageTitle')} description={t('contacts.pageDescription')} />
+        <NoAccountState description={t('contacts.noAccount')} />
       </div>
     )
   }
@@ -32,8 +34,8 @@ export default async function ContactsPage() {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader
-        title="Contacts"
-        description={`${contacts?.length ?? 0} contact${(contacts?.length ?? 0) !== 1 ? 's' : ''}`}
+        title={t('contacts.pageTitle')}
+        description={t.plural('contacts.count', contacts?.length ?? 0)}
         actions={
           <div className="flex items-center gap-1.5">
             <ContactsCsvActions channelAccountId={account.id} />

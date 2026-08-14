@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { CreditMeter } from './credit-meter'
+import { useT } from '@/components/i18n-provider'
 import { PROVIDER_CONFIG, COPILOT_MODEL_CATALOG, type CopilotProviderKind } from '@/lib/ai/models'
 
 const PROVIDER_KINDS = Object.keys(PROVIDER_CONFIG) as CopilotProviderKind[]
@@ -34,6 +35,7 @@ export function CopilotSettingsCard({
   creditsUsed: number
   creditsLimit: number
 }) {
+  const t = useT()
   const [settings, setSettings] = useState(initialSettings)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -53,7 +55,7 @@ export function CopilotSettingsCard({
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {
-      toast.error('Impossible de sauvegarder')
+      toast.error(t('copilotSettings.saveError'))
     } finally {
       setSaving(false)
     }
@@ -73,9 +75,9 @@ export function CopilotSettingsCard({
       <CardHeader>
         <div className="flex items-center gap-1.5">
           <Sparkles className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
-          <CardTitle>Copilote IA</CardTitle>
+          <CardTitle>{t('copilotSettings.cardTitle')}</CardTitle>
         </div>
-        <CardDescription className="mt-1">L&apos;assistant intégré qui vous aide à construire et diagnostiquer votre compte.</CardDescription>
+        <CardDescription className="mt-1">{t('copilotSettings.cardDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <CreditMeter used={creditsUsed} limit={creditsLimit} />
@@ -84,8 +86,8 @@ export function CopilotSettingsCard({
           <div className="space-y-3 border-t border-border pt-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-foreground">Utiliser ma propre clé API</p>
-                <p className="text-xs text-muted-foreground">Contourne le quota mensuel — l&apos;usage reste facturé sur votre propre compte.</p>
+                <p className="text-sm font-medium text-foreground">{t('copilotSettings.useOwnKeyTitle')}</p>
+                <p className="text-xs text-muted-foreground">{t('copilotSettings.useOwnKeyDescription')}</p>
               </div>
               <Switch
                 checked={settings.copilot_enabled}
@@ -101,7 +103,7 @@ export function CopilotSettingsCard({
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Fournisseur</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">{t('copilotSettings.providerLabel')}</Label>
                     <Select value={settings.copilot_provider} onValueChange={(v) => changeProvider(v as CopilotProviderKind)}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -116,7 +118,7 @@ export function CopilotSettingsCard({
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Modèle</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">{t('copilotSettings.modelLabel')}</Label>
                     <Select
                       value={settings.copilot_model || models[0]?.value}
                       onValueChange={(v) => {
@@ -141,7 +143,7 @@ export function CopilotSettingsCard({
 
                 <div className="space-y-1.5">
                   <Label htmlFor="copilot-key" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Key className="size-3" /> Clé API {providerLabel}
+                    <Key className="size-3" /> {t('copilotSettings.apiKeyLabel', { provider: providerLabel })}
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -149,29 +151,29 @@ export function CopilotSettingsCard({
                       type="password"
                       value={settings.copilot_api_key}
                       onChange={(e) => setSettings((s) => ({ ...s, copilot_api_key: e.target.value }))}
-                      placeholder="••••••••"
+                      placeholder={t('copilotSettings.apiKeyPlaceholder')}
                       className="flex-1 font-mono text-sm"
                     />
                     <Button type="button" onClick={() => save({ copilot_api_key: settings.copilot_api_key })} disabled={saving} className="shrink-0 gap-1.5">
                       {saved ? (
                         <>
-                          <CheckCircle2 className="size-4" /> Sauvegardé
+                          <CheckCircle2 className="size-4" /> {t('copilotSettings.saved')}
                         </>
                       ) : (
                         <>
-                          <Save className="size-4" /> Sauvegarder
+                          <Save className="size-4" /> {t('copilotSettings.save')}
                         </>
                       )}
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground/60">La clé est chiffrée avant stockage et ne sera jamais affichée en clair.</p>
+                  <p className="text-[11px] text-muted-foreground/60">{t('copilotSettings.keyEncryptedNote')}</p>
                 </div>
               </>
             )}
           </div>
         ) : (
           <p className="border-t border-border pt-4 text-xs text-muted-foreground">
-            Passez au plan Pro pour utiliser votre propre clé API et lever le quota mensuel.
+            {t('copilotSettings.upgradeToProNote')}
           </p>
         )}
       </CardContent>

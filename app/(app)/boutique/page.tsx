@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { resolveWorkspace, getWorkspaceAccountIds } from '@/lib/workspace/resolve'
 import { decryptApiKey, isEncrypted } from '@/lib/crypto'
+import { getT } from '@/lib/i18n/server'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { BoutiqueClient } from '@/components/boutique/boutique-client'
@@ -11,12 +12,13 @@ import type { AgentSettings, AbandonedSession } from '@/components/boutique/type
 export default async function BoutiquePage() {
   const supabase = await createClient()
   const { active: account } = await resolveActiveAccount()
+  const t = await getT()
 
   if (!account) {
     return (
       <div className="flex min-h-full flex-col">
-        <PageHeader title="Boutique" description="Catalogue produits et commandes." />
-        <NoAccountState description="Connectez un compte pour commencer à gérer votre boutique." />
+        <PageHeader title={t('boutique.page.title')} description={t('boutique.page.description')} />
+        <NoAccountState description={t('boutique.page.noAccountDescription')} />
       </div>
     )
   }

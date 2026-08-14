@@ -14,6 +14,7 @@ import { PostTargetField } from '@/components/shared/post-target-field'
 import { AccountChipPicker } from '@/components/shared/account-chip-picker'
 import { TriggerPicker } from './trigger-picker'
 import { ReplyMethodPicker } from './reply-method-picker'
+import { useT } from '@/components/i18n-provider'
 import type { RuleFormApi } from './types'
 
 export function RuleFormBody({
@@ -26,6 +27,7 @@ export function RuleFormBody({
   /** Lets a Dialog host hide its chrome (title) while the post selector takes over the view. */
   onPostSelectorToggle?: (active: boolean) => void
 }) {
+  const t = useT()
   const { form, errors, setField, selectableAccounts, isDmCapable, isCard, defaultTab } = api
   const [showPostSelector, setShowPostSelectorState] = useState(false)
 
@@ -54,13 +56,11 @@ export function RuleFormBody({
 
   return (
     <div className="flex flex-col gap-4">
-      <FormSection icon={Send} label="Compte & nom">
+      <FormSection icon={Send} label={t('automation.ruleFormBody.accountAndNameSection')}>
         {selectableAccounts.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">
-            L&apos;automatisation de commentaires est réservée aux comptes Instagram — connectez-en un pour créer cette règle.
-          </p>
+          <p className="text-[13px] text-muted-foreground">{t('automation.ruleFormBody.instagramOnlyNotice')}</p>
         ) : (
-          <Field label="Compte" htmlFor="r-account" error={errors.channel_account_id}>
+          <Field label={t('automation.ruleFormBody.accountLabel')} htmlFor="r-account" error={errors.channel_account_id}>
             <Select value={form.channel_account_id} onValueChange={(v) => setField('channel_account_id', v ?? '')}>
               <SelectTrigger id="r-account" className="w-full" aria-invalid={errors.channel_account_id ? true : undefined}>
                 <SelectValue />
@@ -76,7 +76,11 @@ export function RuleFormBody({
           </Field>
         )}
         {selectableAccounts.length > 1 && (
-          <Field label="Comptes additionnels" htmlFor="r-target-accounts" hint="Cette règle se déclenchera aussi sur les comptes sélectionnés.">
+          <Field
+            label={t('automation.ruleFormBody.additionalAccountsLabel')}
+            htmlFor="r-target-accounts"
+            hint={t('automation.ruleFormBody.additionalAccountsHint')}
+          >
             <AccountChipPicker
               accounts={selectableAccounts
                 .filter((a) => a.id !== form.channel_account_id)
@@ -99,27 +103,32 @@ export function RuleFormBody({
             />
           </Field>
         )}
-        <Field label="Nom" htmlFor="r-name" required error={errors.name}>
+        <Field label={t('automation.ruleFormBody.nameLabel')} htmlFor="r-name" required error={errors.name}>
           <Input
             {...fieldA11y('r-name', { error: errors.name })}
             autoFocus={autoFocusName}
             value={form.name}
             onChange={(e) => setField('name', e.target.value)}
-            placeholder="Nom de la règle — ex : Réponse de bienvenue"
+            placeholder={t('automation.ruleFormBody.namePlaceholder')}
           />
         </Field>
       </FormSection>
 
-      <FormSection icon={Zap} label="Déclencheur">
+      <FormSection icon={Zap} label={t('automation.ruleFormBody.triggerSection')}>
         <TriggerPicker api={api} />
 
         {(form.trigger_type === 'keyword' || form.trigger_type === 'comment_keyword') && (
-          <Field label="Mots-clés" htmlFor="r-keywords" error={errors.trigger_keywords} hint="Entrée ou virgule pour ajouter">
+          <Field
+            label={t('automation.ruleFormBody.keywordsLabel')}
+            htmlFor="r-keywords"
+            error={errors.trigger_keywords}
+            hint={t('automation.ruleFormBody.keywordsHint')}
+          >
             <TagInput
               id="r-keywords"
               value={form.trigger_keywords}
               onChange={(v) => setField('trigger_keywords', v)}
-              placeholder="bonjour, prix, tarif…"
+              placeholder={t('automation.ruleFormBody.keywordsPlaceholder')}
               invalid={Boolean(errors.trigger_keywords)}
             />
           </Field>
@@ -128,7 +137,7 @@ export function RuleFormBody({
         {(form.trigger_type === 'any_comment' || form.trigger_type === 'comment_keyword') && (
           <div className="flex flex-wrap gap-3.5 border-t border-border/60 pt-2.5">
             <div className="min-w-[180px] flex-1">
-              <Field label="Post(s) cible(s)" htmlFor="r-target-posts">
+              <Field label={t('automation.ruleFormBody.targetPostsLabel')} htmlFor="r-target-posts">
                 <PostTargetField
                   accountId={form.channel_account_id}
                   selectedIds={form.target_post_ids}
@@ -137,7 +146,7 @@ export function RuleFormBody({
               </Field>
             </div>
             <div className="min-w-[180px] flex-1">
-              <Field label="Action" htmlFor="r-reply-method">
+              <Field label={t('automation.ruleFormBody.actionLabel')} htmlFor="r-reply-method">
                 <ReplyMethodPicker api={api} />
               </Field>
             </div>
@@ -145,23 +154,27 @@ export function RuleFormBody({
         )}
       </FormSection>
 
-      <FormSection icon={LayoutTemplate} label="Réponse">
+      <FormSection icon={LayoutTemplate} label={t('automation.ruleFormBody.responseSection')}>
         {isDmCapable && (
           <OptionPicker
-            name="Type de réponse"
+            name={t('automation.ruleFormBody.responseTypeName')}
             compact
             value={form.response_type}
             onChange={(v) => setField('response_type', v)}
             options={[
-              { value: 'text', label: 'Texte' },
-              { value: 'card', label: 'Carte' },
+              { value: 'text', label: t('automation.ruleFormBody.responseTypeText') },
+              { value: 'card', label: t('automation.ruleFormBody.responseTypeCard') },
             ]}
           />
         )}
 
         {(showsCommentText || showsDmText) && (
           <Field
-            label={showsCommentText && form.reply_method === 'both' ? 'Message de réponse (Commentaire)' : 'Message de réponse'}
+            label={
+              showsCommentText && form.reply_method === 'both'
+                ? t('automation.ruleFormBody.responseLabelComment')
+                : t('automation.ruleFormBody.responseLabel')
+            }
             htmlFor="r-response"
             error={errors.response_text}
           >
@@ -169,7 +182,7 @@ export function RuleFormBody({
               {...fieldA11y('r-response', { error: errors.response_text })}
               value={form.response_text}
               onChange={(e) => setField('response_text', e.target.value)}
-              placeholder="Bonjour ! Merci pour votre message. Nous vous répondrons bientôt."
+              placeholder={t('automation.ruleFormBody.responsePlaceholder')}
             />
           </Field>
         )}
@@ -190,7 +203,11 @@ export function RuleFormBody({
         )}
 
         {showsDmFallback && (
-          <Field label="Message de réponse (DM)" htmlFor="r-response-dm" hint="S'il est laissé vide, le message du commentaire sera utilisé pour le DM.">
+          <Field
+            label={t('automation.ruleFormBody.responseDmLabel')}
+            htmlFor="r-response-dm"
+            hint={t('automation.ruleFormBody.responseDmHint')}
+          >
             <Textarea id="r-response-dm" value={form.response_text_dm} onChange={(e) => setField('response_text_dm', e.target.value)} />
           </Field>
         )}

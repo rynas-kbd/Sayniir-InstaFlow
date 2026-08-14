@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
 
   const fromParam = request.nextUrl.searchParams.get('from')
   const toParam = request.nextUrl.searchParams.get('to')
-  if (fromParam && !parseDateParam(fromParam)) return badRequest('Paramètre "from" invalide')
-  if (toParam && !parseDateParam(toParam)) return badRequest('Paramètre "to" invalide')
+  if (fromParam && !parseDateParam(fromParam)) return badRequest('INVALID_FROM_PARAM')
+  if (toParam && !parseDateParam(toParam)) return badRequest('INVALID_TO_PARAM')
 
   const to = toParam ? parseDateParam(toParam)! : new Date()
   const from = fromParam ? parseDateParam(fromParam)! : new Date(to.getTime() - 13 * 86400000)

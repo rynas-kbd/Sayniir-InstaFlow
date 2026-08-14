@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Camera, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WhatsAppEmbeddedSignupButton } from './whatsapp-embedded-signup-button'
+import { useT } from '@/components/i18n-provider'
 
 export function ConnectPanel({
   whatsappAppId,
@@ -12,6 +13,7 @@ export function ConnectPanel({
   whatsappAppId: string | null
   whatsappConfigId: string | null
 }) {
+  const t = useT()
   const [loadingPlatform, setLoadingPlatform] = useState<string | null>(null)
 
   function connectInstagram() {
@@ -28,11 +30,11 @@ export function ConnectPanel({
     <div className="flex flex-wrap gap-2">
       <Button onClick={connectInstagram} disabled={loadingPlatform !== null}>
         <Camera className="size-4" />
-        {loadingPlatform === 'instagram' ? 'Redirection…' : 'Connecter Instagram'}
+        {loadingPlatform === 'instagram' ? t('accounts.connectPanel.redirecting') : t('accounts.connectPanel.connectInstagram')}
       </Button>
       <Button variant="secondary" onClick={connectMessenger} disabled={loadingPlatform !== null}>
         <MessageCircle className="size-4" />
-        {loadingPlatform === 'messenger' ? 'Redirection…' : 'Connecter Messenger'}
+        {loadingPlatform === 'messenger' ? t('accounts.connectPanel.redirecting') : t('accounts.connectPanel.connectMessenger')}
       </Button>
       <WhatsAppEmbeddedSignupButton appId={whatsappAppId} configId={whatsappConfigId} />
     </div>

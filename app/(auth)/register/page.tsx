@@ -10,8 +10,10 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { AuthCard, GoogleIcon } from '@/components/auth/auth-card'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/components/i18n-provider'
 
 export default function RegisterPage() {
+  const t = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -26,11 +28,11 @@ export default function RegisterPage() {
     setError(null)
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.')
+      setError(t('auth.register.errorPasswordMismatch'))
       return
     }
     if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      setError(t('auth.register.errorPasswordTooShort'))
       return
     }
 
@@ -60,7 +62,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthCard tagline="Automatisez vos conversations">
+    <AuthCard tagline={t('auth.register.tagline')}>
       <AnimatePresence mode="wait">
         {success ? (
           <motion.div
@@ -74,9 +76,9 @@ export default function RegisterPage() {
             <div className="mx-auto mb-3.5 flex size-11 items-center justify-center rounded-full bg-success/15">
               <MailCheck className="size-5 text-success" />
             </div>
-            <h3 className="text-[15px] font-bold text-foreground">Vérifiez votre email</h3>
+            <h3 className="text-[15px] font-bold text-foreground">{t('auth.register.checkEmailTitle')}</h3>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              Un lien de confirmation a été envoyé à{' '}
+              {t('auth.register.checkEmailSub')}{' '}
               <strong className="font-semibold text-foreground">{email}</strong>
             </p>
           </motion.div>
@@ -97,13 +99,13 @@ export default function RegisterPage() {
               className="w-full"
             >
               <GoogleIcon />
-              {googleLoading ? 'Redirection…' : 'Continuer avec Google'}
+              {googleLoading ? t('auth.common.redirecting') : t('auth.common.continueWithGoogle')}
             </Button>
 
             <div className="my-5 flex items-center gap-3">
               <Separator className="flex-1" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                ou
+                {t('auth.common.or')}
               </span>
               <Separator className="flex-1" />
             </div>
@@ -124,33 +126,33 @@ export default function RegisterPage() {
 
             <form onSubmit={handleRegister} className="flex flex-col gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.register.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vous@exemple.com"
+                  placeholder={t('auth.common.emailPlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">{t('auth.register.passwordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimum 8 caractères"
+                    placeholder={t('auth.register.passwordPlaceholder')}
                     required
                     className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    aria-label={showPassword ? t('auth.common.hidePassword') : t('auth.common.showPassword')}
                     className="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -159,19 +161,19 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Label htmlFor="confirmPassword">{t('auth.register.confirmPasswordLabel')}</Label>
                 <Input
                   id="confirmPassword"
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t('auth.common.passwordPlaceholder')}
                   required
                 />
               </div>
 
               <Button type="submit" size="lg" disabled={loading || googleLoading} className="mt-1 w-full">
-                {loading ? 'Création…' : 'Créer mon compte'}
+                {loading ? t('auth.register.submitting') : t('auth.register.submitButton')}
               </Button>
             </form>
           </motion.div>
@@ -181,9 +183,9 @@ export default function RegisterPage() {
       <Separator className="my-6" />
 
       <p className="mb-3 text-center text-[13px] text-muted-foreground">
-        Déjà un compte ?{' '}
+        {t('auth.register.alreadyHaveAccount')}{' '}
         <Link href="/login" className="font-semibold text-primary hover:underline">
-          Se connecter
+          {t('auth.register.signIn')}
         </Link>
       </p>
 
@@ -191,7 +193,7 @@ export default function RegisterPage() {
         href="/"
         className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft size={13} /> Retour à l&apos;accueil
+        <ArrowLeft size={13} /> {t('auth.common.backToHome')}
       </Link>
     </AuthCard>
   )

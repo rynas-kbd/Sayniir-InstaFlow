@@ -3,13 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { cn } from '@/lib/utils'
-
-const FILTERS = [
-  { key: 'all', label: 'Tous' },
-  { key: 'incoming', label: 'Reçus' },
-  { key: 'replied', label: 'Répondus' },
-  { key: 'unreplied', label: 'Sans réponse' },
-]
+import { useT } from '@/components/i18n-provider'
 
 export function InboxFilterBar({
   activeFilter,
@@ -19,7 +13,15 @@ export function InboxFilterBar({
   activeConvId: string | null
 }) {
   const router = useRouter()
+  const t = useT()
   const [isPending, startTransition] = useTransition()
+
+  const FILTERS = [
+    { key: 'all', label: t('inbox.filterBar.all') },
+    { key: 'incoming', label: t('inbox.filterBar.incoming') },
+    { key: 'replied', label: t('inbox.filterBar.replied') },
+    { key: 'unreplied', label: t('inbox.filterBar.unreplied') },
+  ]
 
   function navigate(key: string) {
     const params = new URLSearchParams()

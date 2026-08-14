@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { COLOR_THEMES, useCustomTheme, type ColorTheme } from '@/components/custom-theme-provider'
+import { LanguagePicker } from '@/components/settings/language-picker'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 import { springs } from '@/lib/motion/springs'
 import {
   ShoppingBag,
@@ -22,7 +25,6 @@ import {
   Building2,
   ArrowLeft,
   Check,
-  Palette,
   Sun,
   Moon,
   Monitor,
@@ -35,44 +37,42 @@ type BusinessType = 'ecommerce' | 'coaching' | 'agency' | 'generic'
 type PrimaryGoal = 'reply_faster' | 'automate_faq' | 'convert_comments' | 'qualify_leads' | 'sell_more'
 type TeamSize = 'solo' | '2-5' | '6-20' | '20+'
 
-const BUSINESS_TYPES: Array<{ value: BusinessType; label: string; icon: typeof ShoppingBag }> = [
-  { value: 'ecommerce', label: 'Boutique en ligne', icon: ShoppingBag },
-  { value: 'coaching', label: 'Coaching / rendez-vous', icon: CalendarClock },
-  { value: 'agency', label: 'Agence / leads', icon: Target },
-  { value: 'generic', label: 'Autre', icon: Sparkles },
-]
+function getBusinessTypes(t: Translator): Array<{ value: BusinessType; label: string; icon: typeof ShoppingBag }> {
+  return [
+    { value: 'ecommerce', label: t('onboarding.businessTypes.ecommerce'), icon: ShoppingBag },
+    { value: 'coaching', label: t('onboarding.businessTypes.coaching'), icon: CalendarClock },
+    { value: 'agency', label: t('onboarding.businessTypes.agency'), icon: Target },
+    { value: 'generic', label: t('onboarding.businessTypes.generic'), icon: Sparkles },
+  ]
+}
 
 // Mirrors GOAL_TO_TEMPLATE_ID in lib/onboarding/steps.ts — keep the value set in sync.
-const PRIMARY_GOALS: Array<{ value: PrimaryGoal; label: string; icon: typeof MessageSquareText }> = [
-  { value: 'reply_faster', label: 'Répondre plus vite aux DM', icon: MessageSquareText },
-  { value: 'automate_faq', label: 'Automatiser les questions fréquentes', icon: HelpCircle },
-  { value: 'convert_comments', label: 'Convertir mes commentaires', icon: MousePointerClick },
-  { value: 'qualify_leads', label: 'Qualifier mes prospects', icon: Bot },
-]
+function getPrimaryGoals(t: Translator): Array<{ value: PrimaryGoal; label: string; icon: typeof MessageSquareText }> {
+  return [
+    { value: 'reply_faster', label: t('onboarding.goals.replyFaster'), icon: MessageSquareText },
+    { value: 'automate_faq', label: t('onboarding.goals.automateFaq'), icon: HelpCircle },
+    { value: 'convert_comments', label: t('onboarding.goals.convertComments'), icon: MousePointerClick },
+    { value: 'qualify_leads', label: t('onboarding.goals.qualifyLeads'), icon: Bot },
+  ]
+}
 
 // Boutique-only — only makes sense once business_type = 'ecommerce', shown
 // conditionally below. Activates the ecommerce sales agent directly (see
 // activation-checklist.tsx), not just a flow like the other goals.
-const SELL_MORE_GOAL: { value: PrimaryGoal; label: string; icon: typeof TrendingUp } = {
-  value: 'sell_more',
-  label: 'Vendre plus (automatiser mes ventes)',
-  icon: TrendingUp,
+function getSellMoreGoal(t: Translator): { value: PrimaryGoal; label: string; icon: typeof TrendingUp } {
+  return { value: 'sell_more', label: t('onboarding.goals.sellMore'), icon: TrendingUp }
 }
 
-const TEAM_SIZES: Array<{ value: TeamSize; label: string; icon: typeof User }> = [
-  { value: 'solo', label: 'Solo', icon: User },
-  { value: '2-5', label: '2 à 5', icon: Users },
-  { value: '6-20', label: '6 à 20', icon: UsersRound },
-  { value: '20+', label: '20+', icon: Building2 },
-]
+function getTeamSizes(t: Translator): Array<{ value: TeamSize; label: string; icon: typeof User }> {
+  return [
+    { value: 'solo', label: t('onboarding.teamSizes.solo'), icon: User },
+    { value: '2-5', label: t('onboarding.teamSizes.small'), icon: Users },
+    { value: '6-20', label: t('onboarding.teamSizes.medium'), icon: UsersRound },
+    { value: '20+', label: t('onboarding.teamSizes.large'), icon: Building2 },
+  ]
+}
 
 const AUTO_ADVANCE_DELAY_MS = 320
-const STEP_TITLES = [
-  'Quelle est votre activité ?',
-  'Votre objectif principal ?',
-  'Combien êtes-vous ?',
-  'Personnalisez votre interface',
-]
 
 /** Premium selection card — gradient icon chip, selected ring + glow + check badge, hover lift. */
 function OptionTile<T extends string>({
@@ -145,6 +145,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 
 export function WelcomeForm() {
   const router = useRouter()
+  const t = useT()
   const { theme, setTheme } = useTheme()
   const { colorTheme, setColorTheme } = useCustomTheme()
 
@@ -161,25 +162,28 @@ export function WelcomeForm() {
     if (advanceTimeout.current) clearTimeout(advanceTimeout.current)
   }, [])
 
+  const primaryGoals = getPrimaryGoals(t)
+  const sellMoreGoal = getSellMoreGoal(t)
+
   // Filtrer les objectifs selon le type de business sélectionné
-  const getGoalsForBusinessType = (type: BusinessType | null): typeof PRIMARY_GOALS => {
-    if (!type) return PRIMARY_GOALS
-    
+  const getGoalsForBusinessType = (type: BusinessType | null): typeof primaryGoals => {
+    if (!type) return primaryGoals
+
     switch (type) {
       case 'ecommerce':
         // E-commerce : tous les objectifs + vendre plus
-        return [...PRIMARY_GOALS, SELL_MORE_GOAL]
+        return [...primaryGoals, sellMoreGoal]
       case 'coaching':
         // Coaching : réponse rapide, FAQ, qualifier
-        return PRIMARY_GOALS.filter(g => ['reply_faster', 'automate_faq', 'qualify_leads'].includes(g.value))
+        return primaryGoals.filter(g => ['reply_faster', 'automate_faq', 'qualify_leads'].includes(g.value))
       case 'agency':
         // Agence : réponse rapide, convertir commentaires, qualifier leads
-        return PRIMARY_GOALS.filter(g => ['reply_faster', 'convert_comments', 'qualify_leads'].includes(g.value))
+        return primaryGoals.filter(g => ['reply_faster', 'convert_comments', 'qualify_leads'].includes(g.value))
       case 'generic':
         // Autre : tous sauf vendre plus
-        return PRIMARY_GOALS
+        return primaryGoals
       default:
-        return PRIMARY_GOALS
+        return primaryGoals
     }
   }
 
@@ -237,7 +241,7 @@ export function WelcomeForm() {
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError('Une erreur est survenue, réessayez.')
+      setError(t('onboarding.error'))
       setSaving(false)
     }
   }
@@ -256,8 +260,15 @@ export function WelcomeForm() {
     }
   }
 
+  const stepTitles = [
+    t('onboarding.stepTitles.businessType'),
+    t('onboarding.stepTitles.goal'),
+    t('onboarding.stepTitles.teamSize'),
+    t('onboarding.stepTitles.personalize'),
+  ]
+
   return (
-    <AuthCard tagline="Personnalisons votre espace en 30 secondes">
+    <AuthCard tagline={t('onboarding.tagline')}>
       <div className="flex flex-col gap-5">
         <div>
           <ProgressBar step={step} total={4} />
@@ -268,12 +279,14 @@ export function WelcomeForm() {
                 onClick={() => goTo(step - 1, -1)}
                 className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <ArrowLeft className="size-3" /> Retour
+                <ArrowLeft className="size-3" /> {t('onboarding.back')}
               </button>
             ) : (
               <span />
             )}
-            <span className="text-[11px] font-medium text-muted-foreground">Étape {step + 1}/4</span>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {t('onboarding.stepCounter', { current: step + 1, total: 4 })}
+            </span>
           </div>
         </div>
 
@@ -285,11 +298,11 @@ export function WelcomeForm() {
             exit={{ opacity: 0, x: -direction * 28 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="mb-3.5 text-center text-[14px] font-semibold text-foreground">{STEP_TITLES[step]}</p>
+            <p className="mb-3.5 text-center text-[14px] font-semibold text-foreground">{stepTitles[step]}</p>
 
             {step === 0 && (
               <div className="grid grid-cols-2 gap-2.5">
-                {BUSINESS_TYPES.map((opt) => (
+                {getBusinessTypes(t).map((opt) => (
                   <OptionTile key={opt.value} {...opt} selected={businessType === opt.value} onSelect={handleBusinessTypeSelect} />
                 ))}
               </div>
@@ -315,7 +328,7 @@ export function WelcomeForm() {
 
             {step === 2 && (
               <div className="grid grid-cols-2 gap-2.5">
-                {TEAM_SIZES.map((opt) => (
+                {getTeamSizes(t).map((opt) => (
                   <OptionTile key={opt.value} {...opt} selected={teamSize === opt.value} onSelect={handleTeamSizeSelect} />
                 ))}
               </div>
@@ -323,14 +336,17 @@ export function WelcomeForm() {
 
             {step === 3 && (
               <div className="space-y-4">
+                {/* Language */}
+                <LanguagePicker labelClassName="mb-1.5 text-xs font-medium text-muted-foreground" />
+
                 {/* Mode switch */}
                 <div>
-                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Mode d&apos;affichage</span>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('appearance.displayMode')}</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'light', label: 'Clair', icon: Sun },
-                      { id: 'dark', label: 'Sombre', icon: Moon },
-                      { id: 'system', label: 'Système', icon: Monitor },
+                      { id: 'light', label: t('appearance.light'), icon: Sun },
+                      { id: 'dark', label: t('appearance.dark'), icon: Moon },
+                      { id: 'system', label: t('appearance.system'), icon: Monitor },
                     ].map(({ id, label, icon: Icon }) => (
                       <button
                         key={id}
@@ -352,7 +368,7 @@ export function WelcomeForm() {
 
                 {/* Palette picker */}
                 <div>
-                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Palette de couleur</span>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('appearance.colorPalette')}</span>
                   <div className="grid grid-cols-1 gap-2">
                     {COLOR_THEMES.filter((opt) => opt.id !== 'custom').map((opt) => {
                       const isSelected = colorTheme === opt.id
@@ -375,9 +391,9 @@ export function WelcomeForm() {
                             >
                               {isSelected && <Check className="size-3 text-white" strokeWidth={3} />}
                             </div>
-                            <span className="text-xs">{opt.name}</span>
+                            <span className="text-xs">{t(`appearance.themes.${opt.id}.name`)}</span>
                           </div>
-                          <span className="text-[10.5px] text-muted-foreground">{opt.description}</span>
+                          <span className="text-[10.5px] text-muted-foreground">{t(`appearance.themes.${opt.id}.description`)}</span>
                         </button>
                       )
                     })}
@@ -392,7 +408,7 @@ export function WelcomeForm() {
 
         {step === 3 && (
           <Button size="lg" disabled={!canFinish || saving} onClick={handleSubmit} className="w-full">
-            {saving ? 'Un instant…' : 'Accéder au Dashboard'}
+            {saving ? t('onboarding.saving') : t('onboarding.submit')}
           </Button>
         )}
 
@@ -402,10 +418,9 @@ export function WelcomeForm() {
           disabled={saving}
           className="text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          Passer pour l&apos;instant
+          {t('onboarding.skip')}
         </button>
       </div>
     </AuthCard>
   )
 }
-

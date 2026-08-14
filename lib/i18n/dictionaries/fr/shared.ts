@@ -1,0 +1,58 @@
+export const shared = {
+  accountPicker: {
+    noOtherAccounts: 'Aucun autre compte connecté.',
+  },
+  cardFields: {
+    cardTitleLabel: 'Titre de la carte',
+    cardTitlePlaceholder: 'ex: Super promotion !',
+    subtitleLabel: 'Description / Sous-titre',
+    subtitlePlaceholder: "ex: Profitez de 20% aujourd'hui.",
+    imageLabel: 'Image (optionnel)',
+    buttonsLabel: 'Boutons (max 3)',
+    addButton: '+ Ajouter',
+    buttonN: 'Bouton {index}',
+    removeButton: 'Supprimer',
+    buttonTypeLink: 'Lien (URL)',
+    buttonTypePostback: "Bouton d'action (continue le flow)",
+    buttonTitlePlaceholder: 'Texte du bouton',
+    buttonUrlPlaceholder: 'Lien URL (https://...)',
+    postbackHint: 'Reliez ce bouton à un nœud suivant sur le canvas pour définir ce qui se passe au clic.',
+    noButtons: "Aucun bouton. L'utilisateur cliquera sur la carte.",
+  },
+  formFooter: {
+    cancel: 'Annuler',
+    saving: 'Enregistrement…',
+  },
+  imageUpload: {
+    importFailed: "Échec de l'import",
+    imported: 'Image importée',
+    importError: "Impossible d'importer l'image",
+    importing: 'Import…',
+    importButton: 'Importer une image',
+    removeImage: "Retirer l'image",
+    urlPlaceholder: 'ou collez un lien direct (https://…)',
+  },
+  messagePreview: {
+    placeholder: 'Votre message apparaîtra ici…',
+    cardTitlePlaceholder: 'Titre de la carte',
+    defaultButton: 'Bouton',
+  },
+  postPicker: {
+    title: 'Sélectionner des posts',
+    error: 'Erreur : {message}',
+    noPosts: 'Aucun post trouvé sur ce compte.',
+    cancel: 'Annuler',
+    loadingMore: 'Chargement…',
+    loadMore: 'Charger plus',
+    confirm: 'Valider ({count})',
+  },
+  postTargetField: {
+    select: 'Sélectionner des posts',
+    hint: "Tous les posts si aucun n'est choisi.",
+    edit: 'Modifier',
+  },
+  tagInput: {
+    remove: 'Retirer {tag}',
+    itemCount: '{count} élément(s)',
+  },
+}

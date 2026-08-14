@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { COLOR_THEMES, useCustomTheme, type ColorTheme, type WallpaperId } from '@/components/custom-theme-provider'
 import { WALLPAPER_PRESETS } from '@/components/custom-background'
+import { LanguagePicker } from '@/components/settings/language-picker'
+import { useT } from '@/components/i18n-provider'
 import { cn } from '@/lib/utils'
 
 export function AppearanceCard() {
+  const t = useT()
   const { theme, setTheme } = useTheme()
   const {
     colorTheme,
@@ -32,24 +35,23 @@ export function AppearanceCard() {
         <div className="flex items-center gap-2">
           <Palette className="size-4 text-primary" strokeWidth={1.75} />
           <div>
-            <CardTitle className="text-sm">Personnalisation de l&apos;interface</CardTitle>
-            <CardDescription className="mt-0.5 text-xs">
-              Ajustez l&apos;apparence, la couleur d&apos;accentuation et l&apos;arrière-plan de votre espace.
-            </CardDescription>
+            <CardTitle className="text-sm">{t('appearance.cardTitle')}</CardTitle>
+            <CardDescription className="mt-0.5 text-xs">{t('appearance.cardDescription')}</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Language */}
+        <LanguagePicker />
+
         {/* Mode switch */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-foreground/80">
-            Mode d&apos;affichage
-          </label>
+          <label className="mb-2 block text-xs font-semibold text-foreground/80">{t('appearance.displayMode')}</label>
           <div className="grid grid-cols-3 gap-2.5">
             {[
-              { id: 'light', label: 'Clair', icon: Sun },
-              { id: 'dark', label: 'Sombre', icon: Moon },
-              { id: 'system', label: 'Système', icon: Monitor },
+              { id: 'light', label: t('appearance.light'), icon: Sun },
+              { id: 'dark', label: t('appearance.dark'), icon: Moon },
+              { id: 'system', label: t('appearance.system'), icon: Monitor },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -71,9 +73,7 @@ export function AppearanceCard() {
 
         {/* Color Palette Picker */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-foreground/80">
-            Palette de couleur
-          </label>
+          <label className="mb-2 block text-xs font-semibold text-foreground/80">{t('appearance.colorPalette')}</label>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {COLOR_THEMES.map((opt) => {
               const isSelected = colorTheme === opt.id
@@ -97,8 +97,8 @@ export function AppearanceCard() {
                       {isSelected && <Check className="size-3.5 text-white" strokeWidth={3} />}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-foreground">{opt.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{opt.description}</p>
+                      <p className="text-xs font-semibold text-foreground">{t(`appearance.themes.${opt.id}.name`)}</p>
+                      <p className="text-[11px] text-muted-foreground">{t(`appearance.themes.${opt.id}.description`)}</p>
                     </div>
                   </div>
                 </button>
@@ -112,10 +112,10 @@ export function AppearanceCard() {
                 {/* Primary Color Picker */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Couleur primaire
+                    {t('appearance.primaryColor')}
                   </label>
                   <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
-                    <div 
+                    <div
                       className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
                       style={{ backgroundColor: customPrimaryColor }}
                     >
@@ -133,10 +133,10 @@ export function AppearanceCard() {
                 {/* Secondary Color Picker */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Couleur secondaire
+                    {t('appearance.secondaryColor')}
                   </label>
                   <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
-                    <div 
+                    <div
                       className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
                       style={{ backgroundColor: customSecondaryColor }}
                     >
@@ -160,7 +160,7 @@ export function AppearanceCard() {
           <div className="mb-2 flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80">
               <ImageIcon className="size-3.5 text-primary" />
-              Fond d&apos;écran d&apos;arrière-plan
+              {t('appearance.wallpaper')}
             </label>
           </div>
 
@@ -184,7 +184,7 @@ export function AppearanceCard() {
                       <Check className="size-2.5" strokeWidth={3} />
                     </span>
                   )}
-                  <span className="text-xs">{preset.name}</span>
+                  <span className="text-xs">{t(`appearance.wallpapers.${preset.id}`)}</span>
                 </button>
               )
             })}
@@ -204,18 +204,18 @@ export function AppearanceCard() {
                   <Check className="size-2.5" strokeWidth={3} />
                 </span>
               )}
-              <span className="text-xs">Image URL</span>
+              <span className="text-xs">{t('appearance.wallpaperImageUrlTile')}</span>
             </button>
           </div>
 
           {wallpaper === 'custom' && (
             <div className="mt-3 space-y-1.5">
               <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                <LinkIcon className="size-3" /> Lien URL de votre image de fond
+                <LinkIcon className="size-3" /> {t('appearance.customImageUrlLabel')}
               </label>
               <Input
                 type="url"
-                placeholder="https://images.unsplash.com/photo-..."
+                placeholder={t('appearance.customImageUrlPlaceholder')}
                 value={customImageUrl}
                 onChange={(e) => setCustomImageUrl(e.target.value)}
                 className="rounded-xl text-xs"
@@ -230,7 +230,7 @@ export function AppearanceCard() {
             <div className="mb-2 flex items-center justify-between">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80">
                 <Sliders className="size-3.5 text-primary" />
-                Opacité du fond d&apos;écran ({bgOpacity}%)
+                {t('appearance.opacity', { value: bgOpacity })}
               </label>
             </div>
             <div className="flex items-center gap-2">

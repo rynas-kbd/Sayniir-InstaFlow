@@ -1,5 +1,5 @@
 import { MessageCircle, Zap, Users, BarChart3, Megaphone, Bot } from 'lucide-react'
-import { PLAN_CONFIG, formatDzd, type PlanKey } from '@/lib/plans'
+import { PLAN_CONFIG, formatDzd, getPlanDisplayFr, type PlanKey } from '@/lib/plans'
 
 export const FEATURES = [
   {
@@ -58,17 +58,18 @@ const MARKETING_TIER_KEYS: PlanKey[] = ['starter', 'pro', 'business']
 
 export const PRICING_TIERS = MARKETING_TIER_KEYS.map((key) => {
   const cfg = PLAN_CONFIG[key]
+  const display = getPlanDisplayFr(key)
   const isQuote = cfg.priceMonthlyDzd === null
   return {
     key,
-    name: cfg.label,
+    name: display.label,
     price: isQuote ? 'Sur devis' : formatDzd(cfg.priceMonthlyDzd!),
     period: isQuote ? '' : cfg.period,
     priceAnnual: isQuote ? 'Sur devis' : formatDzd(cfg.priceAnnualDzd!),
     priceAnnualCrossedOut: isQuote ? undefined : formatDzd(cfg.priceMonthlyDzd! * 12),
     periodAnnual: isQuote ? '' : cfg.periodAnnual,
-    description: cfg.description,
-    features: cfg.features,
+    description: display.description,
+    features: display.features,
     highlighted: cfg.highlighted ?? false,
   }
 })

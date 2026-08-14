@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { connectWhatsAppManually, type ConnectWhatsAppManuallyResult } from '@/app/admin/(dashboard)/clients/[id]/actions'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 interface Props {
   userId: string
@@ -15,7 +17,7 @@ interface Props {
   verifyToken: string
 }
 
-function CopyField({ label, value }: { label: string; value: string }) {
+function CopyField({ label, value, t }: { label: string; value: string; t: Translator }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
       <div className="min-w-0">
@@ -26,10 +28,10 @@ function CopyField({ label, value }: { label: string; value: string }) {
         type="button"
         onClick={() => {
           navigator.clipboard.writeText(value)
-          toast.success('Copié')
+          toast.success(t('admin.clients.detail.whatsappForm.copiedToast'))
         }}
         className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
-        aria-label={`Copier ${label}`}
+        aria-label={t('admin.clients.detail.whatsappForm.copyAria', { label })}
       >
         <Copy className="size-3" />
       </button>
@@ -47,6 +49,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
  * verification, not just today's global one).
  */
 export function WhatsAppManualConnectForm({ userId, webhookUrl, verifyToken }: Props) {
+  const t = useT()
   const [wabaId, setWabaId] = useState('')
   const [phoneNumberId, setPhoneNumberId] = useState('')
   const [accessToken, setAccessToken] = useState('')
@@ -63,9 +66,11 @@ export function WhatsAppManualConnectForm({ userId, webhookUrl, verifyToken }: P
         setResult(res)
         setAccessToken('')
         setAppSecret('')
-        toast.success(`Numéro connecté : ${res.displayPhoneNumber ?? phoneNumberId}`)
+        toast.success(t('admin.clients.detail.whatsappForm.connectedToast', { phone: res.displayPhoneNumber ?? phoneNumberId }))
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Erreur lors de la connexion')
+        // NOTE: err.message may come from actions.ts (untranslated French,
+        // see TODO(i18n) there); only the fallback string is translated here.
+        toast.error(err instanceof Error ? err.message : t('admin.clients.detail.whatsappForm.errorToastFallback'))
       }
     })
   }
@@ -74,10 +79,10 @@ export function WhatsAppManualConnectForm({ userId, webhookUrl, verifyToken }: P
     <div className="flex flex-col gap-4">
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground">
-          À communiquer au client pour qu&apos;il configure sa propre app Meta (App Dashboard → WhatsApp → Configuration → Webhook) :
+          {t('admin.clients.detail.whatsappForm.instructionText')}
         </p>
-        <CopyField label="Webhook Callback URL" value={webhookUrl} />
-        <CopyField label="Verify Token" value={verifyToken} />
+        <CopyField label={t('admin.clients.detail.whatsappForm.webhookUrlLabel')} value={webhookUrl} t={t} />
+        <CopyField label={t('admin.clients.detail.whatsappForm.verifyTokenLabel')} value={verifyToken} t={t} />
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-3 sm:grid-cols-2">
@@ -99,7 +104,7 @@ export function WhatsAppManualConnectForm({ userId, webhookUrl, verifyToken }: P
         </div>
         <Button type="submit" disabled={isPending} className="gap-2 sm:col-span-2 sm:self-start">
           {isPending && <Loader2 className="size-4 animate-spin" />}
-          Connecter ce numéro
+          {t('admin.clients.detail.whatsappForm.submitButton')}
         </Button>
       </form>
 
@@ -112,8 +117,10 @@ export function WhatsAppManualConnectForm({ userId, webhookUrl, verifyToken }: P
           {result.webhookSubscribed ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" /> : <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />}
           <span>
             {result.webhookSubscribed
-              ? `Compte "${result.verifiedName ?? result.displayPhoneNumber}" abonné aux webhooks avec succès.`
-              : `Compte créé, mais la souscription webhook a échoué (${result.webhookSubscribeError ?? 'raison inconnue'}) — aucun message n'arrivera tant que ce n'est pas résolu. Vérifiez que le token a la permission whatsapp_business_management.`}
+              ? t('admin.clients.detail.whatsappForm.successResult', { name: result.verifiedName ?? result.displayPhoneNumber ?? '' })
+              : t('admin.clients.detail.whatsappForm.failureResult', {
+                  reason: result.webhookSubscribeError ?? t('admin.clients.detail.whatsappForm.unknownReason'),
+                })}
           </span>
         </div>
       )}

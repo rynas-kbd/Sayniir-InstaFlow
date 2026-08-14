@@ -9,6 +9,7 @@ import { CampaignFormBody } from './campaign-form/campaign-form-body'
 import { CampaignLivePreview } from './campaign-form/campaign-live-preview'
 import type { Tag } from '@/components/contacts/types'
 import type { Campaign, Segment } from './types'
+import { useT } from '@/components/i18n-provider'
 
 export function CreateCampaignForm({
   channelAccountId,
@@ -19,6 +20,7 @@ export function CreateCampaignForm({
   tags: Tag[]
   segments: Segment[]
 }) {
+  const t = useT()
   const router = useRouter()
   const [segments, setSegments] = useState(initialSegments)
 
@@ -41,7 +43,7 @@ export function CreateCampaignForm({
             <CampaignFormBody api={api} tags={tags} segments={segments} onSegmentsChange={setSegments} autoFocusName />
           </CardContent>
         </Card>
-        <FormFooter saving={api.saving} submitLabel="Créer" onCancel={() => router.push('/campaigns')} className="justify-end" />
+        <FormFooter saving={api.saving} submitLabel={t('campaigns.formDialog.create')} onCancel={() => router.push('/campaigns')} className="justify-end" />
       </div>
       <aside className="lg:sticky lg:top-6 lg:self-start">
         <CampaignLivePreview form={api.form} tags={tags} segments={segments} />

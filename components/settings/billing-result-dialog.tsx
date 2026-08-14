@@ -17,7 +17,8 @@ import { Button } from '@/components/ui/button'
 import { haptic } from '@/lib/motion/haptics'
 import { springs } from '@/lib/motion/springs'
 import { createClient } from '@/lib/supabase/client'
-import { PLAN_CONFIG, type PlanKey, type BillingPeriod } from '@/lib/plans'
+import { useT } from '@/components/i18n-provider'
+import { getPlanDisplay, type PlanKey, type BillingPeriod } from '@/lib/plans'
 
 const POLL_INTERVAL_MS = 1200
 const MAX_POLL_ATTEMPTS = 6 // ~7s total
@@ -44,6 +45,7 @@ interface BillingResultDialogInnerProps {
 }
 
 function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingResultDialogInnerProps) {
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const billing = searchParams.get('billing')
@@ -116,10 +118,10 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
         body: JSON.stringify({ plan: state.plan, period: state.period }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur')
+      if (!res.ok) throw new Error(data.error || t('billing.genericError'))
       window.location.href = data.url
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Impossible d'ouvrir le paiement")
+      toast.error(err instanceof Error ? err.message : t('billing.checkoutError'))
       setRetrying(false)
     }
   }
@@ -130,8 +132,8 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
     <ResponsiveDialog open={open} onOpenChange={(next) => !next && handleClose()}>
       <ResponsiveDialogContent className="sm:max-w-sm" showCloseButton={state?.kind !== 'verifying'}>
         <ResponsiveDialogHeader className="sr-only">
-          <ResponsiveDialogTitle>Résultat du paiement</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>État de votre abonnement après paiement</ResponsiveDialogDescription>
+          <ResponsiveDialogTitle>{t('billing.result.dialogTitle')}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>{t('billing.result.dialogDescription')}</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
         {state?.kind === 'verifying' && (
@@ -140,8 +142,8 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
             <div>
-              <p className="text-[15px] font-bold text-foreground">Vérification du paiement…</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">Un instant, on confirme votre abonnement.</p>
+              <p className="text-[15px] font-bold text-foreground">{t('billing.result.verifyingTitle')}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">{t('billing.result.verifyingSub')}</p>
             </div>
           </div>
         )}
@@ -157,12 +159,14 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
               <CheckCircle2 className="size-5 text-success" />
             </motion.div>
             <div>
-              <p className="text-[15px] font-bold text-foreground">Abonnement activé !</p>
+              <p className="text-[15px] font-bold text-foreground">{t('billing.result.confirmedTitle')}</p>
               <p className="mt-1 text-[13px] text-muted-foreground">
-                {PLAN_CONFIG[state.plan].label} est actif
                 {state.expiresAt
-                  ? ` — valable jusqu'au ${new Date(state.expiresAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}.`
-                  : '.'}
+                  ? t('billing.result.confirmedActiveWithExpiry', {
+                      plan: getPlanDisplay(state.plan, t).label,
+                      date: new Date(state.expiresAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    })
+                  : t('billing.result.confirmedActiveNoExpiry', { plan: getPlanDisplay(state.plan, t).label })}
               </p>
             </div>
           </div>
@@ -179,10 +183,8 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
               <Clock className="size-5 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-[15px] font-bold text-foreground">Paiement reçu</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                L&apos;activation est en cours et peut prendre quelques instants. Actualisez la page si besoin.
-              </p>
+              <p className="text-[15px] font-bold text-foreground">{t('billing.result.pendingTitle')}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">{t('billing.result.pendingSub')}</p>
             </div>
           </motion.div>
         )}
@@ -198,10 +200,8 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
               <XCircle className="size-5 text-destructive" />
             </div>
             <div>
-              <p className="text-[15px] font-bold text-foreground">Le paiement n&apos;a pas abouti</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                Aucun montant n&apos;a été prélevé si l&apos;opération a été annulée.
-              </p>
+              <p className="text-[15px] font-bold text-foreground">{t('billing.result.failedTitle')}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">{t('billing.result.failedSub')}</p>
             </div>
           </motion.div>
         )}
@@ -210,22 +210,22 @@ function BillingResultDialogInner({ baselinePlan, baselineExpiresAt }: BillingRe
           <ResponsiveDialogFooter>
             {state.kind === 'confirmed' && (
               <Button type="button" className="w-full" onClick={handleClose}>
-                Parfait
+                {t('billing.result.perfect')}
               </Button>
             )}
             {state.kind === 'pending' && (
               <Button type="button" variant="outline" className="w-full" onClick={handleClose}>
-                Fermer
+                {t('billing.result.close')}
               </Button>
             )}
             {state.kind === 'failed' && (
               <>
                 <Button type="button" className="w-full gap-2 sm:w-auto" onClick={handleRetry} disabled={retrying}>
                   {retrying && <Loader2 className="size-3.5 animate-spin" />}
-                  Réessayer
+                  {t('billing.result.retry')}
                 </Button>
                 <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={handleClose}>
-                  Fermer
+                  {t('billing.result.close')}
                 </Button>
               </>
             )}

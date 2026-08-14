@@ -10,6 +10,7 @@ import { FormDialogHeader } from '@/components/shared/form-section'
 import { useProductForm } from './product-form/use-product-form'
 import { ProductFormBody } from './product-form/product-form-body'
 import { FormFooter } from '@/components/shared/form-footer'
+import { useT } from '@/components/i18n-provider'
 import type { Product } from './types'
 
 export function ProductFormDialog({
@@ -26,6 +27,7 @@ export function ProductFormDialog({
   onClose: () => void
 }) {
   const api = useProductForm({ channelAccountId, product, onSave, onSaved: onClose })
+  const t = useT()
 
   return (
     <ResponsiveDialog open={open} onOpenChange={(next) => !next && onClose()}>
@@ -35,8 +37,8 @@ export function ProductFormDialog({
         <ResponsiveDialogHeader className="shrink-0 border-b border-border bg-card/60 px-5 py-4 pr-12 backdrop-blur-sm">
           <FormDialogHeader
             icon={Package}
-            title={product ? 'Modifier le produit' : 'Nouveau produit'}
-            description="Renseignez les informations affichées à vos clients."
+            title={product ? t('boutique.productFormDialog.editTitle') : t('boutique.productFormDialog.createTitle')}
+            description={t('boutique.productFormDialog.description')}
           />
         </ResponsiveDialogHeader>
 
@@ -46,7 +48,7 @@ export function ProductFormDialog({
           </div>
           <FormFooter
             saving={api.saving}
-            submitLabel={product ? 'Sauvegarder' : 'Créer'}
+            submitLabel={product ? t('boutique.productFormDialog.save') : t('boutique.productFormDialog.create')}
             onCancel={onClose}
             className="shrink-0 justify-end border-t border-border bg-muted/40 px-5 py-3"
           />

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import type { CardButton } from '@/components/flows/types'
 
 export interface MessagePreviewCard {
@@ -32,19 +33,21 @@ export function MessagePreview({ responseType, text, card, placeholder, classNam
 }
 
 function TextPreview({ text, placeholder, className }: { text: string; placeholder?: boolean; className?: string }) {
+  const t = useT()
   const trimmed = text.trim()
   return (
     <div className={cn('min-h-[44px] rounded-lg border border-border/40 bg-muted/40 p-2.5 text-xs text-foreground/90', className)}>
       {trimmed ? (
         <p className="line-clamp-4 leading-relaxed italic">&ldquo;{trimmed}&rdquo;</p>
       ) : (
-        <p className="italic text-muted-foreground/50">{placeholder ? 'Votre message apparaîtra ici…' : ''}</p>
+        <p className="italic text-muted-foreground/50">{placeholder ? t('shared.messagePreview.placeholder') : ''}</p>
       )}
     </div>
   )
 }
 
 function CardPreview({ card, placeholder, className }: { card: MessagePreviewCard; placeholder?: boolean; className?: string }) {
+  const t = useT()
   const [broken, setBroken] = useState(false)
   const hasImage = card.imageUrl.trim() !== '' && !broken
 
@@ -60,14 +63,15 @@ function CardPreview({ card, placeholder, className }: { card: MessagePreviewCar
       </div>
       <div className="flex flex-col gap-1 p-2.5">
         <p className="line-clamp-1 text-xs font-bold text-foreground">
-          {card.title.trim() || (placeholder && <span className="italic text-muted-foreground/50">Titre de la carte</span>)}
+          {card.title.trim() ||
+            (placeholder && <span className="italic text-muted-foreground/50">{t('shared.messagePreview.cardTitlePlaceholder')}</span>)}
         </p>
         {card.subtitle.trim() && <p className="line-clamp-2 text-[11px] text-muted-foreground">{card.subtitle}</p>}
         {card.buttons.length > 0 && (
           <div className="mt-1 flex flex-col gap-1">
             {card.buttons.map((btn, i) => (
               <span key={i} className="rounded-md border border-border/60 bg-card px-2 py-1 text-center text-[11px] font-medium text-primary">
-                {btn.title || 'Bouton'}
+                {btn.title || t('shared.messagePreview.defaultButton')}
               </span>
             ))}
           </div>

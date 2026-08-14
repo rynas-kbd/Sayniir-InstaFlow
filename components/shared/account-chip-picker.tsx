@@ -2,6 +2,7 @@
 
 import { getAccountLabel, PLATFORM_ICON } from '@/lib/channels/labels'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import type { Platform } from '@/lib/channels/types'
 
 /** The minimal account shape getAccountLabel()/PLATFORM_ICON need — matches lib/accounts/active-account.ts::ActiveAccount. */
@@ -33,8 +34,10 @@ export function AccountChipPicker({
   /** e.g. a flow/rule's owner account — rendered checked and non-interactive, can't be removed this way. */
   disabledIds?: string[]
 }) {
+  const t = useT()
+
   if (accounts.length === 0) {
-    return <p className="text-xs text-muted-foreground">Aucun autre compte connecté.</p>
+    return <p className="text-xs text-muted-foreground">{t('shared.accountPicker.noOtherAccounts')}</p>
   }
 
   return (

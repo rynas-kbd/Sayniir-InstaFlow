@@ -4,14 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const ITEMS = [
-  { href: '/admin', label: 'Vue d’ensemble', icon: LayoutDashboard },
-  { href: '/admin/clients', label: 'Utilisateurs', icon: Users },
-]
+import { useT } from '@/components/i18n-provider'
 
 export function AdminNav() {
   const pathname = usePathname()
+  const t = useT()
+
+  const ITEMS = [
+    { href: '/admin', label: t('admin.nav.overview'), icon: LayoutDashboard },
+    { href: '/admin/clients', label: t('admin.nav.users'), icon: Users },
+  ]
 
   return (
     <>

@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/components/i18n-provider'
 
 interface CopilotFABProps {
   onClick: () => void
@@ -28,6 +29,7 @@ interface CopilotFABProps {
  * reserved for hover, so the orb doesn't compete for attention on every page.
  */
 export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
+  const t = useT()
   // On mobile we park the FAB in the top-right corner, well away from:
   //   • The MobileBottomNav bar (fixed bottom-0)
   //   • Any canvas-level FABs (absolute bottom-4 right-4 in the flow builder)
@@ -51,7 +53,7 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
             <motion.button
               type="button"
               onClick={onClick}
-              aria-label="Ouvrir le Copilote IA (Ctrl+I)"
+              aria-label={t('copilot.fab.ariaLabel')}
               className="group relative flex size-14 items-center justify-center rounded-full"
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.94 }}
@@ -97,7 +99,7 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
         </TooltipTrigger>
         <TooltipContent side="left" className="hidden md:block" sideOffset={8}>
           <p className="text-sm">
-            Copilote IA <span className="text-muted-foreground">(Ctrl+I)</span>
+            {t('copilot.fab.tooltipLabel')} <span className="text-muted-foreground">{t('copilot.fab.tooltipShortcut')}</span>
           </p>
         </TooltipContent>
       </Tooltip>

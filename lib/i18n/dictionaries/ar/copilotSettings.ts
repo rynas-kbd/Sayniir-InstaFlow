@@ -1,0 +1,15 @@
+export const copilotSettings = {
+  cardTitle: 'المساعد الذكي',
+  cardDescription: 'المساعد المدمج الذي يساعدك على بناء حسابك وتشخيص المشكلات فيه.',
+  useOwnKeyTitle: 'استخدام مفتاح API الخاص بي',
+  useOwnKeyDescription: 'يتجاوز الحصة الشهرية — يبقى الاستخدام مفوترًا على حسابك الخاص.',
+  providerLabel: 'المزوّد',
+  modelLabel: 'النموذج',
+  apiKeyLabel: 'مفتاح API الخاص بـ {provider}',
+  apiKeyPlaceholder: '••••••••',
+  save: 'حفظ',
+  saved: 'تم الحفظ',
+  keyEncryptedNote: 'يتم تشفير المفتاح قبل تخزينه ولن يُعرض أبدًا بشكل واضح.',
+  upgradeToProNote: 'قم بالترقية إلى خطة Pro لاستخدام مفتاح API الخاص بك ورفع الحصة الشهرية.',
+  saveError: 'تعذّر الحفظ',
+}

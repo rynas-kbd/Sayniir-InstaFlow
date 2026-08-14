@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
+import { useT } from '@/components/i18n-provider'
 
 interface ProgressIndicatorProps {
   step: string
@@ -89,7 +90,9 @@ interface ThinkingIndicatorProps {
  * Alternative compact indicator for when the AI is "thinking" (waiting for LLM response).
  * Displays a simpler, more subtle animation.
  */
-export function ThinkingIndicator({ message = 'Réflexion en cours...' }: ThinkingIndicatorProps) {
+export function ThinkingIndicator({ message }: ThinkingIndicatorProps) {
+  const t = useT()
+  const resolvedMessage = message ?? t('copilot.progress.thinkingDefault')
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -99,7 +102,7 @@ export function ThinkingIndicator({ message = 'Réflexion en cours...' }: Thinki
       className="flex items-center gap-2 text-muted-foreground"
       role="status"
       aria-live="polite"
-      aria-label={message}
+      aria-label={resolvedMessage}
     >
       {/* Three animated dots */}
       <div className="flex gap-1">
@@ -120,7 +123,7 @@ export function ThinkingIndicator({ message = 'Réflexion en cours...' }: Thinki
           />
         ))}
       </div>
-      <span className="text-xs">{message}</span>
+      <span className="text-xs">{resolvedMessage}</span>
     </motion.div>
   )
 }

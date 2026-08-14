@@ -20,24 +20,28 @@ import {
 import type { FlowSummary, FlowNodeType } from './types'
 import { InsightBadge } from '@/components/ai/insight-badge'
 import type { AiInsight } from '@/components/ai/types'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 // Map trigger types to readable labels
-function getTriggerLabel(flow: FlowSummary): string {
-  if (flow.trigger_type === 'any_message') return 'Tout message reçu'
+function getTriggerLabel(flow: FlowSummary, t: Translator): string {
+  if (flow.trigger_type === 'any_message') return t('flows.flowCard.triggerAnyMessage')
   if (flow.trigger_type === 'keyword' && flow.trigger_keywords?.length) {
     const kws = flow.trigger_keywords.slice(0, 2).join(', ')
     return flow.trigger_keywords.length > 2 ? `${kws} +${flow.trigger_keywords.length - 2}` : kws
   }
-  if (flow.trigger_type === 'comment') return 'Commentaire reçu'
+  if (flow.trigger_type === 'comment') return t('flows.flowCard.triggerComment')
   return flow.trigger_type
 }
 
 // Status config
-const STATUS_CONFIG = {
-  active: { label: 'Actif', dot: 'bg-success', badge: 'bg-success/10 text-success border-success/20' },
-  paused: { label: 'En pause', dot: 'bg-warning', badge: 'bg-warning/10 text-warning border-warning/20' },
-  draft:  { label: 'Brouillon', dot: 'bg-muted-foreground/50', badge: 'bg-muted text-muted-foreground border-border' },
-} as const
+function getStatusConfig(t: Translator) {
+  return {
+    active: { label: t('flows.flowCard.statusActive'), dot: 'bg-success', badge: 'bg-success/10 text-success border-success/20' },
+    paused: { label: t('flows.flowCard.statusPaused'), dot: 'bg-warning', badge: 'bg-warning/10 text-warning border-warning/20' },
+    draft: { label: t('flows.flowCard.statusDraft'), dot: 'bg-muted-foreground/50', badge: 'bg-muted text-muted-foreground border-border' },
+  } as const
+}
 
 // Node type icons for preview
 const NODE_ICONS: Partial<Record<FlowNodeType, React.ElementType>> = {
@@ -63,6 +67,8 @@ export function FlowCard({
   allAccounts?: PickableAccount[]
   initialTargetAccountIds?: string[]
 }) {
+  const t = useT()
+  const STATUS_CONFIG = getStatusConfig(t)
   const [flow, setFlow] = useState(initialFlow)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toggling, setToggling] = useState(false)
@@ -84,7 +90,7 @@ export function FlowCard({
       if (!res.ok) throw new Error()
     } catch {
       setTargetAccountIds(targetAccountIds) // rollback
-      toast.error("Impossible de mettre à jour les comptes de ce flow")
+      toast.error(t('flows.flowCard.accountsUpdateError'))
     } finally {
       setSavingAccounts(false)
     }
@@ -103,9 +109,9 @@ export function FlowCard({
       })
       if (!res.ok) throw new Error()
       setFlow((prev) => ({ ...prev, status: nextStatus }))
-      toast.success(checked ? '✅ Flow activé' : '⏸️ Flow mis en pause')
+      toast.success(checked ? t('flows.flowCard.activated') : t('flows.flowCard.paused'))
     } catch {
-      toast.error('Impossible de mettre à jour le flow')
+      toast.error(t('flows.flowCard.updateError'))
     } finally {
       setToggling(false)
     }
@@ -117,7 +123,7 @@ export function FlowCard({
       if (!res.ok) throw new Error()
       window.location.reload()
     } catch {
-      toast.error('Impossible de supprimer le flow')
+      toast.error(t('flows.flowCard.deleteError'))
     }
   }
 
@@ -149,7 +155,7 @@ export function FlowCard({
                 checked={flow.status === 'active'}
                 onCheckedChange={toggleActive}
                 disabled={toggling}
-                aria-label="Activer/désactiver le flow"
+                aria-label={t('flows.flowCard.toggleAria')}
               />
             </div>
           </div>
@@ -159,7 +165,7 @@ export function FlowCard({
             <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{flow.name}</h3>
             <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               <Zap className="size-3 shrink-0" />
-              {getTriggerLabel(flow)}
+              {getTriggerLabel(flow, t)}
             </p>
             {accountName && (
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
@@ -177,13 +183,13 @@ export function FlowCard({
                       }
                     >
                       <Users className="size-3" />
-                      {targetAccountIds.length > 0 ? `+${targetAccountIds.length} compte(s)` : 'Ajouter un compte'}
+                      {targetAccountIds.length > 0 ? t('flows.flowCard.accountsCount', { count: targetAccountIds.length }) : t('flows.flowCard.addAccount')}
                     </PopoverTrigger>
                     <PopoverContent align="start">
-                      <p className="font-semibold text-foreground">Comptes additionnels</p>
-                      <p className="text-[11px] text-muted-foreground">Ce flow se déclenchera aussi sur les comptes sélectionnés.</p>
+                      <p className="font-semibold text-foreground">{t('flows.flowCard.additionalAccounts')}</p>
+                      <p className="text-[11px] text-muted-foreground">{t('flows.flowCard.additionalAccountsDescription')}</p>
                       <AccountChipPicker accounts={otherAccounts} selectedIds={targetAccountIds} onToggle={toggleTargetAccount} />
-                      {savingAccounts && <p className="text-[11px] text-muted-foreground">Enregistrement…</p>}
+                      {savingAccounts && <p className="text-[11px] text-muted-foreground">{t('flows.flowCard.saving')}</p>}
                     </PopoverContent>
                   </Popover>
                 )}
@@ -192,7 +198,7 @@ export function FlowCard({
           </div>
 
           {/* Date */}
-          <p className="text-[11px] text-muted-foreground/60">Créé le {createdAt}</p>
+          <p className="text-[11px] text-muted-foreground/60">{t('flows.flowCard.createdOn', { date: createdAt })}</p>
         </div>
 
         {/* Footer actions */}
@@ -200,10 +206,10 @@ export function FlowCard({
           <button
             onClick={() => setConfirmOpen(true)}
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Supprimer"
+            aria-label={t('flows.flowCard.deleteAria')}
           >
             <Trash2 className="size-3.5" />
-            Supprimer
+            {t('flows.flowCard.delete')}
           </button>
 
           <Link
@@ -211,7 +217,7 @@ export function FlowCard({
             className="flex items-center gap-1.5 rounded-md bg-primary/8 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15"
           >
             <Pencil className="size-3.5" />
-            Modifier
+            {t('flows.flowCard.edit')}
             <ArrowRight className="size-3" />
           </Link>
         </div>
@@ -220,18 +226,18 @@ export function FlowCard({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer « {flow.name} » ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('flows.flowCard.deleteTitle', { name: flow.name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Toutes les données associées à ce flow seront perdues.
+              {t('flows.flowCard.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('flows.flowCard.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Supprimer définitivement
+              {t('flows.flowCard.confirmDelete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

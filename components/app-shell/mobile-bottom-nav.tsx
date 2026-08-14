@@ -23,6 +23,8 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 import type { BusinessType } from './nav-config'
 
 interface BottomTab {
@@ -32,52 +34,34 @@ interface BottomTab {
   badge?: number
 }
 
-const PRIMARY_TABS: BottomTab[] = [
-  { href: '/dashboard', label: 'Accueil', icon: LayoutDashboard },
-  { href: '/inbox', label: 'Inbox', icon: Inbox },
-  { href: '/flows', label: 'Flows', icon: Workflow },
-]
-
-const BUSINESS_TAB_BY_TYPE: Record<BusinessType, BottomTab> = {
-  ecommerce: { href: '/boutique', label: 'Boutique', icon: ShoppingBag },
-  coaching: { href: '/rdv', label: 'RDV', icon: CalendarClock },
-  agency: { href: '/leads', label: 'Leads', icon: Target },
-  generic: { href: '/boutique', label: 'Boutique', icon: ShoppingBag },
+function getPrimaryTabs(t: Translator): BottomTab[] {
+  return [
+    { href: '/dashboard', label: t('nav.mobileItems.home'), icon: LayoutDashboard },
+    { href: '/inbox', label: t('nav.items.inbox'), icon: Inbox },
+    { href: '/flows', label: t('nav.items.flows'), icon: Workflow },
+  ]
 }
 
-const MORE_ITEMS_BY_TYPE: Record<BusinessType, BottomTab[]> = {
-  ecommerce: [
-    { href: '/contacts', label: 'Contacts', icon: Users },
-    { href: '/automation', label: 'Règles', icon: Zap },
-    { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/accounts', label: 'Comptes', icon: Camera },
-    { href: '/settings', label: 'Paramètres', icon: Settings },
-  ],
-  coaching: [
-    { href: '/contacts', label: 'Contacts', icon: Users },
-    { href: '/automation', label: 'Règles', icon: Zap },
-    { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/accounts', label: 'Comptes', icon: Camera },
-    { href: '/settings', label: 'Paramètres', icon: Settings },
-  ],
-  agency: [
-    { href: '/contacts', label: 'Contacts', icon: Users },
-    { href: '/automation', label: 'Règles', icon: Zap },
-    { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/accounts', label: 'Comptes', icon: Camera },
-    { href: '/settings', label: 'Paramètres', icon: Settings },
-  ],
-  generic: [
-    { href: '/contacts', label: 'Contacts', icon: Users },
-    { href: '/automation', label: 'Règles', icon: Zap },
-    { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/accounts', label: 'Comptes', icon: Camera },
-    { href: '/settings', label: 'Paramètres', icon: Settings },
-  ],
+function getBusinessTabByType(t: Translator): Record<BusinessType, BottomTab> {
+  return {
+    ecommerce: { href: '/boutique', label: t('nav.items.boutique'), icon: ShoppingBag },
+    coaching: { href: '/rdv', label: t('nav.mobileItems.rdv'), icon: CalendarClock },
+    agency: { href: '/leads', label: t('nav.items.leads'), icon: Target },
+    generic: { href: '/boutique', label: t('nav.items.boutique'), icon: ShoppingBag },
+  }
+}
+
+function getMoreItems(t: Translator): BottomTab[] {
+  // Same set across every business type today — the store/RDV/leads item
+  // already lives in the primary tabs via getBusinessTabByType.
+  return [
+    { href: '/contacts', label: t('nav.items.contacts'), icon: Users },
+    { href: '/automation', label: t('nav.items.rules'), icon: Zap },
+    { href: '/campaigns', label: t('nav.items.campaigns'), icon: Megaphone },
+    { href: '/analytics', label: t('nav.items.analytics'), icon: BarChart3 },
+    { href: '/accounts', label: t('nav.mobileItems.accounts'), icon: Camera },
+    { href: '/settings', label: t('nav.items.settings'), icon: Settings },
+  ]
 }
 
 export function MobileBottomNav({
@@ -88,13 +72,14 @@ export function MobileBottomNav({
   unrepliedCount?: number
 }) {
   const pathname = usePathname()
+  const t = useT()
   const [moreOpen, setMoreOpen] = useState(false)
   const dragDismiss = useDragDismiss({ onDismiss: () => setMoreOpen(false) })
-  const moreItems = MORE_ITEMS_BY_TYPE[businessType]
+  const moreItems = getMoreItems(t)
 
-  const businessTab = BUSINESS_TAB_BY_TYPE[businessType]
+  const businessTab = getBusinessTabByType(t)[businessType]
   const tabs: BottomTab[] = [
-    ...PRIMARY_TABS.map((tab) =>
+    ...getPrimaryTabs(t).map((tab) =>
       tab.href === '/inbox' ? { ...tab, badge: unrepliedCount } : tab
     ),
     businessTab,
@@ -148,7 +133,7 @@ export function MobileBottomNav({
                   className="text-[11px] font-bold uppercase tracking-widest"
                   style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}
                 >
-                  Navigation
+                  {t('nav.mobileMore.navigationTitle')}
                 </span>
                 <button
                   type="button"
@@ -158,7 +143,7 @@ export function MobileBottomNav({
                     background: 'color-mix(in srgb, var(--organic-sand-300) 25%, transparent)',
                     color: 'color-mix(in srgb, var(--foreground) 55%, transparent)',
                   }}
-                  aria-label="Fermer la navigation"
+                  aria-label={t('nav.mobileMore.closeAriaLabel')}
                 >
                   <X className="size-3.5" />
                 </button>
@@ -319,7 +304,7 @@ export function MobileBottomNav({
                   : 'text-foreground/40'
               )}
             >
-              Plus
+              {t('nav.mobileMore.label')}
             </span>
           </button>
         </div>

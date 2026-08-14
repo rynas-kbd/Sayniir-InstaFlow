@@ -11,10 +11,12 @@ import type { FlowMeta } from '@/components/flows/builder/flow-canvas'
 import { nodeKeyFromSubject } from '@/lib/ai/lint/types'
 import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
 import { InsightBadge } from '@/components/ai/insight-badge'
+import { getT } from '@/lib/i18n/server'
 
 export default async function FlowBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const t = await getT()
 
   const { data: flow } = await supabase.from('flows').select('*').eq('id', id).single()
   if (!flow) notFound()
@@ -77,7 +79,7 @@ export default async function FlowBuilderPage({ params }: { params: Promise<{ id
       <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border px-4 py-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link href="/flows" className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-3.5" /> Flows
+            <ArrowLeft className="size-3.5" /> {t('flows.builderPage.backLink')}
           </Link>
           <span className="min-w-0 truncate text-sm font-semibold text-foreground">{flow.name}</span>
           {flowLevelInsights.length > 0 && <InsightBadge insights={flowLevelInsights} />}

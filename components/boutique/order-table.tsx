@@ -22,26 +22,38 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useT, useLocale } from '@/components/i18n-provider'
+import type { Locale } from '@/lib/i18n/config'
 import type { Order } from './types'
 
 const PAGE_SIZE = 25
 type OrderCategory = 'to_validate' | 'validated' | 'cancelled'
 
+function toIntlLocale(locale: Locale): string {
+  if (locale === 'ar') return 'ar'
+  if (locale === 'en') return 'en-US'
+  return 'fr-FR'
+}
+
 function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
+  const t = useT()
+  const locale = useLocale()
+  const intlLocale = toIntlLocale(locale)
+
   return (
     <Sheet open={order !== null} onOpenChange={(next) => !next && onClose()}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader className="border-b border-border/40 pb-4">
           <SheetTitle className="font-heading text-lg font-bold flex items-center gap-2">
             <ShoppingCart className="size-5 text-primary" />
-            Détails de la commande
+            {t('boutique.orderTable.detailSheet.title')}
           </SheetTitle>
         </SheetHeader>
         {order && (
           <div className="space-y-6 pt-6 text-sm">
             {/* Client Info */}
             <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">Informations Client</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">{t('boutique.orderTable.detailSheet.customerInfoLabel')}</p>
               <div>
                 <p className="font-bold text-foreground text-base">{order.customer_name}</p>
                 <p className="text-muted-foreground font-mono mt-0.5">{order.customer_phone}</p>
@@ -49,7 +61,9 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
               {order.contact && (order.contact.username || order.contact.full_name) && (
                 <div className="pt-2 border-t border-border/40 mt-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                    Contact CRM : {order.contact.username ? `@${order.contact.username}` : order.contact.full_name}
+                    {t('boutique.orderTable.detailSheet.crmContactLabel', {
+                      value: order.contact.username ? `@${order.contact.username}` : (order.contact.full_name ?? ''),
+                    })}
                   </span>
                 </div>
               )}
@@ -57,7 +71,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 
             {/* Product Details */}
             <div className="space-y-3">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">Détail du produit</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">{t('boutique.orderTable.detailSheet.productLabel')}</p>
               <div className="rounded-xl border border-border/60 p-4 bg-card shadow-sm space-y-3">
                 <div className="flex justify-between items-start gap-4">
                   <div>
@@ -65,23 +79,23 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {order.size && (
                         <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold uppercase">
-                          Taille : {order.size}
+                          {t('boutique.orderTable.detailSheet.sizeLabel', { size: order.size })}
                         </Badge>
                       )}
                       {order.color && (
                         <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold uppercase">
-                          Couleur : {order.color}
+                          {t('boutique.orderTable.detailSheet.colorLabel', { color: order.color })}
                         </Badge>
                       )}
                       <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold">
-                        Quantité : {order.quantity}
+                        {t('boutique.orderTable.detailSheet.quantityLabel', { quantity: order.quantity })}
                       </Badge>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-xs text-muted-foreground">{t('boutique.orderTable.detailSheet.totalLabel')}</p>
                     <p className="font-black text-foreground text-base tabular-nums mt-0.5">
-                      {order.total_amount.toLocaleString('fr-FR')} {order.currency}
+                      {order.total_amount.toLocaleString(intlLocale)} {order.currency}
                     </p>
                   </div>
                 </div>
@@ -90,21 +104,21 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 
             {/* Delivery Info */}
             <div className="space-y-2">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">Livraison & Adresse</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">{t('boutique.orderTable.detailSheet.deliveryLabel')}</p>
               <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="size-4 text-muted-foreground" />
-                  <span className="font-semibold text-foreground">{order.wilaya ?? 'Wilaya non précisée'}</span>
+                  <span className="font-semibold text-foreground">{order.wilaya ?? t('boutique.orderTable.detailSheet.wilayaUnspecified')}</span>
                   {order.delivery_mode && (
                     <Badge className="ml-auto bg-[var(--organic-sage-100)] text-[var(--organic-sage-800)] border border-[var(--organic-sage-300)] rounded-md py-0 px-2 text-[10px] font-bold">
-                      {order.delivery_mode === 'domicile' ? 'À Domicile' : 'Point Retrait'}
+                      {order.delivery_mode === 'domicile' ? t('boutique.orderTable.detailSheet.deliveryModeHome') : t('boutique.orderTable.detailSheet.deliveryModePickup')}
                     </Badge>
                   )}
                 </div>
                 {order.shipping_address ? (
                   <p className="text-muted-foreground text-xs leading-relaxed pl-5 mt-1">{order.shipping_address}</p>
                 ) : (
-                  <p className="text-muted-foreground text-xs italic pl-5 mt-1">Aucune adresse de livraison renseignée.</p>
+                  <p className="text-muted-foreground text-xs italic pl-5 mt-1">{t('boutique.orderTable.detailSheet.noAddress')}</p>
                 )}
               </div>
             </div>
@@ -113,10 +127,10 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
             <div className="flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-3.5" />
-                Créé le {new Date(order.created_at).toLocaleString('fr-FR')}
+                {t('boutique.orderTable.detailSheet.createdAt', { date: new Date(order.created_at).toLocaleString(intlLocale) })}
               </span>
               <span className="flex items-center gap-1">
-                Réf: <span className="font-mono text-[10px]">{order.id.slice(0, 8)}...</span>
+                {t('boutique.orderTable.detailSheet.refLabel')} <span className="font-mono text-[10px]">{order.id.slice(0, 8)}...</span>
               </span>
             </div>
           </div>
@@ -127,6 +141,9 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 }
 
 export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
+  const t = useT()
+  const locale = useLocale()
+  const intlLocale = toIntlLocale(locale)
   const [orders, setOrders] = useState<Order[]>(initialOrders)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<OrderCategory>('to_validate')
@@ -158,27 +175,27 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
       setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
       
       if (updates.shipping_status === 'shipped') {
-        toast.success('Commande validée et marquée comme payée & expédiée !')
+        toast.success(t('boutique.orderTable.toasts.updateSuccessShipped'))
       } else if (updates.shipping_status === 'cancelled') {
-        toast.success('Commande marquée comme annulée')
+        toast.success(t('boutique.orderTable.toasts.updateSuccessCancelled'))
       } else {
-        toast.success('Commande mise à jour')
+        toast.success(t('boutique.orderTable.toasts.updateSuccessGeneric'))
       }
     } catch {
-      toast.error('Impossible de modifier le statut de la commande')
+      toast.error(t('boutique.orderTable.toasts.updateError'))
     }
   }
 
   // Delete handler (alternative action)
   async function deleteOrder(id: string) {
-    if (!confirm('Voulez-vous vraiment supprimer définitivement cette commande ?')) return
+    if (!confirm(t('boutique.orderTable.toasts.deleteConfirm'))) return
     try {
       const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Erreur')
       setOrders((prev) => prev.filter((o) => o.id !== id))
-      toast.success('Commande supprimée définitivement')
+      toast.success(t('boutique.orderTable.toasts.deleteSuccess'))
     } catch {
-      toast.error('Impossible de supprimer la commande')
+      toast.error(t('boutique.orderTable.toasts.deleteError'))
     }
   }
 
@@ -214,8 +231,8 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
     return (
       <EmptyState
         icon={ShoppingCart}
-        title="Aucune commande"
-        description="Les commandes prises par l'IA en conversation apparaîtront ici. Activez la prise de commande dans l'onglet Config IA si ce n'est pas déjà fait."
+        title={t('boutique.orderTable.emptyState.title')}
+        description={t('boutique.orderTable.emptyState.description')}
       />
     )
   }
@@ -230,7 +247,12 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
         {(['to_validate', 'validated', 'cancelled'] as const).map((cat) => {
           const isActive = category === cat
           const isHovered = hoveredSubTab === cat
-          const label = cat === 'to_validate' ? 'À valider' : cat === 'validated' ? 'Validées' : 'Annulées'
+          const label =
+            cat === 'to_validate'
+              ? t('boutique.orderTable.tabs.toValidate')
+              : cat === 'validated'
+                ? t('boutique.orderTable.tabs.validated')
+                : t('boutique.orderTable.tabs.cancelled')
           const count = counts[cat]
           
           return (
@@ -288,28 +310,28 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setVisibleCount(PAGE_SIZE) }}
-            placeholder="Rechercher client, téléphone, produit…"
+            placeholder={t('boutique.orderTable.filters.searchPlaceholder')}
             className="pl-8 h-9 rounded-xl border-border bg-card/60 backdrop-blur-sm"
           />
         </div>
         <div className="flex items-center gap-1.5">
           <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-[140px] h-9 rounded-xl border-border bg-card/60" />
-          <span className="text-muted-foreground text-xs font-semibold">à</span>
+          <span className="text-muted-foreground text-xs font-semibold">{t('boutique.orderTable.filters.dateRangeSeparator')}</span>
           <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setVisibleCount(PAGE_SIZE) }} className="w-[140px] h-9 rounded-xl border-border bg-card/60" />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={Search} title="Aucun résultat" description="Aucune commande ne correspond à ces filtres." />
+        <EmptyState icon={Search} title={t('boutique.orderTable.noResults.title')} description={t('boutique.orderTable.noResults.description')} />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
           {/* Header — desktop only */}
           <div className="hidden grid-cols-[1.4fr_1.4fr_0.8fr_1.2fr_0.8fr] gap-x-4 border-b border-border/80 px-4 py-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/75 bg-muted/15 md:grid">
-            <span className="flex items-center gap-1.5"><Package className="size-3" /> Client</span>
-            <span>Produit</span>
-            <span>Total</span>
-            <span>Statut / Actions</span>
-            <span className="flex items-center gap-1.5"><Calendar className="size-3" /> Date</span>
+            <span className="flex items-center gap-1.5"><Package className="size-3" /> {t('boutique.orderTable.headers.customer')}</span>
+            <span>{t('boutique.orderTable.headers.product')}</span>
+            <span>{t('boutique.orderTable.headers.total')}</span>
+            <span>{t('boutique.orderTable.headers.statusActions')}</span>
+            <span className="flex items-center gap-1.5"><Calendar className="size-3" /> {t('boutique.orderTable.headers.date')}</span>
           </div>
 
           {/* Rows */}
@@ -323,7 +345,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                   .slice(0, 2)
                   .toUpperCase()
 
-                const dateLabel = new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+                const dateLabel = new Date(order.created_at).toLocaleDateString(intlLocale, { day: 'numeric', month: 'short' })
 
                 return (
                   <motion.div 
@@ -351,7 +373,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                             {order.customer_phone}
                             {order.contact && (order.contact.username || order.contact.full_name) && (
                               <span className="ml-1.5 rounded bg-muted/80 border border-border/40 px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
-                                CRM
+                                {t('boutique.orderTable.crmBadge')}
                               </span>
                             )}
                           </p>
@@ -366,13 +388,13 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                         <div className="flex flex-wrap gap-1 items-center mt-0.5 text-xs text-muted-foreground/80 font-medium">
                           {order.size && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.size}</Badge>}
                           {order.color && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.color}</Badge>}
-                          <span>Qté {order.quantity}</span>
+                          <span>{t('boutique.orderTable.qtyLabel', { count: order.quantity })}</span>
                         </div>
                       </div>
 
                       {/* Total price */}
                       <p className="whitespace-nowrap text-sm font-black text-foreground tabular-nums">
-                        {order.total_amount.toLocaleString('fr-FR')}
+                        {order.total_amount.toLocaleString(intlLocale)}
                         <span className="ml-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
                       </p>
 
@@ -387,7 +409,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg flex items-center gap-1.5 px-3 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
                               <Check className="size-3.5 stroke-[2.5]" />
-                              Valider
+                              {t('boutique.orderTable.actions.validate')}
                             </Button>
                             <Button
                               type="button"
@@ -395,7 +417,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               size="icon"
                               onClick={() => updateOrderStatus(order.id, { shipping_status: 'cancelled' })}
                               className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
-                              title="Annuler la commande"
+                              title={t('boutique.orderTable.actions.cancelTooltip')}
                             >
                               <X className="size-4 stroke-[2.5]" />
                             </Button>
@@ -404,7 +426,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                           <div className="flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                               <Check className="size-3 stroke-[2.5]" />
-                              Validée
+                              {t('boutique.orderTable.status.validated')}
                             </span>
                             <Button
                               type="button"
@@ -412,7 +434,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               size="icon"
                               onClick={() => updateOrderStatus(order.id, { shipping_status: 'pending', payment_status: 'pending' })}
                               className="size-7 text-muted-foreground hover:text-foreground rounded-lg"
-                              title="Remettre en attente"
+                              title={t('boutique.orderTable.actions.backToPendingTooltip')}
                             >
                               <Clock className="size-3.5" />
                             </Button>
@@ -421,7 +443,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                           <div className="flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2.5 py-0.5 text-[10px] font-bold text-destructive">
                               <X className="size-3 stroke-[2.5]" />
-                              Annulée
+                              {t('boutique.orderTable.status.cancelled')}
                             </span>
                             <Button
                               type="button"
@@ -429,7 +451,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               size="icon"
                               onClick={() => updateOrderStatus(order.id, { shipping_status: 'pending' })}
                               className="size-7 text-muted-foreground hover:text-foreground rounded-lg"
-                              title="Remettre en attente"
+                              title={t('boutique.orderTable.actions.backToPendingTooltip')}
                             >
                               <Clock className="size-3.5" />
                             </Button>
@@ -439,7 +461,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               size="icon"
                               onClick={() => deleteOrder(order.id)}
                               className="size-7 text-muted-foreground hover:text-destructive rounded-lg"
-                              title="Supprimer définitivement"
+                              title={t('boutique.orderTable.actions.deleteTooltip')}
                             >
                               <Trash2 className="size-3.5" />
                             </Button>
@@ -470,7 +492,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                         
                         <div className="text-right shrink-0">
                           <p className="text-sm font-black text-foreground tabular-nums">
-                            {order.total_amount.toLocaleString('fr-FR')}
+                            {order.total_amount.toLocaleString(intlLocale)}
                             <span className="ml-0.5 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">{order.currency}</span>
                           </p>
                           <p className="text-[10px] text-muted-foreground/80 font-bold tabular-nums mt-0.5">{dateLabel}</p>
@@ -481,7 +503,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                         <span className="font-semibold">{order.product_name}</span>
                         {order.size && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.size}</Badge>}
                         {order.color && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.color}</Badge>}
-                        <span className="text-muted-foreground">· Qté {order.quantity}</span>
+                        <span className="text-muted-foreground">· {t('boutique.orderTable.qtyLabel', { count: order.quantity })}</span>
                       </div>
 
                       <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-3">
@@ -494,7 +516,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg flex items-center gap-1.5 px-3 flex-1 justify-center shadow-sm"
                             >
                               <Check className="size-3.5 stroke-[2.5]" />
-                              Valider
+                              {t('boutique.orderTable.actions.validate')}
                             </Button>
                             <Button
                               type="button"
@@ -504,14 +526,14 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               className="h-8 text-muted-foreground hover:text-destructive border-border rounded-lg flex items-center justify-center px-3"
                             >
                               <X className="size-3.5 stroke-[2.5] mr-1" />
-                              Annuler
+                              {t('boutique.orderTable.actions.cancelButton')}
                             </Button>
                           </>
                         ) : category === 'validated' ? (
                           <div className="flex items-center justify-between w-full">
                             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                               <Check className="size-3 stroke-[2.5]" />
-                              Validée
+                              {t('boutique.orderTable.status.validated')}
                             </span>
                             <Button
                               type="button"
@@ -521,14 +543,14 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                               className="h-8 text-xs text-muted-foreground flex items-center gap-1 px-2.5 rounded-lg"
                             >
                               <Clock className="size-3.5" />
-                              Remettre en attente
+                              {t('boutique.orderTable.actions.backToPending')}
                             </Button>
                           </div>
                         ) : (
                           <div className="flex items-center justify-between w-full">
                             <span className="inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2.5 py-1 text-[10px] font-bold text-destructive">
                               <X className="size-3 stroke-[2.5]" />
-                              Annulée
+                              {t('boutique.orderTable.status.cancelled')}
                             </span>
                             <div className="flex items-center gap-1">
                               <Button
@@ -537,7 +559,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                                 size="icon"
                                 onClick={() => updateOrderStatus(order.id, { shipping_status: 'pending' })}
                                 className="size-8 text-muted-foreground hover:text-foreground rounded-lg"
-                                title="Remettre en attente"
+                                title={t('boutique.orderTable.actions.backToPendingTooltip')}
                               >
                                 <Clock className="size-3.5" />
                               </Button>
@@ -547,7 +569,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                                 size="icon"
                                 onClick={() => deleteOrder(order.id)}
                                 className="size-8 text-muted-foreground hover:text-destructive rounded-lg"
-                                title="Supprimer définitivement"
+                                title={t('boutique.orderTable.actions.deleteTooltip')}
                               >
                                 <Trash2 className="size-3.5" />
                               </Button>
@@ -567,7 +589,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
       {visibleCount < filtered.length && (
         <div className="mt-4 flex justify-center">
           <Button type="button" variant="outline" size="sm" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} className="rounded-xl border-border bg-card hover:bg-muted/10 h-9 font-bold px-4">
-            Charger plus ({filtered.length - visibleCount} restants)
+            {t.plural('boutique.orderTable.loadMore', filtered.length - visibleCount)}
           </Button>
         </div>
       )}

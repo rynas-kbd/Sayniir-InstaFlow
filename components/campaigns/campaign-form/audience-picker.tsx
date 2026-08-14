@@ -10,6 +10,7 @@ import { ManageSegmentsDialog } from '../manage-segments-dialog'
 import type { Tag } from '@/components/contacts/types'
 import type { Segment } from '../types'
 import type { CampaignFormApi } from './types'
+import { useT } from '@/components/i18n-provider'
 
 const COUNT_DEBOUNCE_MS = 400
 
@@ -24,6 +25,7 @@ export function AudiencePicker({
   segments: Segment[]
   onSegmentsChange: (segments: Segment[]) => void
 }) {
+  const t = useT()
   const { form, setField, channelAccountId } = api
   const [count, setCount] = useState<number | null>(null)
   const [loadingCount, setLoadingCount] = useState(false)
@@ -63,24 +65,24 @@ export function AudiencePicker({
   return (
     <FormSection
       icon={Users}
-      label="Audience"
+      label={t('campaigns.audiencePicker.sectionLabel')}
       action={<ManageSegmentsDialog channelAccountId={channelAccountId} tags={tags} segments={segments} onChange={onSegmentsChange} />}
     >
       <OptionPicker
-        name="Cible"
+        name={t('campaigns.audiencePicker.targetName')}
         compact
         value={form.audience_mode}
         onChange={(v) => setField('audience_mode', v)}
         options={[
-          { value: 'all', label: 'Tous les contacts' },
-          { value: 'tags', label: 'Tags' },
-          { value: 'segment', label: 'Segment' },
+          { value: 'all', label: t('campaigns.audiencePicker.all') },
+          { value: 'tags', label: t('campaigns.audiencePicker.tags') },
+          { value: 'segment', label: t('campaigns.audiencePicker.segment') },
         ]}
       />
 
       {form.audience_mode === 'tags' &&
         (tags.length === 0 ? (
-          <p className="pt-1 text-xs text-muted-foreground">Aucun tag créé.</p>
+          <p className="pt-1 text-xs text-muted-foreground">{t('campaigns.audiencePicker.noTags')}</p>
         ) : (
           <div className="flex flex-wrap gap-1.5 pt-1">
             {tags.map((tag) => {
@@ -107,10 +109,10 @@ export function AudiencePicker({
 
       {form.audience_mode === 'segment' && (
         <div className="pt-1">
-          <Field label="Segment" htmlFor="c-segment">
+          <Field label={t('campaigns.audiencePicker.segmentFieldLabel')} htmlFor="c-segment">
             <Select value={form.segment_id || undefined} onValueChange={(v) => setField('segment_id', v ?? '')}>
               <SelectTrigger id="c-segment" className="w-full">
-                <SelectValue placeholder="Choisir un segment" />
+                <SelectValue placeholder={t('campaigns.audiencePicker.choosePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {segments.map((s) => (
@@ -125,7 +127,7 @@ export function AudiencePicker({
       )}
 
       <p className="pt-1 text-[11px] text-muted-foreground">
-        {loadingCount ? 'Calcul…' : count !== null ? `${count} contact(s) seront touchés` : ''}
+        {loadingCount ? t('campaigns.audiencePicker.calculating') : count !== null ? t.plural('campaigns.audiencePicker.contactsReached', count) : ''}
       </p>
     </FormSection>
   )

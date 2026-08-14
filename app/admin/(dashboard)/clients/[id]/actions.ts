@@ -16,6 +16,15 @@ import { checkChannelLimit } from '@/lib/plans/restrictions'
 // renders, not Server Action invocations. requireAdmin() is the only thing
 // standing between a logged-in free-tier user and full admin control. Do not
 // remove it as "redundant" with proxy.ts — it is not redundant.
+//
+// TODO(i18n): every `throw new Error('<French message>')` below is a
+// user-facing string (surfaced via toast.error(err.message) in
+// SubscriptionForm.tsx / WhatsAppManualConnectForm.tsx, or Next's default
+// error UI for the plain <form action> cases). 'use server' files can't call
+// useT()/getT() bound to the caller's browser locale in a way that's safe to
+// thread through a throw, so these are left as literal French strings for
+// now. Proper fix: return/throw stable error CODES here and translate them
+// in the calling Client Component via t('admin.errors.<code>').
 
 /**
  * Mettre à jour l'abonnement d'un client (plan, dates, montant, notes).

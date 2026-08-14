@@ -1,0 +1,58 @@
+export const shared = {
+  accountPicker: {
+    noOtherAccounts: 'لا توجد حسابات أخرى متصلة.',
+  },
+  cardFields: {
+    cardTitleLabel: 'عنوان البطاقة',
+    cardTitlePlaceholder: 'مثال: عرض ترويجي كبير!',
+    subtitleLabel: 'الوصف / العنوان الفرعي',
+    subtitlePlaceholder: 'مثال: استفيدوا من خصم 20% اليوم.',
+    imageLabel: 'صورة (اختياري)',
+    buttonsLabel: 'الأزرار (٣ كحد أقصى)',
+    addButton: '+ إضافة',
+    buttonN: 'الزر {index}',
+    removeButton: 'حذف',
+    buttonTypeLink: 'رابط (URL)',
+    buttonTypePostback: 'زر إجراء (يتابع سير العمل)',
+    buttonTitlePlaceholder: 'نص الزر',
+    buttonUrlPlaceholder: 'رابط URL (https://...)',
+    postbackHint: 'اربطوا هذا الزر بالعقدة التالية في لوحة الرسم لتحديد ما يحدث عند النقر.',
+    noButtons: 'لا توجد أزرار. سينقر المستخدم على البطاقة مباشرة.',
+  },
+  formFooter: {
+    cancel: 'إلغاء',
+    saving: 'جارٍ الحفظ…',
+  },
+  imageUpload: {
+    importFailed: 'فشل الرفع',
+    imported: 'تم رفع الصورة',
+    importError: 'تعذّر رفع الصورة',
+    importing: 'جارٍ الرفع…',
+    importButton: 'رفع صورة',
+    removeImage: 'إزالة الصورة',
+    urlPlaceholder: 'أو الصقوا رابطًا مباشرًا (https://…)',
+  },
+  messagePreview: {
+    placeholder: 'ستظهر رسالتكم هنا…',
+    cardTitlePlaceholder: 'عنوان البطاقة',
+    defaultButton: 'زر',
+  },
+  postPicker: {
+    title: 'اختيار المنشورات',
+    error: 'خطأ: {message}',
+    noPosts: 'لم يُعثر على أي منشور في هذا الحساب.',
+    cancel: 'إلغاء',
+    loadingMore: 'جارٍ التحميل…',
+    loadMore: 'تحميل المزيد',
+    confirm: 'تأكيد ({count})',
+  },
+  postTargetField: {
+    select: 'اختيار المنشورات',
+    hint: 'جميع المنشورات في حال عدم اختيار أي منشور.',
+    edit: 'تعديل',
+  },
+  tagInput: {
+    remove: 'إزالة {tag}',
+    itemCount: '{count} عنصر',
+  },
+}

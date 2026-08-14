@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import type { DayPoint } from '@/lib/analytics/queries'
+import { useT, useLocale } from '@/components/i18n-provider'
+
+const DATE_LOCALE: Record<string, string> = { fr: 'fr-FR', en: 'en-US', ar: 'ar' }
 
 interface TooltipState {
   x: number
@@ -10,6 +13,9 @@ interface TooltipState {
 }
 
 export function MessagesChart({ points }: { points: DayPoint[] }) {
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = DATE_LOCALE[locale] ?? 'fr-FR'
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   const W = 720
@@ -45,7 +51,7 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
   if (isEmpty) {
     return (
       <div className="flex h-56 items-center justify-center rounded-xl border border-dashed border-border text-xs text-muted-foreground">
-        Aucune donnée sur cette période.
+        {t('analytics.messagesChart.empty')}
       </div>
     )
   }
@@ -65,11 +71,11 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
       <div className="mb-4 flex items-center gap-5 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="h-[3px] w-5 rounded-full" style={{ background: 'var(--color-primary)' }} />
-          Messages reçus
+          {t('analytics.messagesChart.legendMessages')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-[3px] w-5 rounded-full" style={{ background: 'var(--color-success, #22c55e)' }} />
-          Réponses auto.
+          {t('analytics.messagesChart.legendReplies')}
         </span>
       </div>
 
@@ -125,7 +131,7 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
             fontSize={9.5}
             fill="var(--color-muted-foreground)"
           >
-            {new Date(points[i].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            {new Date(points[i].date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}
           </text>
         ))}
 
@@ -167,10 +173,10 @@ export function MessagesChart({ points }: { points: DayPoint[] }) {
           }}
         >
           <p className="mb-1 font-semibold text-foreground">
-            {new Date(tooltip.point.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+            {new Date(tooltip.point.date).toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' })}
           </p>
-          <p style={{ color: 'var(--color-primary)' }}>{tooltip.point.messages} messages reçus</p>
-          <p style={{ color: '#22c55e' }}>{tooltip.point.replies} réponses auto.</p>
+          <p style={{ color: 'var(--color-primary)' }}>{t('analytics.messagesChart.tooltipMessages', { count: tooltip.point.messages })}</p>
+          <p style={{ color: '#22c55e' }}>{t('analytics.messagesChart.tooltipReplies', { count: tooltip.point.replies })}</p>
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { FormSection } from '@/components/shared/form-section'
+import { useT } from '@/components/i18n-provider'
 
 export interface TeamMember {
   id: string
@@ -25,6 +26,7 @@ export function TeamMembersCard({
   initialMembers: TeamMember[]
   userPlan?: string
 }) {
+  const t = useT()
   const [members, setMembers] = useState(initialMembers)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -48,16 +50,16 @@ export function TeamMembersCard({
       })
       if (!res.ok) {
         const errData = await res.json()
-        throw new Error(errData.error || "Impossible d'inviter ce membre")
+        throw new Error(errData.error || t('teamMembers.inviteError'))
       }
       const created: TeamMember = await res.json()
       setMembers((prev) => [created, ...prev])
       setName('')
       setEmail('')
       setRole('agent')
-      toast.success('Invitation envoyée')
+      toast.success(t('teamMembers.inviteSuccess'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Impossible d'inviter ce membre")
+      toast.error(err instanceof Error ? err.message : t('teamMembers.inviteError'))
     } finally {
       setSaving(false)
     }
@@ -69,7 +71,7 @@ export function TeamMembersCard({
       if (!res.ok) throw new Error()
       setMembers((prev) => prev.filter((m) => m.id !== id))
     } catch {
-      toast.error('Impossible de supprimer')
+      toast.error(t('teamMembers.removeError'))
     }
   }
 
@@ -81,34 +83,36 @@ export function TeamMembersCard({
             <Users className="size-4" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Équipe</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Ajoutez des membres pour leur assigner des conversations dans l&apos;inbox.
-            </p>
+            <p className="text-sm font-semibold text-foreground">{t('teamMembers.cardTitle')}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('teamMembers.cardDescription')}</p>
           </div>
         </div>
 
-        <FormSection icon={List} label="Membres">
+        <FormSection icon={List} label={t('teamMembers.membersLabel')}>
           <div className="space-y-2">
             {members.length === 0 ? (
-              <p className="text-xs italic text-muted-foreground">Aucun membre ajouté.</p>
+              <p className="text-xs italic text-muted-foreground">{t('teamMembers.noMembers')}</p>
             ) : (
               members.map((m) => (
                 <div key={m.id} className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2">
                   <div>
                     <p className="text-[13px] font-semibold text-foreground">
                       {m.name}
-                      {m.role && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">({m.role === 'admin' ? 'admin' : 'agent'})</span>}
+                      {m.role && (
+                        <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
+                          ({m.role === 'admin' ? t('teamMembers.roleLabelAdmin') : t('teamMembers.roleLabelAgent')})
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      {m.email} · {m.accepted_at ? 'Actif' : 'Invité — en attente'}
+                      {m.email} · {m.accepted_at ? t('teamMembers.statusActive') : t('teamMembers.statusPending')}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeMember(m.id)}
                     className="cursor-pointer rounded p-1.5 text-muted-foreground hover:text-destructive"
-                    aria-label="Retirer"
+                    aria-label={t('teamMembers.removeAriaLabel')}
                   >
                     <Trash2 className="size-3.5" />
                   </button>
@@ -120,27 +124,34 @@ export function TeamMembersCard({
 
         {!isBusiness ? (
           <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
-            ⚠️ Le partage d&apos;inbox et l&apos;ajout de membres d&apos;équipe sont réservés au plan <strong>Business</strong>.
+            {t('teamMembers.businessOnlyWarningPrefix')} <strong>Business</strong>
+            {t('teamMembers.businessOnlyWarningSuffix')}
           </div>
         ) : isLimitReached ? (
           <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning-foreground">
-            ⚠️ Limite de 10 membres d&apos;équipe atteinte pour votre plan Business.
+            {t('teamMembers.limitReachedWarning')}
           </div>
         ) : (
-          <FormSection icon={UserPlus} label="Inviter un membre">
+          <FormSection icon={UserPlus} label={t('teamMembers.inviteLabel')}>
             <div className="flex items-center gap-1.5">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" className="text-xs" />
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="text-xs" />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('teamMembers.namePlaceholder')} className="text-xs" />
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('teamMembers.emailPlaceholder')} className="text-xs" />
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'admin' | 'agent')}
                 className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                aria-label="Rôle"
+                aria-label={t('teamMembers.roleAriaLabel')}
               >
-                <option value="agent">Agent</option>
-                <option value="admin">Admin</option>
+                <option value="agent">{t('teamMembers.roleOptionAgent')}</option>
+                <option value="admin">{t('teamMembers.roleOptionAdmin')}</option>
               </select>
-              <Button type="button" size="icon-sm" onClick={addMember} disabled={saving || !name.trim() || !email.trim()} aria-label="Inviter">
+              <Button
+                type="button"
+                size="icon-sm"
+                onClick={addMember}
+                disabled={saving || !name.trim() || !email.trim()}
+                aria-label={t('teamMembers.inviteAriaLabel')}
+              >
                 <Plus className="size-3.5" />
               </Button>
             </div>

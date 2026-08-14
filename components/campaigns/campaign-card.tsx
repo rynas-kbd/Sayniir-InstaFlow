@@ -22,40 +22,35 @@ import type { Campaign, Segment } from './types'
 import type { Tag } from '@/components/contacts/types'
 import { InsightBadge } from '@/components/ai/insight-badge'
 import type { AiInsight } from '@/components/ai/types'
+import { useT, useLocale } from '@/components/i18n-provider'
 
 // Editing content (name/message/audience/schedule/card) doesn't make sense once a campaign is
 // already dispatching or has finished — only these statuses expose the "Modifier" action.
 const EDITABLE_STATUSES: Campaign['status'][] = ['draft', 'scheduled', 'cancelled', 'failed']
 
-// Status styling config
-const STATUS_CONFIG = {
+// Status styling config (dot/badge only — labels are resolved via t() at render time)
+const STATUS_STYLES = {
   draft: {
-    label: 'Brouillon',
     dot: 'bg-muted-foreground/50',
     badge: 'bg-muted text-muted-foreground border-border'
   },
   scheduled: {
-    label: 'Planifiée',
     dot: 'bg-warning animate-pulse',
     badge: 'bg-warning/10 text-warning border-warning/20'
   },
   sending: {
-    label: 'Envoi en cours',
     dot: 'bg-primary animate-ping',
     badge: 'bg-primary/5 text-primary border-primary/20 dark:bg-primary/10 dark:text-primary dark:border-primary/30'
   },
   sent: {
-    label: 'Envoyée',
     dot: 'bg-success',
     badge: 'bg-success/10 text-success border-success/20'
   },
   cancelled: {
-    label: 'Annulée',
     dot: 'bg-muted-foreground/50',
     badge: 'bg-muted text-muted-foreground border-border'
   },
   failed: {
-    label: 'Échec',
     dot: 'bg-destructive',
     badge: 'bg-destructive/5 text-destructive border-destructive/20 dark:bg-destructive/10 dark:text-destructive dark:border-destructive/30'
   },
@@ -81,6 +76,8 @@ export function CampaignCard({
   /** Every account the caller could duplicate this campaign into — see POST /api/campaigns/[id]/duplicate. */
   allAccounts?: PickableAccount[]
 }) {
+  const t = useT()
+  const locale = useLocale()
   const router = useRouter()
   const [campaign, setCampaign] = useState(initialCampaign)
   const [segments, setSegments] = useState(initialSegments)
@@ -106,13 +103,11 @@ export function CampaignCard({
         body: JSON.stringify({ accountIds: duplicateTargetIds }),
       })
       if (!res.ok) throw new Error()
-      toast.success(
-        `Dupliquée vers ${duplicateTargetIds.length} compte(s) — pensez à choisir une audience pour chaque copie.`
-      )
+      toast.success(t.plural('campaigns.card.toastDuplicateSuccess', duplicateTargetIds.length))
       setDuplicateTargetIds([])
       router.refresh()
     } catch {
-      toast.error('Impossible de dupliquer la campagne')
+      toast.error(t('campaigns.card.toastDuplicateError'))
     } finally {
       setDuplicating(false)
     }
@@ -130,7 +125,8 @@ export function CampaignCard({
     router.refresh()
   }
 
-  const cfg = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.draft
+  const cfg = STATUS_STYLES[campaign.status] ?? STATUS_STYLES.draft
+  const statusLabel = t(`campaigns.card.status.${campaign.status in STATUS_STYLES ? campaign.status : 'draft'}`)
 
   async function launchNow() {
     setBusy(true)
@@ -143,10 +139,10 @@ export function CampaignCard({
       if (!res.ok) throw new Error()
       const updated = await res.json()
       setCampaign(updated)
-      toast.success('🚀 Campagne lancée !')
+      toast.success(t('campaigns.card.toastLaunchSuccess'))
       setTimeout(() => window.location.reload(), 1000)
     } catch {
-      toast.error('Impossible de lancer la campagne')
+      toast.error(t('campaigns.card.toastLaunchError'))
     } finally {
       setBusy(false)
     }
@@ -164,10 +160,10 @@ export function CampaignCard({
       if (!res.ok) throw new Error()
       const updated = await res.json()
       setCampaign(updated)
-      toast.success('🔁 Campagne renvoyée à tous les contacts !')
+      toast.success(t('campaigns.card.toastRelaunchSuccess'))
       setTimeout(() => window.location.reload(), 1000)
     } catch {
-      toast.error('Impossible de renvoyer la campagne')
+      toast.error(t('campaigns.card.toastRelaunchError'))
     } finally {
       setBusy(false)
     }
@@ -183,9 +179,9 @@ export function CampaignCard({
       })
       if (!res.ok) throw new Error()
       setCampaign((prev) => ({ ...prev, status: 'cancelled' }))
-      toast.success('Campagne annulée')
+      toast.success(t('campaigns.card.toastCancelSuccess'))
     } catch {
-      toast.error('Impossible d’annuler la campagne')
+      toast.error(t('campaigns.card.toastCancelError'))
     } finally {
       setBusy(false)
     }
@@ -197,7 +193,7 @@ export function CampaignCard({
       if (!res.ok) throw new Error()
       window.location.reload()
     } catch {
-      toast.error('Impossible de supprimer la campagne')
+      toast.error(t('campaigns.card.toastDeleteError'))
     }
   }
 
@@ -206,7 +202,8 @@ export function CampaignCard({
   const progressPercent = totalRecipients > 0 ? Math.round((sendCounts.sent / totalRecipients) * 100) : 0
   const hasCounts = totalRecipients > 0
 
-  const createdAt = new Date(campaign.created_at).toLocaleDateString('fr-FR', {
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
+  const createdAt = new Date(campaign.created_at).toLocaleDateString(dateLocale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -235,7 +232,7 @@ export function CampaignCard({
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge}`}
               >
                 <span className={`size-1.5 rounded-full ${cfg.dot}`} />
-                {cfg.label}
+                {statusLabel}
               </span>
               <InsightBadge insights={insights} />
             </div>
@@ -244,19 +241,19 @@ export function CampaignCard({
             {campaign.status === 'draft' && (
               <Button size="xs" onClick={launchNow} disabled={busy} className="h-7 gap-1">
                 {busy ? <Loader2 className="size-3 animate-spin" /> : <Rocket className="size-3" />}
-                Lancer
+                {t('campaigns.card.launch')}
               </Button>
             )}
             {(campaign.status === 'scheduled' || campaign.status === 'sending') && (
               <Button size="xs" variant="outline" onClick={cancel} disabled={busy} className="h-7 gap-1 border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive">
                 <Ban className="size-3" />
-                Annuler
+                {t('campaigns.card.cancel')}
               </Button>
             )}
             {(campaign.status === 'sent' || campaign.status === 'failed' || campaign.status === 'cancelled') && (
               <Button size="xs" variant="outline" onClick={() => setRelaunchOpen(true)} disabled={busy} className="h-7 gap-1">
                 {busy ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
-                Renvoyer
+                {t('campaigns.card.resend')}
               </Button>
             )}
           </div>
@@ -272,15 +269,15 @@ export function CampaignCard({
             <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
               <Users className="size-3 shrink-0" />
               {campaign.audience_tag_ids && campaign.audience_tag_ids.length > 0
-                ? `${campaign.audience_tag_ids.length} tag(s) d'audience`
-                : 'Tous les abonnés'}
+                ? t.plural('campaigns.card.audienceTags', campaign.audience_tag_ids.length)
+                : t('campaigns.card.audienceAll')}
             </p>
           </div>
 
           {/* Message Template Preview Box */}
           <div className="flex flex-col gap-1.5 pt-0.5">
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
-              Modèle de message
+              {t('campaigns.card.messageTemplate')}
             </span>
             <div className="rounded-lg bg-muted/40 p-2.5 text-xs text-foreground/90 border border-border/40 min-h-[44px]">
               <p className="line-clamp-2 leading-relaxed italic">&ldquo;{campaign.message_template}&rdquo;</p>
@@ -291,7 +288,7 @@ export function CampaignCard({
           {hasCounts && (
             <div className="mt-1 flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-[10px]">
-                <span className="font-medium text-muted-foreground">Progression d&apos;envoi</span>
+                <span className="font-medium text-muted-foreground">{t('campaigns.card.progressLabel')}</span>
                 <span className="font-semibold text-foreground">{progressPercent}%</span>
               </div>
               {/* Progress bar */}
@@ -305,15 +302,15 @@ export function CampaignCard({
               </div>
               {/* Status detail numbers */}
               <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 font-medium">
-                <span>{sendCounts.sent} envoyé(s)</span>
-                <span>{sendCounts.pending} en attente</span>
-                {sendCounts.failed > 0 && <span className="text-destructive/90">{sendCounts.failed} échec(s)</span>}
+                <span>{t.plural('campaigns.card.sentCount', sendCounts.sent)}</span>
+                <span>{t('campaigns.card.pendingCount', { count: sendCounts.pending })}</span>
+                {sendCounts.failed > 0 && <span className="text-destructive/90">{t.plural('campaigns.card.failedCount', sendCounts.failed)}</span>}
               </div>
             </div>
           )}
 
           {/* Date */}
-          <p className="mt-auto pt-1 text-[10px] text-muted-foreground/60">Créée le {createdAt}</p>
+          <p className="mt-auto pt-1 text-[10px] text-muted-foreground/60">{t('campaigns.card.createdAt', { date: createdAt })}</p>
         </div>
 
         {/* Footer actions */}
@@ -323,10 +320,10 @@ export function CampaignCard({
               <button
                 onClick={() => setEditing(true)}
                 className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                aria-label="Modifier"
+                aria-label={t('campaigns.card.editAria')}
               >
                 <Edit2 className="size-3.5" />
-                Modifier
+                {t('campaigns.card.edit')}
               </button>
             )}
             {otherAccounts.length > 0 && (
@@ -335,22 +332,22 @@ export function CampaignCard({
                   render={
                     <button
                       className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                      aria-label="Dupliquer vers un autre compte"
+                      aria-label={t('campaigns.card.duplicateAria')}
                     />
                   }
                 >
                   <Copy className="size-3.5" />
-                  Dupliquer
+                  {t('campaigns.card.duplicate')}
                 </PopoverTrigger>
                 <PopoverContent align="start">
-                  <p className="font-semibold text-foreground">Dupliquer vers…</p>
+                  <p className="font-semibold text-foreground">{t('campaigns.card.duplicatePopoverTitle')}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Le message et la carte sont copiés ; l&apos;audience devra être reconfigurée pour chaque copie.
+                    {t('campaigns.card.duplicatePopoverDescription')}
                   </p>
                   <AccountChipPicker accounts={otherAccounts} selectedIds={duplicateTargetIds} onToggle={toggleDuplicateTarget} />
                   <Button size="sm" onClick={duplicateToAccounts} disabled={duplicating || duplicateTargetIds.length === 0}>
                     {duplicating ? <Loader2 className="size-3 animate-spin" /> : <Copy className="size-3" />}
-                    Dupliquer ({duplicateTargetIds.length})
+                    {t('campaigns.card.duplicateButton', { count: duplicateTargetIds.length })}
                   </Button>
                 </PopoverContent>
               </Popover>
@@ -359,10 +356,10 @@ export function CampaignCard({
           <button
             onClick={() => setConfirmOpen(true)}
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            aria-label="Supprimer"
+            aria-label={t('campaigns.card.deleteAria')}
           >
             <Trash2 className="size-3.5" />
-            Supprimer
+            {t('campaigns.card.deleteLabel')}
           </button>
         </div>
       </div>
@@ -383,18 +380,18 @@ export function CampaignCard({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer « {campaign.name} » ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('campaigns.card.deleteDialogTitle', { name: campaign.name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. L&apos;historique des envois de cette campagne sera définitivement supprimé.
+              {t('campaigns.card.deleteDialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('campaigns.card.dialogCancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Supprimer la campagne
+              {t('campaigns.card.confirmDelete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -403,15 +400,15 @@ export function CampaignCard({
       <AlertDialog open={relaunchOpen} onOpenChange={setRelaunchOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Renvoyer « {campaign.name} » ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('campaigns.card.relaunchDialogTitle', { name: campaign.name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              L&apos;historique des envois précédents sera effacé et la campagne sera renvoyée à <strong>tous les contacts</strong> immédiatement.
+              {t('campaigns.card.relaunchDescriptionPrefix')} <strong>{t('campaigns.card.relaunchDescriptionBold')}</strong> {t('campaigns.card.relaunchDescriptionSuffix')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('campaigns.card.dialogCancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={relaunchNow}>
-              🔁 Renvoyer maintenant
+              {t('campaigns.card.relaunchConfirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

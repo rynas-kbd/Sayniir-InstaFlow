@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { getAvatarColor } from '@/lib/avatar-color'
 import { WidgetSnippetPopover } from './widget-snippet-popover'
+import { useT, useLocale } from '@/components/i18n-provider'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,13 +34,17 @@ export interface ChannelAccount {
   connected_at: string
 }
 
-const PLATFORM_LABEL: Record<string, string> = {
-  instagram: 'Instagram',
-  messenger: 'Messenger',
-  whatsapp: 'WhatsApp',
-}
+const DATE_LOCALE: Record<string, string> = { fr: 'fr-FR', en: 'en-US', ar: 'ar' }
 
 export function AccountCard({ account }: { account: ChannelAccount }) {
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = DATE_LOCALE[locale] ?? 'fr-FR'
+  const PLATFORM_LABEL: Record<string, string> = {
+    instagram: t('accounts.platformLabels.instagram'),
+    messenger: t('accounts.platformLabels.messenger'),
+    whatsapp: t('accounts.platformLabels.whatsapp'),
+  }
   const router = useRouter()
   const [loading, setLoading] = useState<'toggle' | 'delete' | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -51,16 +56,16 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
 
   const tone: StatusTone = !account.is_active || isExpired ? 'destructive' : isExpiringSoon ? 'warning' : 'success'
   const tokenLabel = !account.is_active
-    ? 'Inactif'
+    ? t('accounts.card.statusInactive')
     : isExpired
-      ? 'Expiré'
+      ? t('accounts.card.statusExpired')
       : isExpiringSoon
-        ? `${daysLeft}j restants`
-        : 'Actif'
+        ? t('accounts.card.statusDaysLeft', { count: daysLeft })
+        : t('accounts.card.statusActive')
 
   const accountLabel = account.instagram_username
     ? `@${account.instagram_username}`
-    : (account.page_name ?? account.phone_number ?? 'ce compte')
+    : (account.page_name ?? account.phone_number ?? t('accounts.card.fallbackLabel'))
 
   const displayName = account.page_name ?? PLATFORM_LABEL[account.platform]
 
@@ -73,10 +78,10 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
         body: JSON.stringify({ is_active: !account.is_active }),
       })
       if (!res.ok) throw new Error('Toggle request failed')
-      toast.success(account.is_active ? 'Compte désactivé' : 'Compte activé')
+      toast.success(account.is_active ? t('accounts.card.toastDeactivated') : t('accounts.card.toastActivated'))
       router.refresh()
     } catch {
-      toast.error('Impossible de modifier le statut du compte')
+      toast.error(t('accounts.card.toastToggleError'))
     } finally {
       setLoading(null)
     }
@@ -87,11 +92,11 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
     try {
       const res = await fetch(`/api/accounts/${account.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete request failed')
-      toast.success('Compte déconnecté')
+      toast.success(t('accounts.card.toastDisconnected'))
       setConfirmOpen(false)
       router.refresh()
     } catch {
-      toast.error('Impossible de déconnecter le compte')
+      toast.error(t('accounts.card.toastDisconnectError'))
     } finally {
       setLoading(null)
     }
@@ -138,7 +143,7 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="Ouvrir sur Instagram"
+                    aria-label={t('accounts.card.openOnInstagram')}
                   >
                     <ExternalLink className="size-3" />
                   </a>
@@ -146,16 +151,16 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
               </div>
               <p className="truncate text-xs text-muted-foreground">
                 {account.platform === 'whatsapp'
-                  ? (account.phone_number ?? 'Numéro non disponible')
+                  ? (account.phone_number ?? t('accounts.card.phoneUnavailable'))
                   : account.instagram_username
                     ? `@${account.instagram_username}`
-                    : `ID: ${account.page_id}`}
+                    : t('accounts.card.idLabel', { id: account.page_id ?? '' })}
               </p>
             </div>
           </div>
 
           <p className="text-[11px] text-muted-foreground/60">
-            Connecté le {new Date(account.connected_at).toLocaleDateString('fr-FR')}
+            {t('accounts.card.connectedOn', { date: new Date(account.connected_at).toLocaleDateString(dateLocale) })}
           </p>
         </div>
 
@@ -164,10 +169,10 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
             onClick={() => setConfirmOpen(true)}
             disabled={loading !== null}
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Déconnecter"
+            aria-label={t('accounts.card.disconnect')}
           >
             <Trash2 className="size-3.5" />
-            Déconnecter
+            {t('accounts.card.disconnect')}
           </button>
 
           <div className="flex items-center gap-1">
@@ -177,7 +182,7 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
             />
             <Button variant="outline" size="sm" onClick={handleToggle} disabled={loading !== null} className="h-7 gap-1.5 text-xs">
               <Power className="size-3.5" />
-              {account.is_active ? 'Désactiver' : 'Activer'}
+              {account.is_active ? t('accounts.card.deactivate') : t('accounts.card.activate')}
             </Button>
           </div>
         </div>
@@ -186,19 +191,19 @@ export function AccountCard({ account }: { account: ChannelAccount }) {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Déconnecter le compte</AlertDialogTitle>
+            <AlertDialogTitle>{t('accounts.card.confirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Déconnecter {accountLabel} ? Cette action est irréversible.
+              {t('accounts.card.confirmDescription', { account: accountLabel })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={loading === 'delete'}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading === 'delete'}>{t('accounts.card.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisconnect}
               disabled={loading === 'delete'}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Déconnecter
+              {t('accounts.card.disconnect')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

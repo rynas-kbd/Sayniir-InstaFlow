@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useT, useLocale } from '@/components/i18n-provider'
 import type { Contact, Tag } from './types'
 
 // Dynamic premium avatar colors
@@ -49,6 +50,9 @@ export function ContactTable({
   initialContacts: Contact[]
   tags: Tag[]
 }) {
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
   const [contacts, setContacts] = useState(initialContacts)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -71,7 +75,7 @@ export function ContactTable({
         )
       }
     } catch {
-      toast.error('Impossible de mettre à jour les tags')
+      toast.error(t('contacts.table.toastTagUpdateError'))
     }
   }
 
@@ -84,9 +88,9 @@ export function ContactTable({
       })
       if (!res.ok) throw new Error('Erreur')
       setContacts((prev) => prev.map((c) => (c.id === contactId ? { ...c, custom_fields: fields } : c)))
-      toast.success('Champs personnalisés enregistrés')
+      toast.success(t('contacts.table.toastCustomFieldsSaved'))
     } catch {
-      toast.error('Impossible d\'enregistrer les champs')
+      toast.error(t('contacts.table.toastCustomFieldsError'))
     }
   }
 
@@ -95,9 +99,9 @@ export function ContactTable({
       const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Erreur')
       setContacts((prev) => prev.filter((c) => c.id !== id))
-      toast.success('Contact supprimé')
+      toast.success(t('contacts.table.toastContactDeleted'))
     } catch {
-      toast.error('Impossible de supprimer le contact')
+      toast.error(t('contacts.table.toastContactDeleteError'))
     } finally {
       setDeletingId(null)
     }
@@ -107,8 +111,8 @@ export function ContactTable({
     return (
       <EmptyState
         icon={Users}
-        title="Aucun contact"
-        description="Les contacts de votre CRM apparaîtront automatiquement dès leur premier message, ou importez-en un fichier CSV via le bouton en haut de page."
+        title={t('contacts.table.emptyTitle')}
+        description={t('contacts.table.emptyDescription')}
       />
     )
   }
@@ -123,10 +127,10 @@ export function ContactTable({
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow className="border-b border-border/60">
-            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">Client</TableHead>
-            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">Tags</TableHead>
-            <TableHead className="hidden font-semibold text-foreground/80 px-5 py-4 sm:table-cell">Dernier inbound</TableHead>
-            <TableHead className="text-right font-semibold text-foreground/80 px-3 sm:px-5 py-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnClient')}</TableHead>
+            <TableHead className="font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnTags')}</TableHead>
+            <TableHead className="hidden font-semibold text-foreground/80 px-5 py-4 sm:table-cell">{t('contacts.table.columnLastInbound')}</TableHead>
+            <TableHead className="text-right font-semibold text-foreground/80 px-3 sm:px-5 py-4">{t('contacts.table.columnActions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-border/40">
@@ -175,7 +179,7 @@ export function ContactTable({
                             variant="ghost"
                             size="icon-sm"
                             className="size-6 rounded-full border border-border/60 hover:bg-muted hover:border-border"
-                            aria-label="Ajouter un tag"
+                            aria-label={t('contacts.table.addTagAria')}
                           />
                         }
                       >
@@ -183,10 +187,10 @@ export function ContactTable({
                       </PopoverTrigger>
                       <PopoverContent className="w-52 p-1.5" align="start">
                         <div className="mb-1.5 px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Gérer les tags
+                          {t('contacts.table.manageTagsHeader')}
                         </div>
                         {tags.length === 0 ? (
-                          <p className="p-2 text-xs text-muted-foreground italic">Aucun tag créé.</p>
+                          <p className="p-2 text-xs text-muted-foreground italic">{t('contacts.table.noTagsCreated')}</p>
                         ) : (
                           <div className="space-y-0.5 max-h-52 overflow-y-auto">
                             {tags.map((tag) => {
@@ -215,7 +219,7 @@ export function ContactTable({
                 {/* Last Message Inbound */}
                 <TableCell className="hidden px-5 py-3.5 text-xs text-muted-foreground/80 font-medium sm:table-cell">
                   {contact.last_inbound_at ? (
-                    new Date(contact.last_inbound_at).toLocaleDateString('fr-FR', {
+                    new Date(contact.last_inbound_at).toLocaleDateString(dateLocale, {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
@@ -234,7 +238,7 @@ export function ContactTable({
                       size="icon"
                       onClick={() => setDeletingId(contact.id)}
                       className="size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                      aria-label="Supprimer contact"
+                      aria-label={t('contacts.table.deleteContactAria')}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -271,11 +275,12 @@ export function ContactTable({
                     )}
                     {contact.last_inbound_at && (
                       <div className="mt-0.5 text-[11px] text-muted-foreground/70">
-                        Dernier inbound :{' '}
-                        {new Date(contact.last_inbound_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
+                        {t('contacts.table.lastInboundMobile', {
+                          date: new Date(contact.last_inbound_at).toLocaleDateString(dateLocale, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          }),
                         })}
                       </div>
                     )}
@@ -313,7 +318,7 @@ export function ContactTable({
                         variant="ghost"
                         size="icon-sm"
                         className="size-8 rounded-full border border-border/60 hover:bg-muted hover:border-border"
-                        aria-label="Ajouter un tag"
+                        aria-label={t('contacts.table.addTagAria')}
                       />
                     }
                   >
@@ -321,10 +326,10 @@ export function ContactTable({
                   </PopoverTrigger>
                   <PopoverContent className="w-52 p-1.5" align="start">
                     <div className="mb-1.5 px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Gérer les tags
+                      {t('contacts.table.manageTagsHeader')}
                     </div>
                     {tags.length === 0 ? (
-                      <p className="p-2 text-xs text-muted-foreground italic">Aucun tag créé.</p>
+                      <p className="p-2 text-xs text-muted-foreground italic">{t('contacts.table.noTagsCreated')}</p>
                     ) : (
                       <div className="space-y-0.5 max-h-52 overflow-y-auto">
                         {tags.map((tag) => {
@@ -356,18 +361,18 @@ export function ContactTable({
       <AlertDialog open={deletingId !== null} onOpenChange={(next) => !next && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce contact ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('contacts.table.deleteDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Toutes les données, tags et historiques de messages associés à ce contact seront supprimés.
+              {t('contacts.table.deleteDialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('contacts.table.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingId && deleteContact(deletingId)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Supprimer
+              {t('contacts.table.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -383,6 +388,7 @@ function CustomFieldsPopover({
   contact: Contact
   onSave: (fields: Record<string, string>) => void | Promise<void>
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [rows, setRows] = useState<Array<{ key: string; value: string }>>([])
   const [saving, setSaving] = useState(false)
@@ -419,7 +425,7 @@ function CustomFieldsPopover({
             variant="ghost"
             size="icon"
             className="relative size-8 rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-primary/10 hover:text-primary focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
-            aria-label="Champs personnalisés"
+            aria-label={t('contacts.table.customFieldsAria')}
           />
         }
       >
@@ -432,7 +438,7 @@ function CustomFieldsPopover({
       </PopoverTrigger>
       <PopoverContent className="w-72 p-3" align="end">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Champs personnalisés
+          {t('contacts.table.customFieldsHeader')}
         </div>
         <div className="space-y-2">
           {rows.map((row, idx) => (
@@ -444,7 +450,7 @@ function CustomFieldsPopover({
                   copy[idx] = { ...copy[idx], key: e.target.value }
                   setRows(copy)
                 }}
-                placeholder="clé (ex: budget)"
+                placeholder={t('contacts.table.fieldKeyPlaceholder')}
                 className="h-8 text-xs"
               />
               <Input
@@ -454,14 +460,14 @@ function CustomFieldsPopover({
                   copy[idx] = { ...copy[idx], value: e.target.value }
                   setRows(copy)
                 }}
-                placeholder="valeur"
+                placeholder={t('contacts.table.fieldValuePlaceholder')}
                 className="h-8 text-xs"
               />
               <button
                 type="button"
                 onClick={() => setRows(rows.filter((_, i) => i !== idx))}
                 className="-m-1 shrink-0 cursor-pointer rounded-full p-1 text-muted-foreground hover:text-destructive"
-                aria-label="Supprimer ce champ"
+                aria-label={t('contacts.table.removeFieldAria')}
               >
                 <X className="size-3.5" />
               </button>
@@ -474,10 +480,10 @@ function CustomFieldsPopover({
             onClick={() => setRows([...rows, { key: '', value: '' }])}
             className="cursor-pointer text-xs font-medium text-primary hover:underline"
           >
-            + Ajouter un champ
+            {t('contacts.table.addField')}
           </button>
           <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? 'Enregistrement…' : 'Enregistrer'}
+            {saving ? t('contacts.table.saving') : t('contacts.table.save')}
           </Button>
         </div>
       </PopoverContent>

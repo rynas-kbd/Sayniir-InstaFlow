@@ -10,13 +10,16 @@ import { FlowsEnabledToggle } from '@/components/flows/flows-enabled-toggle'
 import type { FlowSummary } from '@/components/flows/types'
 import { flowIdFromSubject } from '@/lib/ai/lint/types'
 import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
+import { getT } from '@/lib/i18n/server'
+import type { Translator } from '@/lib/i18n/translate'
 
 export default async function FlowsPage() {
   const supabase = await createClient()
   const { accounts, active: account, scope } = await resolveActiveAccount()
+  const t = await getT()
 
   if (!account) {
-    return <NoAccountState description="Connectez un compte Instagram, Messenger ou WhatsApp pour créer des flows." />
+    return <NoAccountState description={t('flows.page.noAccountDescription')} />
   }
 
   const accountIds = scope === 'all' ? accounts.map((a) => a.id) : [account.id]
@@ -65,23 +68,23 @@ export default async function FlowsPage() {
       <div className="glass-banner border-b border-border/40 px-6 py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Flows</h1>
+            <h1 className="text-xl font-semibold text-foreground">{t('flows.page.title')}</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Automatisez vos conversations avec des flux visuels intelligents.
+              {t('flows.page.subtitle')}
             </p>
           </div>
           <Button render={<Link href="/flows/new" />}>
             <Plus className="size-4" />
-            Nouveau flow
+            {t('flows.page.newFlow')}
           </Button>
         </div>
 
         {/* Stats row */}
         <div className="mt-5 flex flex-wrap gap-3">
-          <StatPill icon={Workflow} label="Flows créés" value={safeFlows.length} />
-          <StatPill icon={Zap} label="Actifs" value={activeCount} highlight />
-          <StatPill icon={TrendingUp} label="Déclenchements" value={totalRuns} />
-          <StatPill icon={TrendingUp} label="Complétés" value={completedRuns} />
+          <StatPill icon={Workflow} label={t('flows.page.stats.created')} value={safeFlows.length} />
+          <StatPill icon={Zap} label={t('flows.page.stats.active')} value={activeCount} highlight />
+          <StatPill icon={TrendingUp} label={t('flows.page.stats.triggered')} value={totalRuns} />
+          <StatPill icon={TrendingUp} label={t('flows.page.stats.completed')} value={completedRuns} />
         </div>
       </div>
 
@@ -95,7 +98,7 @@ export default async function FlowsPage() {
 
         <div className="mt-5">
           {safeFlows.length === 0 ? (
-            <FlowsEmptyState />
+            <FlowsEmptyState t={t} />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {safeFlows.map((flow) => (
@@ -116,7 +119,7 @@ export default async function FlowsPage() {
                 <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
                   <Plus className="size-5" />
                 </div>
-                <span className="text-sm font-medium">Nouveau flow</span>
+                <span className="text-sm font-medium">{t('flows.page.newFlow')}</span>
               </Link>
             </div>
           )}
@@ -152,30 +155,31 @@ function StatPill({
   )
 }
 
-function FlowsEmptyState() {
+function FlowsEmptyState({ t }: { t: Translator }) {
+  const tips = [
+    { emoji: '💬', title: t('flows.page.emptyState.tips.message.title'), desc: t('flows.page.emptyState.tips.message.desc') },
+    { emoji: '🔀', title: t('flows.page.emptyState.tips.conditions.title'), desc: t('flows.page.emptyState.tips.conditions.desc') },
+    { emoji: '⏱️', title: t('flows.page.emptyState.tips.delays.title'), desc: t('flows.page.emptyState.tips.delays.desc') },
+  ]
+
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 px-8 py-16 text-center">
       <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10">
         <Workflow className="size-7 text-primary" />
       </div>
-      <h3 className="text-base font-semibold text-foreground">Créez votre premier flow</h3>
+      <h3 className="text-base font-semibold text-foreground">{t('flows.page.emptyState.title')}</h3>
       <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
-        Les flows vous permettent d&apos;automatiser vos réponses avec des scénarios visuels :
-        messages, conditions, délais et bien plus.
+        {t('flows.page.emptyState.description')}
       </p>
       <div className="mt-6">
         <Button render={<Link href="/flows/new" />}>
           <Plus className="size-4" />
-          Nouveau flow
+          {t('flows.page.newFlow')}
         </Button>
       </div>
       {/* Tips */}
       <div className="mt-8 grid max-w-lg gap-3 text-left sm:grid-cols-3">
-        {[
-          { emoji: '💬', title: 'Message auto', desc: 'Répondez instantanément à tout message' },
-          { emoji: '🔀', title: 'Conditions', desc: 'Adaptez le scénario selon les mots-clés' },
-          { emoji: '⏱️', title: 'Délais', desc: 'Attendez avant d\'envoyer le message suivant' },
-        ].map((tip) => (
+        {tips.map((tip) => (
           <div key={tip.title} className="glass-stat rounded-2xl p-3.5">
             <div className="text-xl">{tip.emoji}</div>
             <div className="mt-1.5 text-xs font-medium text-foreground">{tip.title}</div>

@@ -8,28 +8,28 @@ export type OnboardingStepId = 'connect_channel' | 'create_automation' | 'test_i
 export interface OnboardingStepDef {
   id: OnboardingStepId
   order: number
-  title: string
-  description: string
+  titleKey: string
+  descriptionKey: string
 }
 
 export const ONBOARDING_STEPS: OnboardingStepDef[] = [
   {
     id: 'connect_channel',
     order: 1,
-    title: 'Connecter un canal',
-    description: 'Instagram, Messenger ou WhatsApp — un seul suffit pour commencer.',
+    titleKey: 'onboardingActivation.steps.connectChannel.title',
+    descriptionKey: 'onboardingActivation.steps.connectChannel.description',
   },
   {
     id: 'create_automation',
     order: 2,
-    title: 'Créer votre première automatisation',
-    description: 'Un template pré-rempli selon votre objectif, prêt en un clic.',
+    titleKey: 'onboardingActivation.steps.createAutomation.title',
+    descriptionKey: 'onboardingActivation.steps.createAutomation.description',
   },
   {
     id: 'test_it',
     order: 3,
-    title: 'Tester : voir la réponse partir',
-    description: 'Simulez un message reçu et regardez votre automatisation répondre en direct.',
+    titleKey: 'onboardingActivation.steps.testIt.title',
+    descriptionKey: 'onboardingActivation.steps.testIt.description',
   },
 ]
 

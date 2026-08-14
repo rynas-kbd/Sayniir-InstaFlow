@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { emptyForm, validateRuleForm, buildRulePayload, deriveFlags, FIELD_IDS } from './rule-form-schema'
+import { useT } from '@/components/i18n-provider'
 import type { AutomationRule, ChannelAccountLite, RuleFormPayload } from '../types'
 import type { RuleFormApi, RuleFormErrors, RuleFormField, RuleFormState } from './types'
 
@@ -18,6 +19,7 @@ export interface UseRuleFormOptions {
  * boutique product form's `useProductForm`, plus the defaultTab-dependent account filtering and
  * isDmCapable/isCard flags the rule form needs. */
 export function useRuleForm({ accounts, rule, defaultTab, onSave, onSaved }: UseRuleFormOptions): RuleFormApi {
+  const t = useT()
   const selectableAccounts = defaultTab === 'comment' ? accounts.filter((a) => (a.platform ?? 'instagram') === 'instagram') : accounts
 
   const [form, setForm] = useState<RuleFormState>(() => emptyForm(rule, defaultTab, selectableAccounts[0]?.id ?? ''))
@@ -36,22 +38,22 @@ export function useRuleForm({ accounts, rule, defaultTab, onSave, onSaved }: Use
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    const nextErrors = validateRuleForm(form, defaultTab)
+    const nextErrors = validateRuleForm(form, defaultTab, t)
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
       const firstKey = Object.keys(nextErrors)[0] as RuleFormField
       document.getElementById(FIELD_IDS[firstKey])?.focus()
-      toast.error('Vérifiez les champs en rouge')
+      toast.error(t('automation.useRuleForm.checkFields'))
       return
     }
 
     setSaving(true)
     try {
       await onSave(buildRulePayload(form, defaultTab))
-      toast.success(rule ? 'Règle mise à jour' : 'Règle créée')
+      toast.success(rule ? t('automation.useRuleForm.updated') : t('automation.useRuleForm.created'))
       onSaved?.()
     } catch {
-      toast.error("Erreur lors de l'enregistrement de la règle")
+      toast.error(t('automation.useRuleForm.saveError'))
     } finally {
       setSaving(false)
     }

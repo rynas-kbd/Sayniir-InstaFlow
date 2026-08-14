@@ -11,8 +11,10 @@ import { CampaignCard } from '@/components/campaigns/campaign-card'
 import { StatCard } from '@/components/dashboard/stat-card'
 import type { Campaign } from '@/components/campaigns/types'
 import { mapAiInsightRow, type AiInsight } from '@/components/ai/types'
+import { getT } from '@/lib/i18n/server'
 
 export default async function CampaignsPage() {
+  const t = await getT()
   const supabase = await createClient()
   const { accounts, active: account } = await resolveActiveAccount()
   const accountName = account ? getAccountLabel(account) : null
@@ -20,8 +22,8 @@ export default async function CampaignsPage() {
   if (!account) {
     return (
       <div className="flex min-h-full flex-col">
-        <PageHeader title="Campagnes" description="Diffusions ciblées vers vos contacts et segments." />
-        <NoAccountState description="Connectez un compte pour lancer des campagnes." />
+        <PageHeader title={t('campaigns.page.title')} description={t('campaigns.page.description')} />
+        <NoAccountState description={t('campaigns.page.connectAccountDescription')} />
       </div>
     )
   }
@@ -75,12 +77,12 @@ export default async function CampaignsPage() {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader
-        title="Campagnes"
-        description="Diffusions ciblées vers vos contacts et segments."
+        title={t('campaigns.page.title')}
+        description={t('campaigns.page.description')}
         actions={
           <Button render={<Link href="/campaigns/new" />}>
             <Plus className="size-4" />
-            Nouvelle campagne
+            {t('campaigns.page.newCampaignButton')}
           </Button>
         }
       />
@@ -88,21 +90,21 @@ export default async function CampaignsPage() {
       <div className="flex-1 p-4 sm:p-6">
         {/* Campaign Metrics Summary */}
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard title="Campagnes totales" value={totalCampaigns} />
-          <StatCard title="Brouillons" value={draftCampaigns} />
-          <StatCard title="Envoyées" value={sentCampaigns} />
-          <StatCard title="Échecs" value={failedCampaigns} />
+          <StatCard title={t('campaigns.page.statTotal')} value={totalCampaigns} />
+          <StatCard title={t('campaigns.page.statDrafts')} value={draftCampaigns} />
+          <StatCard title={t('campaigns.page.statSent')} value={sentCampaigns} />
+          <StatCard title={t('campaigns.page.statFailed')} value={failedCampaigns} />
         </div>
 
         {safeCampaigns.length === 0 ? (
           <EmptyState
             icon={Megaphone}
-            title="Aucune campagne"
-            description="Créez votre première diffusion ciblée pour envoyer des messages de masse à vos segments."
+            title={t('campaigns.page.emptyTitle')}
+            description={t('campaigns.page.emptyDescription')}
             action={
               <Button render={<Link href="/campaigns/new" />}>
                 <Plus className="size-4" />
-                Nouvelle campagne
+                {t('campaigns.page.newCampaignButton')}
               </Button>
             }
           />
@@ -130,7 +132,7 @@ export default async function CampaignsPage() {
               <div className="flex size-10 items-center justify-center rounded-xl border border-dashed border-current/30 transition-colors group-hover:border-primary/40 group-hover:bg-primary/8">
                 <Plus className="size-5" />
               </div>
-              <span className="text-sm font-medium">Nouvelle campagne</span>
+              <span className="text-sm font-medium">{t('campaigns.page.newCampaignButton')}</span>
             </Link>
           </div>
         )}

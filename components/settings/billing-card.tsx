@@ -11,10 +11,11 @@ import { Badge } from '@/components/ui/badge'
 import { FormSection } from '@/components/shared/form-section'
 import { OptionPicker } from '@/components/shared/option-picker'
 import { BillingResultDialog } from '@/components/settings/billing-result-dialog'
+import { useT } from '@/components/i18n-provider'
 import { cn } from '@/lib/utils'
 import { springs } from '@/lib/motion/springs'
 import { haptic } from '@/lib/motion/haptics'
-import { PLAN_CONFIG, PLAN_KEYS, formatDzd, resolvePlanAmount, type PlanKey, type BillingPeriod } from '@/lib/plans'
+import { PLAN_CONFIG, PLAN_KEYS, formatDzd, resolvePlanAmount, getPlanDisplay, type PlanKey, type BillingPeriod } from '@/lib/plans'
 
 const PURCHASABLE_PLANS = PLAN_KEYS.filter((k) => k !== 'free')
 
@@ -36,12 +37,14 @@ interface BillingCardProps {
 }
 
 export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, customPriceAnnualDzd }: BillingCardProps) {
+  const t = useT()
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>(plan && plan !== 'free' ? plan : 'starter')
   const [period, setPeriod] = useState<BillingPeriod>('monthly')
 
   const customPricing = { custom_price_monthly_dzd: customPriceMonthlyDzd, custom_price_annual_dzd: customPriceAnnualDzd }
   const selectedCfg = PLAN_CONFIG[selectedPlan]
+  const selectedDisplay = getPlanDisplay(selectedPlan, t)
   const isBusinessSelected = selectedPlan === 'business'
   const amount = resolvePlanAmount(selectedPlan, period, customPricing)
   const monthlyBase = isBusinessSelected ? customPriceMonthlyDzd : selectedCfg.priceMonthlyDzd
@@ -59,10 +62,10 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
         body: JSON.stringify({ plan: selectedPlan, period }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur')
+      if (!res.ok) throw new Error(data.error || t('billing.genericError'))
       window.location.href = data.url
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Impossible d'ouvrir le paiement")
+      toast.error(err instanceof Error ? err.message : t('billing.checkoutError'))
       setLoading(false)
     }
   }
@@ -76,28 +79,30 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
             <CreditCard className="size-4" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Abonnement</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Gérez votre abonnement Instaflow.</p>
+            <p className="text-sm font-semibold text-foreground">{t('billing.cardTitle')}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('billing.cardDescription')}</p>
           </div>
         </div>
 
-        <FormSection icon={Wallet} label="Statut">
+        <FormSection icon={Wallet} label={t('billing.statusLabel')}>
           <div className="min-w-0">
             {status && (
               <Badge variant={status === 'active' ? 'default' : 'secondary'} className="mb-1.5">
-                {plan && plan !== 'free' ? `${PLAN_CONFIG[plan].label} — ` : ''}
-                {status === 'active' ? 'Actif' : status === 'expired' ? 'Expiré' : 'Inactif'}
+                {plan && plan !== 'free' ? `${getPlanDisplay(plan, t).label} — ` : ''}
+                {status === 'active' ? t('billing.statusActive') : status === 'expired' ? t('billing.statusExpired') : t('billing.statusInactive')}
               </Badge>
             )}
             <p className="text-xs text-muted-foreground">
               {expiresAt
-                ? `Valide jusqu'au ${new Date(expiresAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}`
-                : 'Aucun abonnement actif.'}
+                ? t('billing.validUntil', {
+                    date: new Date(expiresAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }),
+                  })
+                : t('billing.noActiveSubscription')}
             </p>
           </div>
         </FormSection>
 
-        <FormSection icon={CreditCard} label="Choisir un plan">
+        <FormSection icon={CreditCard} label={t('billing.choosePlan')}>
           <fieldset disabled={loading} className={cn('space-y-3', loading && 'pointer-events-none opacity-60')}>
             <OptionPicker
               compact
@@ -105,15 +110,16 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
               value={period}
               onChange={setPeriod}
               options={[
-                { value: 'monthly', label: 'Mensuel' },
-                { value: 'annual', label: 'Annuel −20%' },
+                { value: 'monthly', label: t('billing.periodMonthly') },
+                { value: 'annual', label: t('billing.periodAnnual') },
               ]}
             />
 
             <LayoutGroup id="billing-plan">
-              <div role="radiogroup" aria-label="Plan" className="grid grid-cols-3 gap-2">
+              <div role="radiogroup" aria-label={t('billing.planRadioGroupLabel')} className="grid grid-cols-3 gap-2">
                 {PURCHASABLE_PLANS.map((key) => {
                   const cfg = PLAN_CONFIG[key]
+                  const display = getPlanDisplay(key, t)
                   const isSelected = key === selectedPlan
                   const planAmount = resolvePlanAmount(key, period, customPricing)
                   return (
@@ -138,17 +144,17 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
                       )}
                       {cfg.highlighted && (
                         <span className="relative z-10 mb-0.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                          <Sparkles className="size-2.5" /> Populaire
+                          <Sparkles className="size-2.5" /> {t('billing.popular')}
                         </span>
                       )}
                       {key === 'business' && (
                         <Building2 className="relative z-10 mb-0.5 size-3.5 text-muted-foreground" strokeWidth={1.75} />
                       )}
                       <span className={cn('relative z-10 text-xs font-bold', isSelected ? 'text-foreground' : 'text-foreground/80')}>
-                        {cfg.label}
+                        {display.label}
                       </span>
                       <span className="relative z-10 text-[11px] font-semibold text-foreground">
-                        {planAmount === null ? 'Sur devis' : `${formatDzd(planAmount)} DZD`}
+                        {planAmount === null ? t('billing.quotePrice') : `${formatDzd(planAmount)} DZD`}
                       </span>
                       {isSelected && (
                         <span className="absolute right-2 top-2 z-10 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -172,12 +178,12 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
               >
                 {businessPriceMissing ? (
                   <div className="rounded-xl border border-border bg-muted/30 px-3.5 py-3 text-xs text-muted-foreground">
-                    Votre tarif Business n&apos;a pas encore été défini. Contactez-nous pour l&apos;obtenir.
+                    {t('billing.businessPriceMissing')}
                   </div>
                 ) : (
                   <>
                     <motion.ul variants={featureListVariants} initial="hidden" animate="show" className="space-y-1.5">
-                      {selectedCfg.features.map((feature) => (
+                      {selectedDisplay.features.map((feature) => (
                         <motion.li
                           key={feature}
                           variants={featureItemVariants}
@@ -193,13 +199,13 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
                     <div className="rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-muted-foreground">
-                          {selectedCfg.label} · {period === 'annual' ? 'annuel' : 'mensuel'}
-                          {isBusinessSelected && ' · tarif négocié'}
+                          {selectedDisplay.label} · {period === 'annual' ? t('billing.periodAnnualShort') : t('billing.periodMonthlyShort')}
+                          {isBusinessSelected && t('billing.negotiatedRate')}
                         </span>
                         <span className="font-semibold text-foreground">{amount !== null ? `${formatDzd(amount)} DZD` : '—'}</span>
                       </div>
                       {annualSavings !== null && annualSavings > 0 && (
-                        <p className="mt-1 text-[10.5px] text-success">Vous économisez {formatDzd(annualSavings)} DZD sur l&apos;année.</p>
+                        <p className="mt-1 text-[10.5px] text-success">{t('billing.annualSavings', { amount: formatDzd(annualSavings) })}</p>
                       )}
                     </div>
                   </>
@@ -215,12 +221,12 @@ export function BillingCard({ plan, status, expiresAt, customPriceMonthlyDzd, cu
                 render={<Link href="/faq" />}
                 className="w-full"
               >
-                Nous contacter
+                {t('billing.contactUs')}
               </Button>
             ) : (
               <Button type="button" onClick={handleSubscribe} disabled={loading} className="w-full gap-2">
                 {loading && <Loader2 className="size-3.5 animate-spin" />}
-                {loading ? 'Redirection…' : status === 'active' ? 'Renouveler' : "S'abonner"}
+                {loading ? t('billing.redirecting') : status === 'active' ? t('billing.renew') : t('billing.subscribe')}
               </Button>
             )}
           </fieldset>

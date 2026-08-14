@@ -1,0 +1,27 @@
+export const rdv = {
+  page: {
+    noAccountDescription: 'Connect an Instagram, Messenger, or WhatsApp account so the AI can take appointments.',
+    loadError: 'Unable to load appointments',
+    title: 'Appointments',
+    description: 'AI-automated appointment booking.',
+    statTotal: 'Total',
+    statPending: 'Pending',
+    statConfirmed: 'Confirmed',
+    emptyTitle: 'No appointments',
+    emptyDescription: 'Appointments booked by the AI will appear here.',
+  },
+  row: {
+    statusPending: 'Pending',
+    statusConfirmed: 'Confirmed',
+    statusCompleted: 'Completed',
+    statusCancelled: 'Cancelled',
+    statusNoShow: 'No-show',
+    noPhone: 'No phone number',
+    unconfirmedSlot: 'Unconfirmed slot',
+    toastConfirmed: 'Appointment confirmed',
+    toastCancelled: 'Appointment cancelled',
+    toastUpdateError: 'Unable to update the appointment',
+    cancelButton: 'Cancel',
+    confirmButton: 'Confirm',
+  },
+}

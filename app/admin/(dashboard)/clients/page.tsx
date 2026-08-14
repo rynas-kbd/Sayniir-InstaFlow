@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Camera, UserPlus, Search, Users, ShieldCheck } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PLAN_CONFIG, type PlanKey } from '@/lib/plans'
+import { PLAN_CONFIG, getPlanDisplay, type PlanKey } from '@/lib/plans'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { StatusDot } from '@/components/ui/status-dot'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,8 +40,6 @@ interface ClientRow {
   channel_accounts: ClientChannelAccount[] | ClientChannelAccount | null
 }
 
-const STATUS_LABEL: Record<string, string> = { active: 'Actif', inactive: 'Inactif', expired: 'Expiré' }
-
 export default async function AdminClientsPage({
   searchParams,
 }: {
@@ -48,6 +47,13 @@ export default async function AdminClientsPage({
 }) {
   const { q = '', role: roleFilter = 'client' } = await searchParams
   const supabase = createAdminClient()
+  const t = await getT()
+
+  const STATUS_LABEL: Record<string, string> = {
+    active: t('admin.common.status.active'),
+    inactive: t('admin.common.status.inactive'),
+    expired: t('admin.common.status.expired'),
+  }
 
   let query = supabase
     .from('profiles')
@@ -68,21 +74,23 @@ export default async function AdminClientsPage({
   ])
 
   const tabs = [
-    { key: 'client', label: 'Clients', count: clientCount ?? 0, icon: Users },
-    { key: 'admin', label: 'Admins', count: adminCount ?? 0, icon: ShieldCheck },
-    { key: 'all', label: 'Tous', count: (clientCount ?? 0) + (adminCount ?? 0), icon: null },
+    { key: 'client', label: t('admin.clients.list.tabClients'), count: clientCount ?? 0, icon: Users },
+    { key: 'admin', label: t('admin.clients.list.tabAdmins'), count: adminCount ?? 0, icon: ShieldCheck },
+    { key: 'all', label: t('admin.clients.list.tabAll'), count: (clientCount ?? 0) + (adminCount ?? 0), icon: null },
   ]
 
   const rows = (users ?? []) as ClientRow[]
 
+  const resultsDescription = `${t.plural('admin.clients.list.resultsCount', rows.length)}${q ? t('admin.clients.list.forQuery', { query: q }) : ''}`
+
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
-        title="Utilisateurs"
-        description={`${rows.length} résultat${rows.length !== 1 ? 's' : ''}${q ? ` pour « ${q} »` : ''}`}
+        title={t('admin.clients.list.title')}
+        description={resultsDescription}
         actions={
           <Button nativeButton={false} render={<Link href="/admin/clients/new" />}>
-            <UserPlus className="size-4" /> Nouvel utilisateur
+            <UserPlus className="size-4" /> {t('admin.clients.list.newUserButton')}
           </Button>
         }
       />
@@ -115,7 +123,7 @@ export default async function AdminClientsPage({
           <form method="GET" action="/admin/clients" className="relative max-w-70 flex-1">
             <input type="hidden" name="role" value={roleFilter} />
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input name="q" defaultValue={q} placeholder="Nom, email…" className="pl-8" />
+            <Input name="q" defaultValue={q} placeholder={t('admin.clients.list.searchPlaceholder')} className="pl-8" />
           </form>
         </div>
 
@@ -123,18 +131,18 @@ export default async function AdminClientsPage({
           {rows.length === 0 ? (
             <div className="py-14 text-center">
               <Users className="mx-auto mb-3 size-6 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">{q ? `Aucun résultat pour « ${q} »` : 'Aucun utilisateur trouvé.'}</p>
+              <p className="text-sm text-muted-foreground">{q ? t('admin.clients.list.noResultsForQuery', { query: q }) : t('admin.clients.list.noUsersFound')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead className="hidden sm:table-cell">Compte Instagram</TableHead>
-                  <TableHead className="hidden md:table-cell">Plan</TableHead>
-                  <TableHead className="hidden sm:table-cell">Rôle</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>{t('admin.clients.list.colUser')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('admin.clients.list.colInstagramAccount')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('admin.clients.list.colPlan')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('admin.clients.list.colRole')}</TableHead>
+                  <TableHead>{t('admin.clients.list.colStatus')}</TableHead>
+                  <TableHead className="text-right">{t('admin.clients.list.colAction')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -145,9 +153,10 @@ export default async function AdminClientsPage({
                   const isExpired = expDate ? expDate < new Date() : false
                   const status = sub?.status ?? 'inactive'
                   const displayStatus = isExpired && status === 'active' ? 'expired' : status
-                  const name = user.full_name ?? 'Sans nom'
+                  const name = user.full_name ?? t('admin.clients.list.noName')
                   const planKey = (sub?.plan ?? 'free') as PlanKey
                   const planCfg = PLAN_CONFIG[planKey]
+                  const planDisplay = getPlanDisplay(planKey, t)
 
                   return (
                     <TableRow key={user.id}>
@@ -185,13 +194,13 @@ export default async function AdminClientsPage({
 
                       <TableCell className="hidden md:table-cell">
                         <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold', planCfg.badgeClass)}>
-                          {planCfg.label}
+                          {planDisplay.label}
                         </span>
                       </TableCell>
 
                       <TableCell className="hidden sm:table-cell">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role === 'admin' ? 'Admin' : 'Client'}
+                          {user.role === 'admin' ? t('admin.common.role.admin') : t('admin.common.role.client')}
                         </Badge>
                       </TableCell>
 
@@ -204,7 +213,7 @@ export default async function AdminClientsPage({
 
                       <TableCell className="text-right">
                         <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/admin/clients/${user.id}`} />}>
-                          Gérer
+                          {t('admin.clients.list.manageButton')}
                         </Button>
                       </TableCell>
                     </TableRow>

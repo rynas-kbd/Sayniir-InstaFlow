@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Package, ShoppingCart, Bot, Sparkles, Plug, Clock3, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/components/i18n-provider'
 import { ProductTable } from './product-table'
 import { OrderTable } from './order-table'
 import { AgentSettingsCard } from './agent-settings-card'
@@ -13,16 +14,16 @@ import { AbandonedSessionsList } from './abandoned-sessions-list'
 import { DiscountCodesManager, type DiscountCode } from './discount-codes-manager'
 import type { Product, Order, AgentSettings, AbandonedSession } from './types'
 
-const TABS = [
-  { key: 'products', label: 'Produits',   icon: Package },
-  { key: 'orders',   label: 'Commandes',  icon: ShoppingCart },
-  { key: 'abandoned', label: 'Paniers abandonnés', icon: Clock3 },
-  { key: 'promos',   label: 'Codes promo', icon: Tag },
-  { key: 'ai',       label: 'Config IA',  icon: Bot },
-  { key: 'integrations', label: 'Intégrations', icon: Plug },
+const TAB_KEYS = [
+  { key: 'products', labelKey: 'products', icon: Package },
+  { key: 'orders', labelKey: 'orders', icon: ShoppingCart },
+  { key: 'abandoned', labelKey: 'abandoned', icon: Clock3 },
+  { key: 'promos', labelKey: 'promos', icon: Tag },
+  { key: 'ai', labelKey: 'ai', icon: Bot },
+  { key: 'integrations', labelKey: 'integrations', icon: Plug },
 ] as const
 
-type TabKey = (typeof TABS)[number]['key']
+type TabKey = (typeof TAB_KEYS)[number]['key']
 
 export function BoutiqueClient({
   channelAccountId,
@@ -41,6 +42,7 @@ export function BoutiqueClient({
   abandonedSessions: AbandonedSession[]
   discountCodes: DiscountCode[]
 }) {
+  const t = useT()
   const [tab, setTab] = useState<TabKey>('products')
   const [hoveredTab, setHoveredTab] = useState<TabKey | null>(null)
 
@@ -67,14 +69,14 @@ export function BoutiqueClient({
             <div className="mb-1.5 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/95 backdrop-blur-md border border-white/20">
                 <Sparkles className="size-3 text-white" />
-                Commerce IA Multi-canal
+                {t('boutique.client.heroBadge')}
               </span>
             </div>
             <h2 className="font-heading text-xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-              Boutique &amp; Catalogue
+              {t('boutique.client.heroTitle')}
             </h2>
             <p className="mt-1 text-[11px] sm:text-sm text-white/80 max-w-[50ch] leading-relaxed hidden sm:block">
-              Gérez votre catalogue de produits, vos commandes en temps réel et configurez l&apos;agent IA closer.
+              {t('boutique.client.heroDescription')}
             </p>
           </div>
 
@@ -83,12 +85,12 @@ export function BoutiqueClient({
             <div className="flex items-center gap-2.5 rounded-xl bg-white/15 px-4 py-2 border border-white/20 backdrop-blur-md shadow-sm">
               <Package className="size-4 text-white" />
               <span className="text-sm font-extrabold">{products.length}</span>
-              <span className="text-xs text-white/80 font-medium">produits</span>
+              <span className="text-xs text-white/80 font-medium">{t('boutique.client.heroProductsLabel')}</span>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl bg-white/15 px-4 py-2 border border-white/20 backdrop-blur-md shadow-sm">
               <ShoppingCart className="size-4 text-white" />
               <span className="text-sm font-extrabold">{orders.length}</span>
-              <span className="text-xs text-white/80 font-medium">commandes</span>
+              <span className="text-xs text-white/80 font-medium">{t('boutique.client.heroOrdersLabel')}</span>
             </div>
           </div>
 
@@ -96,11 +98,11 @@ export function BoutiqueClient({
           <div className="flex sm:hidden items-center gap-2 shrink-0">
             <div className="flex flex-col items-center rounded-xl bg-white/15 px-3 py-2 border border-white/20 backdrop-blur-md">
               <span className="text-base font-black leading-none">{products.length}</span>
-              <span className="text-[9px] text-white/70 font-semibold mt-0.5">produits</span>
+              <span className="text-[9px] text-white/70 font-semibold mt-0.5">{t('boutique.client.heroProductsLabel')}</span>
             </div>
             <div className="flex flex-col items-center rounded-xl bg-white/15 px-3 py-2 border border-white/20 backdrop-blur-md">
               <span className="text-base font-black leading-none">{orders.length}</span>
-              <span className="text-[9px] text-white/70 font-semibold mt-0.5">cmdes</span>
+              <span className="text-[9px] text-white/70 font-semibold mt-0.5">{t('boutique.client.heroOrdersShortLabel')}</span>
             </div>
           </div>
         </div>
@@ -115,10 +117,11 @@ export function BoutiqueClient({
           className="relative flex items-center gap-1 overflow-x-auto rounded-2xl border border-border/50 bg-background/50 p-1.5 backdrop-blur-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-2 shadow-sm"
           onMouseLeave={() => setHoveredTab(null)}
         >
-          {TABS.map(({ key, label, icon: Icon }) => {
+          {TAB_KEYS.map(({ key, labelKey, icon: Icon }) => {
             const isActive = tab === key
             const isHovered = hoveredTab === key
             const count = counts[key]
+            const label = t(`boutique.client.tabs.${labelKey}`)
             // Short labels for mobile
             const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label
             return (

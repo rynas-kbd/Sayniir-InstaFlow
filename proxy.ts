@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { LOCALE_COOKIE, matchLocaleFromAcceptLanguage } from '@/lib/i18n/config'
 
 /**
  * Content-Security-Policy — shipped Report-Only for now (see
@@ -75,6 +76,17 @@ export async function proxy(request: NextRequest) {
 
   // Refresh session — required for Server Components
   const { data: { user } } = await supabase.auth.getUser()
+
+  // First visit ever — no locale cookie yet. Detect from Accept-Language
+  // (fallback French) so the very first HTML render already comes back in
+  // the right language instead of defaulting to French then flashing.
+  // Set AFTER getUser(): the Supabase `setAll` callback above can reassign
+  // `supabaseResponse` to a fresh NextResponse when it refreshes the
+  // session cookie, which would silently drop anything set on the old one.
+  if (!request.cookies.get(LOCALE_COOKIE)) {
+    const detected = matchLocaleFromAcceptLanguage(request.headers.get('accept-language'))
+    supabaseResponse.cookies.set(LOCALE_COOKIE, detected, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+  }
 
   // Protect /dashboard routes
   if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {

@@ -2,6 +2,7 @@
 
 import { Sparkles } from 'lucide-react'
 import { useCopilot } from '@/components/ai/copilot-provider'
+import { useT } from '@/components/i18n-provider'
 import { MobileNav } from './mobile-nav'
 import { Breadcrumb } from './breadcrumb'
 import { CommandMenu } from './command-menu'
@@ -14,17 +15,18 @@ import type { ActiveAccount } from '@/lib/accounts/active-account'
 
 function CopilotHeaderButton() {
   const { openCopilot } = useCopilot()
+  const t = useT()
   return (
     <button
       type="button"
       onClick={() => openCopilot()}
       className="group relative flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--organic-terracotta)_40%,transparent)] bg-[color-mix(in_srgb,var(--organic-terracotta)_14%,transparent)] px-2.5 py-1 text-xs font-bold text-foreground backdrop-blur-md transition-all active:scale-95 md:hidden shadow-sm hover:shadow-md shrink-0"
-      aria-label="Ouvrir le Copilote IA"
+      aria-label={t('nav.copilotButton.ariaLabel')}
     >
       <span className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-[var(--organic-terracotta)]/25 via-transparent to-[var(--organic-sage)]/25 blur-xs opacity-70 animate-pulse" />
       <Sparkles className="relative size-3.5 text-[var(--organic-terracotta)]" />
       <span className="relative font-black text-[11px] uppercase tracking-wider text-[var(--organic-terracotta-700)] dark:text-[var(--organic-terracotta-300)]">
-        Copilote
+        {t('nav.copilotButton.label')}
       </span>
     </button>
   )

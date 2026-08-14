@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Check, Loader2, Film, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useInstagramMedia } from '@/lib/instagram/use-instagram-media'
+import { useT } from '@/components/i18n-provider'
 
 function MediaTypeBadge({ mediaType }: { mediaType?: string }) {
   if (mediaType === 'VIDEO') {
@@ -35,6 +36,7 @@ export function PostSelector({
   onSelect: (ids: string[]) => void
   onClose: () => void
 }) {
+  const t = useT()
   const { items: media, loading, loadingMore, error, hasMore, loadMore } = useInstagramMedia(accountId)
   const [localSelected, setLocalSelected] = useState<string[]>(selectedIds)
 
@@ -44,7 +46,7 @@ export function PostSelector({
 
   return (
     <div className="flex h-full flex-col">
-      <h3 className="mb-4 text-[15px] font-bold text-foreground">Sélectionner des posts</h3>
+      <h3 className="mb-4 text-[15px] font-bold text-foreground">{t('shared.postPicker.title')}</h3>
 
       <div className="min-h-[200px] flex-1">
         {loading ? (
@@ -52,10 +54,10 @@ export function PostSelector({
             <Loader2 className="mx-auto size-8 animate-spin text-muted-foreground" />
           </div>
         ) : error ? (
-          <div className="p-5 text-center text-sm text-destructive">Erreur : {error}</div>
+          <div className="p-5 text-center text-sm text-destructive">{t('shared.postPicker.error', { message: error })}</div>
         ) : media.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">
-            Aucun post trouvé sur ce compte.
+            {t('shared.postPicker.noPosts')}
           </div>
         ) : (
           <>
@@ -92,7 +94,7 @@ export function PostSelector({
               <div className="mt-3 flex justify-center">
                 <Button type="button" variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
                   {loadingMore ? <Loader2 className="size-3.5 animate-spin" /> : null}
-                  {loadingMore ? 'Chargement…' : 'Charger plus'}
+                  {loadingMore ? t('shared.postPicker.loadingMore') : t('shared.postPicker.loadMore')}
                 </Button>
               </div>
             )}
@@ -102,7 +104,7 @@ export function PostSelector({
 
       <div className="mt-5 flex gap-2">
         <Button type="button" variant="outline" onClick={onClose}>
-          Annuler
+          {t('shared.postPicker.cancel')}
         </Button>
         <Button
           type="button"
@@ -112,7 +114,7 @@ export function PostSelector({
             onClose()
           }}
         >
-          Valider ({localSelected.length})
+          {t('shared.postPicker.confirm', { count: localSelected.length })}
         </Button>
       </div>
     </div>

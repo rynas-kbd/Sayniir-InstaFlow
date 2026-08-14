@@ -4,6 +4,7 @@ import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { getAccountLabel } from '@/lib/channels/labels'
 import type { Platform } from '@/lib/channels/types'
 import { cn } from '@/lib/utils'
+import { getT } from '@/lib/i18n/server'
 import { NoAccountState } from '@/components/accounts/no-account-state'
 import { ConversationList } from '@/components/inbox/conversation-list'
 import { ConversationThread } from '@/components/inbox/conversation-thread'
@@ -20,6 +21,7 @@ export default async function InboxPage({
   searchParams: Promise<{ filter?: string; conv?: string; channel?: string; page?: string }>
 }) {
   const supabase = await createClient()
+  const t = await getT()
   const { accounts, active: account, scope } = await resolveActiveAccount()
 
   const { filter, conv, channel, page } = await searchParams
@@ -34,7 +36,7 @@ export default async function InboxPage({
   const accountIds = scope === 'all' ? accounts.map((a) => a.id) : account ? [account.id] : []
 
   if (accountIds.length === 0) {
-    return <NoAccountState description="Connectez un compte pour voir vos conversations." />
+    return <NoAccountState description={t('inbox.noAccount')} />
   }
 
   const accountLabels = new Map(accounts.map((a) => [a.id, getAccountLabel(a)]))
@@ -161,9 +163,9 @@ export default async function InboxPage({
                 }}
               />
               <div>
-                <h1 className="text-[15px] font-bold tracking-tight text-foreground">Inbox</h1>
+                <h1 className="text-[15px] font-bold tracking-tight text-foreground">{t('inbox.title')}</h1>
                 <p className="text-[11px] tabular-nums" style={{ color: 'color-mix(in srgb, var(--organic-text, var(--foreground)) 45%, transparent)' }}>
-                  {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+                  {t.plural('inbox.conversationCount', conversations.length)}
                 </p>
               </div>
             </div>
@@ -239,9 +241,9 @@ export default async function InboxPage({
               <Inbox className="relative size-7" style={{ color: 'var(--organic-terracotta-600)' }} strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-[14.5px] font-semibold text-foreground">Sélectionnez une conversation</p>
+              <p className="text-[14.5px] font-semibold text-foreground">{t('inbox.emptyState.title')}</p>
               <p className="mt-1 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}>
-                Cliquez sur un contact à gauche pour voir ses messages
+                {t('inbox.emptyState.description')}
               </p>
             </div>
           </div>

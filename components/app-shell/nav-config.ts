@@ -13,6 +13,7 @@ import {
   Target,
   Megaphone,
 } from 'lucide-react'
+import type { Translator } from '@/lib/i18n/translate'
 
 export type BusinessType = 'ecommerce' | 'coaching' | 'agency' | 'generic'
 
@@ -27,50 +28,52 @@ export interface NavSection {
   items: NavItem[]
 }
 
-const WORKSPACE_ITEM_BY_TYPE: Record<BusinessType, NavItem | null> = {
-  ecommerce: { href: '/boutique', label: 'Boutique', icon: ShoppingBag },
-  coaching: { href: '/rdv', label: 'Rendez-vous', icon: CalendarClock },
-  agency: { href: '/leads', label: 'Leads', icon: Target },
-  generic: null,
+function getWorkspaceItemByType(t: Translator): Record<BusinessType, NavItem | null> {
+  return {
+    ecommerce: { href: '/boutique', label: t('nav.items.boutique'), icon: ShoppingBag },
+    coaching: { href: '/rdv', label: t('nav.items.rdv'), icon: CalendarClock },
+    agency: { href: '/leads', label: t('nav.items.leads'), icon: Target },
+    generic: null,
+  }
 }
 
-export function getNavSections(businessType: BusinessType): NavSection[] {
-  const workspaceItem = WORKSPACE_ITEM_BY_TYPE[businessType]
+export function getNavSections(businessType: BusinessType, t: Translator): NavSection[] {
+  const workspaceItem = getWorkspaceItemByType(t)[businessType]
 
   const sections: NavSection[] = [
     {
-      label: 'Vue d’ensemble',
+      label: t('nav.sections.overview'),
       items: [
-        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/dashboard', label: t('nav.items.dashboard'), icon: LayoutDashboard },
+        { href: '/analytics', label: t('nav.items.analytics'), icon: BarChart3 },
       ],
     },
     {
-      label: 'Conversations',
+      label: t('nav.sections.conversations'),
       items: [
-        { href: '/inbox', label: 'Inbox', icon: Inbox },
-        { href: '/contacts', label: 'Contacts', icon: Users },
+        { href: '/inbox', label: t('nav.items.inbox'), icon: Inbox },
+        { href: '/contacts', label: t('nav.items.contacts'), icon: Users },
       ],
     },
     {
-      label: 'Automatisation',
+      label: t('nav.sections.automation'),
       items: [
-        { href: '/flows', label: 'Flows', icon: Workflow },
-        { href: '/automation', label: 'Règles', icon: Zap },
-        { href: '/campaigns', label: 'Campagnes', icon: Megaphone },
+        { href: '/flows', label: t('nav.items.flows'), icon: Workflow },
+        { href: '/automation', label: t('nav.items.rules'), icon: Zap },
+        { href: '/campaigns', label: t('nav.items.campaigns'), icon: Megaphone },
       ],
     },
   ]
 
   if (workspaceItem) {
-    sections.push({ label: 'Business', items: [workspaceItem] })
+    sections.push({ label: t('nav.sections.business'), items: [workspaceItem] })
   }
 
   sections.push({
-    label: 'Compte',
+    label: t('nav.sections.account'),
     items: [
-      { href: '/accounts', label: 'Comptes connectés', icon: Camera },
-      { href: '/settings', label: 'Paramètres', icon: Settings },
+      { href: '/accounts', label: t('nav.items.accounts'), icon: Camera },
+      { href: '/settings', label: t('nav.items.settings'), icon: Settings },
     ],
   })
 

@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { TagInput } from '@/components/shared/tag-input'
+import { useT } from '@/components/i18n-provider'
 import { cn } from '@/lib/utils'
 import type { AgentSettings } from './types'
 
@@ -45,8 +46,6 @@ const PROVIDER_META: Record<string, { color: string; badge: string; defaultModel
   openrouter: { color: 'text-sand-600',        badge: 'bg-sand-50 dark:bg-sand-950/30 text-sand-700 dark:text-sand-300 border-sand-200/50',                    defaultModel: 'nvidia/nemotron-3-ultra-550b-a55b:free' },
 }
 
-const DEFAULT_INFOS = ['Nom', 'Téléphone', 'Adresse', 'Wilaya']
-
 type SubTabKey = 'agents' | 'persona' | 'knowledge' | 'infos' | 'llm'
 
 export function AgentSettingsCard({
@@ -56,6 +55,7 @@ export function AgentSettingsCard({
   channelAccountId: string
   initialSettings: AgentSettings
 }) {
+  const t = useT()
   const [settings, setSettings] = useState(initialSettings)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -70,44 +70,69 @@ export function AgentSettingsCard({
   const [newFaqA, setNewFaqA] = useState('')
   const [editingFaqIdx, setEditingFaqIdx] = useState<number | null>(null)
 
+  // Default info fields required by the agent (non-editable list)
+  const DEFAULT_INFOS = useMemo(() => [
+    t('boutique.agentSettings.infos.defaults.name'),
+    t('boutique.agentSettings.infos.defaults.phone'),
+    t('boutique.agentSettings.infos.defaults.address'),
+    t('boutique.agentSettings.infos.defaults.wilaya'),
+  ], [t])
+
   // Sub tabs config
+  // `statusKind` drives badge color and is independent of the translated `status` label,
+  // since the display text must never be used for logic/styling comparisons.
   const SUB_TABS = useMemo(() => [
-    { 
-      key: 'agents', 
-      label: 'Agents automatiques', 
-      icon: Bot, 
-      desc: 'Réponses & Prise de commandes',
-      status: settings.is_qa_active || settings.is_order_taking_active || settings.is_availability_check_active ? 'actif' : 'inactif'
+    {
+      key: 'agents',
+      label: t('boutique.agentSettings.subTabs.agents.label'),
+      icon: Bot,
+      desc: t('boutique.agentSettings.subTabs.agents.desc'),
+      status: settings.is_qa_active || settings.is_order_taking_active || settings.is_availability_check_active
+        ? t('boutique.agentSettings.subTabs.agents.statusActive')
+        : t('boutique.agentSettings.subTabs.agents.statusInactive'),
+      statusKind: settings.is_qa_active || settings.is_order_taking_active || settings.is_availability_check_active
+        ? 'active' as const
+        : 'muted' as const,
     },
-    { 
-      key: 'persona', 
-      label: 'Persona & Consignes', 
-      icon: Sparkles, 
-      desc: 'Ton, style et règles métier',
-      status: settings.instructions.length > 0 ? `${settings.instructions.length} consignes` : 'vide'
+    {
+      key: 'persona',
+      label: t('boutique.agentSettings.subTabs.persona.label'),
+      icon: Sparkles,
+      desc: t('boutique.agentSettings.subTabs.persona.desc'),
+      status: settings.instructions.length > 0
+        ? t.plural('boutique.agentSettings.subTabs.persona.statusCount', settings.instructions.length)
+        : t('boutique.agentSettings.subTabs.persona.statusEmpty'),
+      statusKind: settings.instructions.length > 0 ? 'accent' as const : 'muted' as const,
     },
-    { 
-      key: 'knowledge', 
-      label: 'Base de connaissances', 
-      icon: BookOpen, 
-      desc: 'FAQ & Questions fréquentes',
-      status: faqs.length > 0 ? `${faqs.length} connaissances` : 'vide'
+    {
+      key: 'knowledge',
+      label: t('boutique.agentSettings.subTabs.knowledge.label'),
+      icon: BookOpen,
+      desc: t('boutique.agentSettings.subTabs.knowledge.desc'),
+      status: faqs.length > 0
+        ? t.plural('boutique.agentSettings.subTabs.knowledge.statusCount', faqs.length)
+        : t('boutique.agentSettings.subTabs.knowledge.statusEmpty'),
+      statusKind: faqs.length > 0 ? 'accent' as const : 'muted' as const,
     },
-    { 
-      key: 'infos', 
-      label: 'Champs à collecter', 
-      icon: ListChecks, 
-      desc: 'Données à demander au client',
-      status: settings.infos_to_collect.length > 0 ? `${settings.infos_to_collect.length} champs` : 'par défaut'
+    {
+      key: 'infos',
+      label: t('boutique.agentSettings.subTabs.infos.label'),
+      icon: ListChecks,
+      desc: t('boutique.agentSettings.subTabs.infos.desc'),
+      status: settings.infos_to_collect.length > 0
+        ? t.plural('boutique.agentSettings.subTabs.infos.statusCount', settings.infos_to_collect.length)
+        : t('boutique.agentSettings.subTabs.infos.statusDefault'),
+      statusKind: 'accent' as const,
     },
-    { 
-      key: 'llm', 
-      label: 'Modèle & Clé API', 
-      icon: Cpu, 
-      desc: 'Moteur IA et authentification',
-      status: settings.ai_provider
+    {
+      key: 'llm',
+      label: t('boutique.agentSettings.subTabs.llm.label'),
+      icon: Cpu,
+      desc: t('boutique.agentSettings.subTabs.llm.desc'),
+      status: settings.ai_provider,
+      statusKind: 'accent' as const,
     },
-  ] as const, [settings, faqs])
+  ] as const, [settings, faqs, t])
 
   /* ── save helper ── */
   async function save(patch: Record<string, unknown>) {
@@ -124,14 +149,14 @@ export function AgentSettingsCard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('Erreur')
+      if (!res.ok) throw new Error('Request failed')
       const updated = await res.json()
       setSettings((prev) => ({ ...prev, ...updated, ai_api_key: updated.ai_api_key ?? prev.ai_api_key }))
-      toast.success('Configuration mise à jour')
+      toast.success(t('boutique.agentSettings.toast.saveSuccess'))
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {
-      toast.error('Impossible de sauvegarder')
+      toast.error(t('boutique.agentSettings.toast.saveError'))
     } finally {
       setSaving(false)
     }
@@ -205,9 +230,9 @@ export function AgentSettingsCard({
               <div className="hidden lg:block shrink-0">
                 <span className={cn(
                   'inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider',
-                  subTab.status === 'actif'
+                  subTab.statusKind === 'active'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                    : subTab.status === 'vide' || subTab.status === 'inactif'
+                    : subTab.statusKind === 'muted'
                     ? 'bg-muted text-muted-foreground border border-border/40'
                     : 'bg-primary/10 text-primary border border-primary/20'
                 )}>
@@ -243,18 +268,18 @@ export function AgentSettingsCard({
               </div>
               <div>
                 <h3 className="font-heading text-base font-extrabold text-foreground leading-none">
-                  {activeTab === 'agents' && 'Gestion des Agents automatiques'}
-                  {activeTab === 'persona' && 'Identité, Persona & Comportement'}
-                  {activeTab === 'knowledge' && 'Base de connaissances & FAQ'}
-                  {activeTab === 'infos' && 'Informations client à collecter'}
-                  {activeTab === 'llm' && 'Modèle de Langage & Authentification'}
+                  {activeTab === 'agents' && t('boutique.agentSettings.header.agents.title')}
+                  {activeTab === 'persona' && t('boutique.agentSettings.header.persona.title')}
+                  {activeTab === 'knowledge' && t('boutique.agentSettings.header.knowledge.title')}
+                  {activeTab === 'infos' && t('boutique.agentSettings.header.infos.title')}
+                  {activeTab === 'llm' && t('boutique.agentSettings.header.llm.title')}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {activeTab === 'agents' && 'Sélectionnez quels modules d\'intelligence artificielle sont autorisés à répondre.'}
-                  {activeTab === 'persona' && 'Personnalisez le caractère du bot, le ton à adopter, et donnez des instructions strictes.'}
-                  {activeTab === 'knowledge' && 'Insérez les réponses standard de votre boutique pour guider l\'IA.'}
-                  {activeTab === 'infos' && 'Configurez les champs supplémentaires que l\'agent doit collecter durant les commandes.'}
-                  {activeTab === 'llm' && 'Choisissez votre fournisseur de modèle d\'intelligence artificielle.'}
+                  {activeTab === 'agents' && t('boutique.agentSettings.header.agents.description')}
+                  {activeTab === 'persona' && t('boutique.agentSettings.header.persona.description')}
+                  {activeTab === 'knowledge' && t('boutique.agentSettings.header.knowledge.description')}
+                  {activeTab === 'infos' && t('boutique.agentSettings.header.infos.description')}
+                  {activeTab === 'llm' && t('boutique.agentSettings.header.llm.description')}
                 </p>
               </div>
             </div>
@@ -277,15 +302,15 @@ export function AgentSettingsCard({
                       <MessageCircleQuestion className="size-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-foreground">Assistant Q&amp;A</p>
+                      <p className="text-sm font-extrabold text-foreground">{t('boutique.agentSettings.cards.qa.title')}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                        Répond de manière autonome aux questions courantes concernant vos produits et services en se basant sur votre FAQ.
+                        {t('boutique.agentSettings.cards.qa.description')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between border-t border-border/40 pt-3">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                      {settings.is_qa_active ? 'Actif' : 'Désactivé'}
+                      {settings.is_qa_active ? t('boutique.agentSettings.cards.statusActive') : t('boutique.agentSettings.cards.statusInactive')}
                     </span>
                     <Switch
                       checked={settings.is_qa_active}
@@ -313,15 +338,15 @@ export function AgentSettingsCard({
                       <ShoppingBag className="size-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-foreground">Prise de Commande</p>
+                      <p className="text-sm font-extrabold text-foreground">{t('boutique.agentSettings.cards.orderTaking.title')}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                        Détecte l&apos;intention d&apos;achat du client, collecte les informations de livraison nécessaires et valide le panier.
+                        {t('boutique.agentSettings.cards.orderTaking.description')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between border-t border-border/40 pt-3">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                      {settings.is_order_taking_active ? 'Actif' : 'Désactivé'}
+                      {settings.is_order_taking_active ? t('boutique.agentSettings.cards.statusActive') : t('boutique.agentSettings.cards.statusInactive')}
                     </span>
                     <Switch
                       checked={settings.is_order_taking_active}
@@ -349,15 +374,15 @@ export function AgentSettingsCard({
                       <PackageSearch className="size-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-foreground">Disponibilité Stock</p>
+                      <p className="text-sm font-extrabold text-foreground">{t('boutique.agentSettings.cards.availability.title')}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                        Consulte en temps réel l&apos;état exact des stocks de votre catalogue pour ne proposer que des variantes disponibles.
+                        {t('boutique.agentSettings.cards.availability.description')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between border-t border-border/40 pt-3">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                      {settings.is_availability_check_active ? 'Actif' : 'Désactivé'}
+                      {settings.is_availability_check_active ? t('boutique.agentSettings.cards.statusActive') : t('boutique.agentSettings.cards.statusInactive')}
                     </span>
                     <Switch
                       checked={settings.is_availability_check_active}
@@ -377,11 +402,11 @@ export function AgentSettingsCard({
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Info className="size-3.5 text-primary" /> Description de votre assistant
+                    <Info className="size-3.5 text-primary" /> {t('boutique.agentSettings.persona.descriptionLabel')}
                   </Label>
                   <Textarea
                     rows={4}
-                    placeholder="Ex: Tu es Lyna, assistante chaleureuse de la boutique Dahlia. Tu réponds en darija et français. Tu es enthousiaste et patiente."
+                    placeholder={t('boutique.agentSettings.persona.descriptionPlaceholder')}
                     value={settings.vertical_config?.persona ?? ''}
                     onChange={(e) =>
                       setSettings((s) => ({
@@ -393,15 +418,15 @@ export function AgentSettingsCard({
                     className="resize-none text-sm rounded-xl border-border bg-card shadow-inner focus-visible:ring-primary/20"
                   />
                   <p className="text-[10.5px] text-muted-foreground/80 leading-normal">
-                    Donnez à l&apos;IA une identité claire (nom, langue, attitude). Cela l&apos;aidera à adapter son niveau de politesse et son vocabulaire.
+                    {t('boutique.agentSettings.persona.descriptionHelp')}
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-3 border-t border-border/40">
                   <Label className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <ListChecks className="size-3.5 text-primary" /> Instructions spécifiques et consignes
+                    <ListChecks className="size-3.5 text-primary" /> {t('boutique.agentSettings.persona.instructionsLabel')}
                   </Label>
-                  
+
                   <TagInput
                     id="agent-instructions"
                     value={settings.instructions}
@@ -409,18 +434,18 @@ export function AgentSettingsCard({
                       setSettings((s) => ({ ...s, instructions: v }))
                       save({ instructions: v })
                     }}
-                    placeholder="Tapez une instruction puis appuyez sur Entrée..."
+                    placeholder={t('boutique.agentSettings.persona.instructionsPlaceholder')}
                   />
 
                   <div className="space-y-2 pt-2">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">Recommandations fréquentes :</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">{t('boutique.agentSettings.persona.recommendationsLabel')}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {[
-                        'Toujours saluer le client',
-                        'Ne jamais donner de réductions',
-                        'Répondre en darija',
-                        'Proposer la livraison express',
-                        'Ne pas mentionner les concurrents',
+                        t('boutique.agentSettings.persona.recommendations.greet'),
+                        t('boutique.agentSettings.persona.recommendations.noDiscounts'),
+                        t('boutique.agentSettings.persona.recommendations.replyDarija'),
+                        t('boutique.agentSettings.persona.recommendations.expressDelivery'),
+                        t('boutique.agentSettings.persona.recommendations.noCompetitors'),
                       ]
                         .filter((s) => !settings.instructions.includes(s))
                         .map((s) => (
@@ -447,15 +472,15 @@ export function AgentSettingsCard({
             {activeTab === 'knowledge' && (
               <div className="space-y-5">
                 <div className="space-y-3">
-                  <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Connaissances enregistrées</p>
-                  
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">{t('boutique.agentSettings.knowledge.savedLabel')}</p>
+
                   {faqs.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 py-10 text-center rounded-2xl border border-dashed border-border bg-muted/10">
                       <BookOpen className="size-10 text-muted-foreground/40 stroke-[1.25]" />
                       <div>
-                        <p className="text-sm font-bold text-foreground">Aucune connaissance personnalisée</p>
+                        <p className="text-sm font-bold text-foreground">{t('boutique.agentSettings.knowledge.emptyTitle')}</p>
                         <p className="text-xs text-muted-foreground/80 max-w-[40ch] leading-relaxed mt-1">
-                          Ajoutez des questions fréquentes (tarifs, livraison, retours) pour que l&apos;IA y réponde de manière fiable.
+                          {t('boutique.agentSettings.knowledge.emptyDescription')}
                         </p>
                       </div>
                     </div>
@@ -475,22 +500,22 @@ export function AgentSettingsCard({
                                 <Input
                                   value={faq.question}
                                   onChange={(e) => updateFaq(idx, 'question', e.target.value)}
-                                  placeholder="Question"
+                                  placeholder={t('boutique.agentSettings.knowledge.questionPlaceholder')}
                                   className="text-xs font-bold rounded-lg border-border"
                                 />
                                 <Textarea
                                   rows={2}
                                   value={faq.answer}
                                   onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
-                                  placeholder="Réponse de l'IA"
+                                  placeholder={t('boutique.agentSettings.knowledge.answerPlaceholder')}
                                   className="resize-none text-xs rounded-lg border-border"
                                 />
                                 <div className="flex gap-1.5 justify-end">
                                   <Button variant="ghost" size="sm" className="h-7 text-[10px] px-2" onClick={() => setEditingFaqIdx(null)}>
-                                    Annuler
+                                    {t('boutique.agentSettings.knowledge.cancel')}
                                   </Button>
                                   <Button size="sm" className="h-7 text-[10px] px-2.5" onClick={saveFaq} disabled={saving}>
-                                    <CheckCircle2 className="size-3 mr-1" /> Enregistrer
+                                    <CheckCircle2 className="size-3 mr-1" /> {t('boutique.agentSettings.knowledge.save')}
                                   </Button>
                                 </div>
                               </div>
@@ -506,7 +531,7 @@ export function AgentSettingsCard({
                                     size="icon"
                                     className="size-7 rounded-lg text-muted-foreground hover:text-foreground"
                                     onClick={() => setEditingFaqIdx(idx)}
-                                    aria-label="Modifier"
+                                    aria-label={t('boutique.agentSettings.knowledge.editAria')}
                                   >
                                     <Settings2 className="size-3.5" />
                                   </Button>
@@ -515,7 +540,7 @@ export function AgentSettingsCard({
                                     size="icon"
                                     className="size-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                     onClick={() => removeFaq(idx)}
-                                    aria-label="Supprimer"
+                                    aria-label={t('boutique.agentSettings.knowledge.deleteAria')}
                                   >
                                     <Trash2 className="size-3.5" />
                                   </Button>
@@ -531,20 +556,20 @@ export function AgentSettingsCard({
 
                 <div className="rounded-2xl border border-dashed border-border bg-muted/10 p-4 space-y-3">
                   <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                    <Plus className="size-3.5 text-primary" /> Nouvelle connaissance
+                    <Plus className="size-3.5 text-primary" /> {t('boutique.agentSettings.knowledge.newTitle')}
                   </p>
                   <div className="space-y-2">
                     <Input
                       value={newFaqQ}
                       onChange={(e) => setNewFaqQ(e.target.value)}
-                      placeholder="Ex: Livrez-vous à Alger ?"
+                      placeholder={t('boutique.agentSettings.knowledge.newQuestionPlaceholder')}
                       className="text-xs rounded-xl border-border bg-card"
                     />
                     <Textarea
                       rows={2}
                       value={newFaqA}
                       onChange={(e) => setNewFaqA(e.target.value)}
-                      placeholder="Ex: Oui ! Nous livrons dans toutes les wilayas via Yalidine et Zaki Express."
+                      placeholder={t('boutique.agentSettings.knowledge.newAnswerPlaceholder')}
                       className="resize-none text-xs rounded-xl border-border bg-card"
                     />
                   </div>
@@ -555,7 +580,7 @@ export function AgentSettingsCard({
                     onClick={addFaq}
                     className="w-full gap-1.5 h-9 rounded-xl font-bold"
                   >
-                    Ajouter à la base de connaissances
+                    {t('boutique.agentSettings.knowledge.addButton')}
                   </Button>
                 </div>
               </div>
@@ -567,12 +592,12 @@ export function AgentSettingsCard({
                 <div className="rounded-2xl border border-border/80 bg-muted/10 p-4 flex gap-3 items-start">
                   <Info className="size-4 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-muted-foreground/80 leading-normal">
-                    Par défaut, l&apos;IA collecte les informations standards lors d&apos;un achat (nom du produit, variantes éventuelles, quantité, wilaya, commune et adresse de livraison). Vous pouvez ci-dessous ajouter des champs spécifiques additionnels que l&apos;IA doit impérativement demander.
+                    {t('boutique.agentSettings.infos.banner')}
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="agent-infos-to-collect" className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Champs supplémentaires requis</Label>
+                  <Label htmlFor="agent-infos-to-collect" className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">{t('boutique.agentSettings.infos.fieldsLabel')}</Label>
                   <TagInput
                     id="agent-infos-to-collect"
                     value={settings.infos_to_collect}
@@ -580,14 +605,20 @@ export function AgentSettingsCard({
                       setSettings((s) => ({ ...s, infos_to_collect: v }))
                       save({ infos_to_collect: v })
                     }}
-                    placeholder="Ex: Code promo, Type de peau..."
+                    placeholder={t('boutique.agentSettings.infos.fieldsPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">Suggestions courantes :</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">{t('boutique.agentSettings.infos.suggestionsLabel')}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {['Email', 'Identifiant Instagram', 'Code Promo', 'Date de livraison souhaitée', 'Remarques particulières']
+                    {[
+                      t('boutique.agentSettings.infos.suggestions.email'),
+                      t('boutique.agentSettings.infos.suggestions.instagram'),
+                      t('boutique.agentSettings.infos.suggestions.promoCode'),
+                      t('boutique.agentSettings.infos.suggestions.deliveryDate'),
+                      t('boutique.agentSettings.infos.suggestions.notes'),
+                    ]
                       .filter((s) => !settings.infos_to_collect.includes(s))
                       .map((s) => (
                         <button
@@ -607,7 +638,7 @@ export function AgentSettingsCard({
                 </div>
 
                 <div className="pt-4 border-t border-border/40 space-y-2">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/60">Champs requis par défaut (non modifiables) :</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/60">{t('boutique.agentSettings.infos.defaultsLabel')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {DEFAULT_INFOS.map((d) => (
                       <span key={d} className="inline-flex items-center rounded-full bg-muted/80 border border-border/40 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground select-none">
@@ -626,14 +657,14 @@ export function AgentSettingsCard({
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.02] p-4 flex gap-3 items-center">
                   <ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <p className="text-xs text-muted-foreground leading-normal">
-                    Vos identifiants et clés API sont encryptés de bout en bout (AES-256-GCM) avant d&apos;être enregistrés dans notre base de données. Ils ne sont jamais stockés en clair.
+                    {t('boutique.agentSettings.llm.securityNotice')}
                   </p>
                 </div>
 
                 {/* Grid Inputs for Provider / Model */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Fournisseur d&apos;IA</Label>
+                    <Label className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">{t('boutique.agentSettings.llm.providerLabel')}</Label>
                     <Select
                       value={settings.ai_provider}
                       onValueChange={(v) => {
@@ -659,13 +690,13 @@ export function AgentSettingsCard({
                   </div>
                   
                   <div className="space-y-1.5">
-                    <Label htmlFor="ai-model" className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Modèle LLM</Label>
+                    <Label htmlFor="ai-model" className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">{t('boutique.agentSettings.llm.modelLabel')}</Label>
                     <Input
                       id="ai-model"
                       value={settings.ai_model}
                       onChange={(e) => setSettings((s) => ({ ...s, ai_model: e.target.value }))}
                       onBlur={() => save({ ai_model: settings.ai_model })}
-                      placeholder={PROVIDER_META[settings.ai_provider]?.defaultModel ?? 'modèle'}
+                      placeholder={PROVIDER_META[settings.ai_provider]?.defaultModel ?? t('boutique.agentSettings.llm.modelPlaceholderFallback')}
                       className="rounded-xl border-border bg-card shadow-sm h-10 text-xs font-semibold"
                     />
                   </div>
@@ -674,7 +705,7 @@ export function AgentSettingsCard({
                 {/* API Key section */}
                 <div className="space-y-1.5 pt-3 border-t border-border/40">
                   <Label htmlFor="ai-key" className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Key className="size-3.5 text-primary" /> Clé API
+                    <Key className="size-3.5 text-primary" /> {t('boutique.agentSettings.llm.apiKeyLabel')}
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -702,9 +733,9 @@ export function AgentSettingsCard({
                       className="shrink-0 rounded-xl h-10 font-bold px-4 gap-1.5"
                     >
                       {saved ? (
-                        <><CheckCircle2 className="size-4" /> Sauvegardé</>
+                        <><CheckCircle2 className="size-4" /> {t('boutique.agentSettings.llm.savedButton')}</>
                       ) : (
-                        <><Save className="size-4" /> Enregistrer</>
+                        <><Save className="size-4" /> {t('boutique.agentSettings.llm.saveButton')}</>
                       )}
                     </Button>
                   </div>

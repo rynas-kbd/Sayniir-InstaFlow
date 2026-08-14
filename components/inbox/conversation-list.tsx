@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLATFORM_ICON } from '@/lib/channels/labels'
+import { useT, useLocale } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 import type { Conversation } from './types'
 
 // Deterministic organic palette for avatars
@@ -25,18 +27,18 @@ function getAvatarPalette(str: string) {
   return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length]
 }
 
-function formatRelative(dateStr: string): string {
+function formatRelative(dateStr: string, t: Translator, dateLocale: string): string {
   const date = new Date(dateStr)
   const diff = Date.now() - date.getTime()
   const mins = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
 
-  if (mins < 1) return 'maintenant'
-  if (mins < 60) return `${mins}min`
-  if (hours < 24) return `${hours}h`
-  if (days < 7) return `${days}j`
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (mins < 1) return t('inbox.list.time.now')
+  if (mins < 60) return t('inbox.list.time.minutes', { mins })
+  if (hours < 24) return t('inbox.list.time.hours', { hours })
+  if (days < 7) return t('inbox.list.time.days', { days })
+  return date.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })
 }
 
 export function ConversationList({
@@ -49,6 +51,9 @@ export function ConversationList({
   filter: string
 }) {
   const router = useRouter()
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
 
   function select(conversationId: string) {
     const params = new URLSearchParams()
@@ -70,8 +75,8 @@ export function ConversationList({
           <MessageSquare className="size-5 text-muted-foreground" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-foreground">Aucune conversation</p>
-          <p className="mt-0.5 text-[11.5px] text-muted-foreground">Les messages apparaîtront ici</p>
+          <p className="text-[13px] font-semibold text-foreground">{t('inbox.list.empty.title')}</p>
+          <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t('inbox.list.empty.description')}</p>
         </div>
       </div>
     )
@@ -83,7 +88,7 @@ export function ConversationList({
         const isActive = activeId === conv.id
         const initial = (conv.senderFullName?.[0] ?? conv.senderUsername?.[0] ?? '?').toUpperCase()
         const displayName = conv.senderFullName ?? (conv.senderUsername ? `@${conv.senderUsername}` : conv.senderId)
-        const preview = conv.lastMessage ?? '(média)'
+        const preview = conv.lastMessage ?? t('inbox.list.mediaFallback')
         const palette = getAvatarPalette(conv.senderId)
         const PlatformIcon = PLATFORM_ICON[conv.platform]
 
@@ -173,7 +178,7 @@ export function ConversationList({
                     className="shrink-0 text-[10.5px] tabular-nums"
                     style={{ color: 'color-mix(in srgb, var(--foreground) 35%, transparent)' }}
                   >
-                    {formatRelative(conv.lastMessageAt)}
+                    {formatRelative(conv.lastMessageAt, t, dateLocale)}
                   </span>
                 </div>
                 <p
@@ -186,7 +191,7 @@ export function ConversationList({
                   }}
                 >
                   {conv.lastDirection === 'outgoing' && (
-                    <span style={{ color: 'var(--organic-terracotta-600)', marginRight: '3px' }}>Vous :</span>
+                    <span style={{ color: 'var(--organic-terracotta-600)', marginRight: '3px' }}>{t('inbox.list.youPrefix')}</span>
                   )}
                   {preview.length > 52 ? `${preview.slice(0, 52)}…` : preview}
                 </p>

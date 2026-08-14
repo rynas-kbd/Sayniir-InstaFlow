@@ -1,28 +1,39 @@
+'use client'
+
 import { Clock3, User, ShoppingBag, ArrowRight } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 import type { AbandonedSession } from './types'
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  selecting_product: { label: 'Choix du produit', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
-  gathering_info: { label: 'Informations de livraison', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
+function statusLabel(status: string, t: Translator): { label: string; color: string } {
+  if (status === 'selecting_product') {
+    return { label: t('boutique.abandonedSessions.status.selectingProduct'), color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' }
+  }
+  if (status === 'gathering_info') {
+    return { label: t('boutique.abandonedSessions.status.gatheringInfo'), color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' }
+  }
+  return { label: status, color: 'bg-muted text-muted-foreground border-border' }
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: Translator): string {
   const ms = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(ms / (60 * 60 * 1000))
-  if (hours < 24) return `il y a ${hours}h`
+  if (hours < 24) return t('boutique.abandonedSessions.timeAgoHours', { hours })
   const days = Math.floor(hours / 24)
-  return `il y a ${days}j`
+  return t('boutique.abandonedSessions.timeAgoDays', { days })
 }
 
 export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession[] }) {
+  const t = useT()
+
   if (sessions.length === 0) {
     return (
       <EmptyState
         icon={Clock3}
-        title="Aucun panier abandonné"
-        description="Les conversations commencées mais interrompues depuis plus de 2 heures apparaîtront ici pour relance."
+        title={t('boutique.abandonedSessions.emptyTitle')}
+        description={t('boutique.abandonedSessions.emptyDescription')}
       />
     )
   }
@@ -33,15 +44,15 @@ export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession
         <div className="flex items-center gap-2">
           <Clock3 className="size-4 text-primary" />
           <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-            {sessions.length} Panier{sessions.length > 1 ? 's' : ''} abandonné{sessions.length > 1 ? 's' : ''} en attente
+            {t.plural('boutique.abandonedSessions.pendingCount', sessions.length)}
           </span>
         </div>
-        <span className="text-[11px] font-medium text-muted-foreground">Inactifs &gt; 2h</span>
+        <span className="text-[11px] font-medium text-muted-foreground">{t('boutique.abandonedSessions.inactiveThreshold')}</span>
       </div>
 
       <div className="divide-y divide-border/40">
         {sessions.map((s) => {
-          const statusInfo = STATUS_LABEL[s.status] ?? { label: s.status, color: 'bg-muted text-muted-foreground border-border' }
+          const statusInfo = statusLabel(s.status, t)
           const name = s.customer_name || s.sender_id
           const initials = name.slice(0, 2).toUpperCase()
 
@@ -60,14 +71,14 @@ export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession
                   </div>
                   <p className="mt-0.5 truncate text-xs text-muted-foreground flex items-center gap-1.5">
                     <ShoppingBag className="size-3 text-muted-foreground/70 shrink-0" />
-                    <span>{s.products?.name ?? 'Produit non sélectionné'}</span>
+                    <span>{s.products?.name ?? t('boutique.abandonedSessions.noProductSelected')}</span>
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 ml-auto sm:ml-0">
                 <span className="text-xs font-medium text-muted-foreground/80 bg-muted/50 px-2.5 py-1 rounded-md">
-                  {timeAgo(s.last_message_at)}
+                  {timeAgo(s.last_message_at, t)}
                 </span>
               </div>
             </div>

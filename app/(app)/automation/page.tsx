@@ -3,9 +3,11 @@ import { resolveActiveAccount } from '@/lib/accounts/active-account'
 import { getAccountLabel } from '@/lib/channels/labels'
 import { PageHeader } from '@/components/app-shell/page-header'
 import { AutomationClient } from '@/components/automation/automation-client'
+import { getT } from '@/lib/i18n/server'
 
 export default async function AutomationPage() {
   const supabase = await createClient()
+  const t = await getT()
   const { accounts, active, scope } = await resolveActiveAccount()
 
   // 'Tous les canaux' — mirrors app/(app)/flows/page.tsx's pattern. This page
@@ -37,7 +39,7 @@ export default async function AutomationPage() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <PageHeader title="Règles" description="Réponses automatiques par mot-clé, DM et commentaires." />
+      <PageHeader title={t('automation.page.title')} description={t('automation.page.description')} />
       <div className="min-h-0 flex-1">
         <AutomationClient accounts={accounts} initialRules={rulesWithTargets} />
       </div>

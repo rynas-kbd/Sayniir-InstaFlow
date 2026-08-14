@@ -4,21 +4,23 @@ import { Coins } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Field, FormSection, fieldA11y } from '@/components/shared/form-section'
+import { useT } from '@/components/i18n-provider'
 import type { ProductFormApi } from './types'
 
 const CURRENCIES = ['DZD', 'EUR', 'USD', 'MAD', 'TND']
 
 export function PriceFields({ api }: { api: ProductFormApi }) {
+  const t = useT()
   const { form, errors, setField } = api
   // Keep a saved product's currency selectable even if it falls outside our default list —
   // otherwise the Select would render empty and could write '' back on save.
   const currencyOptions = Array.from(new Set([...CURRENCIES, form.currency].filter(Boolean)))
 
   return (
-    <FormSection icon={Coins} label="Prix & stock">
+    <FormSection icon={Coins} label={t('boutique.productForm.priceFields.sectionLabel')}>
       <div className="flex flex-col gap-3.5 sm:flex-row">
         <div className="flex-1">
-          <Field label="Prix" htmlFor="p-price" required error={errors.price}>
+          <Field label={t('boutique.productForm.priceFields.priceLabel')} htmlFor="p-price" required error={errors.price}>
             <Input
               {...fieldA11y('p-price', { error: errors.price })}
               type="number"
@@ -29,7 +31,7 @@ export function PriceFields({ api }: { api: ProductFormApi }) {
           </Field>
         </div>
         <div className="w-28">
-          <Field label="Devise" htmlFor="p-currency" error={errors.currency}>
+          <Field label={t('boutique.productForm.priceFields.currencyLabel')} htmlFor="p-currency" error={errors.currency}>
             <Select value={form.currency} onValueChange={(v) => setField('currency', v ?? 'DZD')}>
               <SelectTrigger id="p-currency" className="w-full" aria-invalid={errors.currency ? true : undefined}>
                 <SelectValue />
@@ -46,7 +48,7 @@ export function PriceFields({ api }: { api: ProductFormApi }) {
         </div>
         {form.kind === 'physical' && (
           <div className="flex-1">
-            <Field label="Stock" htmlFor="p-stock" error={errors.stock_quantity}>
+            <Field label={t('boutique.productForm.priceFields.stockLabel')} htmlFor="p-stock" error={errors.stock_quantity}>
               <Input
                 {...fieldA11y('p-stock', { error: errors.stock_quantity })}
                 type="number"

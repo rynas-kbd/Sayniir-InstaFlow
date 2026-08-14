@@ -1,7 +1,15 @@
+import type { Translator } from '@/lib/i18n/translate'
+import { createTranslator } from '@/lib/i18n/translate'
+import { fr } from '@/lib/i18n/dictionaries/fr'
+
 /**
  * Source de vérité unique pour les plans — tarifs en DZD (dinars entiers,
  * l'unité que Chargily Pay v2 attend, voir lib/integrations/chargily/client.ts).
  * Importé par l'admin, la landing page, et les routes de facturation.
+ *
+ * Label/description/features are translated content, not catalog data — they
+ * live in lib/i18n/dictionaries/*\/plans.ts and are resolved via
+ * getPlanDisplay()/getPlanDisplayFr() below, not stored on PLAN_CONFIG.
  */
 
 export type PlanKey = 'free' | 'starter' | 'pro' | 'business'
@@ -14,14 +22,11 @@ export const ANNUAL_DISCOUNT_RATE = 0.2
 
 export interface PlanConfig {
   key: PlanKey
-  label: string
   /** null = tarif négocié par client (plan Business), pas de prix catalogue. */
   priceMonthlyDzd: number | null
   priceAnnualDzd: number | null
   period: string
   periodAnnual: string
-  description: string
-  features: string[]
   badgeClass: string   // Tailwind classes for the badge
   borderClass: string  // Border highlight class
   highlighted?: boolean
@@ -34,70 +39,76 @@ function annualFromMonthly(monthly: number): number {
 export const PLAN_CONFIG: Record<PlanKey, PlanConfig> = {
   free: {
     key: 'free',
-    label: 'Free',
     priceMonthlyDzd: 0,
     priceAnnualDzd: 0,
     period: 'pour toujours · 1 canal',
     periodAnnual: 'pour toujours · 1 canal',
-    description: 'Pour découvrir Instaflow avant de vous lancer.',
-    features: ['1 000 contacts', 'Flow builder visuel', 'Réponses IA basiques (100/mois)', 'Capture de leads'],
     badgeClass: 'bg-muted text-muted-foreground border-border',
     borderClass: 'border-border',
   },
   starter: {
     key: 'starter',
-    label: 'Starter',
     priceMonthlyDzd: 4900,
     priceAnnualDzd: annualFromMonthly(4900),
     period: 'DZD/mois',
     periodAnnual: 'DZD/an',
-    description: 'Pour démarrer et automatiser votre premier compte.',
-    features: [
-      '1 compte connecté (Instagram, Messenger ou WhatsApp)',
-      'Inbox unifié',
-      'Flows illimités',
-      'CRM basique (contacts, tags)',
-    ],
     badgeClass: 'bg-muted text-muted-foreground border-border',
     borderClass: 'border-border',
   },
   pro: {
     key: 'pro',
-    label: 'Pro',
     priceMonthlyDzd: 12900,
     priceAnnualDzd: annualFromMonthly(12900),
     period: 'DZD/mois',
     periodAnnual: 'DZD/an',
-    description: "Pour les boutiques et créateurs actifs qui veulent l'IA.",
-    features: [
-      '3 comptes connectés',
-      'Agents IA (Q&A, qualification, prise de commande)',
-      'Campagnes de diffusion',
-      'Analytics avancées',
-      'Tout Starter inclus',
-    ],
     badgeClass: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
     borderClass: 'border-orange-300 dark:border-orange-700',
     highlighted: true,
   },
   business: {
     key: 'business',
-    label: 'Business',
     priceMonthlyDzd: null,
     priceAnnualDzd: null,
     period: 'Sur devis',
     periodAnnual: 'Sur devis',
-    description: 'Pour les agences et comptes multiples.',
-    features: [
-      'Comptes illimités',
-      'Plusieurs utilisateurs',
-      'Support prioritaire',
-      'Intégrations sur mesure',
-      'Tout Pro inclus',
-    ],
     badgeClass: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800',
     borderClass: 'border-teal-300 dark:border-teal-700',
   },
+}
+
+export interface PlanDisplay {
+  label: string
+  description: string
+  features: string[]
+}
+
+/**
+ * Resolves a plan's translatable copy through the `plans` dictionary
+ * namespace (lib/i18n/dictionaries/*\/plans.ts). Call with the caller's
+ * bound Translator (useT()/getT()) so label/description/features follow the
+ * active locale instead of being hardcoded French.
+ */
+export function getPlanDisplay(plan: PlanKey, t: Translator): PlanDisplay {
+  return {
+    label: t(`plans.${plan}.label`),
+    description: t(`plans.${plan}.description`),
+    features: t.list(`plans.${plan}.features`),
+  }
+}
+
+// Bound once — French dictionary content is static, so there is no need to
+// build a new Translator per call.
+const frTranslator = createTranslator(fr, 'fr')
+
+/**
+ * French-only convenience for consumers that must not follow the request
+ * locale: lib/marketing-content.ts's public PRICING_TIERS (the marketing
+ * page stays French regardless of app locale) and the Chargily checkout
+ * description (the checkout itself is already hardcoded to `locale: 'fr'`,
+ * see app/api/billing/checkout/route.ts).
+ */
+export function getPlanDisplayFr(plan: PlanKey): PlanDisplay {
+  return getPlanDisplay(plan, frTranslator)
 }
 
 /** "4 900" — espace insécable fine entre les groupes de milliers. */

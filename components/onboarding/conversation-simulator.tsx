@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Celebration } from '@/components/onboarding/celebration'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 interface SimulatedMessage {
   from: 'user' | 'bot'
@@ -19,7 +21,13 @@ const PLATFORM_GRADIENT: Record<string, string> = {
   messenger: 'bg-[#00B2FF]',
 }
 
-const SUGGESTIONS = ['Bonjour', 'Salut, vous vendez quoi ?', 'Combien ça coûte ?']
+function getSuggestions(t: Translator): string[] {
+  return [
+    t('onboardingActivation.simulator.suggestions.hello'),
+    t('onboardingActivation.simulator.suggestions.whatDoYouSell'),
+    t('onboardingActivation.simulator.suggestions.howMuch'),
+  ]
+}
 
 /**
  * The onboarding "moment aha": types a message, it runs through the real
@@ -35,6 +43,7 @@ export function ConversationSimulator({
   platform: 'instagram' | 'whatsapp' | 'messenger' | null
   onActivated: () => void
 }) {
+  const t = useT()
   const [messages, setMessages] = useState<SimulatedMessage[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -42,6 +51,7 @@ export function ConversationSimulator({
   const [celebrating, setCelebrating] = useState(false)
 
   const gradient = platform ? PLATFORM_GRADIENT[platform] : 'bg-primary'
+  const suggestions = getSuggestions(t)
 
   async function send(text: string) {
     const trimmed = text.trim()
@@ -61,7 +71,7 @@ export function ConversationSimulator({
       const data = await res.json()
 
       if (!res.ok) {
-        setHint(data.error ?? 'Une erreur est survenue.')
+        setHint(data.error ?? t('onboardingActivation.simulator.genericError'))
         return
       }
 
@@ -79,7 +89,7 @@ export function ConversationSimulator({
         setTimeout(onActivated, 2200)
       }
     } catch {
-      setHint('Impossible de contacter le serveur — réessayez.')
+      setHint(t('onboardingActivation.simulator.networkError'))
     } finally {
       setSending(false)
     }
@@ -92,7 +102,7 @@ export function ConversationSimulator({
       <div className="mb-3 flex min-h-[64px] flex-col gap-2.5 px-1">
         {messages.length === 0 && (
           <p className="py-2 text-center text-[11.5px] text-muted-foreground">
-            Écrivez comme le ferait un vrai client — l&apos;automatisation active répondra en direct.
+            {t('onboardingActivation.simulator.emptyHint')}
           </p>
         )}
         <AnimatePresence initial={false}>
@@ -129,7 +139,7 @@ export function ConversationSimulator({
         {sending && (
           <div className="flex items-center gap-1.5 self-start px-1 text-[11px] text-muted-foreground">
             <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground" />
-            en train de répondre…
+            {t('onboardingActivation.simulator.sending')}
           </div>
         )}
       </div>
@@ -138,7 +148,7 @@ export function ConversationSimulator({
 
       {messages.length === 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button
               key={s}
               type="button"
@@ -161,12 +171,18 @@ export function ConversationSimulator({
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Écrivez un message…"
+          placeholder={t('onboardingActivation.simulator.inputPlaceholder')}
           disabled={sending}
           maxLength={500}
           className="h-9 text-xs"
         />
-        <Button type="submit" size="icon-sm" disabled={sending || !input.trim()} className="h-9 w-9 shrink-0" aria-label="Envoyer">
+        <Button
+          type="submit"
+          size="icon-sm"
+          disabled={sending || !input.trim()}
+          className="h-9 w-9 shrink-0"
+          aria-label={t('onboardingActivation.simulator.sendAriaLabel')}
+        >
           <Send className="size-3.5" />
         </Button>
       </form>

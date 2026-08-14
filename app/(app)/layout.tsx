@@ -9,6 +9,8 @@ import { PageTransitionWrapper } from '@/components/app-shell/page-transition'
 import { CopilotProvider } from '@/components/ai/copilot-provider'
 import { RenewalBanner } from '@/components/billing/renewal-banner'
 import type { PlanKey, BillingPeriod } from '@/lib/plans'
+import { I18nProvider } from '@/components/i18n-provider'
+import { getLocale } from '@/lib/i18n/server'
 
 export default async function AppLayout({
   children,
@@ -23,6 +25,8 @@ export default async function AppLayout({
   if (!user) {
     redirect('/login')
   }
+
+  const locale = await getLocale()
 
   const [{ data: profile }, { accounts, active, scope }, { data: subscription }] = await Promise.all([
     supabase
@@ -77,6 +81,7 @@ export default async function AppLayout({
     : { unrepliedMessages: 0, pendingLeads: 0, pendingAppointments: 0 }
 
   return (
+    <I18nProvider initialLocale={locale}>
     <CopilotProvider channelAccountId={active?.id ?? null}>
     <div className="app-shell-root flex h-dvh overflow-hidden bg-background">
       <AppSidebar businessType={businessType} />
@@ -121,5 +126,6 @@ export default async function AppLayout({
       </div>
     </div>
     </CopilotProvider>
+    </I18nProvider>
   )
 }

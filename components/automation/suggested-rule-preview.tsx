@@ -3,6 +3,8 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/components/i18n-provider'
+import type { Translator } from '@/lib/i18n/translate'
 
 interface RuleAction {
   type: 'reply' | 'ask' | 'tag' | 'goto'
@@ -18,16 +20,22 @@ export interface RuleSuggestion {
 }
 
 /** Renders one action's payload as readable text instead of raw JSON — the field that matters differs per action type. */
-function describeAction(action: RuleAction): string {
+function describeAction(action: RuleAction, t: Translator): string {
   switch (action.type) {
     case 'reply':
-      return action.payload.text ? `Répondre : « ${action.payload.text} »` : 'Répondre'
+      return action.payload.text
+        ? t('automation.suggestedRulePreview.actionReplyWithText', { text: action.payload.text })
+        : t('automation.suggestedRulePreview.actionReply')
     case 'ask':
-      return action.payload.question ? `Demander : « ${action.payload.question} »` : 'Poser une question'
+      return action.payload.question
+        ? t('automation.suggestedRulePreview.actionAskWithQuestion', { question: action.payload.question })
+        : t('automation.suggestedRulePreview.actionAsk')
     case 'tag':
-      return action.payload.tag ? `Ajouter le tag "${action.payload.tag}"` : 'Ajouter un tag'
+      return action.payload.tag
+        ? t('automation.suggestedRulePreview.actionTagWithName', { tag: action.payload.tag })
+        : t('automation.suggestedRulePreview.actionTag')
     case 'goto':
-      return 'Aller à une autre étape'
+      return t('automation.suggestedRulePreview.actionGoto')
     default:
       return action.type
   }
@@ -44,6 +52,7 @@ export default function SuggestedRulePreview({
   onPublish: (s: RuleSuggestion) => Promise<void>
   onCancel: () => void
 }) {
+  const t = useT()
   if (!suggestion) return null
   const { title, summary, trigger, actions, examples } = suggestion
 
@@ -57,8 +66,12 @@ export default function SuggestedRulePreview({
 
         {trigger && (
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="font-medium text-foreground">Déclencheur :</span>
-            <Badge variant="secondary">{trigger.type === 'keyword' ? 'Mot-clé' : 'Tout message'}</Badge>
+            <span className="font-medium text-foreground">{t('automation.suggestedRulePreview.trigger')}</span>
+            <Badge variant="secondary">
+              {trigger.type === 'keyword'
+                ? t('automation.suggestedRulePreview.triggerKeyword')
+                : t('automation.suggestedRulePreview.triggerAnyMessage')}
+            </Badge>
             {trigger.keywords?.map((k) => (
               <Badge key={k} variant="outline">
                 {k}
@@ -69,10 +82,10 @@ export default function SuggestedRulePreview({
 
         {Array.isArray(actions) && actions.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-foreground">Actions</p>
+            <p className="text-xs font-medium text-foreground">{t('automation.suggestedRulePreview.actions')}</p>
             <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-muted-foreground">
               {actions.map((a, i) => (
-                <li key={i}>{describeAction(a)}</li>
+                <li key={i}>{describeAction(a, t)}</li>
               ))}
             </ul>
           </div>
@@ -80,7 +93,7 @@ export default function SuggestedRulePreview({
 
         {Array.isArray(examples) && examples.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-foreground">Exemples</p>
+            <p className="text-xs font-medium text-foreground">{t('automation.suggestedRulePreview.examples')}</p>
             <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-muted-foreground">
               {examples.map((e, i) => (
                 <li key={i}>{e}</li>
@@ -91,13 +104,13 @@ export default function SuggestedRulePreview({
 
         <div className="flex flex-wrap gap-2 pt-1">
           <Button type="button" variant="outline" size="sm" onClick={() => onPrefill(suggestion)}>
-            Préremplir le formulaire
+            {t('automation.suggestedRulePreview.prefill')}
           </Button>
           <Button type="button" size="sm" onClick={() => void onPublish(suggestion)}>
-            Publier
+            {t('automation.suggestedRulePreview.publish')}
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Annuler
+            {t('automation.suggestedRulePreview.cancel')}
           </Button>
         </div>
       </CardContent>

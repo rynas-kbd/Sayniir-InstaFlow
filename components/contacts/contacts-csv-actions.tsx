@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/components/i18n-provider'
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
@@ -22,6 +23,7 @@ export function ContactsCsvActions({ channelAccountId }: { channelAccountId: str
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
+  const t = useT()
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -38,10 +40,10 @@ export function ContactsCsvActions({ channelAccountId }: { channelAccountId: str
       })
       if (!res.ok) throw new Error()
       const { updated, skipped } = await res.json()
-      toast.success(`${updated} contact(s) mis à jour, ${skipped} ignoré(s) (aucune correspondance téléphone/email)`)
+      toast.success(t('contacts.csv.toastImportSuccess', { updated, skipped }))
       router.refresh()
     } catch {
-      toast.error("Impossible d'importer le fichier")
+      toast.error(t('contacts.csv.toastImportError'))
     } finally {
       setImporting(false)
     }
@@ -50,10 +52,10 @@ export function ContactsCsvActions({ channelAccountId }: { channelAccountId: str
   return (
     <div className="flex items-center gap-1.5">
       <Button variant="outline" size="sm" nativeButton={false} render={<a href={`/api/contacts/export?accountId=${channelAccountId}`} />}>
-        <Download className="size-3.5" /> Exporter CSV
+        <Download className="size-3.5" /> {t('contacts.csv.export')}
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-        <Upload className="size-3.5" /> {importing ? 'Import…' : 'Importer CSV'}
+        <Upload className="size-3.5" /> {importing ? t('contacts.csv.importing') : t('contacts.csv.import')}
       </Button>
       <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
     </div>

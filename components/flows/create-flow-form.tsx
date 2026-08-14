@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FormSection } from '@/components/shared/form-section'
-import { FLOW_TEMPLATES, BLANK_TEMPLATE } from '@/lib/flows/templates'
-
-const TEMPLATE_OPTIONS = [BLANK_TEMPLATE, ...FLOW_TEMPLATES]
+import { getFlowTemplates, getBlankTemplate } from '@/lib/flows/templates'
+import { useT } from '@/components/i18n-provider'
 
 export function CreateFlowForm({
   channelAccountId,
@@ -36,11 +35,14 @@ export function CreateFlowForm({
   onCreated?: (flowId: string) => void
 }) {
   const router = useRouter()
+  const t = useT()
   const [name, setName] = useState('')
   const [templateId, setTemplateId] = useState<string>(defaultTemplateId ?? 'blank')
   const [saving, setSaving] = useState(false)
 
-  const selectedTemplate = FLOW_TEMPLATES.find((t) => t.id === templateId)
+  const FLOW_TEMPLATES = getFlowTemplates(t)
+  const TEMPLATE_OPTIONS = [getBlankTemplate(t), ...FLOW_TEMPLATES]
+  const selectedTemplate = FLOW_TEMPLATES.find((opt) => opt.id === templateId)
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -72,7 +74,7 @@ export function CreateFlowForm({
             edges: selectedTemplate.edges,
           }),
         })
-        if (!graphRes.ok) toast.error('Flow créé, mais le template n\'a pas pu être chargé')
+        if (!graphRes.ok) toast.error(t('flows.createFlowForm.templateLoadError'))
       }
 
       if (activateOnCreate) {
@@ -81,7 +83,7 @@ export function CreateFlowForm({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'active' }),
         })
-        if (!activateRes.ok) toast.error("Flow créé, mais n'a pas pu être activé — activez-le depuis la liste des flows.")
+        if (!activateRes.ok) toast.error(t('flows.createFlowForm.activateError'))
 
         // agent_settings.flows_enabled defaults to false (see
         // 20260717_flows.sql) and is the account-wide switch inbound.ts
@@ -98,7 +100,7 @@ export function CreateFlowForm({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(settingsPatch),
         })
-        if (!settingsRes.ok) toast.error('Flow créé, mais les réglages associés n\'ont pas pu être activés.')
+        if (!settingsRes.ok) toast.error(t('flows.createFlowForm.settingsError'))
       }
 
       if (onCreated) {
@@ -107,14 +109,14 @@ export function CreateFlowForm({
         router.push(`/flows/${flow.id}`)
       }
     } catch {
-      toast.error('Impossible de créer le flow')
+      toast.error(t('flows.createFlowForm.genericError'))
       setSaving(false)
     }
   }
 
   return (
     <form onSubmit={handleCreate} className="flex flex-col gap-4">
-      <FormSection icon={Sparkles} label="Modèle">
+      <FormSection icon={Sparkles} label={t('flows.createFlowForm.modelSection')}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {TEMPLATE_OPTIONS.map((opt) => {
             const Icon = opt.icon ?? FileText
@@ -141,15 +143,15 @@ export function CreateFlowForm({
         </div>
       </FormSection>
 
-      <FormSection icon={Workflow} label="Nom">
+      <FormSection icon={Workflow} label={t('flows.createFlowForm.nameSection')}>
         <div className="space-y-1.5">
-          <Label htmlFor="flow-name">Nom du flow</Label>
+          <Label htmlFor="flow-name">{t('flows.createFlowForm.nameLabel')}</Label>
           <Input
             id="flow-name"
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={selectedTemplate?.namePlaceholder ?? 'Ex : Accueil nouveaux contacts'}
+            placeholder={selectedTemplate?.namePlaceholder ?? t('flows.createFlowForm.namePlaceholder')}
             maxLength={80}
           />
         </div>
@@ -157,7 +159,7 @@ export function CreateFlowForm({
 
       <div className="flex justify-end gap-2 border-t border-border pt-4">
         <Button type="submit" disabled={saving || !name.trim()}>
-          {saving ? 'Création…' : 'Créer le flow'}
+          {saving ? t('flows.createFlowForm.creating') : t('flows.createFlowForm.submit')}
         </Button>
       </div>
     </form>

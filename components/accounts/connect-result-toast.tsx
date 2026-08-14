@@ -4,21 +4,7 @@ import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { haptic } from '@/lib/motion/haptics'
-
-const PLATFORM_LABELS: Record<string, string> = {
-  instagram: 'Instagram',
-  messenger: 'Messenger',
-  whatsapp: 'WhatsApp',
-}
-
-const ERROR_MESSAGES: Record<string, string> = {
-  access_denied: 'Autorisation refusée sur Facebook.',
-  invalid_state: 'Session expirée, réessaie la connexion.',
-  missing_code: 'Connexion interrompue avant autorisation.',
-  no_pages: 'Aucune Page Facebook gérée par ce compte. Messenger nécessite une Page.',
-  server_error: 'Une erreur est survenue pendant la connexion.',
-  config_missing: 'Connexion Messenger non configurée (config_id manquant).',
-}
+import { useT } from '@/components/i18n-provider'
 
 /**
  * Reads the ?connected= / ?error= / ?reason= params left by the OAuth
@@ -34,17 +20,32 @@ const ERROR_MESSAGES: Record<string, string> = {
  * on the accounts page.
  */
 export function ConnectResultToast({ redirectTo = '/accounts' }: { redirectTo?: string }) {
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
+    const platformLabels: Record<string, string> = {
+      instagram: t('accounts.platformLabels.instagram'),
+      messenger: t('accounts.platformLabels.messenger'),
+      whatsapp: t('accounts.platformLabels.whatsapp'),
+    }
+    const errorMessages: Record<string, string> = {
+      access_denied: t('accounts.connectResult.errors.accessDenied'),
+      invalid_state: t('accounts.connectResult.errors.invalidState'),
+      missing_code: t('accounts.connectResult.errors.missingCode'),
+      no_pages: t('accounts.connectResult.errors.noPages'),
+      server_error: t('accounts.connectResult.errors.serverError'),
+      config_missing: t('accounts.connectResult.errors.configMissing'),
+    }
+
     const connected = searchParams.get('connected')
     const error = searchParams.get('error')
     const reason = searchParams.get('reason')
 
     if (connected) {
-      const label = PLATFORM_LABELS[connected] ?? connected
-      toast.success(`Compte ${label} connecté`)
+      const label = platformLabels[connected] ?? connected
+      toast.success(t('accounts.connectResult.connectedToast', { platform: label }))
       haptic('success')
       router.replace(redirectTo)
       return
@@ -52,13 +53,13 @@ export function ConnectResultToast({ redirectTo = '/accounts' }: { redirectTo?: 
 
     if (error) {
       if (error === 'db_error') {
-        toast.error("Échec d'enregistrement", {
-          description: reason ?? 'Erreur inconnue lors de la sauvegarde du compte.',
+        toast.error(t('accounts.connectResult.errors.dbErrorTitle'), {
+          description: reason ?? t('accounts.connectResult.errors.dbErrorDescriptionFallback'),
         })
       } else if (error === 'no_pages' && reason) {
-        toast.error(ERROR_MESSAGES.no_pages, { description: reason })
+        toast.error(errorMessages.no_pages, { description: reason })
       } else {
-        toast.error(ERROR_MESSAGES[error] ?? 'Une erreur est survenue pendant la connexion.')
+        toast.error(errorMessages[error] ?? t('accounts.connectResult.errors.generic'))
       }
       router.replace(redirectTo)
     }

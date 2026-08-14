@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthCard } from '@/components/auth/auth-card'
+import { useT } from '@/components/i18n-provider'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -19,6 +20,7 @@ const MIN_PASSWORD_LENGTH = 8
  * accepted (app/api/team/accept-invite/route.ts).
  */
 export default function AcceptInvitePage() {
+  const t = useT()
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -28,7 +30,7 @@ export default function AcceptInvitePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`)
+      setError(t('auth.acceptInvite.passwordTooShortError', { count: MIN_PASSWORD_LENGTH }))
       return
     }
     setLoading(true)
@@ -37,14 +39,14 @@ export default function AcceptInvitePage() {
     const supabase = createClient()
     const { error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError) {
-      setError("Impossible de définir le mot de passe. Le lien d'invitation a peut-être expiré.")
+      setError(t('auth.acceptInvite.updatePasswordError'))
       setLoading(false)
       return
     }
 
     const res = await fetch('/api/team/accept-invite', { method: 'POST' })
     if (!res.ok) {
-      setError("Mot de passe défini, mais l'activation du compte a échoué. Contactez le propriétaire du compte.")
+      setError(t('auth.acceptInvite.acceptInviteError'))
       setLoading(false)
       return
     }
@@ -54,11 +56,11 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <AuthCard tagline="Bienvenue dans l'équipe — définissez votre mot de passe">
+    <AuthCard tagline={t('auth.acceptInvite.tagline')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="space-y-1.5">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password">{t('auth.acceptInvite.passwordLabel')}</Label>
           <div className="relative">
             <Input
               id="password"
@@ -72,14 +74,14 @@ export default function AcceptInvitePage() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-label={showPassword ? t('auth.common.hidePassword') : t('auth.common.showPassword')}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Activation…' : 'Activer mon compte'}
+          {loading ? t('auth.acceptInvite.submitting') : t('auth.acceptInvite.submitButton')}
         </Button>
       </form>
     </AuthCard>

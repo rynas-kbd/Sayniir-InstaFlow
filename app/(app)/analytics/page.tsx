@@ -17,6 +17,7 @@ import { NoAccountState } from '@/components/accounts/no-account-state'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { MessagesChart } from '@/components/analytics/messages-chart'
+import { getT } from '@/lib/i18n/server'
 
 function StatBadge({ value, label, icon: Icon, accent }: { value: string | number; label: string; icon: React.ElementType; accent?: string }) {
   return (
@@ -51,13 +52,14 @@ function formatHour(h: number) {
 }
 
 export default async function AnalyticsPage() {
+  const t = await getT()
   const { active: account } = await resolveActiveAccount()
 
   if (!account) {
     return (
       <div className="flex min-h-full flex-col">
-        <PageHeader title="Analytics" description="Performances et statistiques des 14 derniers jours." />
-        <NoAccountState description="Connectez un compte pour voir vos statistiques." />
+        <PageHeader title={t('analytics.header.title')} description={t('analytics.header.description')} />
+        <NoAccountState description={t('analytics.noAccount.description')} />
       </div>
     )
   }
@@ -79,8 +81,8 @@ export default async function AnalyticsPage() {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader
-        title="Analytics"
-        description="Performances et statistiques des 14 derniers jours."
+        title={t('analytics.header.title')}
+        description={t('analytics.header.description')}
       />
 
       <div className="flex-1 space-y-5 p-4 sm:p-6 pb-20 md:pb-6">
@@ -92,48 +94,48 @@ export default async function AnalyticsPage() {
               <BarChart3 className="size-5" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Aperçu de l&apos;engagement</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t('analytics.intro.title')}</h3>
               <p className="text-xs text-muted-foreground">
-                Suivez l&apos;évolution de vos conversations automatiques et le comportement de votre audience.
+                {t('analytics.intro.description')}
               </p>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 text-xs text-muted-foreground border border-border/40 font-medium shrink-0">
             <Sparkles className="size-3.5 text-primary" />
-            14 jours
+            {t('analytics.intro.badge14Days')}
           </div>
         </div>
 
         {totalMessages === 0 && (
           <EmptyState
             icon={BarChart3}
-            title="Pas encore de données"
-            description="Les statistiques apparaîtront ici dès que votre compte recevra ses premiers messages."
+            title={t('analytics.noData.title')}
+            description={t('analytics.noData.description')}
           />
         )}
 
         {/* ── Stat grid ── */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatBadge
-            label="Messages reçus"
+            label={t('analytics.stats.messagesReceived')}
             value={summary.messagesReceived}
             icon={MessageSquare}
             accent="var(--color-primary)"
           />
           <StatBadge
-            label="Réponses auto."
+            label={t('analytics.stats.autoReplies')}
             value={summary.autoReplies}
             icon={Zap}
             accent="#f59e0b"
           />
           <StatBadge
-            label="Taux de réponse"
+            label={t('analytics.stats.responseRate')}
             value={`${summary.responseRate}%`}
             icon={TrendingUp}
             accent="#22c55e"
           />
           <StatBadge
-            label="Nouveaux contacts"
+            label={t('analytics.stats.newContacts')}
             value={summary.newContacts}
             icon={Users}
             accent="#8b5cf6"
@@ -148,7 +150,7 @@ export default async function AnalyticsPage() {
             </div>
             <div>
               <p className="text-lg font-bold tabular-nums">{summary.uniqueConversations}</p>
-              <p className="text-[10.5px] text-muted-foreground">Conversations</p>
+              <p className="text-[10.5px] text-muted-foreground">{t('analytics.secondary.conversations')}</p>
             </div>
           </div>
           <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center gap-3">
@@ -157,7 +159,7 @@ export default async function AnalyticsPage() {
             </div>
             <div>
               <p className="text-lg font-bold tabular-nums">{summary.totalOutgoing}</p>
-              <p className="text-[10.5px] text-muted-foreground">Msgs envoyés</p>
+              <p className="text-[10.5px] text-muted-foreground">{t('analytics.secondary.messagesSent')}</p>
             </div>
           </div>
           <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center gap-3">
@@ -168,32 +170,32 @@ export default async function AnalyticsPage() {
               <p className="text-lg font-bold tabular-nums">
                 {totalMessages > 0 ? formatHour(summary.peakHour) : '—'}
               </p>
-              <p className="text-[10.5px] text-muted-foreground">Heure de pointe</p>
+              <p className="text-[10.5px] text-muted-foreground">{t('analytics.secondary.peakHour')}</p>
             </div>
           </div>
         </div>
 
         {/* ── Commerce funnel + revenue ── */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatBadge label="Sessions démarrées" value={funnel.sessionsStarted} icon={ShoppingCart} accent="#0ea5e9" />
-          <StatBadge label="Commandes confirmées" value={funnel.ordersConfirmed} icon={PackageCheck} accent="#22c55e" />
-          <StatBadge label="Chiffre d'affaires" value={`${revenue.totalRevenue.toLocaleString('fr-FR')} DA`} icon={Wallet} accent="#f59e0b" />
-          <StatBadge label="Panier moyen" value={`${Math.round(revenue.averageOrderValue).toLocaleString('fr-FR')} DA`} icon={Receipt} accent="#8b5cf6" />
+          <StatBadge label={t('analytics.funnel.sessionsStarted')} value={funnel.sessionsStarted} icon={ShoppingCart} accent="#0ea5e9" />
+          <StatBadge label={t('analytics.funnel.ordersConfirmed')} value={funnel.ordersConfirmed} icon={PackageCheck} accent="#22c55e" />
+          <StatBadge label={t('analytics.funnel.revenue')} value={`${revenue.totalRevenue.toLocaleString('fr-FR')} DA`} icon={Wallet} accent="#f59e0b" />
+          <StatBadge label={t('analytics.funnel.averageOrderValue')} value={`${Math.round(revenue.averageOrderValue).toLocaleString('fr-FR')} DA`} icon={Receipt} accent="#8b5cf6" />
         </div>
 
         {/* IA vs humain breakdown */}
         <Card className="border-border/40 shadow-sm">
           <CardHeader className="border-b border-border/40 pb-3">
-            <CardTitle className="text-sm font-semibold">Qui a répondu ?</CardTitle>
-            <CardDescription className="text-xs">IA · Humain (inbox) · Sans réponse</CardDescription>
+            <CardTitle className="text-sm font-semibold">{t('analytics.handling.title')}</CardTitle>
+            <CardDescription className="text-xs">{t('analytics.handling.description')}</CardDescription>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             {(() => {
               const handlingTotal = handling.aiHandled + handling.humanHandled + handling.noReply
               return [
-                { label: 'Réponses IA', value: handling.aiHandled, color: 'var(--color-primary)' },
-                { label: 'Réponses humaines (inbox)', value: handling.humanHandled, color: '#8b5cf6' },
-                { label: 'Sans réponse', value: handling.noReply, color: '#ef4444' },
+                { label: t('analytics.handling.ai'), value: handling.aiHandled, color: 'var(--color-primary)' },
+                { label: t('analytics.handling.human'), value: handling.humanHandled, color: '#8b5cf6' },
+                { label: t('analytics.handling.none'), value: handling.noReply, color: '#ef4444' },
               ].map(({ label, value, color }) => {
                 const pct = handlingTotal > 0 ? Math.round((value / handlingTotal) * 100) : 0
                 return (
@@ -219,13 +221,13 @@ export default async function AnalyticsPage() {
           <CardHeader className="border-b border-border/40 pb-4">
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold">Volume de messagerie</CardTitle>
-                <CardDescription className="mt-0.5 text-xs">Messages reçus vs réponses automatiques par jour</CardDescription>
+                <CardTitle className="text-sm font-semibold">{t('analytics.chart.title')}</CardTitle>
+                <CardDescription className="mt-0.5 text-xs">{t('analytics.chart.description')}</CardDescription>
               </div>
               {totalMessages > 0 && (
                 <div className="flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-[10px] text-muted-foreground border border-border/30">
                   <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                  Live
+                  {t('analytics.chart.live')}
                 </div>
               )}
             </div>
@@ -240,14 +242,14 @@ export default async function AnalyticsPage() {
         {/* Response rate breakdown */}
         <Card className="border-border/40 shadow-sm">
           <CardHeader className="border-b border-border/40 pb-3">
-            <CardTitle className="text-sm font-semibold">Répartition des messages</CardTitle>
-            <CardDescription className="text-xs">Entrants · Sortants · Automatisés</CardDescription>
+            <CardTitle className="text-sm font-semibold">{t('analytics.breakdown.title')}</CardTitle>
+            <CardDescription className="text-xs">{t('analytics.breakdown.description')}</CardDescription>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             {[
-              { label: 'Messages reçus', value: summary.messagesReceived, total: totalMessages, color: 'var(--color-primary)' },
-              { label: 'Réponses automatiques', value: summary.autoReplies, total: totalMessages, color: '#22c55e' },
-              { label: 'Msgs envoyés manuellement', value: Math.max(0, summary.totalOutgoing - summary.autoReplies), total: totalMessages, color: '#f59e0b' },
+              { label: t('analytics.breakdown.received'), value: summary.messagesReceived, total: totalMessages, color: 'var(--color-primary)' },
+              { label: t('analytics.breakdown.autoReplies'), value: summary.autoReplies, total: totalMessages, color: '#22c55e' },
+              { label: t('analytics.breakdown.sentManually'), value: Math.max(0, summary.totalOutgoing - summary.autoReplies), total: totalMessages, color: '#f59e0b' },
             ].map(({ label, value, total, color }) => {
               const pct = total > 0 ? Math.round((value / total) * 100) : 0
               return (

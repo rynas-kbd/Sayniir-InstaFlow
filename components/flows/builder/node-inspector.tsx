@@ -24,20 +24,21 @@ import type { Tag as ContactTag } from '@/components/contacts/types'
 import type { FlowSummary } from '../types'
 import { CardFieldsEditor } from '@/components/shared/card-fields-editor'
 import { PostTargetField } from '@/components/shared/post-target-field'
+import { useT } from '@/components/i18n-provider'
 
 // ── Node metadata ──────────────────────────────────────────────────────────
-const NODE_META: Record<FlowNodeType, { label: string; icon: React.ElementType; color: string; glow: string; gradient: string }> = {
-  trigger:          { label: 'Déclencheur',         icon: Zap,                   color: '#f59e0b', glow: 'rgba(245,158,11,0.18)', gradient: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.04))' },
-  send_message:     { label: 'Envoyer un message',  icon: MessageSquare,         color: 'var(--organic-terracotta)', glow: 'color-mix(in srgb, var(--organic-terracotta) 18%, transparent)', gradient: 'linear-gradient(135deg, color-mix(in srgb, var(--organic-terracotta) 15%, transparent), color-mix(in srgb, var(--organic-terracotta) 4%, transparent))' },
-  ai_reply:         { label: 'Réponse IA',           icon: Sparkles,              color: '#8b5cf6', glow: 'rgba(139,92,246,0.18)', gradient: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.04))' },
-  condition:        { label: 'Condition',            icon: GitBranch,             color: '#ec4899', glow: 'rgba(236,72,153,0.18)', gradient: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(236,72,153,0.04))' },
-  delay:            { label: 'Délai',                icon: Clock,                 color: '#06b6d4', glow: 'rgba(6,182,212,0.18)',  gradient: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.04))' },
-  set_tag:          { label: 'Ajouter un tag',       icon: Tag,                   color: '#22c55e', glow: 'rgba(34,197,94,0.18)',  gradient: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.04))' },
-  remove_tag:       { label: 'Retirer un tag',       icon: Tag,                   color: '#ef4444', glow: 'rgba(239,68,68,0.18)',  gradient: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.04))' },
-  jump:             { label: 'Aller vers un flow',   icon: ArrowRightCircle,      color: '#f97316', glow: 'rgba(249,115,22,0.18)', gradient: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.04))' },
-  capture_input:    { label: 'Capturer une réponse', icon: ListPlus,              color: '#0ea5e9', glow: 'rgba(14,165,233,0.18)', gradient: 'linear-gradient(135deg, rgba(14,165,233,0.15), rgba(14,165,233,0.04))' },
-  external_request: { label: 'Requête externe',      icon: Globe,                 color: '#64748b', glow: 'rgba(100,116,139,0.18)',gradient: 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(100,116,139,0.04))' },
-  split_test:       { label: 'Split A/B',            icon: SplitSquareHorizontal, color: '#a855f7', glow: 'rgba(168,85,247,0.18)', gradient: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.04))' },
+const NODE_META: Record<FlowNodeType, { icon: React.ElementType; color: string; glow: string; gradient: string }> = {
+  trigger:          { icon: Zap,                   color: '#f59e0b', glow: 'rgba(245,158,11,0.18)', gradient: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.04))' },
+  send_message:     { icon: MessageSquare,         color: 'var(--organic-terracotta)', glow: 'color-mix(in srgb, var(--organic-terracotta) 18%, transparent)', gradient: 'linear-gradient(135deg, color-mix(in srgb, var(--organic-terracotta) 15%, transparent), color-mix(in srgb, var(--organic-terracotta) 4%, transparent))' },
+  ai_reply:         { icon: Sparkles,              color: '#8b5cf6', glow: 'rgba(139,92,246,0.18)', gradient: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.04))' },
+  condition:        { icon: GitBranch,             color: '#ec4899', glow: 'rgba(236,72,153,0.18)', gradient: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(236,72,153,0.04))' },
+  delay:            { icon: Clock,                 color: '#06b6d4', glow: 'rgba(6,182,212,0.18)',  gradient: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.04))' },
+  set_tag:          { icon: Tag,                   color: '#22c55e', glow: 'rgba(34,197,94,0.18)',  gradient: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.04))' },
+  remove_tag:       { icon: Tag,                   color: '#ef4444', glow: 'rgba(239,68,68,0.18)',  gradient: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.04))' },
+  jump:             { icon: ArrowRightCircle,      color: '#f97316', glow: 'rgba(249,115,22,0.18)', gradient: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.04))' },
+  capture_input:    { icon: ListPlus,              color: '#0ea5e9', glow: 'rgba(14,165,233,0.18)', gradient: 'linear-gradient(135deg, rgba(14,165,233,0.15), rgba(14,165,233,0.04))' },
+  external_request: { icon: Globe,                 color: '#64748b', glow: 'rgba(100,116,139,0.18)',gradient: 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(100,116,139,0.04))' },
+  split_test:       { icon: SplitSquareHorizontal, color: '#a855f7', glow: 'rgba(168,85,247,0.18)', gradient: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.04))' },
 }
 
 // ── Shared sub-components ─────────────────────────────────────────────────
@@ -149,7 +150,11 @@ export function NodeInspector({
   channelAccountId?: string
   onOpenPostPicker?: () => void
 }) {
+  const t = useT()
   const meta = NODE_META[nodeType] ?? NODE_META.send_message
+  const metaKey: FlowNodeType = NODE_META[nodeType] ? nodeType : 'send_message'
+  const metaLabel = t(`flows.nodeTypes.${metaKey}.label`)
+  const metaShort = t(`flows.nodeTypes.${metaKey}.short`)
   const Icon = meta.icon
 
   function set(key: string, value: unknown) {
@@ -172,35 +177,35 @@ export function NodeInspector({
 
         return (
           <>
-            <Section title="Événement déclencheur" accent={meta.color}>
-              <Field label="Type de déclencheur">
+            <Section title={t('flows.builder.nodeInspector.trigger.sectionTitle')} accent={meta.color}>
+              <Field label={t('flows.builder.nodeInspector.trigger.typeLabel')}>
                 <Select value={triggerType} onValueChange={(v) => v && onChange({ ...config, trigger_type: v, trigger_keywords: null, target_post_ids: null })}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any_message">💬 Tout message DM</SelectItem>
-                    <SelectItem value="keyword">🔑 Mot-clé dans DM</SelectItem>
-                    <SelectItem value="any_comment">💬 Tout commentaire</SelectItem>
-                    <SelectItem value="comment_keyword">🔑 Mot-clé dans commentaire</SelectItem>
-                    <SelectItem value="story_reply">📖 Réponse à une story</SelectItem>
-                    <SelectItem value="story_mention">📣 Mention dans une story</SelectItem>
+                    <SelectItem value="any_message">{t('flows.builder.nodeInspector.trigger.options.anyMessage')}</SelectItem>
+                    <SelectItem value="keyword">{t('flows.builder.nodeInspector.trigger.options.keyword')}</SelectItem>
+                    <SelectItem value="any_comment">{t('flows.builder.nodeInspector.trigger.options.anyComment')}</SelectItem>
+                    <SelectItem value="comment_keyword">{t('flows.builder.nodeInspector.trigger.options.commentKeyword')}</SelectItem>
+                    <SelectItem value="story_reply">{t('flows.builder.nodeInspector.trigger.options.storyReply')}</SelectItem>
+                    <SelectItem value="story_mention">{t('flows.builder.nodeInspector.trigger.options.storyMention')}</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
 
               {(triggerType === 'keyword' || triggerType === 'comment_keyword') && (
-                <Field label="Mots-clés" hint="Séparez par des virgules. Le flow se déclenche si le message contient l'un d'eux.">
+                <Field label={t('flows.builder.nodeInspector.trigger.keywordsLabel')} hint={t('flows.builder.nodeInspector.trigger.keywordsHint')}>
                   <Input
                     defaultValue={keywords}
                     onBlur={(e) => commitKeywords(e.target.value)}
-                    placeholder="promo, commande, prix…"
+                    placeholder={t('flows.builder.nodeInspector.trigger.keywordsPlaceholder')}
                   />
                 </Field>
               )}
 
               {isComment && channelAccountId && onOpenPostPicker && (
-                <Field label="Post(s) cible(s)">
+                <Field label={t('flows.builder.nodeInspector.trigger.targetPostsLabel')}>
                   <PostTargetField
                     accountId={channelAccountId}
                     selectedIds={postIds}
@@ -209,7 +214,7 @@ export function NodeInspector({
                 </Field>
               )}
             </Section>
-            <InfoBox>Modifications sauvegardées automatiquement à chaque changement.</InfoBox>
+            <InfoBox>{t('flows.builder.nodeInspector.trigger.infoBox')}</InfoBox>
           </>
         )
       }
@@ -220,25 +225,25 @@ export function NodeInspector({
         const buttons = (config.card_buttons as CardButton[]) ?? []
 
         return (
-          <Section title="Contenu du message" accent={meta.color}>
-            <Field label="Type de message">
+          <Section title={t('flows.builder.nodeInspector.sendMessage.sectionTitle')} accent={meta.color}>
+            <Field label={t('flows.builder.nodeInspector.sendMessage.typeLabel')}>
               <Select value={messageType} onValueChange={(v) => v && set('message_type', v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">📝 Texte standard</SelectItem>
-                  <SelectItem value="card">🖼️ Carte / Image</SelectItem>
+                  <SelectItem value="text">{t('flows.builder.nodeInspector.sendMessage.options.text')}</SelectItem>
+                  <SelectItem value="card">{t('flows.builder.nodeInspector.sendMessage.options.card')}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
 
             {messageType === 'text' ? (
-              <Field label="Texte du message" hint="Utilisez {{nom}}, {{prenom}} pour personnaliser.">
+              <Field label={t('flows.builder.nodeInspector.sendMessage.textLabel')} hint={t('flows.builder.nodeInspector.sendMessage.textHint')}>
                 <Textarea
                   value={(config.text as string) ?? ''}
                   onChange={(e) => set('text', e.target.value)}
-                  placeholder="Bonjour ! 👋"
+                  placeholder={t('flows.builder.nodeInspector.sendMessage.textPlaceholder')}
                   rows={4}
                   className="resize-none font-sans text-sm"
                 />
@@ -264,51 +269,51 @@ export function NodeInspector({
       case 'ai_reply':
         return (
           <>
-            <Section title="Instructions pour l'IA" accent={meta.color}>
-              <Field label="Prompt / Instructions" hint="L'IA répondra en suivant ces instructions dans le contexte de la conversation.">
+            <Section title={t('flows.builder.nodeInspector.aiReply.sectionTitle')} accent={meta.color}>
+              <Field label={t('flows.builder.nodeInspector.aiReply.promptLabel')} hint={t('flows.builder.nodeInspector.aiReply.promptHint')}>
                 <Textarea
                   value={(config.instructions as string) ?? ''}
                   onChange={(e) => set('instructions', e.target.value)}
-                  placeholder="Réponds aux questions sur nos horaires d'ouverture. Reste toujours courtois."
+                  placeholder={t('flows.builder.nodeInspector.aiReply.promptPlaceholder')}
                   rows={5}
                   className="resize-none text-sm"
                 />
               </Field>
             </Section>
-            <InfoBox>L'IA a accès au contexte de la conversation et aux données du contact.</InfoBox>
+            <InfoBox>{t('flows.builder.nodeInspector.aiReply.infoBox')}</InfoBox>
           </>
         )
 
       // ── Condition ─────────────────────────────────────────────────────────
       case 'condition':
         return (
-          <Section title="Règle de condition" accent={meta.color}>
-            <Field label="Champ à évaluer" hint="Ex: phone, email, custom_fields.budget">
+          <Section title={t('flows.builder.nodeInspector.condition.sectionTitle')} accent={meta.color}>
+            <Field label={t('flows.builder.nodeInspector.condition.fieldLabel')} hint={t('flows.builder.nodeInspector.condition.fieldHint')}>
               <Input
                 value={(config.field as string) ?? ''}
                 onChange={(e) => set('field', e.target.value)}
-                placeholder="phone, email, custom_fields.budget…"
+                placeholder={t('flows.builder.nodeInspector.condition.fieldPlaceholder')}
                 className="font-mono text-sm"
               />
             </Field>
-            <Field label="Opérateur">
+            <Field label={t('flows.builder.nodeInspector.condition.operatorLabel')}>
               <Select value={(config.operator as string) ?? 'equals'} onValueChange={(v) => v && set('operator', v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="equals">= Égal à</SelectItem>
-                  <SelectItem value="contains">⊂ Contient</SelectItem>
-                  <SelectItem value="exists">✓ Existe (non vide)</SelectItem>
+                  <SelectItem value="equals">{t('flows.builder.nodeInspector.condition.options.equals')}</SelectItem>
+                  <SelectItem value="contains">{t('flows.builder.nodeInspector.condition.options.contains')}</SelectItem>
+                  <SelectItem value="exists">{t('flows.builder.nodeInspector.condition.options.exists')}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
             {config.operator !== 'exists' && (
-              <Field label="Valeur">
+              <Field label={t('flows.builder.nodeInspector.condition.valueLabel')}>
                 <Input
                   value={(config.value as string) ?? ''}
                   onChange={(e) => set('value', e.target.value)}
-                  placeholder="valeur attendue…"
+                  placeholder={t('flows.builder.nodeInspector.condition.valuePlaceholder')}
                 />
               </Field>
             )}
@@ -320,8 +325,8 @@ export function NodeInspector({
         const seconds = (config.seconds as number) ?? 60
         const minutes = Math.round(seconds / 60)
         return (
-          <Section title="Durée d'attente" accent={meta.color}>
-            <Field label="Durée en secondes" hint="Minimum : 60s (1 minute). Le flow reprend automatiquement après ce délai.">
+          <Section title={t('flows.builder.nodeInspector.delay.sectionTitle')} accent={meta.color}>
+            <Field label={t('flows.builder.nodeInspector.delay.secondsLabel')} hint={t('flows.builder.nodeInspector.delay.secondsHint')}>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -338,7 +343,9 @@ export function NodeInspector({
                     border: '1px solid color-mix(in srgb, var(--organic-sand-400) 30%, transparent)',
                   }}
                 >
-                  ≈ {minutes >= 60 ? `${Math.round(minutes / 60)}h` : `${minutes}min`}
+                  {minutes >= 60
+                    ? t('flows.builder.nodeInspector.delay.approxHours', { value: Math.round(minutes / 60) })
+                    : t('flows.builder.nodeInspector.delay.approxMinutes', { value: minutes })}
                 </span>
               </div>
             </Field>
@@ -350,18 +357,18 @@ export function NodeInspector({
       case 'set_tag':
       case 'remove_tag':
         return (
-          <Section title={nodeType === 'set_tag' ? 'Tag à ajouter' : 'Tag à retirer'} accent={meta.color}>
+          <Section title={nodeType === 'set_tag' ? t('flows.builder.nodeInspector.tag.addSectionTitle') : t('flows.builder.nodeInspector.tag.removeSectionTitle')} accent={meta.color}>
             <Field
-              label="Sélectionner un tag"
-              hint={nodeType === 'set_tag' ? 'Le tag sera ajouté au contact quand ce nœud est atteint.' : 'Le tag sera retiré du contact quand ce nœud est atteint.'}
+              label={t('flows.builder.nodeInspector.tag.selectLabel')}
+              hint={nodeType === 'set_tag' ? t('flows.builder.nodeInspector.tag.addHint') : t('flows.builder.nodeInspector.tag.removeHint')}
             >
               <Select value={(config.tag_id as string) ?? ''} onValueChange={(v) => v && set('tag_id', v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choisir un tag…" />
+                  <SelectValue placeholder={t('flows.builder.nodeInspector.tag.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {tags.length === 0 ? (
-                    <SelectItem value="__empty__" disabled>Aucun tag disponible</SelectItem>
+                    <SelectItem value="__empty__" disabled>{t('flows.builder.nodeInspector.tag.noTags')}</SelectItem>
                   ) : (
                     tags.map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
@@ -380,8 +387,8 @@ export function NodeInspector({
         const pctA = (config.percentage_a as number) ?? 50
         return (
           <>
-            <Section title="Répartition A/B" accent={meta.color}>
-              <Field label="Branche A (%)">
+            <Section title={t('flows.builder.nodeInspector.splitTest.sectionTitle')} accent={meta.color}>
+              <Field label={t('flows.builder.nodeInspector.splitTest.branchALabel')}>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -394,7 +401,7 @@ export function NodeInspector({
                     className="shrink-0 text-xs font-semibold"
                     style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
                   >
-                    B : {100 - pctA}%
+                    {t('flows.builder.nodeInspector.splitTest.branchB', { value: 100 - pctA })}
                   </span>
                 </div>
               </Field>
@@ -409,7 +416,7 @@ export function NodeInspector({
                 />
               </div>
             </Section>
-            <InfoBox>Chaque contact est assigné aléatoirement à une branche, une seule fois.</InfoBox>
+            <InfoBox>{t('flows.builder.nodeInspector.splitTest.infoBox')}</InfoBox>
           </>
         )
       }
@@ -418,16 +425,16 @@ export function NodeInspector({
       case 'external_request':
         return (
           <>
-            <Section title="Requête HTTP" accent={meta.color}>
-              <Field label="URL cible">
+            <Section title={t('flows.builder.nodeInspector.externalRequest.sectionTitle')} accent={meta.color}>
+              <Field label={t('flows.builder.nodeInspector.externalRequest.urlLabel')}>
                 <Input
                   value={(config.url as string) ?? ''}
                   onChange={(e) => set('url', e.target.value)}
-                  placeholder="https://hooks.zapier.com/…"
+                  placeholder={t('flows.builder.nodeInspector.externalRequest.urlPlaceholder')}
                   className="font-mono text-xs"
                 />
               </Field>
-              <Field label="Méthode">
+              <Field label={t('flows.builder.nodeInspector.externalRequest.methodLabel')}>
                 <Select value={(config.method as string) ?? 'POST'} onValueChange={(v) => v && set('method', v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -440,7 +447,7 @@ export function NodeInspector({
                 </Select>
               </Field>
               {(config.method ?? 'POST') !== 'GET' && (
-                <Field label="Corps (JSON)" hint='Utilisez {"clé": "{{variable}}"} pour injecter des données du contact.'>
+                <Field label={t('flows.builder.nodeInspector.externalRequest.bodyLabel')} hint={t('flows.builder.nodeInspector.externalRequest.bodyHint')}>
                   <Textarea
                     value={(config.body as string) ?? ''}
                     onChange={(e) => set('body', e.target.value)}
@@ -450,16 +457,16 @@ export function NodeInspector({
                   />
                 </Field>
               )}
-              <Field label="Enregistrer la réponse sous" hint="Optionnel. Réutilisable ensuite dans une condition.">
+              <Field label={t('flows.builder.nodeInspector.externalRequest.saveResponseLabel')} hint={t('flows.builder.nodeInspector.externalRequest.saveResponseHint')}>
                 <Input
                   value={(config.save_response_as as string) ?? ''}
                   onChange={(e) => set('save_response_as', e.target.value)}
-                  placeholder="ex: crm_response"
+                  placeholder={t('flows.builder.nodeInspector.externalRequest.saveResponsePlaceholder')}
                   className="font-mono text-xs"
                 />
               </Field>
             </Section>
-            <InfoBox>En cas d'échec de la requête, le flow continue normalement sans s'arrêter.</InfoBox>
+            <InfoBox>{t('flows.builder.nodeInspector.externalRequest.infoBox')}</InfoBox>
           </>
         )
 
@@ -468,12 +475,15 @@ export function NodeInspector({
         const varName = (config.variable_name as string) || 'variable'
         return (
           <>
-            <Section title="Capture de réponse" accent={meta.color}>
-              <Field label="Nom de la variable" hint={`Le prochain message du contact sera sauvegardé sous custom_fields.${varName}.`}>
+            <Section title={t('flows.builder.nodeInspector.captureInput.sectionTitle')} accent={meta.color}>
+              <Field
+                label={t('flows.builder.nodeInspector.captureInput.variableNameLabel')}
+                hint={t('flows.builder.nodeInspector.captureInput.variableNameHint', { variable: varName })}
+              >
                 <Input
                   value={(config.variable_name as string) ?? ''}
                   onChange={(e) => set('variable_name', e.target.value)}
-                  placeholder="email, budget, taille…"
+                  placeholder={t('flows.builder.nodeInspector.captureInput.variableNamePlaceholder')}
                   className="font-mono text-sm"
                 />
               </Field>
@@ -492,7 +502,7 @@ export function NodeInspector({
                   className="mt-0.5 size-4 cursor-pointer accent-primary"
                 />
                 <span className="text-[12px] leading-relaxed" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                  Enregistrer dans les champs personnalisés du contact — réutilisable avec{' '}
+                  {t('flows.builder.nodeInspector.captureInput.saveToCustomFieldPrefix')}{' '}
                   <code
                     className="rounded-md px-1.5 py-0.5 font-mono text-[10px]"
                     style={{
@@ -505,7 +515,7 @@ export function NodeInspector({
                 </span>
               </label>
             </Section>
-            <InfoBox>Placez un nœud « Envoyer un message » juste avant pour poser la question. Ce nœud met le flow en attente de la réponse.</InfoBox>
+            <InfoBox>{t('flows.builder.nodeInspector.captureInput.infoBox')}</InfoBox>
           </>
         )
       }
@@ -513,15 +523,15 @@ export function NodeInspector({
       // ── Jump ──────────────────────────────────────────────────────────────
       case 'jump':
         return (
-          <Section title="Redirection vers un autre flow" accent={meta.color}>
-            <Field label="Flow cible" hint="Le contact sera transféré vers le début du flow sélectionné.">
+          <Section title={t('flows.builder.nodeInspector.jump.sectionTitle')} accent={meta.color}>
+            <Field label={t('flows.builder.nodeInspector.jump.targetFlowLabel')} hint={t('flows.builder.nodeInspector.jump.targetFlowHint')}>
               <Select value={(config.target_flow_id as string) ?? ''} onValueChange={(v) => v && set('target_flow_id', v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choisir un flow…" />
+                  <SelectValue placeholder={t('flows.builder.nodeInspector.jump.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {flows.length === 0 ? (
-                    <SelectItem value="__empty__" disabled>Aucun autre flow disponible</SelectItem>
+                    <SelectItem value="__empty__" disabled>{t('flows.builder.nodeInspector.jump.noFlows')}</SelectItem>
                   ) : (
                     flows.map((f) => (
                       <SelectItem key={f.id} value={f.id}>
@@ -567,12 +577,12 @@ export function NodeInspector({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-bold leading-tight text-foreground">{meta.label}</p>
+            <p className="text-[13px] font-bold leading-tight text-foreground">{metaLabel}</p>
             <p
               className="mt-0.5 text-[10.5px] font-medium"
               style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}
             >
-              Configurer ce nœud
+              {t('flows.builder.nodeInspector.configureThisNode')}
             </p>
           </div>
 
@@ -585,7 +595,7 @@ export function NodeInspector({
               border: `1px solid color-mix(in srgb, ${meta.color} 25%, transparent)`,
             }}
           >
-            {nodeType.replace('_', ' ')}
+            {metaShort}
           </span>
         </div>
       </div>

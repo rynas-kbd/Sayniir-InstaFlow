@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { RefreshCw, Loader2 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/components/i18n-provider'
 
 /**
  * Workspace-wide "keep every account's boutique in sync" toggle — see
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/button'
  * own workspace — see app/(app)/boutique/page.tsx.
  */
 export function BoutiqueSyncToggle({ sourceAccountId, initialEnabled }: { sourceAccountId: string; initialEnabled: boolean }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(initialEnabled)
   const [saving, setSaving] = useState(false)
   const [syncingNow, setSyncingNow] = useState(false)
@@ -29,10 +31,10 @@ export function BoutiqueSyncToggle({ sourceAccountId, initialEnabled }: { source
         body: JSON.stringify({ enabled: checked }),
       })
       if (!res.ok) throw new Error()
-      toast.success(checked ? '🔄 Synchronisation multi-comptes activée' : 'Synchronisation multi-comptes désactivée')
+      toast.success(checked ? t('boutique.syncToggle.toastEnabled') : t('boutique.syncToggle.toastDisabled'))
     } catch {
       setEnabled(!checked)
-      toast.error('Impossible de mettre à jour le réglage')
+      toast.error(t('boutique.syncToggle.toastUpdateError'))
     } finally {
       setSaving(false)
     }
@@ -54,14 +56,14 @@ export function BoutiqueSyncToggle({ sourceAccountId, initialEnabled }: { source
         // exactly like a working sync from the user's side.
         toast.warning(
           data.reason === 'no_siblings'
-            ? 'Aucun autre compte à synchroniser dans votre espace de travail.'
-            : "La synchronisation est désactivée ou aucun espace de travail n'a été trouvé pour ce compte."
+            ? t('boutique.syncToggle.toastNoSiblings')
+            : t('boutique.syncToggle.toastNoWorkspace')
         )
       } else {
-        toast.success(`Synchronisé vers ${data.targets} compte(s) — ${data.products} produit(s).`)
+        toast.success(t('boutique.syncToggle.toastSyncSuccess', { targets: data.targets, products: data.products }))
       }
     } catch {
-      toast.error('La synchronisation a échoué')
+      toast.error(t('boutique.syncToggle.toastSyncError'))
     } finally {
       setSyncingNow(false)
     }
@@ -74,20 +76,20 @@ export function BoutiqueSyncToggle({ sourceAccountId, initialEnabled }: { source
           <RefreshCw className="size-4" />
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">{enabled ? 'Synchronisation multi-comptes activée' : 'Synchronisation multi-comptes désactivée'}</p>
+          <p className="text-sm font-medium text-foreground">{enabled ? t('boutique.syncToggle.statusEnabled') : t('boutique.syncToggle.statusDisabled')}</p>
           <p className="text-xs text-muted-foreground">
             {enabled
-              ? "Config IA et catalogue produits (avec la clé API) restent alignés sur tous vos comptes."
-              : 'Active la config IA et le catalogue produits identiques sur tous vos comptes connectés.'}
+              ? t('boutique.syncToggle.descriptionEnabled')
+              : t('boutique.syncToggle.descriptionDisabled')}
           </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
         <Button size="sm" variant="outline" onClick={syncNow} disabled={!enabled || syncingNow}>
           {syncingNow ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-          Synchroniser maintenant
+          {t('boutique.syncToggle.syncNowButton')}
         </Button>
-        <Switch checked={enabled} onCheckedChange={toggle} disabled={saving} aria-label="Activer la synchronisation multi-comptes" />
+        <Switch checked={enabled} onCheckedChange={toggle} disabled={saving} aria-label={t('boutique.syncToggle.switchAriaLabel')} />
       </div>
     </div>
   )

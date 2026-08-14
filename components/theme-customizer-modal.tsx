@@ -5,6 +5,8 @@ import { useTheme } from 'next-themes'
 import { Check, Moon, Palette, Sun, Monitor, Sparkles, Image as ImageIcon, Sliders, Link as LinkIcon } from 'lucide-react'
 import { COLOR_THEMES, useCustomTheme, type ColorTheme, type WallpaperId } from '@/components/custom-theme-provider'
 import { WALLPAPER_PRESETS } from '@/components/custom-background'
+import { LanguagePicker } from '@/components/settings/language-picker'
+import { useT } from '@/components/i18n-provider'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,7 @@ export function ThemeCustomizerModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const t = useT()
   const { theme, setTheme } = useTheme()
   const {
     colorTheme,
@@ -53,25 +56,24 @@ export function ThemeCustomizerModal({
               <Palette className="size-4" strokeWidth={2} />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold">Personnalisation de l&apos;interface</DialogTitle>
-              <DialogDescription className="text-xs">
-                Sélectionnez votre mode, palette et fond d&apos;écran personnalisé.
-              </DialogDescription>
+              <DialogTitle className="text-base font-bold">{t('appearance.cardTitle')}</DialogTitle>
+              <DialogDescription className="text-xs">{t('appearance.modalDescription')}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="mt-4 space-y-6">
+          {/* Language */}
+          <LanguagePicker />
+
           {/* Mode Selection */}
           <div>
-            <label className="mb-2 block text-xs font-semibold text-foreground/80">
-              Mode d&apos;affichage
-            </label>
+            <label className="mb-2 block text-xs font-semibold text-foreground/80">{t('appearance.displayMode')}</label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'light', label: 'Clair', icon: Sun },
-                { id: 'dark', label: 'Sombre', icon: Moon },
-                { id: 'system', label: 'Système', icon: Monitor },
+                { id: 'light', label: t('appearance.light'), icon: Sun },
+                { id: 'dark', label: t('appearance.dark'), icon: Moon },
+                { id: 'system', label: t('appearance.system'), icon: Monitor },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -93,9 +95,7 @@ export function ThemeCustomizerModal({
 
           {/* Color Palette Selection */}
           <div>
-            <label className="mb-2 block text-xs font-semibold text-foreground/80">
-              Palette de couleurs
-            </label>
+            <label className="mb-2 block text-xs font-semibold text-foreground/80">{t('appearance.colorPalette')}</label>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {COLOR_THEMES.map((item) => {
                 const isSelected = colorTheme === item.id
@@ -120,7 +120,7 @@ export function ThemeCustomizerModal({
                       </div>
                       <div className="text-left">
                         <p className={cn('text-xs font-semibold', isSelected ? 'text-foreground' : 'text-foreground/90')}>
-                          {item.name}
+                          {t(`appearance.themes.${item.id}.name`)}
                         </p>
                       </div>
                     </div>
@@ -135,10 +135,10 @@ export function ThemeCustomizerModal({
                   {/* Primary Color Picker */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Couleur primaire
+                      {t('appearance.primaryColor')}
                     </label>
                     <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
-                      <div 
+                      <div
                         className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
                         style={{ backgroundColor: customPrimaryColor }}
                       >
@@ -156,10 +156,10 @@ export function ThemeCustomizerModal({
                   {/* Secondary Color Picker */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Couleur secondaire
+                      {t('appearance.secondaryColor')}
                     </label>
                     <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-2">
-                      <div 
+                      <div
                         className="relative size-7 shrink-0 rounded-lg shadow-sm border border-black/10 overflow-hidden cursor-pointer"
                         style={{ backgroundColor: customSecondaryColor }}
                       >
@@ -183,7 +183,7 @@ export function ThemeCustomizerModal({
             <div className="mb-2 flex items-center justify-between">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80">
                 <ImageIcon className="size-3.5 text-primary" />
-                Image / Fond d&apos;écran
+                {t('appearance.wallpaper')}
               </label>
             </div>
 
@@ -207,7 +207,7 @@ export function ThemeCustomizerModal({
                         <Check className="size-2.5" strokeWidth={3} />
                       </span>
                     )}
-                    <span className="text-[11.5px]">{preset.name}</span>
+                    <span className="text-[11.5px]">{t(`appearance.wallpapers.${preset.id}`)}</span>
                   </button>
                 )
               })}
@@ -227,7 +227,7 @@ export function ThemeCustomizerModal({
                     <Check className="size-2.5" strokeWidth={3} />
                   </span>
                 )}
-                <span className="text-[11.5px]">Image URL</span>
+                <span className="text-[11.5px]">{t('appearance.wallpaperImageUrlTile')}</span>
               </button>
             </div>
 
@@ -235,11 +235,11 @@ export function ThemeCustomizerModal({
             {wallpaper === 'custom' && (
               <div className="mt-3 space-y-1.5">
                 <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                  <LinkIcon className="size-3" /> URL de l&apos;image de fond
+                  <LinkIcon className="size-3" /> {t('appearance.customImageUrlLabel')}
                 </label>
                 <Input
                   type="url"
-                  placeholder="https://images.unsplash.com/photo-..."
+                  placeholder={t('appearance.customImageUrlPlaceholder')}
                   value={customImageUrl}
                   onChange={(e) => setCustomImageUrl(e.target.value)}
                   className="rounded-xl text-xs"
@@ -254,7 +254,7 @@ export function ThemeCustomizerModal({
               <div className="mb-1.5 flex items-center justify-between">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80">
                   <Sliders className="size-3.5 text-primary" />
-                  Opacité du fond ({bgOpacity}%)
+                  {t('appearance.opacity', { value: bgOpacity })}
                 </label>
               </div>
               <div className="flex items-center gap-2">
@@ -281,14 +281,14 @@ export function ThemeCustomizerModal({
           <div className="rounded-2xl border border-border/60 bg-muted/30 p-3.5">
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
               <Sparkles className="size-3 text-primary" />
-              <span>Aperçu en direct</span>
+              <span>{t('appearance.livePreview')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" className="rounded-xl font-medium">
-                Bouton Principal
+                {t('appearance.previewButton')}
               </Button>
               <div className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                Badge actif
+                {t('appearance.previewBadge')}
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ export function ThemeCustomizerModal({
             onClick={() => onOpenChange(false)}
             className="rounded-xl text-xs font-medium"
           >
-            Fermer
+            {t('appearance.close')}
           </Button>
         </div>
       </DialogContent>

@@ -1,7 +1,10 @@
+'use client'
+
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { ImageUploadField } from '@/components/shared/image-upload-field'
+import { useT } from '@/components/i18n-provider'
 import type { CardButton } from '@/components/flows/types'
 
 export function CardFieldsEditor({
@@ -32,24 +35,26 @@ export function CardFieldsEditor({
   channelAccountId?: string
   folder?: string
 }) {
+  const t = useT()
+
   return (
     <div className="space-y-3.5">
       <div className="space-y-1.5">
-        <Label>Titre de la carte</Label>
-        <Input value={title} onChange={(e) => onTitleChange(e.target.value)} placeholder="ex: Super promotion !" />
+        <Label>{t('shared.cardFields.cardTitleLabel')}</Label>
+        <Input value={title} onChange={(e) => onTitleChange(e.target.value)} placeholder={t('shared.cardFields.cardTitlePlaceholder')} />
       </div>
 
       <div className="space-y-1.5">
-        <Label>Description / Sous-titre</Label>
+        <Label>{t('shared.cardFields.subtitleLabel')}</Label>
         <Input
           value={subtitle}
           onChange={(e) => onSubtitleChange(e.target.value)}
-          placeholder="ex: Profitez de 20% aujourd'hui."
+          placeholder={t('shared.cardFields.subtitlePlaceholder')}
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label>Image (optionnel)</Label>
+        <Label>{t('shared.cardFields.imageLabel')}</Label>
         {channelAccountId && folder ? (
           <ImageUploadField value={imageUrl} onChange={onImageUrlChange} channelAccountId={channelAccountId} folder={folder} />
         ) : (
@@ -59,14 +64,14 @@ export function CardFieldsEditor({
 
       <div className="space-y-2 border-t border-border pt-3">
         <div className="mb-1.5 flex items-center justify-between">
-          <Label className="text-xs font-semibold">Boutons (max 3)</Label>
+          <Label className="text-xs font-semibold">{t('shared.cardFields.buttonsLabel')}</Label>
           {buttons.length < 3 && (
             <button
               type="button"
               onClick={() => onButtonsChange([...buttons, { type: 'web_url', title: 'Acheter', url: 'https://' }])}
               className="-m-1.5 cursor-pointer p-1.5 text-xs font-medium text-primary hover:underline"
             >
-              + Ajouter
+              {t('shared.cardFields.addButton')}
             </button>
           )}
         </div>
@@ -77,7 +82,9 @@ export function CardFieldsEditor({
             return (
               <div key={idx} className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/20 p-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-medium text-muted-foreground">Bouton {idx + 1}</span>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {t('shared.cardFields.buttonN', { index: idx + 1 })}
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
@@ -87,7 +94,7 @@ export function CardFieldsEditor({
                     }}
                     className="-m-1.5 cursor-pointer p-1.5 text-[10px] text-destructive hover:underline"
                   >
-                    Supprimer
+                    {t('shared.cardFields.removeButton')}
                   </button>
                 </div>
 
@@ -108,8 +115,8 @@ export function CardFieldsEditor({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="web_url">Lien (URL)</SelectItem>
-                      <SelectItem value="postback">Bouton d&apos;action (continue le flow)</SelectItem>
+                      <SelectItem value="web_url">{t('shared.cardFields.buttonTypeLink')}</SelectItem>
+                      <SelectItem value="postback">{t('shared.cardFields.buttonTypePostback')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -121,7 +128,7 @@ export function CardFieldsEditor({
                     copy[idx] = { ...copy[idx], title: e.target.value }
                     onButtonsChange(copy)
                   }}
-                  placeholder="Texte du bouton"
+                  placeholder={t('shared.cardFields.buttonTitlePlaceholder')}
                   className="h-8 sm:h-7 text-xs"
                 />
 
@@ -133,14 +140,14 @@ export function CardFieldsEditor({
                       copy[idx] = { ...copy[idx], url: e.target.value }
                       onButtonsChange(copy)
                     }}
-                    placeholder="Lien URL (https://...)"
+                    placeholder={t('shared.cardFields.buttonUrlPlaceholder')}
                     className="h-8 sm:h-7 text-xs"
                   />
                 )}
 
                 {btnType === 'postback' && allowPostbackButtons && (
                   <p className="text-[10px] text-muted-foreground">
-                    Reliez ce bouton à un nœud suivant sur le canvas pour définir ce qui se passe au clic.
+                    {t('shared.cardFields.postbackHint')}
                   </p>
                 )}
               </div>
@@ -148,7 +155,7 @@ export function CardFieldsEditor({
           })}
           {buttons.length === 0 && (
             <p className="py-2 text-center text-xs italic text-muted-foreground">
-              Aucun bouton. L&apos;utilisateur cliquera sur la carte.
+              {t('shared.cardFields.noButtons')}
             </p>
           )}
         </div>

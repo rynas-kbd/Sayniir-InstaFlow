@@ -31,6 +31,10 @@ export async function createUser(data: {
   })
 
   if (error || !user) {
+    // TODO(i18n): server action error string, needs code-based translation
+    // ('use server' files can't call useT()/getT() bound to the caller's
+    // locale in a way that's safe to thread through a throw). Leaving the
+    // literal French message as-is to avoid changing error-handling behavior.
     throw new Error(error?.message ?? 'Erreur lors de la création du compte.')
   }
 

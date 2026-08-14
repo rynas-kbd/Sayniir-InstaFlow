@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useT } from '@/components/i18n-provider'
 
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/gif'
 
@@ -29,6 +30,7 @@ export function ImageUploadField({
   'aria-invalid'?: boolean
   'aria-describedby'?: string
 }) {
+  const t = useT()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -47,13 +49,13 @@ export function ImageUploadField({
       const res = await fetch('/api/uploads/image', { method: 'POST', body: formData })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
-        throw new Error(body?.error ?? "Échec de l'import")
+        throw new Error(body?.error ?? t('shared.imageUpload.importFailed'))
       }
       const { url } = await res.json()
       onChange(url)
-      toast.success('Image importée')
+      toast.success(t('shared.imageUpload.imported'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Impossible d'importer l'image")
+      toast.error(err instanceof Error ? err.message : t('shared.imageUpload.importError'))
     } finally {
       setUploading(false)
     }
@@ -64,10 +66,10 @@ export function ImageUploadField({
       <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={handleFile} />
       <div className="flex gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
-          <Upload className="size-3.5" /> {uploading ? 'Import…' : 'Importer une image'}
+          <Upload className="size-3.5" /> {uploading ? t('shared.imageUpload.importing') : t('shared.imageUpload.importButton')}
         </Button>
         {value.trim() !== '' && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onChange('')} aria-label="Retirer l'image">
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange('')} aria-label={t('shared.imageUpload.removeImage')}>
             <X className="size-3.5" />
           </Button>
         )}
@@ -76,7 +78,7 @@ export function ImageUploadField({
         {...a11y}
         id={id}
         type="url"
-        placeholder="ou collez un lien direct (https://…)"
+        placeholder={t('shared.imageUpload.urlPlaceholder')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

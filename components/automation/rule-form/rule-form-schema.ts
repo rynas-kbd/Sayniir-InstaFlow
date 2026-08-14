@@ -1,3 +1,4 @@
+import type { Translator } from '@/lib/i18n/translate'
 import type { AutomationRule, RuleFormPayload } from '../types'
 import type { RuleFormErrors, RuleFormState } from './types'
 
@@ -57,31 +58,33 @@ function isHttpUrl(value: string): boolean {
 }
 
 /** Kind-aware like the product/campaign validators — only inspects fields the current
- * trigger_type/reply_method/response_type combination actually renders. */
-export function validateRuleForm(f: RuleFormState, defaultTab: 'dm' | 'comment'): RuleFormErrors {
+ * trigger_type/reply_method/response_type combination actually renders. Takes `t` as a parameter
+ * because this is a plain module-level function, not a component or hook — it can't call useT()
+ * itself. */
+export function validateRuleForm(f: RuleFormState, defaultTab: 'dm' | 'comment', t: Translator): RuleFormErrors {
   const errors: RuleFormErrors = {}
   const { isCard, showsCommentText, showsDmText } = deriveFlags(f, defaultTab)
 
-  if (!f.channel_account_id) errors.channel_account_id = 'Choisissez un compte'
+  if (!f.channel_account_id) errors.channel_account_id = t('automation.schema.accountRequired')
 
-  if (!f.name.trim()) errors.name = 'Le nom est obligatoire'
-  else if (f.name.trim().length > 120) errors.name = '120 caractères maximum'
+  if (!f.name.trim()) errors.name = t('automation.schema.nameRequired')
+  else if (f.name.trim().length > 120) errors.name = t('automation.schema.nameTooLong')
 
   if ((f.trigger_type === 'keyword' || f.trigger_type === 'comment_keyword') && f.trigger_keywords.length === 0) {
-    errors.trigger_keywords = 'Ajoutez au moins un mot-clé'
+    errors.trigger_keywords = t('automation.schema.keywordsRequired')
   }
 
   if ((showsCommentText || showsDmText) && !f.response_text.trim()) {
-    errors.response_text = 'Le message de réponse est obligatoire'
+    errors.response_text = t('automation.schema.responseRequired')
   }
 
   if (isCard) {
-    if (!f.card_title.trim()) errors.card_title = 'Le titre de la carte est obligatoire'
+    if (!f.card_title.trim()) errors.card_title = t('automation.schema.cardTitleRequired')
     if (f.card_image_url.trim() !== '' && !isHttpUrl(f.card_image_url.trim())) {
-      errors.card_image_url = "Lien d'image invalide (https://…)"
+      errors.card_image_url = t('automation.schema.cardImageInvalid')
     }
     const invalidButton = f.card_buttons.some((b) => !b.title.trim() || (b.type === 'web_url' && !isHttpUrl((b.url ?? '').trim())))
-    if (invalidButton) errors.card_buttons = 'Chaque bouton doit avoir un titre et, pour un lien, une URL valide (https://…)'
+    if (invalidButton) errors.card_buttons = t('automation.schema.cardButtonsInvalid')
   }
 
   return errors

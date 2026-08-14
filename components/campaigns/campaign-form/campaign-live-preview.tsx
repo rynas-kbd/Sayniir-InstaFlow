@@ -5,26 +5,33 @@ import { MessagePreview } from '@/components/shared/message-preview'
 import type { Tag } from '@/components/contacts/types'
 import type { Segment } from '../types'
 import type { CampaignFormState } from './types'
+import { useT, useLocale } from '@/components/i18n-provider'
 
 export function CampaignLivePreview({ form, tags, segments }: { form: CampaignFormState; tags: Tag[]; segments: Segment[] }) {
+  const t = useT()
+  const locale = useLocale()
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
   const audienceLabel =
     form.audience_mode === 'all'
-      ? 'Tous les contacts'
+      ? t('campaigns.livePreview.allContacts')
       : form.audience_mode === 'tags'
         ? form.tag_ids.length > 0
           ? tags
-              .filter((t) => form.tag_ids.includes(t.id))
-              .map((t) => t.name)
+              .filter((tag) => form.tag_ids.includes(tag.id))
+              .map((tag) => tag.name)
               .join(', ')
-          : 'Aucun tag sélectionné'
-        : segments.find((s) => s.id === form.segment_id)?.name ?? 'Aucun segment sélectionné'
+          : t('campaigns.livePreview.noTagSelected')
+        : (segments.find((s) => s.id === form.segment_id)?.name ?? t('campaigns.livePreview.noSegmentSelected'))
 
-  const scheduleLabel = form.schedule_mode === 'later' && form.scheduled_at ? new Date(form.scheduled_at).toLocaleString('fr-FR') : 'Dès la création'
+  const scheduleLabel =
+    form.schedule_mode === 'later' && form.scheduled_at
+      ? new Date(form.scheduled_at).toLocaleString(dateLocale)
+      : t('campaigns.livePreview.immediate')
 
   return (
     <div className="flex flex-col gap-2.5">
       <span className="flex items-center gap-1.5 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-        <Eye className="size-3" /> Aperçu du message
+        <Eye className="size-3" /> {t('campaigns.livePreview.previewLabel')}
       </span>
       <MessagePreview
         responseType={form.response_type}

@@ -4,8 +4,9 @@ import Image from 'next/image'
 import { ArrowLeft, CreditCard, Bot, User, Trash2, ShieldCheck, StickyNote, X, Phone } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
-import { PLAN_CONFIG, type PlanKey } from '@/lib/plans'
+import { PLAN_CONFIG, getPlanDisplay, type PlanKey } from '@/lib/plans'
 import { cn } from '@/lib/utils'
+import type { Translator } from '@/lib/i18n/translate'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { StatusDot } from '@/components/ui/status-dot'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { WhatsAppManualConnectForm } from '@/components/admin/whatsapp-manual-connect-form'
+import { getLocale, getT } from '@/lib/i18n/server'
 
 import DeleteClientButton from './DeleteClientButton'
 import SubscriptionForm from './SubscriptionForm'
@@ -36,14 +38,12 @@ interface AutomationRule {
   is_active: boolean
 }
 
-const STATUS_LABEL: Record<string, string> = { active: 'Actif', inactive: 'Inactif', expired: 'Expiré' }
-
 // Plan badge helper
-function PlanBadge({ plan }: { plan: PlanKey }) {
+function PlanBadge({ plan, t }: { plan: PlanKey; t: Translator }) {
   const cfg = PLAN_CONFIG[plan]
   return (
     <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold', cfg.badgeClass)}>
-      {cfg.label}
+      {getPlanDisplay(plan, t).label}
     </span>
   )
 }
@@ -51,6 +51,14 @@ function PlanBadge({ plan }: { plan: PlanKey }) {
 export default async function AdminClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = createAdminClient()
   const { id: userId } = await params
+  const t = await getT()
+  const locale = await getLocale()
+
+  const STATUS_LABEL: Record<string, string> = {
+    active: t('admin.common.status.active'),
+    inactive: t('admin.common.status.inactive'),
+    expired: t('admin.common.status.expired'),
+  }
 
   const [{ data: profile }, { data: subscription }, { data: channelAccounts }] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, role, admin_notes, created_at').eq('id', userId).single(),
@@ -89,7 +97,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <Link href="/admin/clients" className="mb-8 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="size-3.5" /> Retour aux clients
+        <ArrowLeft className="size-3.5" /> {t('admin.clients.detail.backLink')}
       </Link>
 
       {/* ── Client header ── */}
@@ -113,12 +121,12 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           )}
           <div>
             <div className="mb-1 flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg font-semibold tracking-tight text-foreground">{profile.full_name ?? 'Client sans nom'}</h1>
-              <PlanBadge plan={currentPlan} />
+              <h1 className="text-lg font-semibold tracking-tight text-foreground">{profile.full_name ?? t('admin.clients.detail.unnamedClient')}</h1>
+              <PlanBadge plan={currentPlan} t={t} />
             </div>
             <p className="text-xs text-muted-foreground">
               {igAccount?.instagram_username ? `@${igAccount.instagram_username} · ` : ''}
-              Inscrit le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
+              {t('admin.clients.detail.registeredOn', { date: new Date(profile.created_at).toLocaleDateString(locale) })}
             </p>
           </div>
         </div>
@@ -132,7 +140,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
         {/* ── Profile ── */}
         <Card>
           <CardHeader>
-            <SectionTitle icon={User} title="Profil utilisateur" />
+            <SectionTitle icon={User} title={t('admin.clients.detail.profileSection.title')} />
           </CardHeader>
           <CardContent>
             <form
@@ -148,20 +156,20 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="full_name">Nom complet</Label>
+                  <Label htmlFor="full_name">{t('admin.clients.detail.profileSection.fullNameLabel')}</Label>
                   <Input id="full_name" name="full_name" defaultValue={profile.full_name ?? ''} required />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">Adresse e-mail</Label>
+                  <Label htmlFor="email">{t('admin.clients.detail.profileSection.emailLabel')}</Label>
                   <Input id="email" name="email" type="email" defaultValue={profile.email ?? ''} required />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="new_password">Nouveau mot de passe</Label>
-                  <Input id="new_password" name="new_password" placeholder="Laisser vide pour conserver" />
+                  <Label htmlFor="new_password">{t('admin.clients.detail.profileSection.newPasswordLabel')}</Label>
+                  <Input id="new_password" name="new_password" placeholder={t('admin.clients.detail.profileSection.newPasswordPlaceholder')} />
                 </div>
               </div>
               <Button type="submit" className="self-start">
-                Mettre à jour
+                {t('admin.clients.detail.profileSection.submitButton')}
               </Button>
             </form>
           </CardContent>
@@ -172,12 +180,12 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           <CardHeader>
             <SectionTitle
               icon={ShieldCheck}
-              title="Rôle & permissions"
+              title={t('admin.clients.detail.roleSection.title')}
               sub={
                 <>
-                  Actuellement :{' '}
+                  {t('admin.clients.detail.roleSection.currentPrefix')}
                   <span className={profile.role === 'admin' ? 'font-bold text-primary' : 'font-bold text-success'}>
-                    {profile.role === 'admin' ? 'Administrateur' : 'Client'}
+                    {profile.role === 'admin' ? t('admin.common.role.admin') : t('admin.common.role.client')}
                   </span>
                 </>
               }
@@ -192,19 +200,19 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
               className="flex flex-col gap-4 sm:flex-row sm:items-end"
             >
               <div className="flex-1 space-y-1.5">
-                <Label htmlFor="role-select">Nouveau rôle</Label>
+                <Label htmlFor="role-select">{t('admin.clients.detail.roleSection.newRoleLabel')}</Label>
                 <select
                   id="role-select"
                   name="role"
                   defaultValue={profile.role ?? 'client'}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <option value="client">👤 Client</option>
-                  <option value="admin">🛡️ Administrateur</option>
+                  <option value="client">{t('admin.clients.detail.roleSection.clientOption')}</option>
+                  <option value="admin">{t('admin.clients.detail.roleSection.adminOption')}</option>
                 </select>
               </div>
               <Button type="submit" variant="outline">
-                Changer
+                {t('admin.clients.detail.roleSection.changeButton')}
               </Button>
             </form>
           </CardContent>
@@ -212,7 +220,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
 
         <Card>
           <CardHeader>
-            <SectionTitle icon={CreditCard} title="Abonnement & Plan" sub="Choisissez le plan du client et configurez son abonnement." />
+            <SectionTitle icon={CreditCard} title={t('admin.clients.detail.subscriptionSection.title')} sub={t('admin.clients.detail.subscriptionSection.description')} />
           </CardHeader>
           <CardContent>
             <SubscriptionForm
@@ -231,7 +239,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
         {/* ── Keywords ── */}
         <Card>
           <CardHeader>
-            <SectionTitle icon={Bot} title="Mots-clés & réponses" />
+            <SectionTitle icon={Bot} title={t('admin.clients.detail.keywordsSection.title')} />
           </CardHeader>
           <CardContent>
             {igAccount ? (
@@ -245,13 +253,13 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                   }}
                   className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.5fr_auto]"
                 >
-                  <Input name="keyword" placeholder="Mot-clé · ex : prix" required />
-                  <Input name="reply_text" placeholder="Réponse automatique" required />
-                  <Button type="submit">Ajouter</Button>
+                  <Input name="keyword" placeholder={t('admin.clients.detail.keywordsSection.keywordPlaceholder')} required />
+                  <Input name="reply_text" placeholder={t('admin.clients.detail.keywordsSection.replyPlaceholder')} required />
+                  <Button type="submit">{t('admin.clients.detail.keywordsSection.addButton')}</Button>
                 </form>
 
                 {!rules || rules.length === 0 ? (
-                  <p className="text-center text-xs text-muted-foreground">Aucun mot-clé configuré.</p>
+                  <p className="text-center text-xs text-muted-foreground">{t('admin.clients.detail.keywordsSection.noneConfigured')}</p>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {(rules as AutomationRule[]).map((rule) => (
@@ -262,7 +270,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                         }`}
                       >
                         <span className="truncate text-[13px] font-bold text-primary">
-                          {rule.trigger_type === 'any_message' ? 'Tout message' : rule.trigger_keywords?.join(', ')}
+                          {rule.trigger_type === 'any_message' ? t('admin.clients.detail.keywordsSection.anyMessage') : rule.trigger_keywords?.join(', ')}
                         </span>
                         <span className="truncate text-[13px] text-muted-foreground">{rule.response_text}</span>
                         <div className="flex items-center gap-2">
@@ -289,7 +297,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                           >
                             <button
                               type="submit"
-                              aria-label="Supprimer"
+                              aria-label={t('admin.clients.detail.keywordsSection.deleteAria')}
                               className="flex items-center justify-center rounded-md border border-destructive/20 bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/15"
                             >
                               <X className="size-3.5" />
@@ -302,7 +310,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                 )}
               </>
             ) : (
-              <p className="text-center text-xs text-muted-foreground">Ce client n&apos;a pas encore connecté de compte.</p>
+              <p className="text-center text-xs text-muted-foreground">{t('admin.clients.detail.keywordsSection.noAccountConnected')}</p>
             )}
           </CardContent>
         </Card>
@@ -310,7 +318,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
         {/* ── Admin notes ── */}
         <Card>
           <CardHeader>
-            <SectionTitle icon={StickyNote} title="Notes admin" sub="Visibles uniquement par les administrateurs" />
+            <SectionTitle icon={StickyNote} title={t('admin.clients.detail.notesSection.title')} sub={t('admin.clients.detail.notesSection.description')} />
           </CardHeader>
           <CardContent>
             <form
@@ -320,9 +328,9 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
               }}
               className="flex flex-col gap-3"
             >
-              <Textarea name="admin_notes" defaultValue={profile.admin_notes ?? ''} placeholder="Notes internes sur ce client…" rows={4} />
+              <Textarea name="admin_notes" defaultValue={profile.admin_notes ?? ''} placeholder={t('admin.clients.detail.notesSection.placeholder')} rows={4} />
               <Button type="submit" variant="outline" className="self-start">
-                Sauvegarder
+                {t('admin.clients.detail.notesSection.saveButton')}
               </Button>
             </form>
           </CardContent>
@@ -333,8 +341,8 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           <CardHeader>
             <SectionTitle
               icon={Phone}
-              title="WhatsApp — connexion manuelle"
-              sub="Pour un client dont on ne peut pas encore utiliser l'inscription en libre-service (notre app Meta est en mode Développement) : il crée sa propre app Meta et vous transmet ses identifiants."
+              title={t('admin.clients.detail.whatsappSection.title')}
+              sub={t('admin.clients.detail.whatsappSection.description')}
             />
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -348,7 +356,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
                     }`}
                   >
                     <span className="font-medium text-foreground">{acc.phone_number ?? acc.phone_number_id}</span>
-                    <StatusDot tone={acc.is_active ? 'success' : 'neutral'} label={acc.is_active ? 'Actif' : 'Inactif'} />
+                    <StatusDot tone={acc.is_active ? 'success' : 'neutral'} label={acc.is_active ? t('admin.common.status.active') : t('admin.common.status.inactive')} />
                   </div>
                 ))}
               </div>
@@ -360,12 +368,13 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
         {/* ── Danger zone ── */}
         <Card className="border-destructive/20">
           <CardHeader>
-            <SectionTitle icon={Trash2} title="Zone de danger" />
+            <SectionTitle icon={Trash2} title={t('admin.clients.detail.dangerSection.title')} />
           </CardHeader>
           <CardContent>
             <p className="mb-4 max-w-lg text-xs leading-relaxed text-muted-foreground">
-              La suppression de cet utilisateur est <span className="font-bold text-destructive">définitive</span>. Ses règles
-              d&apos;automatisation, son abonnement et la liaison avec son compte seront immédiatement détruits.
+              {t('admin.clients.detail.dangerSection.warningPrefix')}
+              <span className="font-bold text-destructive">{t('admin.clients.detail.dangerSection.warningBold')}</span>
+              {t('admin.clients.detail.dangerSection.warningSuffix')}
             </p>
             <DeleteClientButton userId={userId} />
           </CardContent>

@@ -6,6 +6,7 @@ import { Check, X, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusDot, type StatusTone } from '@/components/ui/status-dot'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
+import { useT } from '@/components/i18n-provider'
 
 export interface Lead {
   id: string
@@ -26,22 +27,24 @@ const STATUS_TONE: Record<string, StatusTone> = {
   booked: 'primary',
   lost: 'destructive',
 }
-const STATUS_LABEL: Record<string, string> = {
-  new: 'Nouveau',
-  qualifying: 'En qualification',
-  qualified: 'Qualifié',
-  disqualified: 'Disqualifié',
-  booked: 'RDV pris',
-  lost: 'Perdu',
-}
 const STATUS_BAR: Record<string, string> = {
   qualified: 'from-success/60 via-success to-success/60',
   booked: 'from-primary/60 via-primary to-primary/60',
 }
 
 export function LeadRow({ lead }: { lead: Lead }) {
+  const t = useT()
   const [status, setStatus] = useState(lead.qualification_status)
   const [loading, setLoading] = useState(false)
+
+  const STATUS_LABEL: Record<string, string> = {
+    new: t('leads.row.statusNew'),
+    qualifying: t('leads.row.statusQualifying'),
+    qualified: t('leads.row.statusQualified'),
+    disqualified: t('leads.row.statusDisqualified'),
+    booked: t('leads.row.statusBooked'),
+    lost: t('leads.row.statusLost'),
+  }
 
   async function updateStatus(next: 'qualified' | 'disqualified') {
     setLoading(true)
@@ -53,15 +56,15 @@ export function LeadRow({ lead }: { lead: Lead }) {
       })
       if (!res.ok) throw new Error('Erreur')
       setStatus(next)
-      toast.success(next === 'qualified' ? 'Lead qualifié' : 'Lead disqualifié')
+      toast.success(next === 'qualified' ? t('leads.row.toastQualified') : t('leads.row.toastDisqualified'))
     } catch {
-      toast.error('Impossible de mettre à jour le lead')
+      toast.error(t('leads.row.toastUpdateError'))
     } finally {
       setLoading(false)
     }
   }
 
-  const name = lead.full_name ?? 'Contact sans nom'
+  const name = lead.full_name ?? t('leads.row.noNameContact')
   const barClass = STATUS_BAR[status]
 
   return (
@@ -73,7 +76,7 @@ export function LeadRow({ lead }: { lead: Lead }) {
           <StatusDot tone={STATUS_TONE[status] ?? 'neutral'} label={STATUS_LABEL[status] ?? status} />
           {lead.score !== null && (
             <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
-              Score {lead.score}
+              {t('leads.row.scoreLabel', { score: lead.score })}
             </span>
           )}
         </div>
@@ -85,15 +88,15 @@ export function LeadRow({ lead }: { lead: Lead }) {
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-sm font-semibold text-foreground">{name}</h3>
             <p className="truncate text-xs text-muted-foreground">
-              {lead.phone ?? lead.email ?? 'Aucun contact'}
+              {lead.phone ?? lead.email ?? t('leads.row.noContact')}
             </p>
           </div>
         </div>
 
         <p className="line-clamp-2 flex items-start gap-1.5 text-xs text-muted-foreground">
           <Target className="mt-0.5 size-3 shrink-0" />
-          {lead.need_summary ?? 'Aucun résumé'}
-          {lead.budget_range && ` · Budget ${lead.budget_range}`}
+          {lead.need_summary ?? t('leads.row.noSummary')}
+          {lead.budget_range && ` · ${t('leads.row.budgetSuffix', { budget: lead.budget_range })}`}
         </p>
       </div>
 
@@ -105,11 +108,11 @@ export function LeadRow({ lead }: { lead: Lead }) {
             className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <X className="size-3.5" />
-            Rejeter
+            {t('leads.row.rejectButton')}
           </button>
           <Button size="sm" variant="outline" onClick={() => updateStatus('qualified')} disabled={loading} className="h-7 gap-1.5 text-xs">
             <Check className="size-3.5" />
-            Qualifier
+            {t('leads.row.qualifyButton')}
           </Button>
         </div>
       )}

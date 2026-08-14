@@ -2,6 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/components/i18n-provider'
 import { cn } from '@/lib/utils'
 
 /** Cancel + submit row, placement-agnostic: an inline create page passes `justify-end`, an edit
@@ -19,16 +20,18 @@ export function FormFooter({
   onCancel?: () => void
   className?: string
 }) {
+  const t = useT()
+
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {onCancel && (
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-          Annuler
+          {t('shared.formFooter.cancel')}
         </Button>
       )}
       <Button type="submit" disabled={saving}>
         {saving && <Loader2 className="size-3.5 animate-spin" />}
-        {saving ? 'Enregistrement…' : submitLabel}
+        {saving ? t('shared.formFooter.saving') : submitLabel}
       </Button>
     </div>
   )

@@ -10,6 +10,7 @@ import { AppearanceCard } from '@/components/settings/appearance-card'
 import { CopilotSettingsCard } from '@/components/ai/copilot-settings-card'
 import { getAvatarColor, getInitials } from '@/lib/avatar-color'
 import { checkAiCreditLimit } from '@/lib/ai/credits/meter'
+import { getT, getLocale } from '@/lib/i18n/server'
 import type { CopilotProviderKind } from '@/lib/ai/models'
 
 function SectionTitle({
@@ -35,13 +36,15 @@ function SectionTitle({
 }
 
 export default async function SettingsPage() {
+  const t = await getT()
+  const locale = await getLocale()
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const instagramUsername = user!.user_metadata?.instagram_username
-  const displayName = instagramUsername ? `@${instagramUsername}` : (user!.email ?? 'Utilisateur')
+  const displayName = instagramUsername ? `@${instagramUsername}` : (user!.email ?? t('settingsAccount.fallbackUser'))
 
   const { active: account } = await resolveActiveAccount()
   const { data: teamMembers } = account
@@ -65,21 +68,27 @@ export default async function SettingsPage() {
       : Promise.resolve({ data: null }),
   ])
 
+  const dateLocale = locale === 'ar' ? 'ar' : locale === 'en' ? 'en-US' : 'fr-FR'
+
   const fields = [
-    { label: 'Email', value: user!.email ?? '—', icon: Mail },
-    { label: 'Compte Instagram', value: instagramUsername ? `@${instagramUsername}` : '—', icon: AtSign },
+    { label: t('settingsAccount.accountInfo.email'), value: user!.email ?? t('settingsAccount.fallbackDash'), icon: Mail },
     {
-      label: 'Membre depuis',
-      value: new Date(user!.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }),
+      label: t('settingsAccount.accountInfo.instagramAccount'),
+      value: instagramUsername ? `@${instagramUsername}` : t('settingsAccount.fallbackDash'),
+      icon: AtSign,
+    },
+    {
+      label: t('settingsAccount.accountInfo.memberSince'),
+      value: new Date(user!.created_at).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' }),
       icon: Calendar,
     },
-    { label: 'ID utilisateur', value: user!.id, icon: Hash, mono: true },
+    { label: t('settingsAccount.accountInfo.userId'), value: user!.id, icon: Hash, mono: true },
   ]
 
   return (
     <div className="h-full">
       <div className="mx-auto max-w-2xl">
-        <PageHeader title="Paramètres" description="Gérez votre compte et vos préférences." />
+        <PageHeader title={t('settingsAccount.pageTitle')} description={t('settingsAccount.pageDescription')} />
 
         <div className="space-y-4 p-4 sm:p-6">
           <div className="glass-banner flex items-center gap-4 rounded-2xl px-5 py-5">
@@ -94,7 +103,7 @@ export default async function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Informations du compte</CardTitle>
+              <CardTitle className="text-sm">{t('settingsAccount.accountInfo.cardTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="divide-y divide-border p-0">
               {fields.map(({ label, value, icon: Icon, mono }) => (
@@ -141,7 +150,12 @@ export default async function SettingsPage() {
 
           <Card className="glass-card border-destructive/20">
             <CardHeader>
-              <SectionTitle icon={ShieldAlert} title="Zone de danger" sub="Déconnecter votre session sur cet appareil." destructive />
+              <SectionTitle
+                icon={ShieldAlert}
+                title={t('settingsAccount.dangerZone.title')}
+                sub={t('settingsAccount.dangerZone.description')}
+                destructive
+              />
             </CardHeader>
             <CardContent>
               <SignOutButton />

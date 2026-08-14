@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useInstagramMedia } from '@/lib/instagram/use-instagram-media'
+import { useT } from '@/components/i18n-provider'
 
 const MAX_PREVIEW_THUMBS = 5
 
@@ -19,15 +20,16 @@ export function PostTargetField({
   selectedIds: string[]
   onOpen: () => void
 }) {
+  const t = useT()
   const { items } = useInstagramMedia(selectedIds.length > 0 ? accountId : undefined)
 
   if (selectedIds.length === 0) {
     return (
       <div className="space-y-1.5">
         <Button type="button" variant="outline" className="w-full" onClick={onOpen}>
-          <ImageIcon className="size-3.5" /> Sélectionner des posts
+          <ImageIcon className="size-3.5" /> {t('shared.postTargetField.select')}
         </Button>
-        <p className="text-[11px] text-muted-foreground">Tous les posts si aucun n&apos;est choisi.</p>
+        <p className="text-[11px] text-muted-foreground">{t('shared.postTargetField.hint')}</p>
       </div>
     )
   }
@@ -74,7 +76,7 @@ export function PostTargetField({
         onClick={onOpen}
         className="cursor-pointer text-[13px] text-muted-foreground underline hover:text-foreground"
       >
-        Modifier
+        {t('shared.postTargetField.edit')}
       </button>
     </div>
   )

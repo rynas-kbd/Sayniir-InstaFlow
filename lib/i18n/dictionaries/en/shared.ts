@@ -1,0 +1,58 @@
+export const shared = {
+  accountPicker: {
+    noOtherAccounts: 'No other connected accounts.',
+  },
+  cardFields: {
+    cardTitleLabel: 'Card title',
+    cardTitlePlaceholder: 'e.g. Big sale!',
+    subtitleLabel: 'Description / Subtitle',
+    subtitlePlaceholder: 'e.g. Enjoy 20% off today.',
+    imageLabel: 'Image (optional)',
+    buttonsLabel: 'Buttons (max 3)',
+    addButton: '+ Add',
+    buttonN: 'Button {index}',
+    removeButton: 'Remove',
+    buttonTypeLink: 'Link (URL)',
+    buttonTypePostback: 'Action button (continues the flow)',
+    buttonTitlePlaceholder: 'Button text',
+    buttonUrlPlaceholder: 'Link URL (https://...)',
+    postbackHint: 'Connect this button to a next node on the canvas to define what happens on click.',
+    noButtons: 'No buttons. The user will tap the card.',
+  },
+  formFooter: {
+    cancel: 'Cancel',
+    saving: 'Saving…',
+  },
+  imageUpload: {
+    importFailed: 'Upload failed',
+    imported: 'Image uploaded',
+    importError: 'Could not upload the image',
+    importing: 'Uploading…',
+    importButton: 'Upload an image',
+    removeImage: 'Remove image',
+    urlPlaceholder: 'or paste a direct link (https://…)',
+  },
+  messagePreview: {
+    placeholder: 'Your message will appear here…',
+    cardTitlePlaceholder: 'Card title',
+    defaultButton: 'Button',
+  },
+  postPicker: {
+    title: 'Select posts',
+    error: 'Error: {message}',
+    noPosts: 'No posts found on this account.',
+    cancel: 'Cancel',
+    loadingMore: 'Loading…',
+    loadMore: 'Load more',
+    confirm: 'Confirm ({count})',
+  },
+  postTargetField: {
+    select: 'Select posts',
+    hint: 'All posts if none are selected.',
+    edit: 'Edit',
+  },
+  tagInput: {
+    remove: 'Remove {tag}',
+    itemCount: '{count} item(s)',
+  },
+}
