@@ -31,6 +31,7 @@ interface OrderRow {
   total_amount: number
   payment_status: string
   shipping_status: string
+  items?: Array<{ product_name: string; quantity: number }>
 }
 
 interface ContactRow {
@@ -185,12 +186,15 @@ function OrdersCard({ output }: { output: unknown }) {
       {orders.map((o) => {
         const payment = PAYMENT_STATUS[o.payment_status] ?? PAYMENT_STATUS.pending
         const shipping = SHIPPING_STATUS[o.shipping_status] ?? SHIPPING_STATUS.pending
+        const items = o.items?.length ? o.items : [{ product_name: o.product_name, quantity: o.quantity }]
+        const first = items[0]
+        const itemLabel = `${first.product_name} × ${first.quantity}${items.length > 1 ? ` +${items.length - 1}` : ''}`
         return (
           <Row key={o.id}>
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-foreground">{o.customer_name}</p>
               <p className="truncate text-[11px] text-muted-foreground">
-                {o.product_name} × {o.quantity} — {o.total_amount}
+                {itemLabel} — {o.total_amount}
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

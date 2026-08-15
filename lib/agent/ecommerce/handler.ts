@@ -4,9 +4,11 @@ import { sendAndReport, type AgentChannel } from '../messaging.ts'
 import { fenceUserText } from '../history.ts'
 import { checkConfidenceEscalation } from '../confidence.ts'
 import { renderCardAsText } from '../../channels/shared/card-text.ts'
+import { computeOrderTotals } from '../../boutique/order-total.ts'
 import type { AgentOutcome } from '../types.ts'
 import { getTemplate } from './templates.ts'
 import {
+  flushCompletedLine,
   getMissingFields,
   getNextQuestion,
   isCancellationMessage,
@@ -30,9 +32,16 @@ import { resolveAvailability } from './availability.ts'
  */
 
 interface ExtractedFields {
+  items?: Array<{
+    product_id?: string | null
+    selected_size?: string | null
+    selected_color?: string | null
+    quantity?: number | string | null
+  }>
   product_id?: string | null
   selected_size?: string | null
   selected_color?: string | null
+  quantity?: number | string | null
   customer_name?: string | null
   customer_phone?: string | null
   wilaya?: string | null
@@ -48,6 +57,128 @@ interface EcommerceLlmResult {
   /** Only meaningful when isQuestion is true — see lib/agent/confidence.ts. */
   confidence?: number
   detectedLanguage: string
+}
+
+interface CartItem {
+  product_id: string
+  product_name: string
+  selected_size: string | null
+  selected_color: string | null
+  quantity: number
+}
+
+interface ResolvedOrderLine {
+  product_id: string
+  variant_id: string | null
+  product_name: string
+  size: string | null
+  color: string | null
+  quantity: number
+  unit_price: number
+  currency: string
+  kind: string
+}
+
+function normalizeQuantity(value: unknown): number | null {
+  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number.parseInt(value, 10) : NaN
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function normalizeCartItems(value: unknown, products: Product[]): CartItem[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const raw = item as Record<string, unknown>
+      const productId = typeof raw.product_id === 'string' ? raw.product_id : null
+      const product = products.find((p) => p.id === productId)
+      const quantity = normalizeQuantity(raw.quantity)
+      if (!productId || !product || !quantity) return null
+      return {
+        product_id: productId,
+        product_name: typeof raw.product_name === 'string' && raw.product_name.trim() ? raw.product_name : product.name,
+        selected_size: typeof raw.selected_size === 'string' ? raw.selected_size : null,
+        selected_color: typeof raw.selected_color === 'string' ? raw.selected_color : null,
+        quantity,
+      }
+    })
+    .filter((item): item is CartItem => Boolean(item))
+}
+
+function buildRecapLines(args: {
+  lines: ResolvedOrderLine[]
+  totals: { subtotal: number; discount: number; total: number }
+  t: ReturnType<typeof getTemplate>
+}): string[] {
+  const { lines, totals, t } = args
+  const currency = lines[0]?.currency ?? 'DZD'
+  return [
+    `• ${t.labelItems} :`,
+    ...lines.map((line, index) => {
+      const variant = [line.size ? `${t.labelSize}: ${line.size}` : null, line.color ? `${t.labelColor}: ${line.color}` : null]
+        .filter(Boolean)
+        .join(', ')
+      const suffix = variant ? ` (${variant})` : ''
+      return `  ${index + 1}. ${line.product_name}${suffix} — ${line.quantity} × ${line.unit_price} ${line.currency} = ${line.quantity * line.unit_price} ${line.currency}`
+    }),
+    `• ${t.labelSubtotal} : ${totals.subtotal} ${currency}`,
+    ...(totals.discount > 0 ? [`• ${t.labelDiscount} : -${totals.discount} ${currency}`] : []),
+    `• ${t.labelTotal} : ${totals.total} ${currency}`,
+  ]
+}
+
+async function releaseReservedStock(
+  supabase: ReturnType<typeof createAdminClient>,
+  reservations: Array<{ productId: string; variantId: string | null; quantity: number }>
+) {
+  for (const reserved of reservations.reverse()) {
+    if (reserved.variantId) {
+      await supabase.rpc('increment_variant_stock', { p_variant_id: reserved.variantId, p_quantity: reserved.quantity })
+    } else {
+      await supabase.rpc('increment_product_stock', { p_product_id: reserved.productId, p_quantity: reserved.quantity })
+    }
+  }
+}
+
+async function resolveOrderLines(
+  supabase: ReturnType<typeof createAdminClient>,
+  items: CartItem[],
+  products: Product[]
+): Promise<ResolvedOrderLine[]> {
+  const lines: ResolvedOrderLine[] = []
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.product_id)
+    if (!product) continue
+
+    let unitPrice = product.price
+    let variantId: string | null = null
+    if (item.selected_size || item.selected_color) {
+      const { data: variant } = await supabase
+        .from('product_variants')
+        .select('id, price_override, stock_quantity')
+        .eq('product_id', item.product_id)
+        .eq('size', item.selected_size ?? null)
+        .eq('color', item.selected_color ?? null)
+        .maybeSingle()
+      if (variant) {
+        variantId = variant.id
+        if (variant.price_override !== null) unitPrice = variant.price_override
+      }
+    }
+
+    lines.push({
+      product_id: item.product_id,
+      variant_id: variantId,
+      product_name: product.name,
+      size: item.selected_size ?? null,
+      color: item.selected_color ?? null,
+      quantity: item.quantity,
+      unit_price: unitPrice,
+      currency: product.currency ?? 'DZD',
+      kind: product.kind ?? 'physical',
+    })
+  }
+  return lines
 }
 
 export async function handleQaMessage({
@@ -269,6 +400,9 @@ export async function handleEcommerceMessage({
         product_id: null,
         selected_size: null,
         selected_color: null,
+        quantity: null,
+        items: [],
+        add_more: null,
         shipping_address: null,
         wilaya: null,
         delivery_mode: null,
@@ -301,6 +435,9 @@ export async function handleEcommerceMessage({
           product_id: null,
           selected_size: null,
           selected_color: null,
+          quantity: null,
+          items: [],
+          add_more: null,
           shipping_address: null,
           wilaya: null,
           delivery_mode: null,
@@ -344,8 +481,18 @@ export async function handleEcommerceMessage({
 
   const awaitingField = (session.awaiting_field as string | null) ?? null
   const currentProduct = (products ?? []).find((p) => p.id === session.product_id) ?? null
+  const persistedQuantity =
+    normalizeQuantity((session as { quantity?: unknown }).quantity) ??
+    (session.product_id && awaitingField && !['produit', 'taille', 'couleur', 'quantité'].includes(awaitingField) ? 1 : null)
 
-  const updated = { ...session }
+  const updated = {
+    ...session,
+    items: normalizeCartItems((session as { items?: unknown }).items, products ?? []),
+    quantity: persistedQuantity,
+    add_more: ((session as { add_more?: string | null }).add_more === 'pending' || (session as { add_more?: string | null }).add_more === 'done'
+      ? (session as { add_more?: 'pending' | 'done' }).add_more
+      : null),
+  }
   let isConfirmation = false
   let isCancellation = false
   let deterministicallyResolved = false
@@ -414,6 +561,9 @@ export async function handleEcommerceMessage({
     updated.product_id = null
     updated.selected_size = null
     updated.selected_color = null
+    updated.quantity = null
+    updated.items = []
+    updated.add_more = null
     updated.customer_name = null
     updated.customer_phone = null
     updated.wilaya = null
@@ -425,6 +575,8 @@ export async function handleEcommerceMessage({
     updated.product_id = null
     updated.selected_size = null
     updated.selected_color = null
+    updated.quantity = null
+    updated.add_more = null
     deterministicallyResolved = true
   } else if (isNewSession && prefillProductId) {
     // The Q&A call that handed this turn off to the tunnel (audit finding
@@ -450,6 +602,10 @@ export async function handleEcommerceMessage({
         updated.selected_size = slotResult.value ?? null
       } else if (awaitingField === 'couleur') {
         updated.selected_color = slotResult.value ?? null
+      } else if (awaitingField === 'quantité') {
+        updated.quantity = normalizeQuantity(slotResult.value)
+      } else if (awaitingField === 'autre article') {
+        updated.add_more = slotResult.isAddMoreYes ? null : 'done'
       } else if (awaitingField === 'wilaya') {
         updated.wilaya = slotResult.value ?? null
       } else if (awaitingField === 'mode de livraison') {
@@ -483,9 +639,12 @@ export async function handleEcommerceMessage({
       ? "C'est le PREMIER message du client. Si c'est une salutation, note-le dans isQuestion."
       : `La session est EN COURS. Champ actuellement attendu : "${awaitingField ?? 'aucun'}". État actuel :\n${JSON.stringify(
           {
+            items: updated.items,
+            add_more: updated.add_more,
             product_id: session.product_id,
             selected_size: session.selected_size,
             selected_color: session.selected_color,
+            quantity: session.quantity,
             customer_name: session.customer_name,
             customer_phone: session.customer_phone,
             wilaya: session.wilaya,
@@ -534,14 +693,18 @@ ${history}
 === RÈGLES D'EXTRACTION ===
 - Téléphone algérien : 07/06/05xxxxxxxx ou +213xxxxxxxxx
 - delivery_mode : "domicile" ou "point_retrait" (ou null si non mentionné)
+- quantity : entier positif ; si non mentionné, laisse null.
+- items : remplis uniquement si le message nomme clairement au moins 2 produits distincts du catalogue. Si un produit est ambigu ou absent du catalogue, laisse items vide/null plutôt que de deviner.
 - extra_data clés attendues : ${extraDataKeys.length ? extraDataKeys.map((k) => `"${k}"`).join(', ') : 'aucune'}
 
 JSON uniquement (sans backticks) :
 {
   "extractedData": {
+    "items": [{ "product_id": "UUID", "selected_size": "taille ou null", "selected_color": "couleur ou null", "quantity": 1 }],
     "product_id": "UUID ou null",
     "selected_size": "taille ou null",
     "selected_color": "couleur ou null",
+    "quantity": 1,
     "wilaya": "wilaya ou null",
     "delivery_mode": "domicile | point_retrait | null",
     "shipping_address": "adresse ou null",
@@ -582,9 +745,48 @@ JSON uniquement (sans backticks) :
       }
     }
 
+    const extractedItems = Array.isArray(extracted.items) ? extracted.items : []
+    if (extractedItems.length >= 2) {
+      const resolvedItems = extractedItems
+        .map((item) => {
+          const product = products?.find((p) => p.id === item.product_id)
+          const quantity = normalizeQuantity(item.quantity) ?? 1
+          if (!product) return null
+          return {
+            product_id: product.id,
+            product_name: product.name,
+            selected_size: item.selected_size ?? null,
+            selected_color: item.selected_color ?? null,
+            quantity,
+          }
+        })
+        .filter((item): item is CartItem => Boolean(item))
+
+      if (resolvedItems.length === extractedItems.length && new Set(resolvedItems.map((item) => item.product_id)).size >= 2) {
+        const complete: CartItem[] = []
+        let firstIncomplete: CartItem | null = null
+        for (const item of resolvedItems) {
+          const product = products?.find((p) => p.id === item.product_id)
+          const needsSize = (product?.kind ?? 'physical') === 'physical' && !!product?.sizes?.length && !item.selected_size
+          const needsColor = (product?.kind ?? 'physical') === 'physical' && !!product?.colors?.length && !item.selected_color
+          if (!firstIncomplete && (needsSize || needsColor || !item.quantity)) firstIncomplete = item
+          else if (!needsSize && !needsColor && item.quantity) complete.push(item)
+        }
+        updated.items = [...(updated.items ?? []), ...complete]
+        updated.add_more = 'pending'
+        if (firstIncomplete) {
+          updated.product_id = firstIncomplete.product_id
+          updated.selected_size = firstIncomplete.selected_size ?? null
+          updated.selected_color = firstIncomplete.selected_color ?? null
+          updated.quantity = firstIncomplete.quantity ?? null
+        }
+      }
+    }
+
     if (extracted.product_id) updated.product_id = extracted.product_id
     if (extracted.selected_size) updated.selected_size = extracted.selected_size
     if (extracted.selected_color) updated.selected_color = extracted.selected_color
+    if (extracted.quantity) updated.quantity = normalizeQuantity(extracted.quantity)
     if (extracted.wilaya) updated.wilaya = extracted.wilaya
     if (extracted.delivery_mode) updated.delivery_mode = extracted.delivery_mode
     if (extracted.shipping_address) updated.shipping_address = extracted.shipping_address
@@ -599,6 +801,13 @@ JSON uniquement (sans backticks) :
   if (llmResult?.isQuestion && llmResult.questionReply) {
     const escalation = await checkConfidenceEscalation(accountId, senderId, channel, llmResult.confidence, route, t.humanHandoff)
     if (escalation) return escalation
+  }
+
+  if (!awaitingField || awaitingField === 'quantité') {
+    Object.assign(updated, flushCompletedLine(updated, products ?? []))
+  }
+  if (awaitingField === 'confirmation' && (updated.items?.length ?? 0) > 0 && updated.add_more === 'pending') {
+    updated.add_more = 'done'
   }
 
   const missing = getMissingFields(updated, products ?? [], customInfos)
@@ -622,8 +831,9 @@ JSON uniquement (sans backticks) :
     newStatus = 'confirmed'
     newAwaitingField = null
   } else if (allDone) {
-    const product = (products ?? []).find((p) => p.id === updated.product_id)
-    const isPhysicalKind = (product?.kind ?? 'physical') === 'physical'
+    const resolvedLines = await resolveOrderLines(supabase, updated.items ?? [], products ?? [])
+    const totals = computeOrderTotals(resolvedLines.map((line) => ({ quantity: line.quantity, unit_price: line.unit_price })))
+    const hasPhysicalKind = resolvedLines.some((line) => (line.kind ?? 'physical') === 'physical')
     const deliveryLabel = updated.delivery_mode === 'point_retrait' ? t.deliveryRelay : t.deliveryHome
     const extraLines = Object.entries(updated.extra_data ?? {})
       .map(([k, v]) => `• ${k} : ${v}`)
@@ -632,18 +842,15 @@ JSON uniquement (sans backticks) :
     replyText = [
       t.recap,
       '',
-      `• ${t.labelProduct} : ${product?.name ?? updated.product_id}`,
-      updated.selected_size ? `• ${t.labelSize} : ${updated.selected_size}` : null,
-      updated.selected_color ? `• ${t.labelColor} : ${updated.selected_color}` : null,
-      `• ${t.labelPrice} : ${product?.price ?? '?'} ${product?.currency ?? 'DZD'}`,
+      ...buildRecapLines({ lines: resolvedLines, totals, t }),
       `• ${t.labelName} : ${updated.customer_name}`,
       `• ${t.labelPhone} : ${updated.customer_phone}`,
       // Non-physical kinds (service/digital/subscription/event) never
       // collect wilaya/delivery/address — showing them here always
       // rendered as literal "null" for those shops.
-      isPhysicalKind ? `• ${t.labelWilaya} : ${updated.wilaya}` : null,
-      isPhysicalKind ? `• ${t.labelDelivery} : ${deliveryLabel}` : null,
-      isPhysicalKind ? `• ${t.labelAddress} : ${updated.shipping_address}` : null,
+      hasPhysicalKind ? `• ${t.labelWilaya} : ${updated.wilaya}` : null,
+      hasPhysicalKind ? `• ${t.labelDelivery} : ${deliveryLabel}` : null,
+      hasPhysicalKind ? `• ${t.labelAddress} : ${updated.shipping_address}` : null,
       extraLines || null,
       '',
       t.recapConfirm,
@@ -678,6 +885,9 @@ JSON uniquement (sans backticks) :
     product_id: updated.product_id ?? null,
     selected_size: updated.selected_size ?? null,
     selected_color: updated.selected_color ?? null,
+    quantity: updated.quantity ?? null,
+    items: updated.items ?? [],
+    add_more: updated.add_more ?? null,
     wilaya: updated.wilaya ?? null,
     delivery_mode: updated.delivery_mode ?? null,
     shipping_address: updated.shipping_address ?? null,
@@ -689,16 +899,25 @@ JSON uniquement (sans backticks) :
   await supabase.from('order_sessions').update(updates).eq('id', session.id)
 
   if (newStatus === 'confirmed') {
-    const { data: finalSession } = await supabase.from('order_sessions').select('*, products(name, price, kind, currency)').eq('id', session.id).single()
+    const { data: finalSession } = await supabase.from('order_sessions').select('*').eq('id', session.id).single()
 
-    if (finalSession?.products) {
-      const qty = finalSession.quantity || 1
-      const isPhysical = (finalSession.products.kind ?? 'physical') === 'physical'
+    if (finalSession) {
+      const finalItems = normalizeCartItems(finalSession.items, products ?? [])
+      if (finalItems.length === 0 && finalSession.product_id) {
+        const product = (products ?? []).find((p) => p.id === finalSession.product_id)
+        if (product) {
+          finalItems.push({
+            product_id: product.id,
+            product_name: product.name,
+            selected_size: finalSession.selected_size ?? null,
+            selected_color: finalSession.selected_color ?? null,
+            quantity: normalizeQuantity(finalSession.quantity) ?? 1,
+          })
+        }
+      }
+      const resolvedLines = await resolveOrderLines(supabase, finalItems, products ?? [])
+      const reservations: Array<{ productId: string; variantId: string | null; quantity: number }> = []
 
-      // orders previously had no link back to contacts — just a denormalized
-      // name/phone pair, unusable for anything purchase-aware (segments,
-      // LTV, post-purchase flows). upsertContact already ran earlier in the
-      // inbound pipeline for this sender_id, so the contact row exists.
       const { data: linkedContact } = await supabase
         .from('contacts')
         .select('id')
@@ -706,103 +925,108 @@ JSON uniquement (sans backticks) :
         .eq('sender_id', finalSession.sender_id)
         .maybeSingle()
 
-      // sizes/colors on `products` were flat display tags with no per-combination
-      // price/stock (see migration 20260822) — resolve a matching variant, if any,
-      // and use its price/stock instead of the base product's.
-      let unitPrice = finalSession.products.price
-      let variantId: string | null = null
-      if (finalSession.selected_size || finalSession.selected_color) {
-        const { data: variant } = await supabase
-          .from('product_variants')
-          .select('id, price_override, stock_quantity')
-          .eq('product_id', finalSession.product_id)
-          .eq('size', finalSession.selected_size ?? null)
-          .eq('color', finalSession.selected_color ?? null)
-          .maybeSingle()
-        if (variant) {
-          variantId = variant.id
-          if (variant.price_override !== null) unitPrice = variant.price_override
+      let failedLine: ResolvedOrderLine | null = null
+      for (const line of resolvedLines) {
+        if ((line.kind ?? 'physical') !== 'physical') continue
+        const rpcName = line.variant_id ? 'decrement_variant_stock' : 'decrement_product_stock'
+        const rpcArgs = line.variant_id
+          ? { p_variant_id: line.variant_id, p_quantity: line.quantity }
+          : { p_product_id: line.product_id, p_quantity: line.quantity }
+        const { data: ok, error } = await supabase.rpc(rpcName, rpcArgs)
+        if (error) {
+          console.error('[Ecommerce] Stock check failed:', error)
+          reservations.push({ productId: line.product_id, variantId: line.variant_id, quantity: line.quantity })
+          continue
         }
-      }
-
-      // Promo codes have no dedicated extraction slot — they ride the generic
-      // infos_to_collect → extra_data mechanism, so this checks the handful of
-      // key spellings a merchant is likely to configure. Not exhaustive: a
-      // custom field named something else won't be picked up here.
-      const PROMO_KEYS = ['promo_code', 'code_promo', 'code promo', 'coupon', 'code de réduction', 'code réduction']
-      const rawPromoCode = PROMO_KEYS.map((k) => finalSession.extra_data?.[k]).find(Boolean)
-      let discountAmount = 0
-      let appliedCode: string | null = null
-      if (rawPromoCode) {
-        const { data: redeemed } = await supabase.rpc('redeem_discount_code', {
-          p_channel_account_id: finalSession.channel_account_id,
-          p_code: String(rawPromoCode).trim().toUpperCase(),
-        })
-        if (redeemed) {
-          const subtotal = unitPrice * qty
-          discountAmount = redeemed.percent_off ? (subtotal * redeemed.percent_off) / 100 : (redeemed.amount_off ?? 0)
-          appliedCode = redeemed.code
+        if (!ok) {
+          failedLine = line
+          break
         }
+        reservations.push({ productId: line.product_id, variantId: line.variant_id, quantity: line.quantity })
       }
 
-      const totalAmount = Math.max(unitPrice * qty - discountAmount, 0)
-
-      // Reserve stock BEFORE inserting the order, not after: two customers
-      // confirming the last unit near-simultaneously used to both succeed,
-      // since decrement_product_stock/decrement_variant_stock floored at
-      // zero instead of failing, and nothing re-checked availability
-      // between showing the product and confirming the order (audit
-      // finding F10). Reserving first — atomically, via the migration
-      // 20260826 RPCs — means only one of the two concurrent confirmations
-      // can win; the loser is told the item is gone instead of getting a
-      // false confirmation for a unit that doesn't exist. Non-physical
-      // kinds and products with track_stock off always "succeed" here (see
-      // the RPCs), matching their existing untracked-stock behavior.
-      let stockReserved = true
-      if (isPhysical && variantId) {
-        const { data: ok, error } = await supabase.rpc('decrement_variant_stock', { p_variant_id: variantId, p_quantity: qty })
-        if (error) console.error('[Ecommerce] Variant stock check failed:', error)
-        stockReserved = error ? true : !!ok // a transient RPC error must not block a sale outright — fail open, not closed
-      } else if (isPhysical && finalSession.product_id) {
-        const { data: ok, error } = await supabase.rpc('decrement_product_stock', { p_product_id: finalSession.product_id, p_quantity: qty })
-        if (error) console.error('[Ecommerce] Stock check failed:', error)
-        stockReserved = error ? true : !!ok
-      }
-
-      if (!stockReserved) {
-        replyText = t.outOfStock(finalSession.products.name)
-        await supabase
-          .from('order_sessions')
-          .update({ status: 'gathering_info', awaiting_field: 'produit', product_id: null, selected_size: null, selected_color: null })
-          .eq('id', finalSession.id)
+      if (failedLine) {
+        await releaseReservedStock(supabase, reservations)
+        const remainingItems = finalItems.filter((item) => item.product_id !== failedLine?.product_id)
+        const remainingLines = await resolveOrderLines(supabase, remainingItems, products ?? [])
+        if (remainingItems.length === 0) {
+          replyText = `${t.outOfStockLine(failedLine.product_name)}\n\n${t.cartEmptyAfterStockFailure}`
+          await supabase
+            .from('order_sessions')
+            .update({ status: 'gathering_info', awaiting_field: 'produit', items: [], add_more: null, product_id: null, selected_size: null, selected_color: null, quantity: null })
+            .eq('id', finalSession.id)
+        } else {
+          const totals = computeOrderTotals(remainingLines.map((line) => ({ quantity: line.quantity, unit_price: line.unit_price })))
+          replyText = [t.outOfStockLine(failedLine.product_name), '', ...buildRecapLines({ lines: remainingLines, totals, t }), '', t.recapConfirm].join('\n')
+          await supabase
+            .from('order_sessions')
+            .update({ status: 'gathering_info', awaiting_field: 'confirmation', items: remainingItems, add_more: 'done' })
+            .eq('id', finalSession.id)
+        }
       } else {
-        const { error: insertError } = await supabase.from('orders').insert({
+        const PROMO_KEYS = ['promo_code', 'code_promo', 'code promo', 'coupon', 'code de réduction', 'code réduction']
+        const rawPromoCode = PROMO_KEYS.map((k) => finalSession.extra_data?.[k]).find(Boolean)
+        let appliedCode: string | null = null
+        let discountPercentOff: number | null = null
+        let discountAmountOff: number | null = null
+        if (rawPromoCode) {
+          const { data: redeemed } = await supabase.rpc('redeem_discount_code', {
+            p_channel_account_id: finalSession.channel_account_id,
+            p_code: String(rawPromoCode).trim().toUpperCase(),
+          })
+          if (redeemed) {
+            appliedCode = redeemed.code
+            discountPercentOff = redeemed.percent_off ?? null
+            discountAmountOff = redeemed.amount_off ?? null
+          }
+        }
+
+        const totals = computeOrderTotals(
+          resolvedLines.map((line) => ({ quantity: line.quantity, unit_price: line.unit_price })),
+          { percent_off: discountPercentOff, amount_off: discountAmountOff }
+        )
+        const firstLine = resolvedLines[0]
+        const hasPhysical = resolvedLines.some((line) => (line.kind ?? 'physical') === 'physical')
+        const orderPayload = {
           channel_account_id: finalSession.channel_account_id,
           order_session_id: finalSession.id,
           contact_id: linkedContact?.id ?? null,
           customer_name: finalSession.customer_name ?? 'Inconnu',
           customer_phone: finalSession.customer_phone ?? 'Inconnu',
-          wilaya: isPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
-          delivery_mode: isPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
-          shipping_address: isPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
-          product_name: finalSession.products.name,
-          currency: finalSession.products.currency ?? 'DZD',
-          price: unitPrice,
-          size: finalSession.selected_size,
-          color: finalSession.selected_color,
-          quantity: qty,
-          total_amount: totalAmount,
+          wilaya: hasPhysical ? (finalSession.wilaya ?? 'Inconnue') : finalSession.wilaya ?? null,
+          delivery_mode: hasPhysical ? (finalSession.delivery_mode ?? 'Inconnu') : finalSession.delivery_mode ?? null,
+          shipping_address: hasPhysical ? (finalSession.shipping_address ?? '') : finalSession.shipping_address ?? null,
+          product_name: firstLine?.product_name ?? 'Commande',
+          currency: firstLine?.currency ?? 'DZD',
+          price: firstLine?.unit_price ?? 0,
+          size: firstLine?.size ?? null,
+          color: firstLine?.color ?? null,
+          quantity: firstLine?.quantity ?? 1,
+          total_amount: totals.total,
+          discount_percent_off: discountPercentOff,
+          discount_amount_off: discountAmountOff,
           extra_data: { ...(finalSession.extra_data ?? {}), ...(appliedCode ? { applied_discount_code: appliedCode } : {}) },
+        }
+        const itemPayload = resolvedLines.map((line, index) => ({
+          product_id: line.product_id,
+          variant_id: line.variant_id,
+          product_name: line.product_name,
+          size: line.size,
+          color: line.color,
+          quantity: line.quantity,
+          unit_price: line.unit_price,
+          currency: line.currency,
+          position: index,
+        }))
+
+        const { data: orderId, error: insertError } = await supabase.rpc('create_order_with_items', {
+          p_order: orderPayload,
+          p_items: itemPayload,
         })
 
-        if (insertError) {
+        if (insertError || !orderId) {
           console.error('[Ecommerce] Order creation failed:', insertError)
-          // `replyText` was already set to t.confirmed above — the customer
-          // must not see a confirmation for an order that doesn't exist.
-          // Revert the session to "awaiting confirmation" so a retry of
-          // "oui" tries the insert again instead of silently doing nothing.
-          // (Stock stays reserved either way — safer to under-sell on a
-          // rare insert failure than to double-sell the unit back out.)
+          await releaseReservedStock(supabase, reservations)
           replyText = t.recapConfirm
           await supabase.from('order_sessions').update({ status: 'gathering_info', awaiting_field: 'confirmation' }).eq('id', finalSession.id)
         } else {

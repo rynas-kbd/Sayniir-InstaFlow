@@ -11,10 +11,8 @@ import {
   Search, 
   Check, 
   X, 
-  Eye, 
   Trash2, 
-  Clock, 
-  AlertCircle
+  Clock
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +22,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils'
 import { useT, useLocale } from '@/components/i18n-provider'
 import type { Locale } from '@/lib/i18n/config'
-import type { Order } from './types'
+import type { Order, Product } from './types'
+import { OrderItemsCell, getOrderDisplayItems } from './order-items-cell'
+import { OrderItemsEditor } from './order-items-editor'
 
 const PAGE_SIZE = 25
 type OrderCategory = 'to_validate' | 'validated' | 'cancelled'
@@ -35,7 +35,17 @@ function toIntlLocale(locale: Locale): string {
   return 'fr-FR'
 }
 
-function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
+function OrderDetailSheet({
+  order,
+  products,
+  onClose,
+  onSaved,
+}: {
+  order: Order | null
+  products: Product[]
+  onClose: () => void
+  onSaved: (order: Order) => void
+}) {
   const t = useT()
   const locale = useLocale()
   const intlLocale = toIntlLocale(locale)
@@ -71,35 +81,9 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
 
             {/* Product Details */}
             <div className="space-y-3">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">{t('boutique.orderTable.detailSheet.productLabel')}</p>
-              <div className="rounded-xl border border-border/60 p-4 bg-card shadow-sm space-y-3">
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <p className="font-semibold text-foreground text-sm leading-snug">{order.product_name}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {order.size && (
-                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold uppercase">
-                          {t('boutique.orderTable.detailSheet.sizeLabel', { size: order.size })}
-                        </Badge>
-                      )}
-                      {order.color && (
-                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold uppercase">
-                          {t('boutique.orderTable.detailSheet.colorLabel', { color: order.color })}
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-bold">
-                        {t('boutique.orderTable.detailSheet.quantityLabel', { quantity: order.quantity })}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="text-end shrink-0">
-                    <p className="text-xs text-muted-foreground">{t('boutique.orderTable.detailSheet.totalLabel')}</p>
-                    <p className="font-black text-foreground text-base tabular-nums mt-0.5">
-                      {order.total_amount.toLocaleString(intlLocale)} {order.currency}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/80">{t('boutique.orderTable.detailSheet.itemsLabel')}</p>
+              <OrderItemsCell order={order} variant="detail" />
+              <OrderItemsEditor order={order} products={products} onSaved={onSaved} />
             </div>
 
             {/* Delivery Info */}
@@ -140,7 +124,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order | null; onClose: ()
   )
 }
 
-export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
+export function OrderTable({ initialOrders, products }: { initialOrders: Order[]; products: Product[] }) {
   const t = useT()
   const locale = useLocale()
   const intlLocale = toIntlLocale(locale)
@@ -186,6 +170,11 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
     }
   }
 
+  function applyUpdatedOrder(updated: Order) {
+    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+    setDetailOrder((current) => (current?.id === updated.id ? updated : current))
+  }
+
   // Delete handler (alternative action)
   async function deleteOrder(id: string) {
     if (!confirm(t('boutique.orderTable.toasts.deleteConfirm'))) return
@@ -215,7 +204,8 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
       }
 
       // Query filter
-      if (q && !`${o.customer_name} ${o.customer_phone} ${o.product_name}`.toLowerCase().includes(q)) return false
+      const itemNames = getOrderDisplayItems(o).map((item) => item.product_name).join(' ')
+      if (q && !`${o.customer_name} ${o.customer_phone} ${o.product_name} ${itemNames}`.toLowerCase().includes(q)) return false
       
       // Date filter
       const created = new Date(o.created_at).getTime()
@@ -381,16 +371,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                       </button>
 
                       {/* Product details */}
-                      <div className="min-w-0">
-                        <p className="truncate text-[13px] font-bold text-foreground">
-                          {order.product_name}
-                        </p>
-                        <div className="flex flex-wrap gap-1 items-center mt-0.5 text-xs text-muted-foreground/80 font-medium">
-                          {order.size && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.size}</Badge>}
-                          {order.color && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.color}</Badge>}
-                          <span>{t('boutique.orderTable.qtyLabel', { count: order.quantity })}</span>
-                        </div>
-                      </div>
+                      <OrderItemsCell order={order} variant="compact" />
 
                       {/* Total price */}
                       <p className="whitespace-nowrap text-sm font-black text-foreground tabular-nums">
@@ -499,11 +480,8 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
                         </div>
                       </div>
 
-                      <div className="flex items-baseline gap-1.5 flex-wrap text-xs text-foreground bg-muted/20 border border-border/40 p-2.5 rounded-xl">
-                        <span className="font-semibold">{order.product_name}</span>
-                        {order.size && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.size}</Badge>}
-                        {order.color && <Badge variant="outline" className="rounded-md border-border/60 bg-muted/40 px-1 py-0 text-[9px] font-bold uppercase">{order.color}</Badge>}
-                        <span className="text-muted-foreground">· {t('boutique.orderTable.qtyLabel', { count: order.quantity })}</span>
+                      <div className="bg-muted/20 border border-border/40 p-2.5 rounded-xl">
+                        <OrderItemsCell order={order} variant="compact" />
                       </div>
 
                       <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-3">
@@ -594,7 +572,7 @@ export function OrderTable({ initialOrders }: { initialOrders: Order[] }) {
         </div>
       )}
 
-      <OrderDetailSheet order={detailOrder} onClose={() => setDetailOrder(null)} />
+      <OrderDetailSheet order={detailOrder} products={products} onClose={() => setDetailOrder(null)} onSaved={applyUpdatedOrder} />
     </div>
   )
 }

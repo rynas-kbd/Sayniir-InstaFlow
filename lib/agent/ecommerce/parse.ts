@@ -1,4 +1,12 @@
-import { normalizeAlgerianPhone, normalizeDeliveryMode, isConfirmationMessage, isCancellationMessage, type Product } from './state.ts'
+import {
+  normalizeAlgerianPhone,
+  normalizeDeliveryMode,
+  isConfirmationMessage,
+  isCancellationMessage,
+  isAddMoreYesMessage,
+  isAddMoreNoMessage,
+  type Product,
+} from './state.ts'
 import { resolveWilaya } from './wilayas.ts'
 import { looksLikeQuestion } from './intent.ts'
 import { stripDiacritics, foldedEquals } from './normalize.ts'
@@ -42,6 +50,59 @@ export interface SlotParseResult {
   /** Only set for the 'confirmation' slot. */
   isConfirmation?: boolean
   isCancellation?: boolean
+  isAddMoreYes?: boolean
+  isAddMoreNo?: boolean
+}
+
+const NUMBER_WORDS: Record<string, number> = {
+  un: 1,
+  une: 1,
+  one: 1,
+  واحد: 1,
+  وحدة: 1,
+  زوج: 2,
+  deux: 2,
+  two: 2,
+  اثنين: 2,
+  ثلاثة: 3,
+  trois: 3,
+  three: 3,
+  four: 4,
+  quatre: 4,
+  اربعة: 4,
+  أربعة: 4,
+  cinq: 5,
+  five: 5,
+  خمسة: 5,
+  six: 6,
+  ستة: 6,
+  sept: 7,
+  seven: 7,
+  سبعة: 7,
+  huit: 8,
+  eight: 8,
+  ثمانية: 8,
+  neuf: 9,
+  nine: 9,
+  تسعة: 9,
+  dix: 10,
+  ten: 10,
+  عشرة: 10,
+}
+
+export function parseQuantity(text: string): number | null {
+  const trimmed = text.trim().toLowerCase()
+  if (!trimmed) return null
+
+  const digitMatch = trimmed.match(/\b([1-9]\d{0,2})\b/)
+  if (digitMatch) return Number.parseInt(digitMatch[1], 10)
+
+  const folded = stripDiacritics(trimmed)
+  for (const [word, value] of Object.entries(NUMBER_WORDS)) {
+    if (new RegExp(`(^|\\s)${stripDiacritics(word)}(\\s|$)`, 'i').test(folded)) return value
+  }
+
+  return null
 }
 
 /**
@@ -70,6 +131,17 @@ export function parseSlot(awaitingField: SlotField, text: string, product: Produ
     case 'couleur': {
       const match = product?.colors?.find((c) => foldedEquals(c, trimmed))
       return match ? { matched: true, value: match } : { matched: false }
+    }
+
+    case 'quantité': {
+      const quantity = parseQuantity(trimmed)
+      return quantity ? { matched: true, value: String(quantity) } : { matched: false }
+    }
+
+    case 'autre article': {
+      if (isAddMoreYesMessage(trimmed)) return { matched: true, isAddMoreYes: true, isAddMoreNo: false }
+      if (isAddMoreNoMessage(trimmed)) return { matched: true, isAddMoreYes: false, isAddMoreNo: true }
+      return { matched: false }
     }
 
     case 'wilaya': {

@@ -26,7 +26,9 @@ export default async function BoutiquePage() {
   // A session not confirmed/cancelled and stale (no message in 2h) is a
   // ready-made abandoned-cart signal — order_sessions already tracks exactly
   // this, it was just never surfaced anywhere.
-  const abandonedThreshold = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  const abandonedThresholdDate = new Date()
+  abandonedThresholdDate.setHours(abandonedThresholdDate.getHours() - 2)
+  const abandonedThreshold = abandonedThresholdDate.toISOString()
 
   const [{ data: products }, { data: orders }, { data: rawSettings }, { count: sessionsTotal }, { data: abandonedSessions }, { data: discountCodes }] =
     await Promise.all([
@@ -38,7 +40,7 @@ export default async function BoutiquePage() {
       supabase.from('products').select('*').eq('channel_account_id', account.id).order('created_at', { ascending: false }).limit(300),
       supabase
         .from('orders')
-        .select('*, contact:contacts(id, full_name, username)')
+        .select('*, contact:contacts(id, full_name, username), items:order_items(*)')
         .eq('channel_account_id', account.id)
         .order('created_at', { ascending: false })
         .limit(300),
@@ -46,7 +48,7 @@ export default async function BoutiquePage() {
       supabase.from('order_sessions').select('id', { count: 'exact', head: true }).eq('channel_account_id', account.id),
       supabase
         .from('order_sessions')
-        .select('id, sender_id, customer_name, status, last_message_at, products(name)')
+        .select('id, sender_id, customer_name, status, last_message_at, items, products(name)')
         .eq('channel_account_id', account.id)
         .not('status', 'in', '(confirmed,cancelled)')
         .lt('last_message_at', abandonedThreshold)
@@ -94,7 +96,10 @@ export default async function BoutiquePage() {
 
   const productTotals = new Map<string, number>()
   for (const o of safeOrders) {
-    productTotals.set(o.product_name, (productTotals.get(o.product_name) ?? 0) + o.quantity)
+    const lines = o.items?.length ? o.items : [{ product_name: o.product_name, quantity: o.quantity }]
+    for (const item of lines) {
+      productTotals.set(item.product_name, (productTotals.get(item.product_name) ?? 0) + item.quantity)
+    }
   }
   const topProducts = Array.from(productTotals.entries())
     .sort((a, b) => b[1] - a[1])

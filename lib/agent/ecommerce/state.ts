@@ -30,15 +30,26 @@ const KIND_EXTRA_FIELDS: Partial<Record<ProductKind, string>> = {
 }
 
 export interface OrderSessionState {
+  items?: CartLine[]
   product_id?: string | null
   selected_size?: string | null
   selected_color?: string | null
+  quantity?: number | null
+  add_more?: 'pending' | 'done' | null
   customer_name?: string | null
   customer_phone?: string | null
   wilaya?: string | null
   delivery_mode?: string | null
   shipping_address?: string | null
   extra_data?: Record<string, string>
+}
+
+export interface CartLine {
+  product_id: string
+  product_name: string
+  selected_size?: string | null
+  selected_color?: string | null
+  quantity: number
 }
 
 export function normalizeAlgerianPhone(phone: string | null): string | null {
@@ -72,29 +83,77 @@ export function isCancellationMessage(text: string): boolean {
   return /^(non|annuler?|laisser? tomber|stop|nope|لا|إلغاء|يلغي)$/i.test(text.trim())
 }
 
+export function isAddMoreYesMessage(text: string): boolean {
+  return /^(oui|ok|ouais|wah|encore|ajouter?|un autre|autre article|yes|add|نعم|واه|زيد|آخر)$/i.test(text.trim())
+}
+
+export function isAddMoreNoMessage(text: string): boolean {
+  return /^(non|no|nope|terminer?|finaliser?|c'?est tout|ça sera tout|pas d'?autre|لا|خلاص|كمل)$/i.test(text.trim())
+}
+
+function lineNeedsVariantSlot(line: OrderSessionState, product: Product | undefined): boolean {
+  if ((product?.kind ?? 'physical') !== 'physical') return false
+  if (product?.sizes?.length && !line.selected_size) return true
+  if (product?.colors?.length && !line.selected_color) return true
+  return false
+}
+
+export function flushCompletedLine(state: OrderSessionState, products: Product[]): OrderSessionState {
+  if (!state.product_id) return state
+  const product = products.find((p) => p.id === state.product_id)
+  if (!product || lineNeedsVariantSlot(state, product) || !state.quantity || state.quantity < 1) return state
+
+  return {
+    ...state,
+    items: [
+      ...(state.items ?? []),
+      {
+        product_id: product.id,
+        product_name: product.name,
+        selected_size: state.selected_size ?? null,
+        selected_color: state.selected_color ?? null,
+        quantity: state.quantity,
+      },
+    ],
+    product_id: null,
+    selected_size: null,
+    selected_color: null,
+    quantity: null,
+    add_more: 'pending',
+  }
+}
+
 export function getMissingFields(session: OrderSessionState, products: Product[], customInfos: string[]): string[] {
   const product = products.find((p) => p.id === session.product_id)
-  const kind: ProductKind = product?.kind ?? 'physical'
+  const cartProducts = (session.items ?? []).map((item) => products.find((p) => p.id === item.product_id)).filter((p): p is Product => Boolean(p))
+  const relevantProducts = product ? [product, ...cartProducts] : cartProducts
+  const kind: ProductKind = product?.kind ?? cartProducts[0]?.kind ?? 'physical'
   const missing: string[] = []
+  const hasItems = (session.items?.length ?? 0) > 0
 
-  if (!session.product_id) missing.push('produit')
+  if (!session.product_id && (!hasItems || (hasItems && session.add_more === null))) missing.push('produit')
 
-  if (kind === 'physical') {
+  if (session.product_id && kind === 'physical') {
     if (product?.sizes?.length && !session.selected_size) missing.push('taille')
     if (product?.colors?.length && !session.selected_color) missing.push('couleur')
   }
 
+  if (session.product_id && (!session.quantity || session.quantity < 1)) missing.push('quantité')
+  if (!session.product_id && hasItems && session.add_more === 'pending') missing.push('autre article')
+
   if (!session.customer_name) missing.push('nom complet')
   if (!session.customer_phone) missing.push('téléphone')
 
-  if (kind === 'physical') {
+  if (relevantProducts.some((p) => (p.kind ?? 'physical') === 'physical')) {
     if (!session.wilaya) missing.push('wilaya')
     if (!session.delivery_mode) missing.push('mode de livraison')
     if (session.delivery_mode && !session.shipping_address) missing.push('adresse complète')
   }
 
-  const kindExtraField = KIND_EXTRA_FIELDS[kind]
-  if (kindExtraField && !session.extra_data?.[kindExtraField]) missing.push(kindExtraField)
+  const kindExtraFields = Array.from(new Set(relevantProducts.map((p) => KIND_EXTRA_FIELDS[p.kind ?? 'physical']).filter((field): field is string => Boolean(field))))
+  for (const kindExtraField of kindExtraFields) {
+    if (!session.extra_data?.[kindExtraField]) missing.push(kindExtraField)
+  }
 
   for (const info of customInfos) {
     const key = info.toLowerCase().trim()
@@ -147,6 +206,18 @@ export function getNextQuestion(
         quickReplies: colorOptions.length > 0 ? colorOptions : undefined,
       }
     }
+
+    case 'quantité':
+      return { text: t.askQuantity(product?.name ?? '') }
+
+    case 'autre article':
+      return {
+        text: t.askAddMore,
+        quickReplies: [
+          { title: t.addMoreYes, payload: 'oui' },
+          { title: t.addMoreNo, payload: 'non' },
+        ],
+      }
 
     case 'nom complet':
       return { text: t.askName }

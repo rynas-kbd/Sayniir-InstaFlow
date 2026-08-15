@@ -9,6 +9,7 @@ import {
   createMappingDictionary,
   type ProductField,
 } from '../column-detector'
+import { describe, expect, it } from 'vitest'
 
 describe('Column Detector', () => {
   describe('detectColumnMapping', () => {

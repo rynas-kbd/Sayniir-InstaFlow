@@ -108,7 +108,12 @@ export async function runCartRecoverySweep(): Promise<CartRecoveryResult> {
 
         const lang = (session.detected_language as DetectedLang | null) ?? 'fr'
         const t = getTemplate(lang)
-        const productName = (session.products as { name?: string } | null)?.name ?? null
+        const sessionItems = Array.isArray(session.items) ? session.items as Array<{ product_name?: string; quantity?: number }> : []
+        const firstItem = sessionItems[0]
+        const productName =
+          firstItem?.product_name
+            ? `${firstItem.product_name}${sessionItems.length > 1 ? ` +${sessionItems.length - 1}` : ''}`
+            : (session.products as { name?: string } | null)?.name ?? null
         const confirmTitle = CONFIRM_TITLE_BY_LANG[lang] ?? CONFIRM_TITLE_BY_LANG.fr
 
         const result = await adapter.sendMessage(ref, session.sender_id, t.cartReminder(productName), [{ title: confirmTitle, payload: 'oui' }])

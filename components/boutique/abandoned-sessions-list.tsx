@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock3, User, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Clock3, User, ShoppingBag } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Badge } from '@/components/ui/badge'
 import { useT } from '@/components/i18n-provider'
@@ -55,6 +55,10 @@ export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession
           const statusInfo = statusLabel(s.status, t)
           const name = s.customer_name || s.sender_id
           const initials = name.slice(0, 2).toUpperCase()
+          const firstItem = s.items?.[0]
+          const productLabel = firstItem?.product_name
+            ? `${firstItem.product_name}${(s.items?.length ?? 0) > 1 ? ` +${(s.items?.length ?? 1) - 1}` : ''}`
+            : s.products?.name ?? t('boutique.abandonedSessions.noProductSelected')
 
           return (
             <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/30">
@@ -71,7 +75,7 @@ export function AbandonedSessionsList({ sessions }: { sessions: AbandonedSession
                   </div>
                   <p className="mt-0.5 truncate text-xs text-muted-foreground flex items-center gap-1.5">
                     <ShoppingBag className="size-3 text-muted-foreground/70 shrink-0" />
-                    <span>{s.products?.name ?? t('boutique.abandonedSessions.noProductSelected')}</span>
+                    <span>{productLabel}</span>
                   </p>
                 </div>
               </div>

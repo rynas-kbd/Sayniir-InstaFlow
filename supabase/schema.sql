@@ -139,6 +139,18 @@ CREATE TABLE IF NOT EXISTS public.products (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS public.product_variants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  size TEXT,
+  color TEXT,
+  price_override DECIMAL(10, 2),
+  stock_quantity INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (product_id, size, color)
+);
+
 -- 6. Order Sessions (e-commerce vertical, transient state)
 CREATE TABLE IF NOT EXISTS public.order_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -148,6 +160,8 @@ CREATE TABLE IF NOT EXISTS public.order_sessions (
   selected_size TEXT,
   selected_color TEXT,
   quantity INT DEFAULT 1,
+  items JSONB NOT NULL DEFAULT '[]',
+  add_more TEXT,
   shipping_address TEXT,
   wilaya TEXT,
   delivery_mode TEXT,                        -- 'domicile' | 'point_retrait'
@@ -177,9 +191,27 @@ CREATE TABLE IF NOT EXISTS public.orders (
   color TEXT,
   quantity INT NOT NULL DEFAULT 1,
   total_amount DECIMAL(10, 2) NOT NULL,
+  discount_percent_off INT,
+  discount_amount_off DECIMAL(10, 2),
   extra_data JSONB DEFAULT '{}',
   payment_status TEXT DEFAULT 'pending',
   shipping_status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  variant_id UUID REFERENCES public.product_variants(id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  size TEXT,
+  color TEXT,
+  quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  unit_price DECIMAL(10, 2) NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'DZD',
+  position INT NOT NULL DEFAULT 0,
+  extra_data JSONB NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -278,6 +310,9 @@ CREATE INDEX IF NOT EXISTS idx_comment_logs_created ON public.comment_logs(creat
 CREATE INDEX IF NOT EXISTS idx_automation_rules_channel_account ON public.automation_rules(channel_account_id);
 CREATE INDEX IF NOT EXISTS idx_order_sessions_channel_account_sender ON public.order_sessions(channel_account_id, sender_id);
 CREATE INDEX IF NOT EXISTS idx_orders_session ON public.orders(order_session_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_product ON public.product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON public.order_items(order_id, position);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON public.order_items(product_id) WHERE product_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON public.subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_booking_sessions_channel_account_sender ON public.booking_sessions(channel_account_id, external_user_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_channel_account ON public.appointments(channel_account_id);
@@ -293,8 +328,10 @@ ALTER TABLE public.message_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comment_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.automation_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.agent_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booking_sessions ENABLE ROW LEVEL SECURITY;
@@ -370,6 +407,21 @@ CREATE POLICY "Users manage own products"
     )
   );
 
+CREATE POLICY "Users manage variants of their own products"
+  ON public.product_variants FOR ALL
+  USING (EXISTS (
+    SELECT 1
+    FROM public.products p
+    JOIN public.channel_accounts ca ON ca.id = p.channel_account_id
+    WHERE p.id = product_variants.product_id AND ca.user_id = auth.uid()
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1
+    FROM public.products p
+    JOIN public.channel_accounts ca ON ca.id = p.channel_account_id
+    WHERE p.id = product_variants.product_id AND ca.user_id = auth.uid()
+  ));
+
 -- Order Sessions
 CREATE POLICY "Users manage own order sessions"
   ON public.order_sessions FOR ALL
@@ -397,6 +449,21 @@ CREATE POLICY "Users manage own orders"
       SELECT id FROM public.channel_accounts WHERE user_id = auth.uid()
     )
   );
+
+CREATE POLICY "Users manage items of their own orders"
+  ON public.order_items FOR ALL
+  USING (EXISTS (
+    SELECT 1
+    FROM public.orders o
+    JOIN public.channel_accounts ca ON ca.id = o.channel_account_id
+    WHERE o.id = order_items.order_id AND ca.user_id = auth.uid()
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1
+    FROM public.orders o
+    JOIN public.channel_accounts ca ON ca.id = o.channel_account_id
+    WHERE o.id = order_items.order_id AND ca.user_id = auth.uid()
+  ));
 
 -- Subscriptions
 CREATE POLICY "Users view own subscription"

@@ -273,7 +273,8 @@ describe('handleEcommerceMessage — the pre-confirmation stock re-check blocks 
 
     expect(outcome.status).toBe('replied')
     if (outcome.status === 'replied') {
-      expect(outcome.replyText).toBe(t.outOfStock(shirt.name))
+      expect(outcome.replyText).toContain(t.outOfStockLine(shirt.name))
+      expect(outcome.replyText).toContain(t.cartEmptyAfterStockFailure)
     }
   })
 })

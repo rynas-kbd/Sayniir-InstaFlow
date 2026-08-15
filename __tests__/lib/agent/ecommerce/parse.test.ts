@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { parseSlot, resolveProduct } from '../../../../lib/agent/ecommerce/parse'
+import { parseQuantity, parseSlot, resolveProduct } from '../../../../lib/agent/ecommerce/parse'
 import type { Product } from '../../../../lib/agent/ecommerce/state'
 
 const sasuke: Product = {
@@ -48,6 +48,34 @@ describe('parseSlot — taille / couleur', () => {
 
   test('does not match a size the product does not have', () => {
     expect(parseSlot('taille', 'XXL', sasuke).matched).toBe(false)
+  })
+})
+
+describe('parseSlot — quantité / autre article', () => {
+  test('parses digit quantities', () => {
+    expect(parseQuantity('2')).toBe(2)
+    expect(parseQuantity('je veux 3 pièces')).toBe(3)
+  })
+
+  test('parses common number words across supported languages', () => {
+    expect(parseQuantity('deux')).toBe(2)
+    expect(parseQuantity('two')).toBe(2)
+    expect(parseQuantity('زوج')).toBe(2)
+    expect(parseQuantity('ثلاثة')).toBe(3)
+  })
+
+  test('returns null for invalid quantities', () => {
+    expect(parseQuantity('zero')).toBeNull()
+    expect(parseQuantity('beaucoup')).toBeNull()
+  })
+
+  test('parses the quantity slot', () => {
+    expect(parseSlot('quantité', '4', null)).toMatchObject({ matched: true, value: '4' })
+  })
+
+  test('parses the add-more slot', () => {
+    expect(parseSlot('autre article', 'oui', null)).toMatchObject({ matched: true, isAddMoreYes: true })
+    expect(parseSlot('autre article', "c'est tout", null)).toMatchObject({ matched: true, isAddMoreNo: true })
   })
 })
 

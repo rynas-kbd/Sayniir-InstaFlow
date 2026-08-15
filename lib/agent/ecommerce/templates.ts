@@ -6,6 +6,10 @@ export interface Template {
   askProductShort: string
   askSize: (opts: string) => string
   askColor: (opts: string) => string
+  askQuantity: (productName: string) => string
+  askAddMore: string
+  addMoreYes: string
+  addMoreNo: string
   askName: string
   askPhone: string
   askWilaya: string
@@ -17,12 +21,18 @@ export interface Template {
   askExtra: (field: string) => string
   recap: string
   recapConfirm: string
+  labelItems: string
+  labelSubtotal: string
+  labelDiscount: string
+  labelTotal: string
   confirmed: string
   cancelled: string
   /** Sent when a customer asks to talk to a human — see lib/agent/ecommerce/intent.ts's 'human' intent. */
   humanHandoff: string
   /** Sent when the atomic stock re-check at confirmation time fails — see the stockReserved guard in handleEcommerceMessage. */
   outOfStock: (productName: string) => string
+  outOfStockLine: (productName: string) => string
+  cartEmptyAfterStockFailure: string
   /** Abandoned-cart recovery nudge — see lib/agent/ecommerce/cart-recovery.ts. productName is null when the session was abandoned before a product was even picked. */
   cartReminder: (productName: string | null) => string
   /** Vérification de disponibilité — see lib/agent/ecommerce/availability.ts. Never LLM-generated: these six cover every AvailabilityResolution kind. */
@@ -52,6 +62,10 @@ export const TEMPLATES: Record<string, Template> = {
     askProductShort: 'Lequel de nos produits vous intéresse ?',
     askSize: (opts) => `Quelle taille souhaitez-vous ? Options : ${opts}`,
     askColor: (opts) => `Quelle couleur souhaitez-vous ? Options : ${opts}`,
+    askQuantity: (name) => `Quelle quantité souhaitez-vous${name ? ` pour "${name}"` : ''} ?`,
+    askAddMore: 'Souhaitez-vous ajouter un autre article à cette commande ?',
+    addMoreYes: 'Oui',
+    addMoreNo: 'Non',
     askName: 'Quel est votre nom complet ?',
     askPhone: 'Quel est votre numéro de téléphone ?',
     askWilaya: 'Dans quelle wilaya êtes-vous ?',
@@ -64,10 +78,16 @@ export const TEMPLATES: Record<string, Template> = {
     askExtra: (field) => `Pouvez-vous me donner votre ${field} ?`,
     recap: '✅ Voici le récapitulatif de votre commande :',
     recapConfirm: 'Est-ce que tout est correct ? Répondez "oui" pour confirmer ou "non" pour annuler.',
+    labelItems: 'Articles',
+    labelSubtotal: 'Sous-total',
+    labelDiscount: 'Remise',
+    labelTotal: 'Total',
     confirmed: '🎉 Merci ! Votre commande a bien été confirmée. Notre équipe vous contactera bientôt.',
     cancelled: "D'accord, votre commande a été annulée. N'hésitez pas à revenir ! 😊",
     humanHandoff: "D'accord, je vous mets en relation avec un membre de notre équipe. Un instant svp 🙏",
     outOfStock: (name) => `Désolé, "${name}" vient de se retrouver en rupture de stock 😔 Souhaitez-vous choisir un autre produit ?`,
+    outOfStockLine: (name) => `Désolé, "${name}" vient de se retrouver en rupture de stock 😔 Je l'ai retiré du panier.`,
+    cartEmptyAfterStockFailure: 'Votre panier est vide maintenant. Quel produit souhaitez-vous choisir ?',
     cartReminder: (name) =>
       name
         ? `Vous avez laissé une commande en cours pour "${name}" 🛍️ Elle vous intéresse toujours ? Répondez "oui" pour continuer, ou dites-le-moi si vous avez changé d'avis.`
@@ -96,6 +116,10 @@ export const TEMPLATES: Record<string, Template> = {
     askProductShort: 'أي من منتجاتنا يعجبك؟',
     askSize: (opts) => `ما المقاس الذي تريده؟ الخيارات : ${opts}`,
     askColor: (opts) => `ما اللون الذي تريده؟ الخيارات : ${opts}`,
+    askQuantity: (name) => `كم الكمية التي تريدها${name ? ` من "${name}"` : ''}؟`,
+    askAddMore: 'هل تريد إضافة منتج آخر إلى هذا الطلب؟',
+    addMoreYes: 'نعم',
+    addMoreNo: 'لا',
     askName: 'ما اسمك الكامل؟',
     askPhone: 'ما رقم هاتفك؟',
     askWilaya: 'في أي ولاية أنت؟',
@@ -107,10 +131,16 @@ export const TEMPLATES: Record<string, Template> = {
     askExtra: (field) => `هل يمكنك إعطائي ${field}؟`,
     recap: '✅ ملخص طلبك :',
     recapConfirm: 'هل كل شيء صحيح؟ أجب بـ "نعم" للتأكيد أو "لا" للإلغاء.',
+    labelItems: 'المنتجات',
+    labelSubtotal: 'المجموع الفرعي',
+    labelDiscount: 'الخصم',
+    labelTotal: 'المجموع',
     confirmed: '🎉 شكراً! تم تأكيد طلبك. سيتصل بك فريقنا قريباً.',
     cancelled: 'حسناً، تم إلغاء طلبك. لا تتردد في العودة! 😊',
     humanHandoff: 'حسناً، سأحولك إلى أحد أعضاء فريقنا. لحظة من فضلك 🙏',
     outOfStock: (name) => `عذراً، "${name}" نفدت كميته للتو من المخزون 😔 هل تريد اختيار منتج آخر؟`,
+    outOfStockLine: (name) => `عذراً، "${name}" نفدت كميته للتو من المخزون 😔 أزلته من السلة.`,
+    cartEmptyAfterStockFailure: 'سلتك فارغة الآن. أي منتج تريد اختياره؟',
     cartReminder: (name) =>
       name
         ? `تركت طلبية لم تكتمل بخصوص "${name}" 🛍️ ما زلت مهتماً؟ أجب بـ "نعم" للمتابعة، أو أخبرني إذا غيرت رأيك.`
@@ -139,6 +169,10 @@ export const TEMPLATES: Record<string, Template> = {
     askProductShort: 'أشمن منتج عجبك؟',
     askSize: (opts) => `شحال تحب القياس؟ الخيارات : ${opts}`,
     askColor: (opts) => `شحال تحب اللون؟ الخيارات : ${opts}`,
+    askQuantity: (name) => `شحال تحب الكمية${name ? ` من "${name}"` : ''}؟`,
+    askAddMore: 'تحب تزيد منتج آخر لهاذ الطلب؟',
+    addMoreYes: 'واه',
+    addMoreNo: 'لا',
     askName: 'شنو اسمك الكامل؟',
     askPhone: 'شنو رقم تيليفونك؟',
     askWilaya: 'فين أنت؟ قول الولاية.',
@@ -150,10 +184,16 @@ export const TEMPLATES: Record<string, Template> = {
     askExtra: (field) => `واش تقدر تعطيني ${field}؟`,
     recap: '✅ هاذا ملخص الطلب ديالك :',
     recapConfirm: 'كلشي صح؟ جاوب بـ "واه" باش تأكد ولا "لا" باش تلغي.',
+    labelItems: 'المنتجات',
+    labelSubtotal: 'المجموع قبل التخفيض',
+    labelDiscount: 'التخفيض',
+    labelTotal: 'المجموع',
     confirmed: '🎉 شكراً! الطلب ديالك تأكد. الفريق ديالنا غيتصل بيك قريب.',
     cancelled: 'واخا، الطلب ديالك تلغى. ما تتردد ترجع! 😊',
     humanHandoff: 'واخا، غادي نحولك لواحد من الفريق ديالنا. لحظة عافاك 🙏',
     outOfStock: (name) => `سماح ليا، "${name}" سالات الكمية ديالو دابا 😔 واش تحب تختار منتج آخر؟`,
+    outOfStockLine: (name) => `سماح ليا، "${name}" سالات الكمية ديالو دابا 😔 حيدتو من السلة.`,
+    cartEmptyAfterStockFailure: 'السلة ولات فارغة. أشمن منتج تحب تختار؟',
     cartReminder: (name) =>
       name
         ? `خليتي طلبية ماكملتيهاش على "${name}" 🛍️ مازال معجبك؟ جاوب بـ "واه" باش تكمل، ولا قوليها إذا بدلتي رايك.`
@@ -182,6 +222,10 @@ export const TEMPLATES: Record<string, Template> = {
     askProductShort: 'Which of our products interests you?',
     askSize: (opts) => `Which size would you like? Options: ${opts}`,
     askColor: (opts) => `Which color would you like? Options: ${opts}`,
+    askQuantity: (name) => `What quantity would you like${name ? ` for "${name}"` : ''}?`,
+    askAddMore: 'Would you like to add another item to this order?',
+    addMoreYes: 'Yes',
+    addMoreNo: 'No',
     askName: 'What is your full name?',
     askPhone: 'What is your phone number?',
     askWilaya: 'Which wilaya are you in?',
@@ -193,10 +237,16 @@ export const TEMPLATES: Record<string, Template> = {
     askExtra: (field) => `Can you give me your ${field}?`,
     recap: '✅ Here is your order summary:',
     recapConfirm: 'Is everything correct? Reply "yes" to confirm or "no" to cancel.',
+    labelItems: 'Items',
+    labelSubtotal: 'Subtotal',
+    labelDiscount: 'Discount',
+    labelTotal: 'Total',
     confirmed: '🎉 Thank you! Your order has been confirmed. Our team will contact you soon.',
     cancelled: 'Okay, your order has been cancelled. Feel free to come back! 😊',
     humanHandoff: "Sure, I'll connect you with a member of our team. One moment please 🙏",
     outOfStock: (name) => `Sorry, "${name}" just went out of stock 😔 Would you like to choose another product?`,
+    outOfStockLine: (name) => `Sorry, "${name}" just went out of stock 😔 I removed it from the cart.`,
+    cartEmptyAfterStockFailure: 'Your cart is empty now. Which product would you like to choose?',
     cartReminder: (name) =>
       name
         ? `You left an order in progress for "${name}" 🛍️ Still interested? Reply "yes" to continue, or let me know if you changed your mind.`

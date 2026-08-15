@@ -86,7 +86,7 @@ describe('getMissingFields / getNextQuestion — slot ordering', () => {
     expect(getMissingFields(session, [product], [])[0]).toBe('produit')
   })
 
-  test('asks for size, then color, then name, then phone, in order', () => {
+  test('asks for size, then color, then quantity, then name, in order', () => {
     const session: OrderSessionState = { product_id: 'p1' }
     expect(getMissingFields(session, [product], [])[0]).toBe('taille')
 
@@ -94,6 +94,9 @@ describe('getMissingFields / getNextQuestion — slot ordering', () => {
     expect(getMissingFields(session, [product], [])[0]).toBe('couleur')
 
     session.selected_color = 'Noir'
+    expect(getMissingFields(session, [product], [])[0]).toBe('quantité')
+
+    session.quantity = 1
     expect(getMissingFields(session, [product], [])[0]).toBe('nom complet')
   })
 
@@ -104,6 +107,7 @@ describe('getMissingFields / getNextQuestion — slot ordering', () => {
       selected_color: 'Noir',
       customer_name: 'Rynas',
       customer_phone: '0794055836',
+      quantity: 1,
       wilaya: 'Béjaïa',
     }
     expect(getMissingFields(session, [product], [])[0]).toBe('mode de livraison')
@@ -119,6 +123,7 @@ describe('getMissingFields / getNextQuestion — slot ordering', () => {
       selected_color: 'Noir',
       customer_name: 'Rynas',
       customer_phone: '0794055836',
+      quantity: 1,
       wilaya: 'Béjaïa',
       delivery_mode: 'domicile',
       shipping_address: 'Akbou, Ighram',

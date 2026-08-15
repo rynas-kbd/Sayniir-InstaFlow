@@ -52,10 +52,29 @@ export interface Order {
   color: string | null
   quantity: number
   total_amount: number
+  discount_percent_off: number | null
+  discount_amount_off: number | null
   currency: string
   payment_status: string
   shipping_status: string
   created_at: string
+  items?: OrderItem[]
+}
+
+export interface OrderItem {
+  id?: string
+  order_id?: string
+  product_id: string | null
+  variant_id?: string | null
+  product_name: string
+  size: string | null
+  color: string | null
+  quantity: number
+  unit_price: number
+  currency: string
+  position: number
+  extra_data?: Record<string, unknown>
+  created_at?: string
 }
 
 /** A stale, non-confirmed order_session — the ready-made abandoned-cart signal that was never surfaced anywhere. */
@@ -65,6 +84,7 @@ export interface AbandonedSession {
   customer_name: string | null
   status: string
   last_message_at: string
+  items?: Array<{ product_name?: string | null; quantity?: number | null }>
   products: { name: string } | null
 }
 

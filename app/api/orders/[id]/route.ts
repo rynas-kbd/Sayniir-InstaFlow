@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jsonError } from '@/lib/api/errors'
 import { createClient } from '@/lib/supabase/server'
+import { computeOrderTotals } from '@/lib/boutique/order-total'
+import { buildOrderItemsPayload, hasOrderItemsErrors, validateOrderItems, type EditableOrderItem } from '@/components/boutique/order-items-schema'
+import type { Translator } from '@/lib/i18n/translate'
+
+const serverT = Object.assign((key: string) => key, {
+  plural: (key: string) => key,
+  list: () => [],
+}) as Translator
 
 export async function PATCH(
   request: NextRequest,
@@ -16,7 +24,7 @@ export async function PATCH(
   // First verify the order belongs to an account owned by this user
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('channel_account_id')
+    .select('channel_account_id, discount_percent_off, discount_amount_off')
     .eq('id', id)
     .single()
 
@@ -42,32 +50,43 @@ export async function PATCH(
   // on `orders` (the real status fields are payment_status/shipping_status).
   // This is the route order-table.tsx actually calls (PATCH /api/orders/{id}),
   // so the payment/shipping status dropdowns silently didn't persist.
-  const allowed = ['payment_status', 'shipping_status', 'price', 'quantity', 'shipping_address']
+  const allowed = ['payment_status', 'shipping_status', 'shipping_address']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
   }
 
-  // Ensure total_amount is recalculated if price or quantity changed
-  if (updates.price !== undefined || updates.quantity !== undefined) {
-    const p = updates.price !== undefined ? parseFloat(updates.price as string) : undefined;
-    const q = updates.quantity !== undefined ? parseInt(updates.quantity as string, 10) : undefined;
-    if (p !== undefined && q !== undefined) {
-      updates.total_amount = p * q;
-    } else {
-      // Need to fetch current order to calculate
-      const { data: currentOrder } = await supabase.from('orders').select('price, quantity').eq('id', id).single();
-      const finalP = p !== undefined ? p : (currentOrder?.price || 0);
-      const finalQ = q !== undefined ? q : (currentOrder?.quantity || 0);
-      updates.total_amount = finalP * finalQ;
+  let itemPayload: EditableOrderItem[] | null = null
+  if (Array.isArray(body.items)) {
+    itemPayload = buildOrderItemsPayload(body.items)
+    const errors = validateOrderItems(itemPayload, serverT)
+    if (hasOrderItemsErrors(errors)) {
+      return NextResponse.json({ error: 'Invalid order items', details: errors }, { status: 400 })
     }
+    const totals = computeOrderTotals(itemPayload.map((item) => ({ quantity: item.quantity, unit_price: item.unit_price })), {
+      percent_off: order.discount_percent_off,
+      amount_off: order.discount_amount_off,
+    })
+    const first = itemPayload[0]
+    updates.product_name = first.product_name
+    updates.price = first.unit_price
+    updates.size = first.size
+    updates.color = first.color
+    updates.quantity = first.quantity
+    updates.currency = first.currency
+    updates.total_amount = totals.total
+  }
+
+  if (itemPayload) {
+    const { error: replaceError } = await supabase.rpc('replace_order_items', { p_order_id: id, p_items: itemPayload })
+    if (replaceError) return jsonError(500, 'Une erreur est survenue', replaceError)
   }
 
   const { data: updatedOrder, error } = await supabase
     .from('orders')
     .update(updates)
     .eq('id', id)
-    .select()
+    .select('*, contact:contacts(id, full_name, username), items:order_items(*)')
     .single()
 
   if (error) return jsonError(500, 'Une erreur est survenue', error)

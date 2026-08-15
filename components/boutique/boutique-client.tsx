@@ -195,7 +195,7 @@ export function BoutiqueClient({
                 <ProductTable channelAccountId={channelAccountId} initialProducts={products} />
               )}
               {tab === 'orders' && (
-                <OrderTable initialOrders={orders} />
+                <OrderTable initialOrders={orders} products={products} />
               )}
               {tab === 'abandoned' && (
                 <div className="pt-2">
