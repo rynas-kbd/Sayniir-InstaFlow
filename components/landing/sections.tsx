@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import {
   LOGO_STRIP,
   METRICS,
@@ -32,6 +32,50 @@ const TONE_AVATAR_FG: Record<'a' | 's', string> = {
   s: 'var(--organic-sage-800)',
 }
 
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+}
+
+/** Animates a numeric value from 0 up to `target` once the element is in view */
+function useCountUp(target: number, duration = 1.4, decimals = 0) {
+  const [value, setValue] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-10%' })
+
+  useEffect(() => {
+    if (!inView) return
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / (duration * 1000), 1)
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(parseFloat((eased * target).toFixed(decimals)))
+      if (progress < 1) requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+  }, [inView, target, duration, decimals])
+
+  return { ref, value }
+}
+
 export function LogoMarquee() {
   const loop = [...LOGO_STRIP, ...LOGO_STRIP]
   return (
@@ -58,26 +102,51 @@ export function LogoMarquee() {
 }
 
 export function MetricsBand() {
+  const metrics = [
+    { label: 'DM traités / mois', target: 2400000, suffix: '', prefix: '', decimals: 0, display: (v: number) => `${(v/1000000).toFixed(1)}M+` },
+    { label: 'Taux de réponse IA', target: 94, suffix: '%', prefix: '', decimals: 0, display: (v: number) => `${Math.round(v)}%` },
+    { label: 'Temps de réponse', target: 3, suffix: 's', prefix: '<', decimals: 0, display: (v: number) => `<${Math.round(v)}s` },
+    { label: 'Équipes actives', target: 12000, suffix: '+', prefix: '', decimals: 0, display: (v: number) => `${(v/1000).toFixed(0)}k+` },
+  ]
+
   return (
     <section className="pb-[88px]">
-      <div data-reveal-group className="lp-stagger grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {METRICS.map((m) => (
-          <div
-            key={m.label}
-            data-reveal
-            className="lp-card card p-6"
-            style={{ borderLeft: '3px solid var(--organic-terracotta)' }}
-          >
-            <div data-count className="font-heading text-[clamp(32px,3.2vw,44px)] leading-[1.08] font-bold" style={{ color: 'var(--organic-text)' }}>
-              {m.value}
-            </div>
-            <div className="mt-2 text-[12.5px] font-semibold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
-              {m.label}
-            </div>
-          </div>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-8%" }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3.5"
+      >
+        {metrics.map((m) => (
+          <MetricCard key={m.label} metric={m} />
         ))}
-      </div>
+      </motion.div>
     </section>
+  )
+}
+
+function MetricCard({ metric }: { metric: { label: string; target: number; decimals: number; display: (v: number) => string } }) {
+  const { ref, value } = useCountUp(metric.target, 1.6, metric.decimals)
+  return (
+    <motion.div
+      variants={cardVariants}
+      whileHover={{ y: -4, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="lp-card card p-6 cursor-pointer"
+      style={{ borderLeft: '3px solid var(--organic-terracotta)' }}
+    >
+      <span
+        ref={ref}
+        className="font-heading text-[clamp(32px,3.2vw,44px)] leading-[1.08] font-bold block"
+        style={{ color: 'var(--organic-text)' }}
+      >
+        {metric.display(value)}
+      </span>
+      <div className="mt-2 text-[12.5px] font-semibold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
+        {metric.label}
+      </div>
+    </motion.div>
   )
 }
 
@@ -94,12 +163,30 @@ export function FeaturesGrid() {
   return (
     <section id="features" className="pb-[88px]">
       <SectionHeader kicker="Pourquoi ça gagne" note="Conçu pour ceux qui vendent en message" />
-      <h2 data-reveal className="mb-10 max-w-[20ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
+      <motion.h2 
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-10 max-w-[20ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+      >
         Pas un chatbot. Un closer.
-      </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
+      </motion.h2>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-8%" }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
         {FEATURES.map((f, idx) => (
-          <div key={f.title} data-reveal className="lp-card card">
+          <motion.div
+            key={f.title}
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.015 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="lp-card card cursor-pointer"
+          >
             <span
               className="mb-4 grid size-10 place-content-center rounded-xl shrink-0"
               style={{ background: TONE_ICON_BG[f.tone], color: TONE_ICON_FG[f.tone] }}
@@ -108,9 +195,9 @@ export function FeaturesGrid() {
             </span>
             <h3 className="mb-2 font-heading text-[16px] leading-[1.25]">{f.title}</h3>
             <p className="m-0 text-[13.5px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}>{f.body}</p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -125,12 +212,30 @@ export function Channels() {
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="Canaux" note="API natives · pas de bricolage" />
-      <h2 data-reveal className="mb-10 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
+      <motion.h2
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-10 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+      >
         Là où vos clients sont déjà.
-      </h2>
-      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
+      </motion.h2>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-8%" }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
         {CHANNEL_INFO.map((c) => (
-          <div key={c.title} data-reveal className="lp-card card flex-row items-start gap-4 p-6">
+          <motion.div
+            key={c.title}
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.015 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="lp-card card flex-row items-start gap-4 p-6 cursor-pointer"
+          >
             <span
               className="grid size-12 shrink-0 place-content-center rounded-xl"
               style={{ background: TONE_ICON_BG[c.tone], color: TONE_ICON_FG[c.tone] }}
@@ -145,9 +250,9 @@ export function Channels() {
                 {c.body}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -156,15 +261,32 @@ export function InboxShowcase() {
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="L'inbox partagée" note="Boîte d'équipe collaborative" />
-      <h2 data-reveal className="mb-3 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
+      <motion.h2
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-3 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+      >
         L'IA rédige. Vous validez. Elle apprend.
-      </h2>
-      <p className="mb-9 max-w-[56ch] text-base leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 76%, transparent)' }}>
+      </motion.h2>
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-9 max-w-[56ch] text-base leading-[1.65]" 
+        style={{ color: 'color-mix(in srgb, var(--organic-text) 76%, transparent)' }}
+      >
         Chaque conversation dont l&apos;IA n&apos;est pas sûre arrive ici avec une réponse suggérée et un score de confiance.
         Validez-la, modifiez-la, ou reprenez la main — dans tous les cas, elle progresse.
-      </p>
-      <div
-        data-reveal
+      </motion.p>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-8%" }}
+        transition={{ type: 'spring', stiffness: 70, damping: 14 }}
         className="overflow-hidden rounded-2xl border-[1.5px]"
         style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)', background: 'var(--organic-bg)', boxShadow: '0 8px 32px rgba(0,0,0,.08)' }}
       >
@@ -175,46 +297,86 @@ export function InboxShowcase() {
           <span className="ml-3 text-[13px] font-bold tracking-[.04em]">Instaflow · Inbox</span>
           <span className="tag ml-auto" style={{ background: 'var(--organic-sage-100)', color: 'var(--organic-sage-800)' }}>3 à traiter</span>
         </div>
+        
         <div className="lp-inbox-grid grid min-h-[380px] grid-cols-[300px_minmax(0,1fr)]">
+          {/* Left panel chat items */}
           <div className="border-r-[1.5px] p-3" style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 8%, transparent)' }}>
             <div className="mb-3 flex flex-wrap gap-1.5">
               <span className="tag" style={{ background: 'var(--organic-terracotta-100)', color: 'var(--organic-terracotta-800)' }}>Tout · 47</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>Instagram</span>
               <span className="tag border" style={{ borderColor: 'var(--organic-terracotta)', color: 'var(--organic-terracotta-700)' }}>WhatsApp</span>
             </div>
-            <div className="mb-2 rounded-xl p-3.5" style={{ background: 'var(--organic-terracotta-100)' }}>
-              <div className="flex justify-between text-[13px]">
-                <strong>Maya R.</strong>
-                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>2m</span>
-              </div>
-              <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Vous livrez au Canada ? Il me le faut avant…
-              </div>
-            </div>
-            <div className="mb-2 rounded-xl p-3.5">
-              <div className="flex justify-between text-[13px]">
-                <strong>Jon B.</strong>
-                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>11m</span>
-              </div>
-              <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Traité par l&apos;IA · statut de commande → résolu
-              </div>
-            </div>
-            <div className="rounded-xl p-3.5">
-              <div className="flex justify-between text-[13px]">
-                <strong>@petalandstem</strong>
-                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>24m</span>
-              </div>
-              <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                Traité par l&apos;IA · lead capturé → CRM
-              </div>
+            
+            <div className="flex flex-col gap-2">
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.15 }}
+                className="rounded-xl p-3.5"
+                style={{ background: 'var(--organic-terracotta-100)' }}
+              >
+                <div className="flex justify-between text-[13px]">
+                  <strong>Maya R.</strong>
+                  <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>2m</span>
+                </div>
+                <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
+                  Vous livrez au Canada ? Il me le faut avant…
+                </div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.25 }}
+                className="rounded-xl p-3.5"
+              >
+                <div className="flex justify-between text-[13px]">
+                  <strong>Jon B.</strong>
+                  <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>11m</span>
+                </div>
+                <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
+                  Traité par l&apos;IA · statut de commande → résolu
+                </div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.35 }}
+                className="rounded-xl p-3.5"
+              >
+                <div className="flex justify-between text-[13px]">
+                  <strong>@petalandstem</strong>
+                  <span style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>24m</span>
+                </div>
+                <div className="mt-[3px] text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
+                  Traité par l&apos;IA · lead capturé → CRM
+                </div>
+              </motion.div>
             </div>
           </div>
+          
+          {/* Right panel chat message mockup */}
           <div className="flex flex-col gap-3 p-5">
-            <div className="max-w-[70%] self-start rounded-[16px] rounded-bl-[4px] px-3.5 py-2.5 text-sm" style={{ background: 'var(--organic-sand-200)' }}>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: 'spring', stiffness: 80, damping: 14, delay: 0.2 }}
+              className="max-w-[70%] self-start rounded-[16px] rounded-bl-[4px] px-3.5 py-2.5 text-sm"
+              style={{ background: 'var(--organic-sand-200)' }}
+            >
               Vous livrez au Canada ? Il me le faut avant le 14 pour un mariage
-            </div>
-            <div
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: 'spring', stiffness: 85, damping: 14, delay: 0.38 }}
               className="mt-auto rounded-xl border-[1.5px] p-4"
               style={{ borderColor: 'var(--organic-terracotta-300)', background: 'var(--organic-terracotta-100)' }}
             >
@@ -232,10 +394,10 @@ export function InboxShowcase() {
                 <button type="button" className="btn btn-primary">Valider &amp; envoyer</button>
                 <button type="button" className="btn btn-ghost">Modifier</button>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -244,9 +406,21 @@ export function Testimonials() {
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="Preuves & Avis" note="Agences · e-commerce · créateurs" />
-      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-8%" }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
         {TESTIMONIALS.map((t) => (
-          <figure key={t.name} data-reveal className="lp-card card m-0">
+          <motion.figure
+            key={t.name}
+            variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.015 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="lp-card card m-0 cursor-pointer"
+          >
             <div className="lp-stars mb-3" aria-label="5 étoiles">★★★★★</div>
             <blockquote className="mb-5 text-[14.5px] leading-[1.6]" style={{ fontStyle: 'italic', color: 'color-mix(in srgb, var(--organic-text) 88%, transparent)' }}>
               &ldquo;{t.quote}&rdquo;
@@ -263,9 +437,9 @@ export function Testimonials() {
                 <span style={{ color: 'color-mix(in srgb, var(--organic-text) 58%, transparent)' }}>{t.role}</span>
               </span>
             </figcaption>
-          </figure>
+          </motion.figure>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -274,10 +448,23 @@ export function ComparisonTable() {
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="Le changement" note="Migration gratuite sur tout plan payant" />
-      <h2 data-reveal className="mb-9 max-w-[24ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]">
+      <motion.h2 
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-9 max-w-[24ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+      >
         Les outils chatbot historiques datent de 2019.
-      </h2>
-      <div data-reveal className="overflow-x-auto rounded-2xl border-[1.5px]" style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}>
+      </motion.h2>
+      <motion.div
+        initial={{ opacity: 0, y: 25 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-8%" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="overflow-x-auto rounded-2xl border-[1.5px]" 
+        style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+      >
         <table className="table" style={{ minWidth: 640 }}>
           <thead>
             <tr style={{ background: 'color-mix(in srgb, var(--organic-bg) 60%, transparent)' }}>
@@ -306,7 +493,7 @@ export function ComparisonTable() {
             ))}
           </tbody>
         </table>
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -323,13 +510,19 @@ export function Faq() {
       <SectionHeader kicker="Questions fréquentes" note="" />
       <div className="lp-faq-grid grid grid-cols-[minmax(0,340px)_minmax(0,1fr)] gap-x-[clamp(24px,5vw,80px)] gap-y-7">
         <h2 className="font-heading text-[clamp(28px,3.2vw,40px)] leading-[1.12]">Les questions qu&apos;on nous pose le plus.</h2>
-        <div data-reveal-group className="lp-stagger flex flex-col">
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-8%" }}
+          className="flex flex-col"
+        >
           {FAQ_ITEMS.map((item, i) => {
             const isOpen = openIndex === i
             return (
-              <div
+              <motion.div
                 key={item.q}
-                data-reveal
+                variants={cardVariants}
                 className="py-[18px]"
                 style={{ borderBottom: i < FAQ_ITEMS.length - 1 ? '1.5px solid color-mix(in srgb, var(--organic-text) 9%, transparent)' : undefined }}
               >
@@ -378,10 +571,10 @@ export function Faq() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             )
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   )
@@ -390,8 +583,11 @@ export function Faq() {
 export function ClosingCta() {
   return (
     <section className="pb-12">
-      <div
-        data-reveal
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        viewport={{ once: true, margin: "-5%" }}
+        transition={{ type: 'spring', stiffness: 70, damping: 15 }}
         className="relative overflow-hidden rounded-3xl p-[clamp(40px,6vw,80px)_clamp(24px,5vw,72px)] border-[1.5px]"
         style={{
           background: 'var(--organic-surface)',
@@ -413,12 +609,16 @@ export function ClosingCta() {
           on vous aide à repasser à votre ancien outil.
         </p>
         <div className="relative mt-8 flex flex-wrap items-center gap-3">
-          <Link href="/register" className="btn btn-primary rounded-full px-6">
-            Essai gratuit →
-          </Link>
-          <Link href="/register" className="btn btn-secondary rounded-full px-6">
-            Commencer gratuitement
-          </Link>
+          <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 400, damping: 18 }}>
+            <Link href="/register" className="btn btn-primary rounded-full px-6">
+              Essai gratuit →
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 18 }}>
+            <Link href="/register" className="btn btn-secondary rounded-full px-6">
+              Commencer gratuitement
+            </Link>
+          </motion.div>
           <span
             className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
             style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
@@ -429,7 +629,7 @@ export function ClosingCta() {
             Sans carte bancaire
           </span>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

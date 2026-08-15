@@ -2,6 +2,8 @@ import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 import { Hero } from '@/components/landing/hero'
 import { FlowDemo } from '@/components/landing/flow-demo'
 import { Pricing } from '@/components/landing/pricing'
+import { CursorGlow } from '@/components/landing/cursor-glow'
+import { SmoothScroll } from '@/components/landing/smooth-scroll'
 import {
   LogoMarquee,
   MetricsBand,
@@ -17,6 +19,8 @@ import {
 export default function LandingPage() {
   return (
     <>
+      <SmoothScroll />
+      <CursorGlow />
       <LandingNav />
       <div className="mx-auto max-w-[1160px] px-[clamp(20px,5vw,64px)]">
         <Hero />

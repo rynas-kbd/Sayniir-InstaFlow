@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { motion, useScroll } from 'framer-motion'
 
 const NAV_LINKS = [
   { href: '#product', label: 'Produit' },
@@ -12,47 +13,86 @@ const NAV_LINKS = [
 
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { scrollYProgress } = useScroll()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 24)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <>
-      <nav
-        className="sticky top-0 z-30 flex min-h-16 items-center gap-6"
+      {/* Scroll Progress Bar at the top */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 z-50 h-[3px]"
+        style={{
+          scaleX: scrollYProgress,
+          transformOrigin: '0%',
+          background: 'var(--organic-terracotta)',
+          boxShadow: '0 1px 6px color-mix(in srgb, var(--organic-terracotta) 45%, transparent)',
+        }}
+      />
+
+      <motion.nav
+        className="sticky top-0 z-30 flex items-center gap-6"
+        animate={{
+          paddingTop: scrolled ? '10px' : '15px',
+          paddingBottom: scrolled ? '10px' : '15px',
+          boxShadow: scrolled ? '0 8px 30px rgba(0,0,0,.04)' : '0 0 0 rgba(0,0,0,0)',
+        }}
+        transition={{ duration: 0.28, ease: 'easeOut' }}
         style={{
           backdropFilter: 'blur(18px) saturate(1.6)',
           background: 'color-mix(in srgb, var(--organic-bg) 88%, transparent)',
           borderBottom: '1.5px solid color-mix(in srgb, var(--organic-text) 7%, transparent)',
-          padding: '13.2px max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
+          paddingLeft: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
+          paddingRight: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
         }}
       >
         {/* Clickable logo */}
-        <Link
-          href="/"
-          className="lp-brand mr-auto font-heading text-xl font-bold tracking-tight no-underline"
-          style={{
-            color: 'var(--organic-text)',
-            transition: 'opacity .2s ease',
-          }}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
         >
-          Instaflow
-        </Link>
+          <Link
+            href="/"
+            className="lp-brand font-heading text-xl font-bold tracking-tight no-underline block"
+            style={{
+              color: 'var(--organic-text)',
+            }}
+          >
+            Instaflow
+          </Link>
+        </motion.div>
 
         {/* Desktop nav links */}
-        <div className="lp-nav-links flex items-center gap-6">
+        <div className="lp-nav-links flex items-center gap-6 ml-auto mr-1">
           {NAV_LINKS.map((link) => (
-            <a
+            <motion.a
               key={link.href}
               href={link.href}
+              whileHover={{ y: -1 }}
               className="lp-nav-link relative text-sm no-underline"
               style={{ color: 'color-mix(in srgb, var(--organic-text) 80%, transparent)', transition: 'color .18s ease' }}
             >
               {link.label}
-            </a>
+            </motion.a>
           ))}
         </div>
 
-        <Link href="/register" className="btn btn-primary lp-nav-cta">
-          Essai gratuit
-        </Link>
+        <motion.div
+          whileHover={{ scale: 1.04, y: -0.5 }}
+          whileTap={{ scale: 0.96 }}
+          className="lp-nav-cta-wrapper"
+        >
+          <Link href="/register" className="btn btn-primary lp-nav-cta">
+            Essai gratuit
+          </Link>
+        </motion.div>
 
         {/* Mobile hamburger */}
         <button
@@ -86,7 +126,7 @@ export function LandingNav() {
             )}
           </svg>
         </button>
-      </nav>
+      </motion.nav>
 
       {/* Mobile dropdown */}
       {menuOpen && (
@@ -135,7 +175,10 @@ export function LandingNav() {
       )}
 
       {/* Floating mobile bottom conversion bar */}
-      <div
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 28, delay: 0.6 }}
         className="fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between gap-3 rounded-2xl p-3 shadow-2xl md:hidden border"
         style={{
           background: 'color-mix(in srgb, var(--organic-surface) 96%, transparent)',
@@ -148,14 +191,16 @@ export function LandingNav() {
           <span className="font-heading text-xs font-extrabold tracking-tight" style={{ color: 'var(--organic-text)' }}>Instaflow</span>
           <span className="text-[10.5px] font-medium" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>Essai gratuit · En ligne en 10m</span>
         </div>
-        <Link
-          href="/register"
-          className="btn btn-primary h-9 px-4 text-xs font-bold"
-          style={{ borderRadius: 10 }}
-        >
-          Essai gratuit →
-        </Link>
-      </div>
+        <motion.div whileTap={{ scale: 0.94 }} whileHover={{ scale: 1.04 }}>
+          <Link
+            href="/register"
+            className="btn btn-primary h-9 px-4 text-xs font-bold"
+            style={{ borderRadius: 10 }}
+          >
+            Essai gratuit →
+          </Link>
+        </motion.div>
+      </motion.div>
     </>
   )
 }

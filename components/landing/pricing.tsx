@@ -2,9 +2,32 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Check, Sparkles, Zap, Building2 } from 'lucide-react'
 import { PRICING_TIERS } from '@/lib/marketing-content'
 import { SectionHeader } from './chrome'
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+}
 
 /* ─── Animated price counter ─────────────────────────────────────────── */
 function AnimatedPrice({ value, className }: { value: string; className?: string }) {
@@ -84,7 +107,6 @@ function TiltCard({
   return (
     <div
       ref={ref}
-      data-reveal
       className={className}
       /* override .lp-card:hover so CSS and JS don't fight each other */
       style={{
@@ -210,7 +232,13 @@ export function Pricing() {
       </div>
 
       {/* Cards */}
-      <div data-reveal-group className="lp-stagger grid grid-cols-1 md:grid-cols-3 items-stretch gap-5">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-8%" }}
+        className="grid grid-cols-1 md:grid-cols-3 items-stretch gap-5"
+      >
         {PRICING_TIERS.map((tier, idx) => {
           const price = billing === 'annual' ? tier.priceAnnual : tier.price
           const period = billing === 'annual' ? tier.periodAnnual : tier.period
@@ -218,22 +246,26 @@ export function Pricing() {
           const Icon = TIER_ICONS[idx % TIER_ICONS.length]
 
           return (
-            <TiltCard
+            <motion.div
               key={tier.name}
-              highlighted={tier.highlighted}
-              /*
-               * overflow-hidden so the -top-3.5 badge doesn't escape the
-               * card border-radius on older Safari, but we need the badge
-               * to sit ABOVE the card visually. Solution: keep overflow
-               * visible on the outer div and clip only the shimmer layer.
-               * Using `isolate` creates a stacking context so the badge
-               * z-index works independently of siblings.
-               */
-              className={`lp-card card relative isolate flex flex-col${
-                tier.highlighted ? ' lp-pricing-highlight' : ''
-              }`}
-              style={tier.highlighted ? { zIndex: 1 } : undefined}
+              variants={cardVariants}
+              className="flex"
             >
+              <TiltCard
+                highlighted={tier.highlighted}
+                /*
+                 * overflow-hidden so the -top-3.5 badge doesn't escape the
+                 * card border-radius on older Safari, but we need the badge
+                 * to sit ABOVE the card visually. Solution: keep overflow
+                 * visible on the outer div and clip only the shimmer layer.
+                 * Using `isolate` creates a stacking context so the badge
+                 * z-index works independently of siblings.
+                 */
+                className={`lp-card card relative isolate flex flex-col w-full${
+                  tier.highlighted ? ' lp-pricing-highlight' : ''
+                }`}
+                style={tier.highlighted ? { zIndex: 1 } : undefined}
+              >
               {/* Shimmer border on Pro — clipped to card bounds */}
               {tier.highlighted && (
                 <span
@@ -350,10 +382,11 @@ export function Pricing() {
                   <span aria-hidden style={{ marginLeft: 6, opacity: .75 }}>→</span>
                 )}
               </Link>
-            </TiltCard>
+              </TiltCard>
+            </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
       {/* Trust strip */}
       <div className="mt-9 flex flex-wrap justify-center gap-x-7 gap-y-2 text-[12.5px] font-semibold" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
