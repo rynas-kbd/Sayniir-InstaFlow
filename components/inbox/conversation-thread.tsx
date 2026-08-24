@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Trash2, Sparkles } from 'lucide-react'
+import { ChevronLeft, Bot, Zap, Send, Pause, Play, MessageSquareText, Plus, Trash2, Sparkles, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -88,6 +88,7 @@ export function ConversationThread({
   const [snippetsOpen, setSnippetsOpen] = useState(false)
   const [newShortcut, setNewShortcut] = useState('')
   const [assignedTo, setAssignedTo] = useState(initialAssignedTo)
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
 
   async function handleAssign(email: string) {
     if (!contactId) return
@@ -280,7 +281,7 @@ export function ConversationThread({
 
         {/* Actions */}
         <div className="relative flex shrink-0 items-center gap-2">
-          {/* Assign select */}
+          {/* Desktop: assign select */}
           {contactId && teamMembers.length > 0 && (
             <select
               value={assignedTo}
@@ -299,7 +300,7 @@ export function ConversationThread({
             </select>
           )}
 
-          {/* Bot pause toggle */}
+          {/* Desktop: bot pause toggle */}
           {contactId && (
             <button
               type="button"
@@ -325,7 +326,7 @@ export function ConversationThread({
             </button>
           )}
 
-          {/* Message count */}
+          {/* Desktop: message count */}
           <div
             className="hidden shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium sm:flex"
             style={{
@@ -337,6 +338,87 @@ export function ConversationThread({
             <Bot className="size-3" strokeWidth={1.75} />
             {t.plural('inbox.thread.messageCount', sorted.length)}
           </div>
+
+          {/* Mobile: kebab menu exposing bot toggle + assign */}
+          {contactId && (
+            <Popover open={mobileActionsOpen} onOpenChange={setMobileActionsOpen}>
+              <PopoverTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={t('inbox.thread.moreActionsAria') ?? 'More actions'}
+                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-all duration-150 sm:hidden"
+                    style={{
+                      background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
+                      color: 'color-mix(in srgb, var(--foreground) 55%, transparent)',
+                    }}
+                  />
+                }
+              >
+                <MoreVertical className="size-4" strokeWidth={1.75} />
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-56 overflow-hidden rounded-2xl border-0 p-2 shadow-xl"
+                align="end"
+                side="bottom"
+                style={{
+                  background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
+                  backdropFilter: 'blur(24px) saturate(1.8)',
+                  border: '1px solid color-mix(in srgb, var(--organic-sand-300) 40%, transparent)',
+                  boxShadow: '0 8px 32px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)',
+                }}
+              >
+                {/* Bot toggle */}
+                <button
+                  type="button"
+                  onClick={() => { togglePause(); setMobileActionsOpen(false) }}
+                  disabled={togglingPause}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,var(--organic-sand-300)_15%,transparent)] disabled:opacity-50"
+                  style={{ color: botPaused ? 'var(--organic-terracotta-700)' : 'var(--organic-sage-700)' }}
+                >
+                  {botPaused ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+                  {botPaused ? t('inbox.thread.botPaused') : t('inbox.thread.botActive')}
+                </button>
+
+                {/* Assign */}
+                {teamMembers.length > 0 && (
+                  <div className="mt-1 px-3 pb-2 pt-1">
+                    <p
+                      className="mb-1.5 text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}
+                    >
+                      {t('inbox.thread.unassigned')}
+                    </p>
+                    <select
+                      value={assignedTo}
+                      onChange={(e) => { handleAssign(e.target.value); setMobileActionsOpen(false) }}
+                      className="w-full cursor-pointer rounded-lg px-2.5 py-1.5 text-[12px] font-medium outline-none transition-all"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
+                        color: 'color-mix(in srgb, var(--foreground) 65%, transparent)',
+                      }}
+                    >
+                      <option value="">{t('inbox.thread.unassigned')}</option>
+                      {teamMembers.map((m) => (
+                        <option key={m.email} value={m.email}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Message count */}
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11px]"
+                  style={{ color: 'color-mix(in srgb, var(--foreground) 45%, transparent)' }}
+                >
+                  <Bot className="size-3.5" strokeWidth={1.75} />
+                  {t.plural('inbox.thread.messageCount', sorted.length)}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 

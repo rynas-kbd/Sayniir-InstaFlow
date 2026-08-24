@@ -116,7 +116,7 @@ export function MobileBottomNav({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={springs.playful}
-              className="fixed bottom-0 start-0 end-0 z-50 rounded-t-3xl pb-safe touch-none md:hidden"
+              className="fixed bottom-0 start-0 end-0 z-50 max-h-[72vh] overflow-y-auto rounded-t-3xl pb-safe touch-none md:hidden"
               style={{
                 background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
                 backdropFilter: 'blur(32px) saturate(1.8)',
@@ -193,7 +193,7 @@ export function MobileBottomNav({
 
       {/* ── Bottom Tab Bar ── */}
       <nav
-        className="relative shrink-0 z-[60] md:hidden"
+        className="relative shrink-0 z-[60] overflow-hidden md:hidden"
         style={{
           background: 'color-mix(in srgb, var(--organic-bg) 78%, transparent)',
           backdropFilter: 'blur(32px) saturate(1.8)',
@@ -259,7 +259,7 @@ export function MobileBottomNav({
                 {/* Label */}
                 <span
                   className={cn(
-                    'relative text-[10px] font-medium leading-none transition-colors duration-150',
+                    'relative max-w-full truncate text-[10px] font-medium leading-none transition-colors duration-150',
                     isActive
                       ? 'text-[var(--organic-terracotta-700)] font-semibold'
                       : 'text-foreground/40'
@@ -298,7 +298,7 @@ export function MobileBottomNav({
             />
             <span
               className={cn(
-                'relative text-[10px] font-medium leading-none transition-colors duration-150',
+                'relative max-w-full truncate text-[10px] font-medium leading-none transition-colors duration-150',
                 isMoreActive || moreOpen
                   ? 'text-[var(--organic-terracotta-700)] font-semibold'
                   : 'text-foreground/40'

@@ -259,7 +259,7 @@ export default async function DashboardPage() {
                     {safeMessages.map((m) => (
                       <li
                         key={m.id}
-                        className="flex items-center gap-3.5 px-5 py-3.5 transition-all duration-300 hover:bg-muted/40 hover:translate-x-1.5"
+                        className="flex items-center gap-3.5 px-5 py-3.5 transition-all duration-300 hover:bg-muted/40 md:hover:translate-x-1.5"
                       >
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all group-hover:scale-105">
                           {m.sender_username ? m.sender_username[0].toUpperCase() : <User className="size-3.5" />}

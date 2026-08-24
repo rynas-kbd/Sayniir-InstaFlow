@@ -10,13 +10,18 @@
    when opening any floating element (menu, dialog, popover, sheet).
    ───────────────────────────────────────────── */
 
-/* Reserve scrollbar gutter space so opening a menu never shifts content */
-html {
-  scrollbar-gutter: stable;
+/* Reserve scrollbar gutter space so opening a menu never shifts content.
+   Only on pointer devices (desktop) — mobile scrollbars are always overlay
+   so reserving gutter creates an empty gap on the right side. */
+@media (hover: hover) {
+  html {
+    scrollbar-gutter: stable;
+  }
 }
 
-/* Block Base UI / Radix from hiding overflow or injecting a padding compensator */
-html[data-scroll-locked],
+/* Block Base UI / Radix from hiding overflow or injecting a padding compensator.
+   Only apply to body — html must keep its overflow:hidden when app-shell-root
+   is mounted (rule below at L34), so targeting html here would conflict. */
 body[data-scroll-locked],
 body[style*='overflow: hidden'],
 body[style*='overflow:hidden'] {
@@ -767,24 +772,9 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─────────────────────────────────────────────
    Scrollbar — near-invisible until needed
+   (Duplicate block removed — full custom scrollbar
+    styles are declared in the section below at ~L1017)
    ───────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 9999px;
-  border: 1px solid transparent;
-  background-clip: content-box;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
-  background-clip: content-box;
-}
 
 /* ─────────────────────────────────────────────
    Marketing page gradient utilities
@@ -1101,6 +1091,17 @@ h1, h2, h3, h4, h5, h6 {
   /* Slightly larger tap targets for important interactive elements */
   button, [role="button"], a {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── iOS Safari anti-zoom fix ──
+     Safari zooms automatically into any input with font-size < 16px.
+     Force 16px on all text inputs on mobile so the viewport stays locked.
+     The visual appearance is unchanged — the 13–14px design sizes are applied
+     via transform or kept as-is (16px reads fine at mobile density). */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
 

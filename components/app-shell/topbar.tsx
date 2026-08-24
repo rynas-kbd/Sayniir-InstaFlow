@@ -48,7 +48,11 @@ export function Topbar({
   accountScope?: 'all' | 'single'
 }) {
   return (
-    <header className="relative z-[60] flex min-h-16 shrink-0 items-center justify-between gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] px-4 pt-safe pb-2 backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)] md:h-14 md:py-0 md:px-4 md:pt-0">
+    <header className="relative z-[60] shrink-0 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)]">
+      {/* iOS safe-area spacer — pushes the visible header bar down by the notch
+          height without inflating the flex row itself, so items-center works. */}
+      <div className="pt-safe" />
+      <div className="relative flex h-14 items-center justify-between gap-3 px-4">
       {/* Bottom border — terracotta gradient line */}
       <div
         className="pointer-events-none absolute bottom-0 start-0 end-0 h-px"
@@ -77,13 +81,16 @@ export function Topbar({
         <Breadcrumb businessType={businessType} />
       </div>
 
-      <div className="relative flex items-center gap-1 sm:gap-2">
-        <CopilotHeaderButton />
-        <CommandMenu businessType={businessType} />
-        <div className="mx-0.5 hidden h-5 w-px bg-[color-mix(in_srgb,var(--organic-sand-400)_40%,transparent)] md:block" />
-        <ThemeToggle />
-        <NotificationsMenu counts={notificationCounts} />
-        <UserMenu email={email} />
+        <div className="relative flex items-center gap-1 sm:gap-2">
+          <CopilotHeaderButton />
+          <CommandMenu businessType={businessType} />
+          <div className="mx-0.5 hidden h-5 w-px bg-[color-mix(in_srgb,var(--organic-sand-400)_40%,transparent)] md:block" />
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
+          <NotificationsMenu counts={notificationCounts} />
+          <UserMenu email={email} />
+        </div>
       </div>
     </header>
   )
