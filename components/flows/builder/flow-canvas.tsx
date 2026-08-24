@@ -11,6 +11,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Node,
   type Edge,
   type Connection,
@@ -38,6 +39,7 @@ import {
   HelpCircle,
   X,
   Link2,
+  Focus,
 } from 'lucide-react'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
@@ -144,7 +146,22 @@ export interface FlowMeta {
   status: string
 }
 
-export function FlowCanvas({
+export function FlowCanvas(props: {
+  flow: FlowMeta
+  initialNodes: FlowNodeRecord[]
+  initialEdges: FlowEdgeRecord[]
+  tags: ContactTag[]
+  otherFlows: FlowSummary[]
+  insightsByNodeKey?: Record<string, AiInsight[]>
+}) {
+  return (
+    <ReactFlowProvider>
+      <FlowCanvasInner {...props} />
+    </ReactFlowProvider>
+  )
+}
+
+function FlowCanvasInner({
   flow,
   initialNodes,
   initialEdges,
@@ -159,6 +176,7 @@ export function FlowCanvas({
   otherFlows: FlowSummary[]
   insightsByNodeKey?: Record<string, AiInsight[]>
 }) {
+  const { fitView } = useReactFlow()
   const t = useT()
   const locale = useLocale()
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -225,7 +243,6 @@ export function FlowCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-
   const onConnect = useCallback(
     (connection: Connection) => setEdges((eds) => addEdge({ ...connection, sourceHandle: connection.sourceHandle ?? 'default' }, eds)),
     [setEdges]
@@ -258,15 +275,107 @@ export function FlowCanvas({
     }
   })
 
-  function addNode(type: FlowNodeType) {
-    const nodeKey = `${type}-${crypto.randomUUID()}`
+  function addNextStep(type: FlowNodeType) {
+    const parentId = selectedId ?? 'trigger'
+    const parentNode = nodes.find((n) => n.id === parentId)
+    
+    const newNodeKey = `${type}-${crypto.randomUUID()}`
+    const existingOutgoingEdges = edges.filter((e) => e.source === parentId)
+    
+    const basePos = parentNode ? parentNode.position : { x: 100, y: 100 }
+    const newPos = {
+      x: basePos.x + (existingOutgoingEdges.length > 0 ? existingOutgoingEdges.length * 180 : 0),
+      y: basePos.y + 160,
+    }
+
     const newNode: Node = {
-      id: nodeKey,
+      id: newNodeKey,
       type: 'flowNode',
-      position: { x: 100 + nodes.length * 40, y: 100 + nodes.length * 80 },
+      position: newPos,
+      data: { nodeType: type, config: {}, summary: summaryFor(type, {}, t) },
+    }
+
+    const parentNodeType = parentNode ? (parentNode.data as unknown as FlowNodeData)?.nodeType : undefined
+    const sourceHandle = parentNodeType === 'condition'
+      ? (existingOutgoingEdges.length === 0 ? 'true' : 'false')
+      : 'default'
+
+    const newEdge: Edge = {
+      id: `${parentId}-${newNodeKey}-${sourceHandle}`,
+      source: parentId,
+      target: newNodeKey,
+      sourceHandle,
+    }
+
+    setNodes((nds) => [...nds, newNode])
+    setEdges((eds) => [...eds, newEdge])
+    setSelectedId(newNodeKey)
+    setSelectedEdgeId(null)
+
+    toast.success(t('flows.builder.flowCanvas.stepAddedAndConnected') ?? 'Étape ajoutée et reliée !')
+    
+    setTimeout(() => {
+      fitView({ padding: 0.35, duration: 400 })
+    }, 50)
+  }
+
+  function connectToExistingNode(targetNodeId: string) {
+    if (!selectedId || selectedId === targetNodeId) return
+    const existingEdge = edges.find((e) => e.source === selectedId && e.target === targetNodeId)
+    if (existingEdge) {
+      toast.error('Ces étapes sont déjà reliées')
+      return
+    }
+
+    const parentNode = nodes.find((n) => n.id === selectedId)
+    const parentNodeType = parentNode ? (parentNode.data as unknown as FlowNodeData)?.nodeType : undefined
+    const existingOutgoing = edges.filter((e) => e.source === selectedId)
+    const sourceHandle = parentNodeType === 'condition'
+      ? (existingOutgoing.length === 0 ? 'true' : 'false')
+      : 'default'
+
+    const newEdge: Edge = {
+      id: `${selectedId}-${targetNodeId}-${sourceHandle}`,
+      source: selectedId,
+      target: targetNodeId,
+      sourceHandle,
+    }
+
+    setEdges((eds) => [...eds, newEdge])
+    toast.success('Étapes reliées !')
+  }
+
+  const existingNodesList = nodes
+    .filter((n) => n.id !== selectedId)
+    .map((n) => {
+      const data = n.data as unknown as FlowNodeData
+      const typeLabel = t(`flows.nodeTypes.${data.nodeType || 'unknown'}.short`)
+      const summaryText = data.summary ? `: ${data.summary.slice(0, 25)}` : ''
+      return {
+        id: n.id,
+        label: `${n.id === 'trigger' ? '⚡ Déclencheur' : typeLabel}${summaryText}`,
+      }
+    })
+
+  function addNode(type: FlowNodeType) {
+    if (selectedId) {
+      addNextStep(type)
+      return
+    }
+    const newNodeKey = `${type}-${crypto.randomUUID()}`
+    const lastNode = nodes[nodes.length - 1]
+    const basePos = lastNode ? lastNode.position : { x: 100, y: 100 }
+    const newNode: Node = {
+      id: newNodeKey,
+      type: 'flowNode',
+      position: { x: basePos.x, y: basePos.y + 160 },
       data: { nodeType: type, config: {}, summary: summaryFor(type, {}, t) },
     }
     setNodes((nds) => [...nds, newNode])
+    setSelectedId(newNodeKey)
+    setTimeout(() => {
+      fitView({ padding: 0.35, duration: 400 })
+    }, 50)
   }
 
   function updateSelectedConfig(config: Record<string, unknown>) {
@@ -422,6 +531,9 @@ export function FlowCanvas({
         flows={otherFlows}
         channelAccountId={flow.channel_account_id}
         onOpenPostPicker={() => setPostPickerOpen(true)}
+        onAddNextStep={addNextStep}
+        onConnectToNode={connectToExistingNode}
+        existingNodes={existingNodesList}
       />
     </div>
   ) : nodeData ? (
@@ -438,6 +550,9 @@ export function FlowCanvas({
           flows={otherFlows}
           channelAccountId={flow.channel_account_id}
           onOpenPostPicker={() => setPostPickerOpen(true)}
+          onAddNextStep={addNextStep}
+          onConnectToNode={connectToExistingNode}
+          existingNodes={existingNodesList}
         />
         <Button
           type="button"
@@ -465,44 +580,53 @@ export function FlowCanvas({
   )
 
   return (
-    <ReactFlowProvider>
-      <div className="flex h-full w-full flex-col">
-        {/* Top toolbar avec bouton Save */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-sidebar px-4 py-2.5">
-          <div className="flex items-center gap-2">
-            <Workflow className="size-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">{flow.name}</h2>
-            {hasUnsavedChanges && (
-              <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-500">
-                <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse" />
-                {t('flows.builder.flowCanvas.unsaved')}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {lastSavedAt && !hasUnsavedChanges && (
-              <span className="hidden sm:block text-[11px] text-muted-foreground">
-                {t('flows.builder.flowCanvas.savedAt', {
-                  time: lastSavedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
-                })}
-              </span>
-            )}
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={saving || !hasUnsavedChanges}
-              className="gap-1.5 shadow-sm"
-            >
-              <Save className="size-3.5" />
-              <span className="hidden sm:inline">
-                {saving ? t('flows.builder.flowCanvas.saving') : hasUnsavedChanges ? t('flows.builder.flowCanvas.save') : t('flows.builder.flowCanvas.saved')}
-              </span>
-              <span className="sm:hidden">
-                {saving ? '…' : t('flows.builder.flowCanvas.saveShort')}
-              </span>
-            </Button>
-          </div>
+    <div className="flex h-full w-full flex-col">
+      {/* Top toolbar avec bouton Save & Recenter */}
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-sidebar px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <Workflow className="size-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground truncate max-w-[140px] sm:max-w-none">{flow.name}</h2>
+          {hasUnsavedChanges && (
+            <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-500 shrink-0">
+              <span className="size-1.5 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse" />
+              {t('flows.builder.flowCanvas.unsaved')}
+            </span>
+          )}
         </div>
+        <div className="flex items-center gap-2">
+          {lastSavedAt && !hasUnsavedChanges && (
+            <span className="hidden sm:block text-[11px] text-muted-foreground">
+              {t('flows.builder.flowCanvas.savedAt', {
+                time: lastSavedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+              })}
+            </span>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => fitView({ padding: 0.35, duration: 400 })}
+            title="Recadrer la vue (Recenter)"
+            className="gap-1.5 shadow-sm text-xs"
+          >
+            <Focus className="size-3.5" />
+            <span className="hidden sm:inline">Recadrer</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving || !hasUnsavedChanges}
+            className="gap-1.5 shadow-sm"
+          >
+            <Save className="size-3.5" />
+            <span className="hidden sm:inline">
+              {saving ? t('flows.builder.flowCanvas.saving') : hasUnsavedChanges ? t('flows.builder.flowCanvas.save') : t('flows.builder.flowCanvas.saved')}
+            </span>
+            <span className="sm:hidden">
+              {saving ? '…' : t('flows.builder.flowCanvas.saveShort')}
+            </span>
+          </Button>
+        </div>
+      </div>
 
         <div className="flex h-full w-full flex-1 overflow-hidden">
         {/* Left sidebar — add nodes (desktop only) */}
@@ -637,7 +761,6 @@ export function FlowCanvas({
         <div className="hidden h-full w-80 shrink-0 overflow-y-auto border-l border-[color-mix(in_srgb,var(--organic-sand-400)_30%,transparent)] bg-[color-mix(in_srgb,var(--organic-bg)_70%,transparent)] backdrop-blur-xl p-4 md:block">
           {inspectorContent}
         </div>
-        </div>
       </div>
 
       {/* Mobile: node palette sheet */}
@@ -705,6 +828,6 @@ export function FlowCanvas({
         onSelect={(ids) => updateTrigger({ target_post_ids: ids.length > 0 ? ids : null })}
         onClose={() => setPostPickerOpen(false)}
       />
-    </ReactFlowProvider>
+    </div>
   )
 }

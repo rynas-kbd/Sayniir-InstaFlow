@@ -141,6 +141,9 @@ export function NodeInspector({
   flows,
   channelAccountId,
   onOpenPostPicker,
+  onAddNextStep,
+  onConnectToNode,
+  existingNodes,
 }: {
   nodeType: FlowNodeType
   config: Record<string, unknown>
@@ -149,6 +152,9 @@ export function NodeInspector({
   flows: FlowSummary[]
   channelAccountId?: string
   onOpenPostPicker?: () => void
+  onAddNextStep?: (type: FlowNodeType) => void
+  onConnectToNode?: (targetNodeId: string) => void
+  existingNodes?: { id: string; label: string }[]
 }) {
   const t = useT()
   const meta = NODE_META[nodeType] ?? NODE_META.send_message
@@ -602,6 +608,87 @@ export function NodeInspector({
 
       {/* ── Fields ───────────────────────────────────────────────────── */}
       {renderFields()}
+
+      {/* ── Quick Next Step & Link section (Ideal for mobile flow building) ── */}
+      {onAddNextStep && (
+        <Section title="➕ Étape suivante (1 tap)" accent="var(--organic-terracotta)">
+          <p className="text-[11px] leading-snug" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+            Ajoutez l&apos;étape suivante. Elle sera automatiquement créée, reliée et placée au bon endroit.
+          </p>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => onAddNextStep('send_message')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-95"
+            >
+              <MessageSquare className="size-3.5 text-primary shrink-0" />
+              <span className="truncate">Message</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddNextStep('ai_reply')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-purple-500/40 hover:bg-purple-500/5 transition-all active:scale-95"
+            >
+              <Sparkles className="size-3.5 text-purple-500 shrink-0" />
+              <span className="truncate">Réponse IA</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddNextStep('condition')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-pink-500/40 hover:bg-pink-500/5 transition-all active:scale-95"
+            >
+              <GitBranch className="size-3.5 text-pink-500 shrink-0" />
+              <span className="truncate">Condition</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddNextStep('delay')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all active:scale-95"
+            >
+              <Clock className="size-3.5 text-cyan-500 shrink-0" />
+              <span className="truncate">Délai</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddNextStep('capture_input')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-sky-500/40 hover:bg-sky-500/5 transition-all active:scale-95"
+            >
+              <ListPlus className="size-3.5 text-sky-500 shrink-0" />
+              <span className="truncate">Capture</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddNextStep('set_tag')}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-start text-xs font-semibold hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all active:scale-95"
+            >
+              <Tag className="size-3.5 text-emerald-500 shrink-0" />
+              <span className="truncate">Tag</span>
+            </button>
+          </div>
+
+          {/* Connect to existing node dropdown */}
+          {onConnectToNode && existingNodes && existingNodes.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/40 space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+                Lier à une étape existante
+              </Label>
+              <Select onValueChange={(val) => { if (typeof val === 'string' && val) onConnectToNode(val) }}>
+                <SelectTrigger className="w-full h-8 text-xs">
+                  <SelectValue placeholder="Choisir un nœud…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingNodes.map((n) => (
+                    <SelectItem key={n.id} value={n.id}>
+                      {String(n.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </Section>
+      )}
     </div>
   )
 }
+
