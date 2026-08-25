@@ -119,7 +119,7 @@ export default async function AppLayout({
           expiresAt={subscription?.expires_at ?? null}
           billingPeriod={(subscription?.billing_period as BillingPeriod | undefined) ?? null}
         />
-        <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto overflow-x-hidden">
+        <main className="relative z-10 flex flex-1 flex-col min-h-0 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
           <PageTransitionWrapper accountKey={scope === 'all' ? 'all' : active?.id ?? 'none'}>{children}</PageTransitionWrapper>
         </main>
         <MobileBottomNav businessType={businessType} unrepliedCount={notificationCounts.unrepliedMessages} />

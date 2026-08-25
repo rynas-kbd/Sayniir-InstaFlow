@@ -7,7 +7,6 @@ import {
   ReactFlowProvider,
   Background,
   Controls,
-  MiniMap,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -723,21 +722,6 @@ function FlowCanvasInner({
           >
             <Background />
             <Controls position="bottom-left" showInteractive={true} />
-            <MiniMap
-              position="bottom-right"
-              className="hidden md:block"
-              zoomable
-              pannable
-              nodeColor={(n) => {
-                if (n.id === 'trigger') return 'var(--organic-terracotta)'
-                const type = (n.data as unknown as FlowNodeData)?.nodeType
-                if (type === 'condition' || type === 'delay') return 'var(--organic-sage)'
-                if (type === 'ai_reply') return '#8b5cf6'
-                return 'var(--primary)'
-              }}
-              nodeBorderRadius={6}
-              maskColor="rgba(0, 0, 0, 0.45)"
-            />
           </ReactFlow>
 
           {/* Floating Quick Action Toolbar when a node is selected */}

@@ -193,12 +193,13 @@ export function MobileBottomNav({
 
       {/* ── Bottom Tab Bar ── */}
       <nav
-        className="relative shrink-0 z-[60] border-t border-border/80 bg-background/90 backdrop-blur-2xl md:hidden"
+        className="fixed bottom-0 start-0 end-0 z-50 border-t border-border/80 bg-card/95 backdrop-blur-2xl md:hidden shadow-2xl"
         style={{
-          background: 'color-mix(in srgb, var(--organic-bg) 92%, transparent)',
+          background: 'color-mix(in srgb, var(--organic-bg) 95%, transparent)',
           backdropFilter: 'blur(32px) saturate(1.8)',
-          boxShadow: '0 -4px 24px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)',
+          boxShadow: '0 -4px 30px color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
           paddingBottom: 'max(env(safe-area-inset-bottom), 10px)',
+          paddingTop: '6px',
         }}
       >
         {/* Top gradient line */}
@@ -206,11 +207,11 @@ export function MobileBottomNav({
           className="pointer-events-none absolute start-0 end-0 top-0 h-px"
           style={{
             background:
-              'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-terracotta) 25%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 20%, transparent) 70%, transparent)',
+              'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-terracotta) 30%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 25%, transparent) 70%, transparent)',
           }}
         />
 
-        <div className="flex items-center px-1 pt-2 pb-1">
+        <div className="flex items-center justify-around px-1">
           {/* Primary tabs */}
           {tabs.map(({ href, label, icon: Icon, badge }) => {
             const isActive = isPrimaryActive(href)
@@ -218,16 +219,16 @@ export function MobileBottomNav({
               <Link
                 key={href}
                 href={href}
-                className="relative flex flex-1 flex-col items-center gap-1 py-1.5 transition-all duration-150 active:scale-95"
+                className="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-all duration-150 active:scale-95"
               >
                 {/* Active background pill */}
                 {isActive && (
                   <motion.div
                     layoutId="mobile-bottom-active"
-                    className="absolute inset-x-2 inset-y-0 rounded-xl"
+                    className="absolute inset-x-1 inset-y-0 rounded-xl"
                     style={{
                       background:
-                        'color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
+                        'color-mix(in srgb, var(--organic-terracotta) 14%, transparent)',
                     }}
                     transition={springs.smooth}
                   />
@@ -240,14 +241,14 @@ export function MobileBottomNav({
                       'relative size-[22px] shrink-0 transition-colors duration-150',
                       isActive
                         ? 'text-[var(--organic-terracotta-600)]'
-                        : 'text-foreground/40'
+                        : 'text-foreground/50'
                     )}
                     strokeWidth={isActive ? 2.25 : 1.75}
                   />
                   {/* Badge */}
                   {badge != null && badge > 0 && (
                     <span
-                      className="absolute -end-1.5 -top-1 flex min-w-[16px] items-center justify-center rounded-full px-[3px] text-[9px] font-bold leading-[16px] text-white"
+                      className="absolute -end-1.5 -top-1 flex min-w-[16px] items-center justify-center rounded-full px-[3px] text-[9px] font-bold leading-[16px] text-white shadow-sm"
                       style={{ background: 'var(--organic-terracotta-600)' }}
                     >
                       {badge > 99 ? '99+' : badge}
@@ -255,13 +256,13 @@ export function MobileBottomNav({
                   )}
                 </div>
 
-                {/* Label */}
+                {/* Label (deuxième ligne) */}
                 <span
                   className={cn(
-                    'relative max-w-full truncate text-[10px] font-medium leading-none transition-colors duration-150',
+                    'relative max-w-full truncate text-[10.5px] leading-tight transition-colors duration-150',
                     isActive
-                      ? 'text-[var(--organic-terracotta-700)] font-semibold'
-                      : 'text-foreground/40'
+                      ? 'text-[var(--organic-terracotta-700)] font-bold'
+                      : 'text-foreground/60 font-medium'
                   )}
                 >
                   {label}
@@ -274,14 +275,14 @@ export function MobileBottomNav({
           <button
             type="button"
             onClick={() => setMoreOpen((o) => !o)}
-            className="relative flex flex-1 flex-col items-center gap-1 py-1.5 transition-all duration-150 active:scale-95"
+            className="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-all duration-150 active:scale-95"
           >
             {isMoreActive && (
               <motion.div
                 layoutId="mobile-bottom-active"
-                className="absolute inset-x-2 inset-y-0 rounded-xl"
+                className="absolute inset-x-1 inset-y-0 rounded-xl"
                 style={{
-                  background: 'color-mix(in srgb, var(--organic-terracotta) 12%, transparent)',
+                  background: 'color-mix(in srgb, var(--organic-terracotta) 14%, transparent)',
                 }}
                 transition={springs.smooth}
               />
@@ -291,16 +292,16 @@ export function MobileBottomNav({
                 'relative size-[22px] shrink-0 transition-colors duration-150',
                 isMoreActive || moreOpen
                   ? 'text-[var(--organic-terracotta-600)]'
-                  : 'text-foreground/40'
+                  : 'text-foreground/50'
               )}
               strokeWidth={isMoreActive || moreOpen ? 2.25 : 1.75}
             />
             <span
               className={cn(
-                'relative max-w-full truncate text-[10px] font-medium leading-none transition-colors duration-150',
+                'relative max-w-full truncate text-[10.5px] leading-tight transition-colors duration-150',
                 isMoreActive || moreOpen
-                  ? 'text-[var(--organic-terracotta-700)] font-semibold'
-                  : 'text-foreground/40'
+                  ? 'text-[var(--organic-terracotta-700)] font-bold'
+                  : 'text-foreground/60 font-medium'
               )}
             >
               {t('nav.mobileMore.label')}
