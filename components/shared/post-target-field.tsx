@@ -25,11 +25,16 @@ export function PostTargetField({
 
   if (selectedIds.length === 0) {
     return (
-      <div className="space-y-1.5">
-        <Button type="button" variant="outline" className="w-full" onClick={onOpen}>
-          <ImageIcon className="size-3.5" /> {t('shared.postTargetField.select')}
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-11 sm:h-9 rounded-xl border-dashed border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs sm:text-sm font-semibold gap-2 shadow-sm"
+          onClick={onOpen}
+        >
+          <ImageIcon className="size-4 text-primary" /> {t('shared.postTargetField.select')}
         </Button>
-        <p className="text-[11px] text-muted-foreground">{t('shared.postTargetField.hint')}</p>
+        <p className="text-[11px] leading-relaxed text-muted-foreground/80">{t('shared.postTargetField.hint')}</p>
       </div>
     )
   }

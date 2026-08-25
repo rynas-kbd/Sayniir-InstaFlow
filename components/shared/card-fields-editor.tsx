@@ -80,9 +80,9 @@ export function CardFieldsEditor({
           {buttons.map((btn, idx) => {
             const btnType = btn.type ?? 'web_url'
             return (
-              <div key={idx} className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/20 p-2">
+              <div key={idx} className="flex flex-col gap-2 rounded-xl border border-border/80 bg-card/80 p-3 shadow-sm transition-all hover:border-primary/30">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-medium text-muted-foreground">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                     {t('shared.cardFields.buttonN', { index: idx + 1 })}
                   </span>
                   <button
@@ -92,7 +92,7 @@ export function CardFieldsEditor({
                       copy.splice(idx, 1)
                       onButtonsChange(copy)
                     }}
-                    className="-m-1.5 cursor-pointer p-1.5 text-[10px] text-destructive hover:underline"
+                    className="cursor-pointer text-[11px] font-semibold text-destructive hover:underline"
                   >
                     {t('shared.cardFields.removeButton')}
                   </button>

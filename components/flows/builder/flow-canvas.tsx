@@ -40,6 +40,7 @@ import {
   X,
   Link2,
   Focus,
+  Settings,
 } from 'lucide-react'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
@@ -210,6 +211,8 @@ function FlowCanvasInner({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
+  const [nextStepPaletteOpen, setNextStepPaletteOpen] = useState(false)
   const [postPickerOpen, setPostPickerOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 767px)')
   // Local copy of trigger config (so changes are reflected immediately)
@@ -224,6 +227,11 @@ function FlowCanvasInner({
   })
 
   const selectedNode = nodes.find((n) => n.id === selectedId)
+
+  const focusSelectedNode = useCallback(() => {
+    if (!selectedId) return
+    fitView({ nodes: [{ id: selectedId }], padding: 0.6, duration: 400 })
+  }, [selectedId, fitView])
 
   // Détecter les changements non sauvegardés
   useEffect(() => {
@@ -717,6 +725,7 @@ function FlowCanvasInner({
             <Controls position="bottom-left" showInteractive={true} />
             <MiniMap
               position="bottom-right"
+              className="hidden md:block"
               zoomable
               pannable
               nodeColor={(n) => {
@@ -731,10 +740,97 @@ function FlowCanvasInner({
             />
           </ReactFlow>
 
+          {/* Floating Quick Action Toolbar when a node is selected */}
+          <AnimatePresence>
+            {selectedId && !mobileInspectorOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 rounded-2xl border border-primary/30 bg-card/95 px-3 py-2 shadow-2xl backdrop-blur-xl max-w-[94vw] overflow-x-auto"
+              >
+                {/* Node type badge */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-xl border border-primary/20 shrink-0">
+                  <span className="size-2 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[11px] font-bold text-primary truncate max-w-[100px] sm:max-w-[140px]">
+                    {selectedId === 'trigger'
+                      ? '⚡ Déclencheur'
+                      : t(`flows.nodeTypes.${(selectedNode?.data as unknown as FlowNodeData)?.nodeType || 'unknown'}.short`)}
+                  </span>
+                </div>
+
+                <div className="h-4 w-px bg-border/60 shrink-0" />
+
+                {/* + Next Step button */}
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setNextStepPaletteOpen(true)}
+                  className="h-8 gap-1.5 rounded-xl px-3 text-xs font-bold shadow-md bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 active:scale-95 transition-transform"
+                >
+                  <Plus className="size-3.5" strokeWidth={2.5} />
+                  <span>+ Étape</span>
+                </Button>
+
+                {/* Config button */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setMobileInspectorOpen(true)}
+                  className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold shrink-0 bg-background/80 hover:bg-accent active:scale-95 transition-transform"
+                >
+                  <Settings className="size-3.5 text-muted-foreground" />
+                  <span className="hidden sm:inline">Configurer</span>
+                  <span className="sm:hidden">Éditer</span>
+                </Button>
+
+                {/* Focus / Recenter button */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={focusSelectedNode}
+                  title="Centrer sur ce nœud"
+                  className="h-8 size-8 p-0 rounded-xl text-muted-foreground hover:text-foreground shrink-0"
+                >
+                  <Focus className="size-3.5" />
+                </Button>
+
+                {/* Delete button (non-trigger) */}
+                {selectedId !== 'trigger' && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={deleteSelected}
+                    title="Supprimer ce nœud"
+                    className="h-8 size-8 p-0 rounded-xl text-destructive hover:bg-destructive/10 shrink-0"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                )}
+
+                {/* Deselect button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedId(null)
+                    setMobileInspectorOpen(false)
+                  }}
+                  className="ml-0.5 rounded-full p-1 text-muted-foreground hover:text-foreground shrink-0"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Mobile FAB — opens node palette */}
           <motion.button
             onClick={() => setPaletteOpen(true)}
-            className="absolute bottom-20 right-4 z-10 md:hidden flex size-14 items-center justify-center rounded-full shadow-2xl"
+            className="absolute bottom-24 right-4 z-10 md:hidden flex size-14 items-center justify-center rounded-full shadow-2xl"
             style={{
               background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)',
             }}
@@ -765,7 +861,8 @@ function FlowCanvasInner({
 
       {/* Mobile: node palette sheet */}
       <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
-        <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto pb-safe">
+        <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto pb-safe rounded-t-3xl border-t border-border shadow-2xl">
+          <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-3" />
           <SheetHeader>
             <SheetTitle className="text-base font-semibold">{t('flows.builder.flowCanvas.addNodeHeading')}</SheetTitle>
           </SheetHeader>
@@ -811,9 +908,46 @@ function FlowCanvasInner({
         </SheetContent>
       </Sheet>
 
+      {/* Mobile/Desktop: Next Step quick palette sheet */}
+      <Sheet open={nextStepPaletteOpen} onOpenChange={setNextStepPaletteOpen}>
+        <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto pb-safe rounded-t-3xl border-t border-border shadow-2xl">
+          <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-3" />
+          <SheetHeader>
+            <SheetTitle className="text-base font-bold text-center">Ajouter l'étape suivante</SheetTitle>
+          </SheetHeader>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {ADDABLE.map(({ type, icon: Icon }) => (
+              <button
+                key={type}
+                onClick={() => {
+                  addNextStep(type)
+                  setNextStepPaletteOpen(false)
+                }}
+                className="group relative flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-card p-4 transition-all duration-200 active:scale-95 hover:border-primary/40 hover:bg-primary/5 shadow-sm"
+              >
+                <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 transition-colors group-hover:from-primary/20 group-hover:to-primary/10">
+                  <Icon className="size-5 text-primary" strokeWidth={2} />
+                </div>
+                <span className="text-center text-xs font-semibold leading-tight text-foreground">
+                  {t(`flows.nodeTypes.${type}.short`)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Mobile: node inspector sheet */}
-      <Sheet open={isMobile && selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+      <Sheet
+        open={isMobile ? (mobileInspectorOpen && selectedId !== null) : false}
+        onOpenChange={(open) => {
+          setMobileInspectorOpen(open)
+          if (!open) setSelectedId(null)
+        }}
+      >
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto pb-safe rounded-t-3xl border-t border-border shadow-2xl">
+          <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-3" />
           <SheetHeader className="sr-only">
             <SheetTitle>{t('flows.builder.flowCanvas.mobileInspectorTitle')}</SheetTitle>
           </SheetHeader>

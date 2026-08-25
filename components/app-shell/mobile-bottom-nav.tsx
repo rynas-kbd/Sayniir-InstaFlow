@@ -193,13 +193,12 @@ export function MobileBottomNav({
 
       {/* ── Bottom Tab Bar ── */}
       <nav
-        className="relative shrink-0 z-[60] overflow-hidden md:hidden"
+        className="relative shrink-0 z-[60] border-t border-border/80 bg-background/90 backdrop-blur-2xl md:hidden"
         style={{
-          background: 'color-mix(in srgb, var(--organic-bg) 78%, transparent)',
+          background: 'color-mix(in srgb, var(--organic-bg) 92%, transparent)',
           backdropFilter: 'blur(32px) saturate(1.8)',
-          borderTop: '1px solid color-mix(in srgb, var(--organic-terracotta) 10%, transparent)',
-          boxShadow: '0 -4px 24px color-mix(in srgb, var(--organic-terracotta) 5%, transparent)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          boxShadow: '0 -4px 24px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 10px)',
         }}
       >
         {/* Top gradient line */}
@@ -207,11 +206,11 @@ export function MobileBottomNav({
           className="pointer-events-none absolute start-0 end-0 top-0 h-px"
           style={{
             background:
-              'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-terracotta) 20%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 15%, transparent) 70%, transparent)',
+              'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-terracotta) 25%, transparent) 30%, color-mix(in srgb, var(--organic-sage) 20%, transparent) 70%, transparent)',
           }}
         />
 
-        <div className="flex items-stretch px-1 pt-1.5 pb-2">
+        <div className="flex items-center px-1 pt-2 pb-1">
           {/* Primary tabs */}
           {tabs.map(({ href, label, icon: Icon, badge }) => {
             const isActive = isPrimaryActive(href)
