@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, ReactNode } from 'react'
+import { useRef, ReactNode, ElementType } from 'react'
 import { motion, useInView } from 'framer-motion'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none'
@@ -13,7 +13,7 @@ interface ScrollRevealProps {
   distance?: number
   once?: boolean
   className?: string
-  as?: keyof JSX.IntrinsicElements
+  as?: ElementType
 }
 
 const getInitial = (direction: Direction, distance: number) => {
