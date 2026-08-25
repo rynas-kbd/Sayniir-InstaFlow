@@ -341,12 +341,27 @@ export function LandingFooter() {
 export function SectionHeader({ kicker, note }: { kicker: string; note: string }) {
   return (
     <div data-reveal className="mb-8 flex items-center gap-4">
-      <span className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-md shrink-0">
+      <span
+        className="font-mono text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md shrink-0"
+        style={{
+          color: 'var(--organic-text)',
+          background: 'color-mix(in srgb, var(--organic-text) 8%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--organic-text) 14%, transparent)',
+        }}
+      >
         [ {kicker} ]
       </span>
-      <div className="h-[1px] flex-1 bg-gradient-to-r from-zinc-700/60 via-zinc-800 to-transparent" />
+      <div
+        className="h-[1px] flex-1"
+        style={{
+          background: 'linear-gradient(to right, color-mix(in srgb, var(--organic-text) 16%, transparent), transparent)',
+        }}
+      />
       {note && (
-        <span className="font-mono text-xs text-zinc-500 hidden sm:inline-block shrink-0">
+        <span
+          className="font-mono text-xs hidden sm:inline-block shrink-0"
+          style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}
+        >
           // {note}
         </span>
       )}

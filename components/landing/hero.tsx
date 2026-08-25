@@ -63,13 +63,16 @@ export function Hero() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-        className="font-heading text-[clamp(37px,3.6vw,58px)] font-extrabold leading-[1.12] tracking-[-0.025em] text-zinc-100 max-w-[90ch]"
+        className="font-heading text-[clamp(38px,3.6vw,58px)] font-extrabold leading-[1.12] tracking-[-0.025em] max-w-[90ch]"
+        style={{ color: 'var(--organic-text)' }}
       >
         Automatisez vos ventes sur{' '}
         <span className="relative inline-block overflow-hidden align-bottom h-[1.12em]">
           <RotatingChannel text={CHANNELS[channelIndex]} />
         </span>{' '}
-        <span className="text-zinc-500">sans toucher à votre téléphone.</span>
+        <span style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>
+          sans toucher à votre téléphone.
+        </span>
       </motion.h1>
 
       {/* Subline */}
@@ -77,7 +80,8 @@ export function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-8 max-w-[52ch] text-[16px] leading-[1.7] text-zinc-400"
+        className="mt-8 max-w-[52ch] text-[16px] leading-[1.7]"
+        style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}
       >
         Un agent IA qui répond à vos messages privés, qualifie vos prospects et conclut les ventes — 24h/24, à votre place.
       </motion.p>
@@ -108,7 +112,8 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.45 }}
-        className="mt-7 text-[12.5px] text-zinc-600"
+        className="mt-7 text-[12.5px]"
+        style={{ color: 'color-mix(in srgb, var(--organic-text) 38%, transparent)' }}
       >
         Sans carte de crédit · +38% de conversions DM en moyenne
       </motion.p>

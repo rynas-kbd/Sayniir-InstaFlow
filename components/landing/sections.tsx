@@ -89,23 +89,38 @@ export function CommandCenterTrust() {
   return (
     <section className="py-12">
       {/* High-End Glassmorphic Container */}
-      <div className="rounded-3xl border border-zinc-800/80 bg-zinc-950/80 p-8 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+      <div
+        className="rounded-3xl p-8 backdrop-blur-2xl shadow-2xl relative overflow-hidden"
+        style={{
+          background: 'var(--organic-surface)',
+          border: '1.5px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
+        }}
+      >
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-5 mb-8">
+        <div
+          className="flex items-center justify-between pb-5 mb-8"
+          style={{ borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+        >
           <div className="flex items-center gap-3">
             <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-300">
+            <span
+              className="font-mono text-xs font-bold uppercase tracking-widest"
+              style={{ color: 'var(--organic-text)' }}
+            >
               [ COMMAND_CENTER · PREUVES SOCIALES & STATISTIQUES IA ]
             </span>
           </div>
-          <span className="font-mono text-xs text-amber-400 font-semibold hidden sm:inline-block">
+          <span className="font-mono text-xs text-amber-500 font-semibold hidden sm:inline-block">
             ✓ API NATIVE META & WHATSAPP
           </span>
         </div>
 
         {/* Logo Cloud Marquee Strip */}
         <div className="mb-10">
-          <p className="mb-4 text-xs font-mono font-bold tracking-wider uppercase text-zinc-500">
+          <p
+            className="mb-4 text-xs font-mono font-bold tracking-wider uppercase"
+            style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}
+          >
             Fait confiance par 12 000+ marques, agences & e-commerçants
           </p>
           <div className="lp-marquee opacity-80 hover:opacity-100 transition-opacity">
@@ -114,7 +129,8 @@ export function CommandCenterTrust() {
                 <span
                   key={i}
                   aria-hidden={i >= LOGO_STRIP.length}
-                  className="font-heading text-lg font-bold tracking-tight text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className="font-heading text-lg font-bold tracking-tight transition-colors cursor-pointer"
+                  style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}
                 >
                   {name}
                 </span>
@@ -124,7 +140,10 @@ export function CommandCenterTrust() {
         </div>
 
         {/* Metrics Grid Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-zinc-800/60">
+        <div
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6"
+          style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+        >
           {metrics.map((m) => (
             <MetricBox key={m.label} metric={m} />
           ))}
@@ -137,14 +156,23 @@ export function CommandCenterTrust() {
 function MetricBox({ metric }: { metric: { label: string; target: number; display: (v: number) => string } }) {
   const { ref, value } = useCountUp(metric.target, 1.6, 0)
   return (
-    <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 flex flex-col justify-between">
+    <div
+      className="rounded-xl p-5 flex flex-col justify-between"
+      style={{
+        background: 'color-mix(in srgb, var(--organic-text) 4%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+      }}
+    >
       <span
         ref={ref}
         className="font-heading text-[clamp(28px,2.8vw,40px)] font-extrabold leading-none text-metallic"
       >
         {metric.display(value)}
       </span>
-      <div className="mt-2 font-mono text-[11px] font-bold tracking-wider uppercase text-zinc-400">
+      <div
+        className="mt-2 font-mono text-[11px] font-bold tracking-wider uppercase"
+        style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
+      >
         {metric.label}
       </div>
     </div>
@@ -178,45 +206,69 @@ export function FeaturesGrid() {
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="mb-12 max-w-[22ch] font-heading text-[clamp(32px,3.8vw,48px)] leading-[1.12]"
+        style={{ color: 'var(--organic-text)' }}
       >
-        L'architecture d'un <br />
-        <span className="text-metallic">Closer Haute Performance.</span>
+        Conçu pour capturer chaque vente.
       </motion.h2>
       <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-8%" }}
+        viewport={{ once: true, margin: "-10%" }}
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
       >
         {FEATURES.map((f, idx) => {
           const num = `0${idx + 1}`
           return (
             <motion.div key={f.title} variants={cardVariants}>
-              <div className="card h-full p-7 backdrop-blur-2xl border border-white/[0.08] relative overflow-hidden flex flex-col justify-between" style={{ background: 'linear-gradient(160deg, rgba(24, 24, 30, 0.9) 0%, rgba(12, 12, 16, 0.95) 100%)' }}>
+              <div
+                className="card h-full p-7 backdrop-blur-2xl relative overflow-hidden flex flex-col justify-between"
+                style={{
+                  background: 'var(--organic-surface)',
+                  border: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                }}
+              >
                 {/* Giant Editorial Number Background Accent */}
-                <span className="absolute -right-2 -top-4 font-heading text-[72px] font-extrabold text-white/[0.04] select-none pointer-events-none">
+                <span
+                  className="absolute -right-2 -top-4 font-heading text-[72px] font-extrabold select-none pointer-events-none"
+                  style={{ color: 'color-mix(in srgb, var(--organic-text) 5%, transparent)' }}
+                >
                   {num}
                 </span>
 
                 <div>
                   <div className="flex items-center justify-between mb-5">
                     <span
-                      className="grid size-11 place-content-center rounded-xl shrink-0 shadow-md border border-white/10"
-                      style={{ background: TONE_ICON_BG[f.tone], color: TONE_ICON_FG[f.tone] }}
+                      className="grid size-11 place-content-center rounded-xl shrink-0 shadow-md"
+                      style={{
+                        background: TONE_ICON_BG[f.tone],
+                        color: TONE_ICON_FG[f.tone],
+                        border: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                      }}
                     >
                       {ICONS[idx % ICONS.length]}
                     </span>
-                    <span className="font-mono text-xs font-bold text-amber-500/80 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                    <span className="font-mono text-xs font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
                       Pillier {num}
                     </span>
                   </div>
 
-                  <h3 className="mb-2.5 font-heading text-[18px] leading-[1.25] font-bold text-zinc-100">{f.title}</h3>
+                  <h3
+                    className="mb-2.5 font-heading text-[18px] leading-[1.25] font-bold"
+                    style={{ color: 'var(--organic-text)' }}
+                  >
+                    {f.title}
+                  </h3>
                   <p className="m-0 text-[14px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}>{f.body}</p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-amber-400/90 font-semibold">
+                <div
+                  className="mt-6 pt-4 flex items-center justify-between text-xs font-mono font-semibold"
+                  style={{
+                    borderTop: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)',
+                    color: 'var(--organic-terracotta)',
+                  }}
+                >
                   <span>Actif 24/7</span>
                   <span>→ 1.4s rep</span>
                 </div>
@@ -440,20 +492,29 @@ export function Testimonials() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Left Column: Featured Highlight Quote */}
         {featured && (
-          <div className="lg:col-span-7 rounded-3xl border border-zinc-700 bg-gradient-to-br from-zinc-900/90 via-zinc-950 to-zinc-950 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
-            <div className="absolute top-4 right-6 font-mono text-7xl font-bold text-zinc-800 pointer-events-none select-none">
+          <div
+            className="lg:col-span-7 rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
+            style={{
+              background: 'var(--organic-surface)',
+              border: '1.5px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
+            }}
+          >
+            <div
+              className="absolute top-4 right-6 font-mono text-7xl font-bold pointer-events-none select-none"
+              style={{ color: 'color-mix(in srgb, var(--organic-text) 6%, transparent)' }}
+            >
               “
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-4 text-zinc-200">
-                ★★★★★ <span className="font-mono text-xs text-zinc-400 font-bold ml-2">5.0 SCORE CLIENT</span>
+              <div className="flex items-center gap-2 mb-4 text-amber-500">
+                ★★★★★ <span className="font-mono text-xs font-bold ml-2" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>5.0 SCORE CLIENT</span>
               </div>
-              <blockquote className="text-[clamp(18px,2.2vw,24px)] font-heading leading-relaxed text-zinc-100 font-medium">
+              <blockquote className="text-[clamp(18px,2.2vw,24px)] font-heading leading-relaxed font-medium" style={{ color: 'var(--organic-text)' }}>
                 "{featured.quote}"
               </blockquote>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-zinc-800 flex items-center gap-4">
+            <div className="mt-8 pt-6 flex items-center gap-4" style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}>
               <span
                 className="grid size-11 shrink-0 place-content-center rounded-full text-[14px] font-bold shadow-md"
                 style={{ background: TONE_AVATAR_BG[featured.tone], color: TONE_AVATAR_FG[featured.tone] }}
@@ -461,8 +522,8 @@ export function Testimonials() {
                 {featured.initials}
               </span>
               <div>
-                <strong className="block text-base text-zinc-100 font-bold">{featured.name}</strong>
-                <span className="text-xs text-zinc-400">{featured.role}</span>
+                <strong className="block text-base font-bold" style={{ color: 'var(--organic-text)' }}>{featured.name}</strong>
+                <span className="text-xs" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{featured.role}</span>
               </div>
             </div>
           </div>
@@ -473,10 +534,14 @@ export function Testimonials() {
           {rest.map((t) => (
             <div
               key={t.name}
-              className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 flex flex-col justify-between"
+              className="rounded-2xl p-6 flex flex-col justify-between"
+              style={{
+                background: 'var(--organic-surface)',
+                border: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+              }}
             >
-              <div className="text-zinc-300 text-xs mb-2">★★★★★</div>
-              <p className="text-xs text-zinc-300 leading-relaxed italic mb-4">
+              <div className="text-amber-500 text-xs mb-2">★★★★★</div>
+              <p className="text-xs leading-relaxed italic mb-4" style={{ color: 'color-mix(in srgb, var(--organic-text) 80%, transparent)' }}>
                 "{t.quote}"
               </p>
               <div className="flex items-center gap-3">
@@ -487,8 +552,8 @@ export function Testimonials() {
                   {t.initials}
                 </span>
                 <div>
-                  <strong className="block text-xs text-zinc-200">{t.name}</strong>
-                  <span className="text-[10px] text-zinc-500">{t.role}</span>
+                  <strong className="block text-xs" style={{ color: 'var(--organic-text)' }}>{t.name}</strong>
+                  <span className="text-[10px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{t.role}</span>
                 </div>
               </div>
             </div>

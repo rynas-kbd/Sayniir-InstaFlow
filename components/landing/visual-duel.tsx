@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { SectionHeader } from './chrome'
 
 interface Scenario {
   id: string
@@ -23,100 +24,99 @@ interface Scenario {
 
 const SCENARIOS: Scenario[] = [
   {
-    id: 'stock',
-    title: '1. Demande de Stock',
-    userMessage: 'Bonjour ! Est-ce que le manteau noir existe encore en Taille M ?',
+    id: 'price-objection',
+    title: '1. Question sur le Prix',
+    userMessage: 'C’est trop cher pour moi votre offre...',
     oldBot: {
-      reply: '⚠️ Désolé, commande non reconnue. Tapez 1 pour suivre un colis, Tapez 2 pour voir la FAQ.',
-      status: 'Prospect bloqué · Conversion 0%',
-      time: 'Après 4 min',
-      badge: 'Robot Rigide',
+      reply: 'Merci de votre message ! Consultez nos tarifs sur notre-site.com/tarifs ou tapez 1 pour parler au support.',
+      status: 'Prospect Perdu (Bounce)',
+      time: 'Instant (Robot)',
+      badge: 'Bouton pré-enregistré',
     },
     instaflow: {
-      reply: 'Bonjour ! Oui, il nous reste exactement 2 pièces en Taille M ! Je vous prépare votre panier avec la livraison offerte ? 🎁',
-      status: 'Lead qualifié · Lien d\'achat envoyé',
-      time: '< 1.2s',
-      badge: 'Closer IA Vente Directe',
+      reply: 'Je comprends parfaitement ! Qu’est-ce qui vous fait le plus hésiter ? Si la tréso est serrée, on a une option de paiement en 3x sans frais. Je vous explique ?',
+      status: 'Vente Conclue (Paiement 3x)',
+      time: '1.2 seconde (IA)',
+      badge: 'Négociation Empathique',
     },
   },
   {
-    id: 'abandon',
-    title: '2. Panier Abandonné',
-    userMessage: 'J\'ai hésité au moment de valider ma commande tout à l\'heure...',
+    id: 'availability',
+    title: '2. DM à 2h du Matin',
+    userMessage: 'Salut ! Vous avez du stock sur le modèle Noir M ? Je veux commander tout de suite.',
     oldBot: {
-      reply: 'Vos articles restent enregistrés dans votre navigateur pendant 24h.',
-      status: 'Message passif sans relance',
-      time: 'Le lendemain',
-      badge: 'Message Automatique',
+      reply: 'Nos bureaux sont fermés. Heures d’ouverture : Lundi-Vendredi 9h-18h.',
+      status: 'Abandon de Panier',
+      time: '8 heures de retard',
+      badge: 'Message d’absence',
     },
     instaflow: {
-      reply: 'Je comprends parfaitement ! Si c\'est la livraison qui vous fait hésiter, je peux vous offrir un code de -10% valable les 30 prochaines minutes : FLASH10 😉',
-      status: 'Relance ciblée · Vente conclue',
-      time: '< 1.4s',
-      badge: 'Relance Intelligente',
+      reply: 'Oui ! Il en reste exactement 3 en stock en Noir M ⚡️ Voici le lien direct avec livraison offerte expédiée demain matin : instaflow.shop/checkout?sku=BLK-M',
+      status: 'Paiement Effectué à 02h04',
+      time: '1.4 seconde (IA)',
+      badge: 'Conversion Instantanée',
     },
   },
   {
-    id: 'pricing',
-    title: '3. Objection Tarif',
-    userMessage: 'C\'est un peu cher par rapport aux autres marques non ?',
+    id: 'qualification',
+    title: '3. Lead Immolier / B2B',
+    userMessage: 'Je cherche à faire rénover mon appartement de 80m² sur Paris.',
     oldBot: {
-      reply: 'Nos prix sont fermes et calculés au plus juste selon nos coûts de fabrication.',
-      status: 'Réponse froide défensive',
-      time: 'Après 2h',
-      badge: 'Réponse Type',
+      reply: 'Veuillez remplir notre formulaire de contact sur notre-site.com/contact-form-long-complex',
+      status: 'Formulaire Abandonné (0.2% conv)',
+      time: 'Lien sortant',
+      badge: 'Redirection Web',
     },
     instaflow: {
-      reply: 'Je comprends votre réaction ! La différence vient du cuir italien garanti 5 ans et de la confection artisanale. Voulez-vous voir notre vidéo de fabrication ?',
-      status: 'Valeur démontrée · Confiance établie',
-      time: '< 1.1s',
-      badge: 'Traiteur d\'Objection',
+      reply: 'Projet canon ! Quel est votre budget estimé et votre délai idéal ? Je peux vous fixer un rdv de 15min directement avec notre architecte ce jeudi.',
+      status: 'RDV Qualifié sur Calendly',
+      time: '1.1 seconde (IA)',
+      badge: 'Qualification & Closing',
     },
   },
 ]
 
 const FEATURES_CHECKLIST = [
   {
-    feature: 'Temps de réponse',
-    oldBot: 'Plusieurs minutes (ou réponse différée)',
-    instaflow: 'Instantané (< 1.4 seconde 24/7)',
-  },
-  {
-    feature: 'Intelligence contextuelle',
-    oldBot: 'Boutons fixes & mots-clés stricts',
+    feature: 'Compréhension du contexte',
+    oldBot: 'Mot-clé exact uniquement',
     instaflow: 'Compréhension du langage naturel humain',
   },
   {
-    feature: 'Objectif final',
-    oldBot: 'Décharger le support client',
+    feature: 'Objectif de la conversation',
+    oldBot: 'Rediriger vers un lien web',
     instaflow: 'Qualifier et conclure des ventes en DM',
+  },
+  {
+    feature: 'Mémoire & Personnalisation',
+    oldBot: 'Zéro mémoire entre 2 messages',
+    instaflow: 'Se souvient de chaque client & produit',
   },
 ]
 
 export function VisualDuel() {
-  const [activeScenarioId, setActiveScenarioId] = useState<string>('stock')
+  const [activeScenarioId, setActiveScenarioId] = useState<string>('price-objection')
+
   const activeScenario = SCENARIOS.find((s) => s.id === activeScenarioId) || SCENARIOS[0]
 
   return (
     <section id="features" className="py-20 relative">
       <div className="mx-auto max-w-[1240px]">
         {/* Section Header */}
-        <div className="mb-10 flex items-center gap-4">
-          <span className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-md shrink-0">
-            [ COMPARATIF · RUPTURE TECHNIQUE ]
-          </span>
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-zinc-700/60 via-zinc-800 to-transparent" />
-          <span className="font-mono text-xs text-zinc-500 hidden sm:inline-block shrink-0">
-            // BOT 2019 VS INSTAFLOW 2026
-          </span>
-        </div>
+        <SectionHeader kicker="COMPARATIF · RUPTURE TECHNIQUE" note="BOT 2019 VS INSTAFLOW 2026" />
 
         <div className="mb-10 max-w-[64ch]">
-          <h2 className="font-heading text-[clamp(32px,3.8vw,50px)] font-extrabold leading-[1.15] text-zinc-100">
+          <h2
+            className="font-heading text-[clamp(32px,3.8vw,50px)] font-extrabold leading-[1.15]"
+            style={{ color: 'var(--organic-text)' }}
+          >
             Les chatbots de 2019 font fuir vos clients. <br />
             <span className="text-metallic">Instaflow les transforme en acheteurs.</span>
           </h2>
-          <p className="mt-4 text-base text-zinc-400 leading-relaxed">
+          <p
+            className="mt-4 text-base leading-relaxed"
+            style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
+          >
             Testez la différence entre un arbre de décision rigide et une IA conversationnelle entraînée pour vendre.
           </p>
         </div>
@@ -130,11 +130,12 @@ export function VisualDuel() {
                 key={s.id}
                 type="button"
                 onClick={() => setActiveScenarioId(s.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  isActive
-                    ? 'bg-zinc-100 text-zinc-950 shadow-lg scale-[1.02]'
-                    : 'bg-zinc-900/90 text-zinc-400 border border-zinc-800 hover:text-white hover:bg-zinc-800'
-                }`}
+                className="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                style={{
+                  background: isActive ? 'var(--organic-text)' : 'var(--organic-surface)',
+                  color: isActive ? 'var(--organic-bg)' : 'color-mix(in srgb, var(--organic-text) 65%, transparent)',
+                  border: isActive ? 'none' : '1px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
+                }}
               >
                 {s.title}
               </button>
@@ -153,16 +154,35 @@ export function VisualDuel() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"
           >
             {/* Left: 2019 Bot (Muted Mismatched Legacy Experience) */}
-            <div className="rounded-3xl border border-zinc-800/80 bg-zinc-950/90 p-6 flex flex-col justify-between shadow-xl relative overflow-hidden">
+            <div
+              className="rounded-3xl p-6 flex flex-col justify-between shadow-xl relative overflow-hidden"
+              style={{
+                background: 'var(--organic-surface)',
+                border: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+              }}
+            >
               <div>
-                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4 mb-5">
+                <div
+                  className="flex items-center justify-between pb-4 mb-5"
+                  style={{ borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+                >
                   <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-zinc-600" />
-                    <span className="font-mono text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                    <span className="size-2 rounded-full bg-zinc-400" />
+                    <span
+                      className="font-mono text-xs font-bold uppercase tracking-wider"
+                      style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
+                    >
                       CHATBOT OBSOLÈTE (2019)
                     </span>
                   </div>
-                  <span className="font-mono text-[11px] text-zinc-400 border border-zinc-800 px-2.5 py-0.5 rounded-full bg-zinc-900">
+                  <span
+                    className="font-mono text-[11px] px-2.5 py-0.5 rounded-full"
+                    style={{
+                      color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)',
+                      background: 'color-mix(in srgb, var(--organic-text) 5%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                    }}
+                  >
                     {activeScenario.oldBot.badge}
                   </span>
                 </div>
@@ -171,36 +191,68 @@ export function VisualDuel() {
                 <div className="space-y-4 font-sans text-xs">
                   {/* User Bubble */}
                   <div className="flex justify-end">
-                    <div className="bg-zinc-800 text-zinc-200 px-4 py-2.5 rounded-2xl rounded-tr-xs max-w-[85%] leading-relaxed">
+                    <div
+                      className="px-4 py-2.5 rounded-2xl rounded-tr-xs max-w-[85%] leading-relaxed"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-text) 12%, transparent)',
+                        color: 'var(--organic-text)',
+                      }}
+                    >
                       {activeScenario.userMessage}
                     </div>
                   </div>
                   {/* Bot Bubble */}
                   <div className="flex justify-start">
-                    <div className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-4 py-2.5 rounded-2xl rounded-tl-xs max-w-[85%] leading-relaxed">
+                    <div
+                      className="px-4 py-2.5 rounded-2xl rounded-tl-xs max-w-[85%] leading-relaxed"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-text) 5%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)',
+                        color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)',
+                      }}
+                    >
                       {activeScenario.oldBot.reply}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-zinc-800/80 flex items-center justify-between font-mono text-[11px]">
-                <span className="text-zinc-500 font-bold">✕ {activeScenario.oldBot.status}</span>
-                <span className="text-zinc-500">{activeScenario.oldBot.time}</span>
+              <div
+                className="mt-8 pt-4 flex items-center justify-between font-mono text-[11px]"
+                style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+              >
+                <span className="text-red-400 font-bold">✕ {activeScenario.oldBot.status}</span>
+                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>{activeScenario.oldBot.time}</span>
               </div>
             </div>
 
             {/* Right: Instaflow AI Closer 2026 (Metallic Premium Experience) */}
-            <div className="rounded-3xl border border-zinc-700 bg-gradient-to-b from-zinc-900/90 via-zinc-950 to-zinc-950 p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div
+              className="rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden"
+              style={{
+                background: 'var(--organic-surface)',
+                border: '1.5px solid color-mix(in srgb, var(--organic-text) 14%, transparent)',
+              }}
+            >
               <div>
-                <div className="flex items-center justify-between border-b border-zinc-800 pb-4 mb-5">
+                <div
+                  className="flex items-center justify-between pb-4 mb-5"
+                  style={{ borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+                >
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="font-mono text-xs font-bold text-metallic uppercase tracking-wider">
                       INSTAFLOW CLOSER IA (2026)
                     </span>
                   </div>
-                  <span className="font-mono text-[11px] text-zinc-200 border border-zinc-700 px-2.5 py-0.5 rounded-full bg-zinc-800 font-bold">
+                  <span
+                    className="font-mono text-[11px] px-2.5 py-0.5 rounded-full font-bold"
+                    style={{
+                      color: 'var(--organic-text)',
+                      background: 'color-mix(in srgb, var(--organic-text) 8%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--organic-text) 14%, transparent)',
+                    }}
+                  >
                     ✦ {activeScenario.instaflow.badge}
                   </span>
                 </div>
@@ -209,40 +261,68 @@ export function VisualDuel() {
                 <div className="space-y-4 font-sans text-xs">
                   {/* User Bubble */}
                   <div className="flex justify-end">
-                    <div className="bg-zinc-800 text-zinc-200 px-4 py-2.5 rounded-2xl rounded-tr-xs max-w-[85%] leading-relaxed">
+                    <div
+                      className="px-4 py-2.5 rounded-2xl rounded-tr-xs max-w-[85%] leading-relaxed"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-text) 12%, transparent)',
+                        color: 'var(--organic-text)',
+                      }}
+                    >
                       {activeScenario.userMessage}
                     </div>
                   </div>
                   {/* Instaflow Bubble */}
                   <div className="flex justify-start">
-                    <div className="bg-zinc-900 border border-zinc-700 text-zinc-100 px-4 py-2.5 rounded-2xl rounded-tl-xs max-w-[85%] leading-relaxed">
+                    <div
+                      className="px-4 py-2.5 rounded-2xl rounded-tl-xs max-w-[85%] leading-relaxed"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-text) 6%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
+                        color: 'var(--organic-text)',
+                      }}
+                    >
                       {activeScenario.instaflow.reply}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-zinc-800 flex items-center justify-between font-mono text-[11px]">
+              <div
+                className="mt-8 pt-4 flex items-center justify-between font-mono text-[11px]"
+                style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+              >
                 <span className="text-emerald-400 font-bold">✓ {activeScenario.instaflow.status}</span>
-                <span className="text-zinc-300 font-bold">{activeScenario.instaflow.time}</span>
+                <span className="font-bold" style={{ color: 'var(--organic-text)' }}>{activeScenario.instaflow.time}</span>
               </div>
             </div>
           </motion.div>
         </AnimatePresence>
 
         {/* Feature Comparison Checklist */}
-        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6">
+        <div
+          className="mt-10 rounded-2xl p-6"
+          style={{
+            background: 'var(--organic-surface)',
+            border: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {FEATURES_CHECKLIST.map((item, idx) => (
               <div key={idx} className="flex flex-col gap-2">
-                <span className="font-mono text-xs font-bold uppercase text-zinc-400">
+                <span
+                  className="font-mono text-xs font-bold uppercase"
+                  style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
+                >
                   {item.feature}
                 </span>
-                <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                <div
+                  className="text-xs flex items-center gap-1.5"
+                  style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}
+                >
                   <span>✕</span>
                   <span>{item.oldBot}</span>
                 </div>
-                <div className="text-xs text-zinc-200 font-bold flex items-center gap-1.5">
+                <div className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--organic-text)' }}>
                   <span className="text-emerald-400">✓</span>
                   <span>{item.instaflow}</span>
                 </div>
