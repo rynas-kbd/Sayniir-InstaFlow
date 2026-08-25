@@ -334,13 +334,13 @@ export function CopilotPanel({
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0, bottom: 0.3 }}
             onDragEnd={handleDragEnd}
-            className="flex flex-col h-full touch-none"
+            className="flex flex-col h-full"
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
-              <div className="h-1.5 w-12 rounded-full bg-foreground/25 transition-colors" />
+            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none">
+              <div className="h-1.5 w-12 rounded-full bg-foreground/30 transition-colors" />
             </div>
-            <div className="glass-card flex flex-1 flex-col gap-0 overflow-hidden rounded-t-2xl">
+            <div className="glass-card flex flex-1 flex-col gap-0 overflow-hidden rounded-t-3xl border-t border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl">
           <SheetHeader className="border-b border-border/50 px-4 py-3.5">
             {/* SheetTitle stays text-only (screen readers need an accessible dialog title) —
                 the visual identity block below is a sibling, not nested inside it, since
@@ -381,7 +381,7 @@ export function CopilotPanel({
             </div>
           </SheetHeader>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto touch-pan-y overscroll-contain px-4 py-4">
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />

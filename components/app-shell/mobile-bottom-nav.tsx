@@ -104,8 +104,8 @@ export function MobileBottomNav({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 md:hidden"
-              style={{ background: 'rgba(0, 0, 0, 0.4)' }}
+              className="fixed inset-0 z-[70] md:hidden"
+              style={{ background: 'rgba(0, 0, 0, 0.5)' }}
               onClick={() => setMoreOpen(false)}
             />
             {/* Sheet */}
@@ -116,33 +116,28 @@ export function MobileBottomNav({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={springs.playful}
-              className="fixed bottom-0 start-0 end-0 z-50 max-h-[72vh] overflow-y-auto rounded-t-3xl pb-safe touch-none md:hidden"
+              className="fixed bottom-0 start-0 end-0 z-[75] max-h-[82vh] overflow-y-auto touch-pan-y overscroll-contain rounded-t-3xl md:hidden shadow-2xl"
               style={{
-                background: 'color-mix(in srgb, var(--organic-bg) 90%, transparent)',
+                background: 'color-mix(in srgb, var(--organic-bg) 95%, transparent)',
                 backdropFilter: 'blur(32px) saturate(1.8)',
-                borderTop: '1px solid color-mix(in srgb, var(--organic-sand-400) 30%, transparent)',
-                boxShadow: '0 -8px 40px color-mix(in srgb, var(--organic-terracotta) 8%, transparent)',
+                borderTop: '1px solid color-mix(in srgb, var(--organic-terracotta) 20%, transparent)',
+                boxShadow: '0 -8px 40px color-mix(in srgb, var(--organic-terracotta) 15%, transparent)',
               }}
             >
               {/* Handle */}
-              <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-[color-mix(in_srgb,var(--organic-sand-400)_40%,transparent)]" />
+              <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-foreground/30 cursor-grab active:cursor-grabbing touch-none" />
 
               {/* Header */}
               <div className="flex items-center justify-between px-5 pb-3 pt-4">
                 <span
-                  className="text-[11px] font-bold uppercase tracking-widest"
-                  style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)' }}
+                  className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground"
                 >
                   {t('nav.mobileMore.navigationTitle')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setMoreOpen(false)}
-                  className="flex size-7 cursor-pointer items-center justify-center rounded-full"
-                  style={{
-                    background: 'color-mix(in srgb, var(--organic-sand-300) 25%, transparent)',
-                    color: 'color-mix(in srgb, var(--foreground) 55%, transparent)',
-                  }}
+                  className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:text-foreground"
                   aria-label={t('nav.mobileMore.closeAriaLabel')}
                 >
                   <X className="size-3.5" />
@@ -150,7 +145,7 @@ export function MobileBottomNav({
               </div>
 
               {/* Grid of items */}
-              <div className="grid grid-cols-3 gap-2 px-4 pb-6">
+              <div className="grid grid-cols-3 gap-2.5 px-4 pb-[max(5rem,calc(4rem+env(safe-area-inset-bottom)))]">
                 {moreItems.map(({ href, label, icon: Icon }) => {
                   const isActive = pathname === href || pathname.startsWith(`${href}/`)
                   return (
@@ -159,10 +154,10 @@ export function MobileBottomNav({
                       href={href}
                       onClick={() => setMoreOpen(false)}
                       className={cn(
-                        'flex flex-col items-center gap-2 rounded-2xl px-3 py-4 transition-all duration-150',
+                        'flex flex-col items-center gap-2 rounded-2xl px-3 py-4 transition-all duration-150 active:scale-95 shadow-sm',
                         isActive
                           ? 'text-white'
-                          : 'text-foreground/70'
+                          : 'text-foreground/80'
                       )}
                       style={
                         isActive
@@ -174,14 +169,14 @@ export function MobileBottomNav({
                             }
                           : {
                               background:
-                                'color-mix(in srgb, var(--organic-sand-300) 18%, transparent)',
+                                'color-mix(in srgb, var(--organic-sand-300) 25%, transparent)',
                               border:
-                                '1px solid color-mix(in srgb, var(--organic-sand-400) 20%, transparent)',
+                                '1px solid color-mix(in srgb, var(--organic-sand-400) 25%, transparent)',
                             }
                       }
                     >
-                      <Icon className="size-5 shrink-0" strokeWidth={isActive ? 2 : 1.75} />
-                      <span className="text-[11px] font-medium leading-none">{label}</span>
+                      <Icon className="size-5 shrink-0" strokeWidth={isActive ? 2.25 : 1.75} />
+                      <span className="text-[11.5px] font-semibold leading-none">{label}</span>
                     </Link>
                   )
                 })}

@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useT } from '@/components/i18n-provider'
+import { cn } from '@/lib/utils'
 
 interface CopilotFABProps {
   onClick: () => void
@@ -45,7 +46,12 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.div
-            className="hidden md:flex fixed bottom-6 end-6 z-40"
+            className={cn(
+              "fixed z-40",
+              hideOnMobile
+                ? "hidden md:flex md:bottom-6 md:end-6"
+                : "flex bottom-20 end-4 md:bottom-6 md:end-6"
+            )}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={springs.snappy}
