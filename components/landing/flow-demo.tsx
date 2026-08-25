@@ -99,19 +99,19 @@ export function FlowDemo() {
     <section id="product" className="pt-6 pb-[72px]">
       <div
         data-reveal
-        className="relative rounded-[calc(var(--radius-lg)*2)] border-[1.5px] p-[clamp(16px,3vw,32px)]"
-        style={{ borderColor: 'var(--organic-terracotta-300)', background: 'color-mix(in srgb, var(--organic-sand-100) 60%, transparent)' }}
+        className="relative rounded-[calc(var(--radius-lg)*2)] border-[1.5px] p-[clamp(16px,3vw,32px)] backdrop-blur-xl shadow-2xl"
+        style={{ borderColor: 'var(--organic-terracotta-300)', background: 'color-mix(in srgb, var(--organic-sand-100) 70%, transparent)' }}
       >
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold tracking-[.1em] uppercase" style={{ color: 'var(--organic-terracotta-700)' }}>
-              Flow en direct · Fig. 01
+            <span className="text-xs font-bold tracking-[.1em] uppercase text-metallic">
+              ✦ Studio Flow 3D · Fig. 01
             </span>
-            <span className="text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
-              Cliquez sur un nœud pour l'inspecter
+            <span className="text-[13px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>
+              Cliquez sur un nœud pour l'inspecter en direct
             </span>
           </div>
-          <button type="button" className="btn btn-secondary" onClick={runFlow}>
+          <button type="button" className="btn btn-secondary shadow-md" onClick={runFlow}>
             {running ? 'En cours…' : 'Lancer ce flow'}
           </button>
         </div>

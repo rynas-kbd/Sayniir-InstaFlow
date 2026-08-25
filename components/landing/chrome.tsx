@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { motion, useScroll } from 'framer-motion'
+import { motion, AnimatePresence, useScroll } from 'framer-motion'
 
 const NAV_LINKS = [
   { href: '#product', label: 'Produit' },
@@ -38,7 +38,7 @@ export function LandingNav() {
       />
 
       <motion.nav
-        className="sticky top-0 z-30 flex items-center gap-6"
+        className="sticky top-0 z-30 flex items-center justify-between gap-6"
         animate={{
           paddingTop: scrolled ? '10px' : '15px',
           paddingBottom: scrolled ? '10px' : '15px',
@@ -63,6 +63,13 @@ export function LandingNav() {
             className="lp-brand font-heading text-xl font-bold tracking-tight no-underline block"
             style={{
               color: 'var(--organic-text)',
+            }}
+            onClick={(e) => {
+              // If already on the landing page, smooth scroll to top instead of hard nav
+              if (window.location.pathname === '/') {
+                e.preventDefault()
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
             }}
           >
             Instaflow
@@ -94,85 +101,112 @@ export function LandingNav() {
           </Link>
         </motion.div>
 
-        {/* Mobile hamburger */}
-        <button
+        {/* Mobile hamburger — animated morphing button */}
+        <motion.button
           type="button"
-          className="lp-hamburger ml-1"
+          className="lp-hamburger"
           aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
+          whileTap={{ scale: 0.9 }}
           style={{
             display: 'none',
             background: 'none',
-            border: 'none',
+            border: '1.5px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
             cursor: 'pointer',
-            padding: '6px',
-            borderRadius: 8,
+            padding: '7px',
+            borderRadius: 10,
             color: 'var(--organic-text)',
+            width: 36,
+            height: 36,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-            {menuOpen ? (
-              <>
-                <line x1="4" y1="4" x2="18" y2="18" />
-                <line x1="18" y1="4" x2="4" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="6" x2="19" y2="6" />
-                <line x1="3" y1="11" x2="19" y2="11" />
-                <line x1="3" y1="16" x2="19" y2="16" />
-              </>
-            )}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+            <motion.line
+              x1="1" y1="4" x2="15" y2="4"
+              animate={menuOpen ? { y1: 8, y2: 8, rotate: 45, originX: '50%', originY: '50%' } : { y1: 4, y2: 4, rotate: 0 }}
+              transition={{ duration: 0.25 }}
+            />
+            <motion.line
+              x1="1" y1="8" x2="15" y2="8"
+              animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.line
+              x1="1" y1="12" x2="15" y2="12"
+              animate={menuOpen ? { y1: 8, y2: 8, rotate: -45, originX: '50%', originY: '50%' } : { y1: 12, y2: 12, rotate: 0 }}
+              transition={{ duration: 0.25 }}
+            />
           </svg>
-        </button>
+        </motion.button>
       </motion.nav>
 
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div
-          className="lp-mobile-menu"
-          style={{
-            position: 'sticky',
-            top: 64,
-            zIndex: 29,
-            background: 'color-mix(in srgb, var(--organic-bg) 97%, transparent)',
-            backdropFilter: 'blur(18px)',
-            borderBottom: '1.5px solid color-mix(in srgb, var(--organic-text) 7%, transparent)',
-            padding: '12px max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            animation: 'fadeUp .25s ease both',
-          }}
-        >
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              style={{
-                padding: '10px 4px',
-                fontSize: 15,
-                fontWeight: 600,
-                color: 'var(--organic-text)',
-                textDecoration: 'none',
-                borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)',
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-          <Link
-            href="/register"
-            onClick={() => setMenuOpen(false)}
-            className="btn btn-primary mt-2"
-            style={{ alignSelf: 'flex-start' }}
+      {/* Mobile dropdown — animated fullscreen panel */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -12, scaleY: 0.96 }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'fixed',
+              top: 56,
+              left: 0,
+              right: 0,
+              zIndex: 29,
+              transformOrigin: 'top',
+              background: 'color-mix(in srgb, var(--organic-bg) 98%, transparent)',
+              backdropFilter: 'blur(24px)',
+              borderBottom: '1.5px solid color-mix(in srgb, var(--organic-text) 8%, transparent)',
+              padding: '8px max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px))) 20px',
+            }}
           >
-            Essai gratuit
-          </Link>
-        </div>
-      )}
+            {NAV_LINKS.map((link, i) => (
+              <motion.a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.2 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '14px 0',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: 'var(--organic-text)',
+                  textDecoration: 'none',
+                  borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 7%, transparent)',
+                }}
+              >
+                {link.label}
+                <span style={{ opacity: 0.3, fontSize: 12 }}>→</span>
+              </motion.a>
+            ))}
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: NAV_LINKS.length * 0.05 + 0.05 }}
+              className="mt-5"
+            >
+              <Link
+                href="/register"
+                onClick={() => setMenuOpen(false)}
+                className="btn btn-primary w-full text-center"
+                style={{ display: 'block' }}
+              >
+                Démarrer gratuitement →
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating mobile bottom conversion bar */}
       <motion.div
@@ -306,14 +340,14 @@ export function LandingFooter() {
 
 export function SectionHeader({ kicker, note }: { kicker: string; note: string }) {
   return (
-    <div data-reveal className="mb-8 flex flex-wrap items-center justify-between gap-3">
-      <span className="lp-kicker">{kicker}</span>
+    <div data-reveal className="mb-8 flex items-center gap-4">
+      <span className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-md shrink-0">
+        [ {kicker} ]
+      </span>
+      <div className="h-[1px] flex-1 bg-gradient-to-r from-zinc-700/60 via-zinc-800 to-transparent" />
       {note && (
-        <span
-          className="text-[12px] font-medium tracking-[.04em]"
-          style={{ color: 'color-mix(in srgb, var(--organic-text) 48%, transparent)' }}
-        >
-          {note}
+        <span className="font-mono text-xs text-zinc-500 hidden sm:inline-block shrink-0">
+          // {note}
         </span>
       )}
     </div>

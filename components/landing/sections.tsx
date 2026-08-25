@@ -14,6 +14,7 @@ import {
   FAQ_ITEMS,
 } from '@/lib/landing-content'
 import { SectionHeader } from './chrome'
+import { SpatialCard } from './spatial-card'
 
 const TONE_ICON_BG: Record<'a' | 's', string> = {
   a: 'var(--organic-terracotta-100)',
@@ -76,24 +77,56 @@ function useCountUp(target: number, duration = 1.4, decimals = 0) {
   return { ref, value }
 }
 
-export function LogoMarquee() {
+export function CommandCenterTrust() {
   const loop = [...LOGO_STRIP, ...LOGO_STRIP]
+  const metrics = [
+    { label: 'DM traités / mois', target: 2400000, display: (v: number) => `${(v/1000000).toFixed(1)}M+` },
+    { label: 'Taux de réponse IA', target: 98, display: (v: number) => `${Math.round(v)}%` },
+    { label: 'Temps de réponse', target: 1.4, display: (v: number) => `<1.4s` },
+    { label: 'Équipes actives', target: 12000, display: (v: number) => `${(v/1000).toFixed(0)}k+` },
+  ]
+
   return (
-    <section className="pb-16">
-      <p className="mb-5 text-center text-xs font-bold tracking-[.12em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
-        Adopté par plus de 12 000 équipes qui vivent dans leurs DM
-      </p>
-      <div className="lp-marquee">
-        <div className="flex w-max items-baseline gap-[clamp(24px,4vw,56px)]" style={{ animation: 'marquee 36s linear infinite' }}>
-          {loop.map((name, i) => (
-            <span
-              key={i}
-              aria-hidden={i >= LOGO_STRIP.length}
-              className="font-heading text-xl font-bold tracking-tight"
-              style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
-            >
-              {name}
+    <section className="py-12">
+      {/* High-End Glassmorphic Container */}
+      <div className="rounded-3xl border border-zinc-800/80 bg-zinc-950/80 p-8 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+        {/* Header Bar */}
+        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-5 mb-8">
+          <div className="flex items-center gap-3">
+            <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-300">
+              [ COMMAND_CENTER · PREUVES SOCIALES & STATISTIQUES IA ]
             </span>
+          </div>
+          <span className="font-mono text-xs text-amber-400 font-semibold hidden sm:inline-block">
+            ✓ API NATIVE META & WHATSAPP
+          </span>
+        </div>
+
+        {/* Logo Cloud Marquee Strip */}
+        <div className="mb-10">
+          <p className="mb-4 text-xs font-mono font-bold tracking-wider uppercase text-zinc-500">
+            Fait confiance par 12 000+ marques, agences & e-commerçants
+          </p>
+          <div className="lp-marquee opacity-80 hover:opacity-100 transition-opacity">
+            <div className="flex w-max items-center gap-12" style={{ animation: 'marquee 32s linear infinite' }}>
+              {loop.map((name, i) => (
+                <span
+                  key={i}
+                  aria-hidden={i >= LOGO_STRIP.length}
+                  className="font-heading text-lg font-bold tracking-tight text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Grid Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-zinc-800/60">
+          {metrics.map((m) => (
+            <MetricBox key={m.label} metric={m} />
           ))}
         </div>
       </div>
@@ -101,53 +134,29 @@ export function LogoMarquee() {
   )
 }
 
-export function MetricsBand() {
-  const metrics = [
-    { label: 'DM traités / mois', target: 2400000, suffix: '', prefix: '', decimals: 0, display: (v: number) => `${(v/1000000).toFixed(1)}M+` },
-    { label: 'Taux de réponse IA', target: 94, suffix: '%', prefix: '', decimals: 0, display: (v: number) => `${Math.round(v)}%` },
-    { label: 'Temps de réponse', target: 3, suffix: 's', prefix: '<', decimals: 0, display: (v: number) => `<${Math.round(v)}s` },
-    { label: 'Équipes actives', target: 12000, suffix: '+', prefix: '', decimals: 0, display: (v: number) => `${(v/1000).toFixed(0)}k+` },
-  ]
-
+function MetricBox({ metric }: { metric: { label: string; target: number; display: (v: number) => string } }) {
+  const { ref, value } = useCountUp(metric.target, 1.6, 0)
   return (
-    <section className="pb-[88px]">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-8%" }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3.5"
-      >
-        {metrics.map((m) => (
-          <MetricCard key={m.label} metric={m} />
-        ))}
-      </motion.div>
-    </section>
-  )
-}
-
-function MetricCard({ metric }: { metric: { label: string; target: number; decimals: number; display: (v: number) => string } }) {
-  const { ref, value } = useCountUp(metric.target, 1.6, metric.decimals)
-  return (
-    <motion.div
-      variants={cardVariants}
-      whileHover={{ y: -4, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="lp-card card p-6 cursor-pointer"
-      style={{ borderLeft: '3px solid var(--organic-terracotta)' }}
-    >
+    <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 flex flex-col justify-between">
       <span
         ref={ref}
-        className="font-heading text-[clamp(32px,3.2vw,44px)] leading-[1.08] font-bold block"
-        style={{ color: 'var(--organic-text)' }}
+        className="font-heading text-[clamp(28px,2.8vw,40px)] font-extrabold leading-none text-metallic"
       >
         {metric.display(value)}
       </span>
-      <div className="mt-2 text-[12.5px] font-semibold tracking-[.06em] uppercase" style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}>
+      <div className="mt-2 font-mono text-[11px] font-bold tracking-wider uppercase text-zinc-400">
         {metric.label}
       </div>
-    </motion.div>
+    </div>
   )
+}
+
+export function LogoMarquee() {
+  return <CommandCenterTrust />
+}
+
+export function MetricsBand() {
+  return null
 }
 
 export function FeaturesGrid() {
@@ -162,41 +171,59 @@ export function FeaturesGrid() {
 
   return (
     <section id="features" className="pb-[88px]">
-      <SectionHeader kicker="Pourquoi ça gagne" note="Conçu pour ceux qui vendent en message" />
+      <SectionHeader kicker="L'Ingénierie Instaflow" note="Conçu spécifiquement pour la conversion en DM" />
       <motion.h2 
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-10 max-w-[20ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+        className="mb-12 max-w-[22ch] font-heading text-[clamp(32px,3.8vw,48px)] leading-[1.12]"
       >
-        Pas un chatbot. Un closer.
+        L'architecture d'un <br />
+        <span className="text-metallic">Closer Haute Performance.</span>
       </motion.h2>
       <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-8%" }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
       >
-        {FEATURES.map((f, idx) => (
-          <motion.div
-            key={f.title}
-            variants={cardVariants}
-            whileHover={{ y: -5, scale: 1.015 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="lp-card card cursor-pointer"
-          >
-            <span
-              className="mb-4 grid size-10 place-content-center rounded-xl shrink-0"
-              style={{ background: TONE_ICON_BG[f.tone], color: TONE_ICON_FG[f.tone] }}
-            >
-              {ICONS[idx % ICONS.length]}
-            </span>
-            <h3 className="mb-2 font-heading text-[16px] leading-[1.25]">{f.title}</h3>
-            <p className="m-0 text-[13.5px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}>{f.body}</p>
-          </motion.div>
-        ))}
+        {FEATURES.map((f, idx) => {
+          const num = `0${idx + 1}`
+          return (
+            <motion.div key={f.title} variants={cardVariants}>
+              <div className="card h-full p-7 backdrop-blur-2xl border border-white/[0.08] relative overflow-hidden flex flex-col justify-between" style={{ background: 'linear-gradient(160deg, rgba(24, 24, 30, 0.9) 0%, rgba(12, 12, 16, 0.95) 100%)' }}>
+                {/* Giant Editorial Number Background Accent */}
+                <span className="absolute -right-2 -top-4 font-heading text-[72px] font-extrabold text-white/[0.04] select-none pointer-events-none">
+                  {num}
+                </span>
+
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <span
+                      className="grid size-11 place-content-center rounded-xl shrink-0 shadow-md border border-white/10"
+                      style={{ background: TONE_ICON_BG[f.tone], color: TONE_ICON_FG[f.tone] }}
+                    >
+                      {ICONS[idx % ICONS.length]}
+                    </span>
+                    <span className="font-mono text-xs font-bold text-amber-500/80 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                      Pillier {num}
+                    </span>
+                  </div>
+
+                  <h3 className="mb-2.5 font-heading text-[18px] leading-[1.25] font-bold text-zinc-100">{f.title}</h3>
+                  <p className="m-0 text-[14px] leading-[1.65]" style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}>{f.body}</p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-amber-400/90 font-semibold">
+                  <span>Actif 24/7</span>
+                  <span>→ 1.4s rep</span>
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
       </motion.div>
     </section>
   )
@@ -403,43 +430,71 @@ export function InboxShowcase() {
 }
 
 export function Testimonials() {
+  const featured = TESTIMONIALS[0]
+  const rest = TESTIMONIALS.slice(1)
+
   return (
     <section className="pb-[88px]">
       <SectionHeader kicker="Preuves & Avis" note="Agences · e-commerce · créateurs" />
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-8%" }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
-        {TESTIMONIALS.map((t) => (
-          <motion.figure
-            key={t.name}
-            variants={cardVariants}
-            whileHover={{ y: -5, scale: 1.015 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="lp-card card m-0 cursor-pointer"
-          >
-            <div className="lp-stars mb-3" aria-label="5 étoiles">★★★★★</div>
-            <blockquote className="mb-5 text-[14.5px] leading-[1.6]" style={{ fontStyle: 'italic', color: 'color-mix(in srgb, var(--organic-text) 88%, transparent)' }}>
-              &ldquo;{t.quote}&rdquo;
-            </blockquote>
-            <figcaption className="flex items-center gap-3 mt-auto">
+      
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Left Column: Featured Highlight Quote */}
+        {featured && (
+          <div className="lg:col-span-7 rounded-3xl border border-zinc-700 bg-gradient-to-br from-zinc-900/90 via-zinc-950 to-zinc-950 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div className="absolute top-4 right-6 font-mono text-7xl font-bold text-zinc-800 pointer-events-none select-none">
+              “
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-4 text-zinc-200">
+                ★★★★★ <span className="font-mono text-xs text-zinc-400 font-bold ml-2">5.0 SCORE CLIENT</span>
+              </div>
+              <blockquote className="text-[clamp(18px,2.2vw,24px)] font-heading leading-relaxed text-zinc-100 font-medium">
+                "{featured.quote}"
+              </blockquote>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-zinc-800 flex items-center gap-4">
               <span
-                className="grid size-9 shrink-0 place-content-center rounded-full text-[12px] font-bold"
-                style={{ background: TONE_AVATAR_BG[t.tone], color: TONE_AVATAR_FG[t.tone] }}
+                className="grid size-11 shrink-0 place-content-center rounded-full text-[14px] font-bold shadow-md"
+                style={{ background: TONE_AVATAR_BG[featured.tone], color: TONE_AVATAR_FG[featured.tone] }}
               >
-                {t.initials}
+                {featured.initials}
               </span>
-              <span className="text-[13px] leading-[1.4]">
-                <strong className="block">{t.name}</strong>
-                <span style={{ color: 'color-mix(in srgb, var(--organic-text) 58%, transparent)' }}>{t.role}</span>
-              </span>
-            </figcaption>
-          </motion.figure>
-        ))}
-      </motion.div>
+              <div>
+                <strong className="block text-base text-zinc-100 font-bold">{featured.name}</strong>
+                <span className="text-xs text-zinc-400">{featured.role}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Right Column: Vertical Stream of Reviews */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          {rest.map((t) => (
+            <div
+              key={t.name}
+              className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 flex flex-col justify-between"
+            >
+              <div className="text-zinc-300 text-xs mb-2">★★★★★</div>
+              <p className="text-xs text-zinc-300 leading-relaxed italic mb-4">
+                "{t.quote}"
+              </p>
+              <div className="flex items-center gap-3">
+                <span
+                  className="grid size-8 shrink-0 place-content-center rounded-full text-[11px] font-bold"
+                  style={{ background: TONE_AVATAR_BG[t.tone], color: TONE_AVATAR_FG[t.tone] }}
+                >
+                  {t.initials}
+                </span>
+                <div>
+                  <strong className="block text-xs text-zinc-200">{t.name}</strong>
+                  <span className="text-[10px] text-zinc-500">{t.role}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }
