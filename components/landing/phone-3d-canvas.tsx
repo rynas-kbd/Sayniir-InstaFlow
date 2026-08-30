@@ -1389,7 +1389,7 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
       if (phoneGroupRef.current) {
         // Floating motion + Interactive 3D Mouse Parallax Tilt
         const isMob = window.innerWidth < 768
-        const baseY = isMob ? -0.28 : 0.2
+        const baseY = isMob ? -0.05 : 0.2
         phoneGroupRef.current.position.y = baseY + Math.sin(elapsedTime * 1.8) * 0.08
 
         const targetRotY = Math.sin(elapsedTime * 0.7) * 0.45 + mousePos.currentX * 0.45
@@ -1444,7 +1444,7 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
   }, [activeIdx, accentColor])
 
   return (
-    <div ref={containerRef} className="w-full h-[600px] sm:h-[750px] flex items-center justify-center relative select-none overflow-hidden">
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center relative select-none">
       {/* Outer diffused ambient halo — large, blurred, very soft */}
       <div
         className="absolute pointer-events-none transition-all duration-700"

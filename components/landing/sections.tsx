@@ -464,7 +464,7 @@ export function FeaturesGrid() {
       style={{ height: `${FEATURES.length * 100}vh` }}
     >
       {/* Viewport Docked to Top Edge Under Floating Navbar */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pt-16 pb-6 px-4 md:px-10 relative">
+      <div className="sticky top-0 h-screen w-full overflow-x-hidden flex flex-col justify-between pt-16 pb-6 px-4 md:px-10 relative">
         
         {/* Midnight Sapphire Aura — 2-layer atmospheric gradient system */}
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050507]">
@@ -564,8 +564,8 @@ export function FeaturesGrid() {
               </div>
 
               {/* Center Column: MASSIVE HERO 3D PHONE CHARACTER */}
-              <div className="flex-1 lg:col-span-6 flex items-center justify-center order-1 lg:order-2 z-30 w-full min-h-0">
-                <div className="w-full max-w-[340px] sm:max-w-[640px] h-[260px] min-[390px]:h-[300px] sm:h-[460px] lg:h-[640px] relative rounded-3xl p-1 sm:p-2 flex items-center justify-center">
+              <div className="flex-1 lg:col-span-6 flex items-center justify-center order-1 lg:order-2 z-30 w-full">
+                <div className="w-full max-w-[340px] sm:max-w-[640px] h-[300px] min-[390px]:h-[340px] sm:h-[500px] lg:h-[680px] relative p-1 sm:p-2 flex items-center justify-center overflow-visible">
                   <Phone3DCanvas activeIdx={activeIdx} accentColor={palette.accent} />
                 </div>
               </div>
