@@ -256,6 +256,17 @@ function FlowCanvasInner({
       edges: edges.map((e) => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle })),
     })
     initialSnapshotRef.current = snap
+    // Force immediate update to prevent race condition with useEffect
+    setHasUnsavedChanges(false)
+  }, [nodes, edges])
+  
+  const resetUnsavedChanges = useCallback(() => {
+    // Take a fresh snapshot of current state
+    const snap = JSON.stringify({
+      nodes: nodes.map((n) => ({ id: n.id, type: n.type, position: n.position, data: (n.data as unknown as FlowNodeData).config })),
+      edges: edges.map((e) => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle })),
+    })
+    initialSnapshotRef.current = snap
     setHasUnsavedChanges(false)
   }, [nodes, edges])
 
@@ -316,15 +327,21 @@ function FlowCanvasInner({
   useEffect(() => {
     if (!hasUnsavedChanges) return
 
-    function handlePopState() {
-      if (hasUnsavedChanges) {
-        setPendingNavTarget('/flows')
-        setShowUnsavedDialog(true)
-      }
+    // Push a dummy history state to intercept back button
+    window.history.pushState(null, '', window.location.href)
+
+    function handlePopState(e: PopStateEvent) {
+      // Stop the navigation
+      window.history.pushState(null, '', window.location.href)
+      
+      setPendingNavTarget('/flows')
+      setShowUnsavedDialog(true)
     }
 
     window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
   }, [hasUnsavedChanges])
 
   // Raccourci clavier Ctrl+S / Cmd+S pour sauvegarder
@@ -1056,25 +1073,34 @@ function FlowCanvasInner({
 
       {/* ── Unsaved Changes Safety Dialog ── */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
-        <AlertDialogContent className="sm:max-w-md border border-amber-500/30 bg-card/95 backdrop-blur-2xl shadow-2xl">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3">
+        <AlertDialogContent 
+          className="sm:max-w-md !border-amber-500/30"
+          style={{
+            background: 'color-mix(in srgb, var(--card) 95%, transparent)',
+            backdropFilter: 'blur(24px) saturate(1.5)',
+          }}
+        >
+          <AlertDialogHeader className="!text-start">
+            <div className="flex items-start gap-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="size-5" />
               </div>
-              <div className="space-y-1 text-start">
-                <AlertDialogTitle className="text-base font-bold text-foreground">
+              <div className="flex-1 space-y-1.5">
+                <AlertDialogTitle className="text-base font-semibold text-foreground">
                   Modifications non enregistrées
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
                   Vous avez des modifications non sauvegardées dans ce flux. Si vous quittez sans enregistrer, vos changements seront perdus.
                 </AlertDialogDescription>
               </div>
             </div>
           </AlertDialogHeader>
 
-          <AlertDialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <AlertDialogCancel onClick={() => setShowUnsavedDialog(false)}>
+          <AlertDialogFooter className="!-mx-0 !-mb-0 !mt-6 !border-t-0 !bg-transparent !p-0 flex-col gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel 
+              onClick={() => setShowUnsavedDialog(false)}
+              className="sm:order-1"
+            >
               Annuler
             </AlertDialogCancel>
             <Button
@@ -1082,12 +1108,13 @@ function FlowCanvasInner({
               onClick={() => {
                 const target = pendingNavTarget || '/flows'
                 setShowUnsavedDialog(false)
-                setHasUnsavedChanges(false)
+                // Reset the snapshot to current state to mark as "saved"
+                resetUnsavedChanges()
                 setTimeout(() => {
                   router.push(target)
                 }, 50)
               }}
-              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-2"
             >
               Quitter sans sauvegarder
             </Button>
@@ -1096,13 +1123,13 @@ function FlowCanvasInner({
                 await handleSave()
                 const target = pendingNavTarget || '/flows'
                 setShowUnsavedDialog(false)
-                setHasUnsavedChanges(false)
+                // resetUnsavedChanges is already called in handleSave via updateSavedSnapshot
                 setTimeout(() => {
                   router.push(target)
                 }, 50)
               }}
               disabled={saving}
-              className="gap-1.5 cursor-pointer"
+              className="gap-1.5 sm:order-3"
             >
               <Save className="size-3.5" />
               {saving ? 'Enregistrement…' : 'Sauvegarder et quitter'}
