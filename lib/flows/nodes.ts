@@ -10,6 +10,27 @@ import type { Contact } from '../contacts/types.ts'
 
 const EXTERNAL_REQUEST_MAX_RESPONSE_BYTES = 64 * 1024
 
+async function sendFlowMessage(ctx: NodeExecContext, text: string, replyTarget?: string): Promise<void> {
+  if (!text) return
+
+  const commentId = ctx.run.context.commentId
+  const commentReplySent = ctx.run.context.commentReplySent === true
+  if (typeof commentId === 'string' && replyTarget === 'comment' && ctx.adapter.sendCommentReply) {
+    await ctx.adapter.sendCommentReply(ctx.ref, commentId, text)
+    return
+  }
+  if (typeof commentId === 'string' && !commentReplySent && ctx.adapter.sendPrivateReplyToComment) {
+    const result = await ctx.adapter.sendPrivateReplyToComment(ctx.ref, commentId, text)
+    if (!result) return
+    const nextContext = { ...ctx.run.context, commentReplySent: true }
+    ctx.run.context = nextContext
+    await createAdminClient().from('flow_runs').update({ context: nextContext }).eq('id', ctx.run.id)
+    return
+  }
+
+  await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
+}
+
 /** Reads at most `maxBytes` of a response body, discarding the rest. */
 async function readCapped(res: Response, maxBytes: number): Promise<string> {
   const reader = res.body?.getReader()
@@ -68,6 +89,7 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
     case 'send_message': {
       const contact: Partial<Contact> | null = ctx.run.contact_id ? await getContact(ctx.account.id, ctx.run.contact_id) : null
       const messageType = node.config.message_type as string | undefined
+      const replyTarget = node.config.reply_target as string | undefined
       if (messageType === 'card') {
         const title = renderTemplate((node.config.card_title as string) || '', contact)
         const subtitle = renderTemplate((node.config.card_subtitle as string) || '', contact) || undefined
@@ -81,6 +103,14 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
         // and always falls back to text. Prefer the real-button path
         // whenever there's no image to carry, for both link and action buttons.
         const useButtonTemplate = buttons.length > 0 && !imageUrl
+
+        if (
+          typeof ctx.run.context.commentId === 'string' &&
+          (replyTarget === 'comment' || ctx.run.context.commentReplySent !== true)
+        ) {
+          await sendFlowMessage(ctx, title || subtitle || '', replyTarget)
+          return { type: 'continue', handle: 'default' }
+        }
 
         if (useButtonTemplate && ctx.adapter.sendButtons) {
           const channelButtons: ChannelButton[] = buttons.map((b, idx) =>
@@ -96,11 +126,11 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
           // Sent as a plain text link instead of a card attachment — see
           // lib/channels/shared/card-text.ts.
           const text = renderCardAsText({ title, subtitle, imageUrl, buttons: buttons.map((b) => ({ title: b.title, url: b.url })) })
-          if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
+          await sendFlowMessage(ctx, text, replyTarget)
         }
       } else {
         const text = renderTemplate((node.config.text as string) || '', contact)
-        if (text) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, text)
+        await sendFlowMessage(ctx, text, replyTarget)
       }
       return { type: 'continue', handle: 'default' }
     }
@@ -114,7 +144,7 @@ export async function executeNode(node: FlowNode, ctx: NodeExecContext): Promise
           ctx.agentArgs.aiApiKey,
           ctx.agentArgs.aiModel
         )
-        if (result?.reply) await ctx.adapter.sendMessage(ctx.ref, ctx.run.sender_id, result.reply)
+        if (result?.reply) await sendFlowMessage(ctx, result.reply)
       } catch (err) {
         console.error('[flows:ai_reply] LLM call failed:', err)
       }

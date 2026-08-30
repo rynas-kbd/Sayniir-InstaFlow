@@ -143,7 +143,8 @@ async function startRun(
   account: DispatchAccount,
   contactId: string | null,
   senderId: string,
-  agentArgs: AgentArgs
+  agentArgs: AgentArgs,
+  context: Record<string, unknown> = {}
 ): Promise<void> {
   const supabase = createDispatchAdminClient()
   const { nodes } = await loadGraph(flowId)
@@ -159,6 +160,7 @@ async function startRun(
       sender_id: senderId,
       current_node_key: triggerNode.node_key,
       status: 'active',
+      context,
     })
     .select()
     .single()
@@ -208,6 +210,7 @@ export async function runFlowsForInboundComment(input: {
   account: DispatchAccount
   contactId: string | null
   senderId: string
+  commentId: string
   commentText: string
   mediaId?: string | null
   agentArgs: AgentArgs
@@ -224,7 +227,9 @@ export async function runFlowsForInboundComment(input: {
   const matched = (flows ?? []).find((f) => matchesCommentTrigger(f, input.commentText, input.mediaId))
   if (!matched) return false
 
-  await startRun(matched.id, input.platform, input.account, input.contactId, input.senderId, input.agentArgs)
+  await startRun(matched.id, input.platform, input.account, input.contactId, input.senderId, input.agentArgs, {
+    commentId: input.commentId,
+  })
   return true
 }
 

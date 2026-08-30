@@ -74,6 +74,16 @@ export interface ChannelAdapter {
     text: string,
     quickReplies?: Array<{ title: string; payload: string }>
   ): Promise<{ messageId: string } | null>
+  sendPrivateReplyToComment?(
+    ref: ChannelAccountRef,
+    commentId: string,
+    text: string
+  ): Promise<{ messageId: string } | null>
+  sendCommentReply?(
+    ref: ChannelAccountRef,
+    commentId: string,
+    text: string
+  ): Promise<{ messageId: string } | null>
   sendCard?(
     ref: ChannelAccountRef,
     recipientExternalId: string,

@@ -677,6 +677,7 @@ export async function dispatchInboundComment(comment: NormalizedInboundComment):
       account: { id: account.id, user_id: account.user_id, access_token: account.access_token },
       contactId,
       senderId: comment.commenterId,
+      commentId: comment.commentId,
       commentText: comment.text,
       mediaId: comment.mediaId,
       agentArgs: { aiProvider: agentSettings.ai_provider || null, aiApiKey: apiKey, aiModel: agentSettings.ai_model || null },

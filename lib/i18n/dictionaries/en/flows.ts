@@ -207,9 +207,12 @@ export const flows = {
       sendMessage: {
         sectionTitle: 'Message content',
         typeLabel: 'Message type',
+        replyTargetLabel: 'Send reply to',
         options: {
           text: '📝 Standard text',
           card: '🖼️ Card / Image',
+          dm: '📩 Private message (DM)',
+          comment: '💬 Public comment reply',
         },
         textLabel: 'Message text',
         textHint: 'Use {{name}}, {{firstName}} to personalize.',

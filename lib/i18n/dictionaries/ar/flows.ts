@@ -207,9 +207,12 @@ export const flows = {
       sendMessage: {
         sectionTitle: 'محتوى الرسالة',
         typeLabel: 'نوع الرسالة',
+        replyTargetLabel: 'إرسال الرد إلى',
         options: {
           text: '📝 نص عادي',
           card: '🖼️ بطاقة / صورة',
+          dm: '📩 رسالة خاصة (DM)',
+          comment: '💬 رد عام على التعليق',
         },
         textLabel: 'نص الرسالة',
         textHint: 'استخدم {{الاسم}}، {{الاسم_الأول}} للتخصيص.',

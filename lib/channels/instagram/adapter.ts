@@ -168,6 +168,26 @@ export const instagramAdapter: ChannelAdapter = {
     return result ? { messageId: result.message_id } : null
   },
 
+  async sendPrivateReplyToComment(ref: ChannelAccountRef, commentId: string, text: string) {
+    if (!ref.externalId) {
+      console.error('[instagram:sendPrivateReplyToComment] ❌ externalId is empty — cannot send message!')
+      return null
+    }
+    const { sendPrivateReplyToComment } = await import('../../meta/comments')
+    const result = await sendPrivateReplyToComment(ref.externalId, commentId, ref.accessToken, text)
+    return result ? { messageId: result.message_id } : null
+  },
+
+  async sendCommentReply(ref: ChannelAccountRef, commentId: string, text: string) {
+    if (!ref.externalId) {
+      console.error('[instagram:sendCommentReply] ❌ externalId is empty — cannot send comment reply!')
+      return null
+    }
+    const { sendCommentReply } = await import('../../meta/comments')
+    const result = await sendCommentReply(commentId, ref.accessToken, text)
+    return result ? { messageId: result.id } : null
+  },
+
   async sendCard(
     ref: ChannelAccountRef,
     recipientExternalId: string,

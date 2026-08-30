@@ -243,6 +243,17 @@ export function NodeInspector({
                 </SelectContent>
               </Select>
             </Field>
+            <Field label={t('flows.builder.nodeInspector.sendMessage.replyTargetLabel')}>
+              <Select value={(config.reply_target as string) ?? 'dm'} onValueChange={(v) => v && set('reply_target', v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dm">{t('flows.builder.nodeInspector.sendMessage.options.dm')}</SelectItem>
+                  <SelectItem value="comment">{t('flows.builder.nodeInspector.sendMessage.options.comment')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
 
             {messageType === 'text' ? (
               <Field label={t('flows.builder.nodeInspector.sendMessage.textLabel')} hint={t('flows.builder.nodeInspector.sendMessage.textHint')}>
@@ -691,4 +702,3 @@ export function NodeInspector({
     </div>
   )
 }
-
