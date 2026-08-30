@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/components/i18n-provider'
 
 interface StudioScenario {
   id: string
@@ -20,118 +21,162 @@ interface StudioScenario {
   extractedData: { key: string; value: string }[]
 }
 
-const SCENARIOS: StudioScenario[] = [
-  {
-    id: 'ecom-closing',
-    title: 'E-commerce (Panier Elevé)',
-    channel: 'Instagram DM',
-    channelColor: '#E1306C',
-    userMessage: 'Salut ! Je veux le manteau en laine Camel mais j’hésite sur la taille. Je fais 1m75.',
-    confidence: 98,
-    nodes: [
-      {
-        id: 'n1',
-        label: '1. Identification Intent & Taille',
-        status: 'IA Comprise',
-        description: 'Manteau Camel · Hauteur 1m75 → Match Taille M/L',
-      },
-      {
-        id: 'n2',
-        label: '2. Vérification Stock & Recommandation',
-        status: 'Stock OK (3 restants)',
-        description: 'Recommande M pour coupe ajustée, L pour oversize',
-      },
-      {
-        id: 'n3',
-        label: '3. Offre & Lien de Checkout Direct',
-        status: 'Lien Généré',
-        description: 'Code promo VIP -10% + Checkout Stripe DM instantané',
-      },
-    ],
-    aiResponse:
-      'Hello ! Pour 1m75, la taille M sera parfaite pour une coupe élégante ajustée. Si tu aimes l’effet oversize tendance, prends du L ! Il n’en reste plus que 3 en stock Camel M. Je te mets le code VIP10 (-10%) direct ici : Raddlly.shop/pay?item=camel-m&code=VIP10 ⚡️',
-    extractedData: [
-      { key: 'Produit', value: 'Manteau Laine Camel' },
-      { key: 'Taille Recommandée', value: 'M (1m75)' },
-      { key: 'Statut', value: 'Checkout généré' },
-    ],
-  },
-  {
-    id: 'b2b-lead',
-    title: 'Lead B2B / Agence',
-    channel: 'WhatsApp',
-    channelColor: '#25D366',
-    userMessage: 'Bonjour, nous cherchons une solution pour automatiser le SAV de notre marque de cosmétique (45k abonnés).',
-    confidence: 96,
-    nodes: [
-      {
-        id: 'n1',
-        label: '1. Qualification Taille de Marque',
-        status: 'Lead Chaud (>10k abonnés)',
-        description: 'Cosmétique · 45k followers · Volume élevé estimé',
-      },
-      {
-        id: 'n2',
-        label: '2. Scoring & Matching Solution',
-        status: 'Plan Scale Recommandé',
-        description: 'Détection besoin API WhatsApp Multi-Agents',
-      },
-      {
-        id: 'n3',
-        label: '3. Prise de RDV Automatique',
-        status: 'Calendly Invoqué',
-        description: 'Propose créneau avec Account Executive dédie',
-      },
-    ],
-    aiResponse:
-      'Bonjour ! Très belle marque ! Avec 45k abonnés, l’IA va vous faire gagner environ 18h de SAV par semaine. Quel est votre volume de DM par jour ? Je peux vous caler une démo sur-mesure de 15min avec notre Head of Sales ce jeudi.',
-    extractedData: [
-      { key: 'Industrie', value: 'Cosmétique B2C' },
-      { key: 'Volume Estimé', value: '~150 DM/jour' },
-      { key: 'Action', value: 'Prise de RDV Démo' },
-    ],
-  },
-  {
-    id: 'infoproduit',
-    title: 'Coaching & Infoproduit',
-    channel: 'Messenger',
-    channelColor: '#0084FF',
-    userMessage: 'Est-ce que votre programme de formation est adapté si je pars de zéro en e-commerce ?',
-    confidence: 99,
-    nodes: [
-      {
-        id: 'n1',
-        label: '1. Analyse Objection Débutant',
-        status: 'Empathie Détectée',
-        description: 'Niveau: Débutant complet · Besoin réassurance',
-      },
-      {
-        id: 'n2',
-        label: '2. Preuve Sociale & Témoignage',
-        status: 'Case Study Matché',
-        description: 'Envoie le cas d’un élève parti de 0 qui a fait 5k€/m',
-      },
-      {
-        id: 'n3',
-        label: '3. Proposition d’Accès Immédiat',
-        status: 'Offre Présentée',
-        description: 'Module 1 offert ou inscription directe',
-      },
-    ],
-    aiResponse:
-      'Exactement ! 65% de nos membres ont commencé sans aucune expérience préalable. Le Module 1 est conçu pas-à-pas pour les vrais débutants. Veux-tu que je t’envoie l’accès gratuit à la 1ère vidéo de démonstration ?',
-    extractedData: [
-      { key: 'Niveau Client', value: 'Débutant complet' },
-      { key: 'Objection', value: 'Peur de la complexité' },
-      { key: 'Action', value: 'Envoi Lead Magnet' },
-    ],
-  },
-]
-
 export function InteractiveStudio() {
-  const [activeTab, setActiveTab] = useState<string>('ecom-closing')
+  const [activeTab, setActiveTab] = useState<string>('ecommerce')
   const [stepIndex, setStepIndex] = useState<number>(0)
   const chatRef = useRef<HTMLDivElement>(null)
+  const t = useT()
+
+  // Build scenarios from translations
+  const SCENARIOS: StudioScenario[] = [
+    {
+      id: 'ecommerce',
+      title: t('landing.scenarios.ecommerce.label'),
+      channel: 'Instagram DM',
+      channelColor: '#E1306C',
+      userMessage: t('landing.scenarios.ecommerce.userMessage'),
+      confidence: 98,
+      nodes: [
+        {
+          id: 'n1',
+          label: t('landing.scenarios.ecommerce.nodes.intentDetection.label'),
+          status: t('landing.scenarios.ecommerce.nodes.intentDetection.status'),
+          description: t('landing.scenarios.ecommerce.nodes.intentDetection.hint'),
+        },
+        {
+          id: 'n2',
+          label: t('landing.scenarios.ecommerce.nodes.productSearch.label'),
+          status: t('landing.scenarios.ecommerce.nodes.productSearch.status'),
+          description: t('landing.scenarios.ecommerce.nodes.productSearch.hint'),
+        },
+        {
+          id: 'n3',
+          label: t('landing.scenarios.ecommerce.nodes.stockCheck.label'),
+          status: t('landing.scenarios.ecommerce.nodes.stockCheck.status'),
+          description: t('landing.scenarios.ecommerce.nodes.stockCheck.hint'),
+        },
+        {
+          id: 'n4',
+          label: t('landing.scenarios.ecommerce.nodes.orderCreation.label'),
+          status: t('landing.scenarios.ecommerce.nodes.orderCreation.status'),
+          description: t('landing.scenarios.ecommerce.nodes.orderCreation.hint'),
+        },
+      ],
+      aiResponse: t('landing.scenarios.ecommerce.aiResponse'),
+      extractedData: [
+        {
+          key: t('landing.scenarios.ecommerce.extractedData.product.key'),
+          value: t('landing.scenarios.ecommerce.extractedData.product.value'),
+        },
+        {
+          key: t('landing.scenarios.ecommerce.extractedData.size.key'),
+          value: t('landing.scenarios.ecommerce.extractedData.size.value'),
+        },
+        {
+          key: t('landing.scenarios.ecommerce.extractedData.quantity.key'),
+          value: t('landing.scenarios.ecommerce.extractedData.quantity.value'),
+        },
+      ],
+    },
+    {
+      id: 'appointment',
+      title: t('landing.scenarios.appointment.label'),
+      channel: 'WhatsApp',
+      channelColor: '#25D366',
+      userMessage: t('landing.scenarios.appointment.userMessage'),
+      confidence: 96,
+      nodes: [
+        {
+          id: 'n1',
+          label: t('landing.scenarios.appointment.nodes.intentDetection.label'),
+          status: t('landing.scenarios.appointment.nodes.intentDetection.status'),
+          description: t('landing.scenarios.appointment.nodes.intentDetection.hint'),
+        },
+        {
+          id: 'n2',
+          label: t('landing.scenarios.appointment.nodes.availabilityCheck.label'),
+          status: t('landing.scenarios.appointment.nodes.availabilityCheck.status'),
+          description: t('landing.scenarios.appointment.nodes.availabilityCheck.hint'),
+        },
+        {
+          id: 'n3',
+          label: t('landing.scenarios.appointment.nodes.slotProposal.label'),
+          status: t('landing.scenarios.appointment.nodes.slotProposal.status'),
+          description: t('landing.scenarios.appointment.nodes.slotProposal.hint'),
+        },
+        {
+          id: 'n4',
+          label: t('landing.scenarios.appointment.nodes.bookingConfirmation.label'),
+          status: t('landing.scenarios.appointment.nodes.bookingConfirmation.status'),
+          description: t('landing.scenarios.appointment.nodes.bookingConfirmation.hint'),
+        },
+      ],
+      aiResponse: t('landing.scenarios.appointment.aiResponse'),
+      extractedData: [
+        {
+          key: t('landing.scenarios.appointment.extractedData.type.key'),
+          value: t('landing.scenarios.appointment.extractedData.type.value'),
+        },
+        {
+          key: t('landing.scenarios.appointment.extractedData.timeframe.key'),
+          value: t('landing.scenarios.appointment.extractedData.timeframe.value'),
+        },
+        {
+          key: t('landing.scenarios.appointment.extractedData.contact.key'),
+          value: t('landing.scenarios.appointment.extractedData.contact.value'),
+        },
+      ],
+    },
+    {
+      id: 'leadQualification',
+      title: t('landing.scenarios.leadQualification.label'),
+      channel: 'Messenger',
+      channelColor: '#0084FF',
+      userMessage: t('landing.scenarios.leadQualification.userMessage'),
+      confidence: 99,
+      nodes: [
+        {
+          id: 'n1',
+          label: t('landing.scenarios.leadQualification.nodes.intentDetection.label'),
+          status: t('landing.scenarios.leadQualification.nodes.intentDetection.status'),
+          description: t('landing.scenarios.leadQualification.nodes.intentDetection.hint'),
+        },
+        {
+          id: 'n2',
+          label: t('landing.scenarios.leadQualification.nodes.leadScoring.label'),
+          status: t('landing.scenarios.leadQualification.nodes.leadScoring.status'),
+          description: t('landing.scenarios.leadQualification.nodes.leadScoring.hint'),
+        },
+        {
+          id: 'n3',
+          label: t('landing.scenarios.leadQualification.nodes.infoCollection.label'),
+          status: t('landing.scenarios.leadQualification.nodes.infoCollection.status'),
+          description: t('landing.scenarios.leadQualification.nodes.infoCollection.hint'),
+        },
+        {
+          id: 'n4',
+          label: t('landing.scenarios.leadQualification.nodes.handoff.label'),
+          status: t('landing.scenarios.leadQualification.nodes.handoff.status'),
+          description: t('landing.scenarios.leadQualification.nodes.handoff.hint'),
+        },
+      ],
+      aiResponse: t('landing.scenarios.leadQualification.aiResponse'),
+      extractedData: [
+        {
+          key: t('landing.scenarios.leadQualification.extractedData.intent.key'),
+          value: t('landing.scenarios.leadQualification.extractedData.intent.value'),
+        },
+        {
+          key: t('landing.scenarios.leadQualification.extractedData.score.key'),
+          value: t('landing.scenarios.leadQualification.extractedData.score.value'),
+        },
+        {
+          key: t('landing.scenarios.leadQualification.extractedData.status.key'),
+          value: t('landing.scenarios.leadQualification.extractedData.status.value'),
+        },
+      ],
+    },
+  ]
 
   const currentScenario = SCENARIOS.find((s) => s.id === activeTab) || SCENARIOS[0]
 
@@ -148,7 +193,6 @@ export function InteractiveStudio() {
       clearTimeout(t3)
     }
   }, [activeTab])
-
   // Scroll chat down when messages appear
   useEffect(() => {
     if (chatRef.current) {
@@ -169,20 +213,20 @@ export function InteractiveStudio() {
               border: '1px solid color-mix(in srgb, var(--organic-text) 14%, transparent)',
             }}
           >
-            ✦ Studio d'Expérimentation en Direct
+            {t('landing.interactiveStudio.sectionTag')}
           </span>
           <h2
             className="font-heading text-[clamp(32px,4vw,54px)] font-extrabold leading-tight"
             style={{ color: 'var(--organic-text)' }}
           >
-            Testez la voix de votre IA <br />
-            <span className="text-metallic">en temps réel.</span>
+            {t('landing.interactiveStudio.title')} <br />
+            <span className="text-metallic">{t('landing.interactiveStudio.titleHighlight')}</span>
           </h2>
           <p
             className="mt-4 text-[17px] max-w-[55ch] mx-auto"
             style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
           >
-            Cliquez sur un scénario ci-dessous pour observer comment Raddlly qualifie, répond et conclut la vente en quelques secondes.
+            {t('landing.interactiveStudio.subtitle')}
           </p>
 
           {/* Scenario Tabs Switcher */}
@@ -213,7 +257,6 @@ export function InteractiveStudio() {
             })}
           </div>
         </div>
-
         {/* Full-width Studio Interface Container */}
         <div
           className="rounded-3xl p-6 md:p-10 backdrop-blur-2xl shadow-2xl"
@@ -230,13 +273,13 @@ export function InteractiveStudio() {
                 style={{ borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
               >
                 <span className="text-xs font-mono uppercase tracking-widest font-bold text-amber-500">
-                  Graphe de Décision IA
+                  {t('landing.interactiveStudio.decisionGraph')}
                 </span>
                 <span
                   className="text-xs font-mono"
                   style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
                 >
-                  Canal : <strong style={{ color: 'var(--organic-text)' }}>{currentScenario.channel}</strong>
+                  {t('landing.interactiveStudio.scenario')} : <strong style={{ color: 'var(--organic-text)' }}>{currentScenario.channel}</strong>
                 </span>
               </div>
 
@@ -306,7 +349,7 @@ export function InteractiveStudio() {
                   className="block text-[10px] font-mono font-bold uppercase tracking-wider mb-2"
                   style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}
                 >
-                  ⚡️ Données Structurées Extraites en Temps Réel
+                  {t('landing.interactiveStudio.dataExtracted')}
                 </span>
                 <div className="grid grid-cols-3 gap-2">
                   {currentScenario.extractedData.map((data) => (
@@ -348,8 +391,8 @@ export function InteractiveStudio() {
                       <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold" style={{ color: 'var(--organic-text)' }}>Raddlly AI Agent</div>
-                      <div className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>Temps de réponse moyen : 1.4s</div>
+                      <div className="text-xs font-bold" style={{ color: 'var(--organic-text)' }}>{t('landing.interactiveStudio.aiAgent')}</div>
+                      <div className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{t('landing.interactiveStudio.responseTime')}</div>
                     </div>
                   </div>
                   <span
@@ -382,7 +425,7 @@ export function InteractiveStudio() {
                           className="block text-[10px] font-mono font-bold mb-1 uppercase"
                           style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}
                         >
-                          Client · DM {currentScenario.channel}
+                          {t('landing.interactiveStudio.userLabel')} · DM {currentScenario.channel}
                         </span>
                         {currentScenario.userMessage}
                       </motion.div>
@@ -404,7 +447,6 @@ export function InteractiveStudio() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
                   {/* AI Response Message */}
                   <AnimatePresence>
                     {stepIndex >= 2 && (

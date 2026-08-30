@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useInView, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
+import { useT } from '@/components/i18n-provider'
 import {
   LOGO_STRIP,
   METRICS,
@@ -79,6 +80,7 @@ function useCountUp(target: number, duration = 1.4, decimals = 0) {
 }
 
 export function LogoMarquee() {
+  const t = useT()
   const loop = [...LOGO_STRIP, ...LOGO_STRIP, ...LOGO_STRIP, ...LOGO_STRIP]
   return (
     <section className="pb-16 pt-8">
@@ -86,9 +88,9 @@ export function LogoMarquee() {
         className="mb-5 text-xs font-bold tracking-[.1em] uppercase text-center flex items-center justify-center gap-2"
         style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}
       >
-        <span>INTÉGRATIONS NATIVES — APIS OFFICIELLES META</span>
+        <span>{t('landing.logoMarquee.integrations')}</span>
         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span>ADOPTÉ PAR +12 000 ÉQUIPES</span>
+        <span>{t('landing.logoMarquee.adoption')}</span>
       </p>
       <div className="lp-marquee opacity-90 hover:opacity-100 transition-opacity">
         <div
@@ -153,33 +155,34 @@ export function MetricsBand() {
 /** Combined trust section: logo marquee + animated metrics band.
  *  Matches the clean design from commit 6d3cfffa — no terminal-style labels. */
 export function CommandCenterTrust() {
+  const t = useT()
   const loop = [...LOGO_STRIP, ...LOGO_STRIP]
 
   // Each metric: target number, display formatter, label
   const metrics = [
     {
-      label: 'DM traités / mois',
+      label: t('landing.commandCenter.metrics.dmProcessed'),
       target: 2.4,
       decimals: 1,
       format: (v: number) => `${v.toFixed(1)}M+`,
       duration: 1.8,
     },
     {
-      label: 'Taux de réponse IA',
+      label: t('landing.commandCenter.metrics.aiResponseRate'),
       target: 98,
       decimals: 0,
       format: (v: number) => `${Math.round(v)}%`,
       duration: 1.6,
     },
     {
-      label: 'Temps de réponse',
+      label: t('landing.commandCenter.metrics.responseTime'),
       target: 1.4,
       decimals: 1,
       format: (v: number) => `<${v.toFixed(1)}s`,
       duration: 1.4,
     },
     {
-      label: 'Équipes actives',
+      label: t('landing.commandCenter.metrics.activeTeams'),
       target: 12,
       decimals: 0,
       format: (v: number) => `${Math.round(v)}k+`,
@@ -198,7 +201,7 @@ export function CommandCenterTrust() {
         className="mb-6 text-xs font-bold tracking-[.1em] uppercase text-center"
         style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
       >
-        Fait confiance par 12 000+ marques, agences & e-commerçants
+        {t('landing.commandCenter.trustHeadline')}
       </motion.p>
 
       {/* Logo marquee */}
@@ -290,6 +293,7 @@ export function FeaturesGrid() {
   const sectionRef = useRef<HTMLElement>(null)
   const [activeIdx, setActiveIdx] = useState(0)
   const [direction, setDirection] = useState(1)
+  const t = useT()
 
   const isActive = useRef(false)
   const cooldown = useRef(false)
@@ -495,9 +499,9 @@ export function FeaturesGrid() {
         {/* Subtle Minimal Progress Indicator */}
         <div className="flex items-center justify-between z-20 max-w-[1400px] mx-auto w-full text-[12px] font-mono font-bold text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">
           <span className="text-[var(--organic-terracotta)] font-extrabold uppercase tracking-wider">
-            Module {numStr} / 06
+            {t('landing.features.moduleIndicator', { current: numStr, total: '06' })}
           </span>
-          <span>Défilez pour explorer ↓</span>
+          <span>{t('landing.features.scrollHint')}</span>
         </div>
 
         {/* Fullscreen Horizontal Slide Stage with Dezoom & 3D Perspective Motion */}
@@ -542,7 +546,7 @@ export function FeaturesGrid() {
                       borderColor: `color-mix(in srgb, ${palette.accent} 40%, transparent)`,
                     }}
                   >
-                    MODULE 0{activeIdx + 1}
+                    {t('landing.features.moduleLabel')} 0{activeIdx + 1}
                   </span>
                   <span className="text-[10.5px] sm:text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] font-bold">
                     [ 0{activeIdx + 1} / 06 ]
@@ -577,10 +581,10 @@ export function FeaturesGrid() {
                   <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-2xl shadow-lg relative overflow-hidden">
                     <div className="flex items-center gap-2 mb-1.5 text-emerald-400 font-bold text-xs">
                       <span className="text-lg">🌿</span>
-                      <span className="font-mono tracking-wider uppercase text-[10px]">TON // BOTANIQUE</span>
+                      <span className="font-mono tracking-wider uppercase text-[10px]">{t('landing.features.toneLabel')}</span>
                     </div>
                     <p className="text-[11px] leading-relaxed text-emerald-200/90 font-medium">
-                      &ldquo;Répond toujours de manière chaleureuse avec émoticônes botaniques 🌿, propose les promotions et tutoie poliment.&rdquo;
+                      &ldquo;{t('landing.features.toneDirective')}&rdquo;
                     </p>
                   </div>
                 ) : (
@@ -608,7 +612,7 @@ export function FeaturesGrid() {
                     className="w-full py-3 px-5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 text-white font-mono"
                     style={{ backgroundColor: palette.accent }}
                   >
-                    Activer Module #{numStr} →
+                    {t('landing.features.activateModule', { number: numStr })} →
                   </Link>
                 </div>
               </div>
@@ -624,7 +628,7 @@ export function FeaturesGrid() {
               type="button"
               onClick={() => selectIdx(i)}
               className="h-11 px-2 flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer"
-              aria-label={`Module ${i + 1}`}
+              aria-label={t('landing.features.moduleAriaLabel', { number: i + 1 })}
             >
               <span
                 className="h-2.5 rounded-full transition-all duration-300 block"
@@ -674,7 +678,7 @@ function FeatureGraphic({ index, accent }: { index: number; accent: string }) {
               Directive de Ton de Marque
             </span>
             <p className="text-[13px] text-[var(--organic-text)] italic leading-relaxed">
-              "Réponds toujours de manière chaleureuse avec émoticônes botaniques, propose les promotions en cours et tutoie poliment."
+              "{t('landing.features.toneDirectiveFull')}"
             </p>
           </div>
 

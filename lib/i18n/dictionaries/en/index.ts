@@ -27,6 +27,7 @@ import { plans } from './plans'
 import { rdv } from './rdv'
 import { leads } from './leads'
 import { copilot } from './copilot'
+import { landing } from './landing'
 
 export const en: Dictionary = {
   common,
@@ -57,4 +58,5 @@ export const en: Dictionary = {
   rdv,
   leads,
   copilot,
+  landing,
 }

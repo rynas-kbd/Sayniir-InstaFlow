@@ -3,16 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
-import { useLocale, useSetLocale } from '@/components/i18n-provider'
+import { useLocale, useSetLocale, useT } from '@/components/i18n-provider'
 import type { Locale } from '@/lib/i18n/config'
 import { RaddllyLogo } from '@/components/raddlly-logo'
-
-const NAV_LINKS = [
-  { href: '#product', label: 'Produit' },
-  { href: '#features', label: 'Fonctionnalités' },
-  { href: '#pricing', label: 'Tarifs' },
-  { href: '#faq', label: 'FAQ' },
-]
 
 export function LanguageSwitcher() {
   const locale = useLocale()
@@ -59,6 +52,14 @@ export function LandingNav() {
   const [scrolled, setScrolled] = useState(false)
   const [hoveredLink, setHoveredLink] = useState<string | null>(null)
   const { scrollYProgress } = useScroll()
+  const t = useT()
+
+  const NAV_LINKS = [
+    { href: '#product', label: t('landing.nav.product') },
+    { href: '#features', label: t('landing.nav.features') },
+    { href: '#pricing', label: t('landing.nav.pricing') },
+    { href: '#faq', label: t('landing.nav.faq') },
+  ]
 
   useEffect(() => {
     const handleScroll = () => {
@@ -194,7 +195,7 @@ export function LandingNav() {
                     color: '#fff',
                   }}
                 >
-                  <span>Essai gratuit</span>
+                  <span>{t('landing.nav.cta')}</span>
                   <motion.span
                     variants={{
                       initial: { x: 0 },
@@ -211,7 +212,7 @@ export function LandingNav() {
             <motion.button
               type="button"
               className="md:hidden flex items-center justify-center size-8 rounded-full border cursor-pointer"
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? t('landing.nav.closeMenu') : t('landing.nav.openMenu')}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((v) => !v)}
               whileTap={{ scale: 0.9 }}
@@ -292,7 +293,7 @@ export function LandingNav() {
                 className="btn btn-primary w-full text-center py-3 text-xs font-bold rounded-full"
                 style={{ display: 'block', background: 'var(--organic-terracotta)', color: '#fff' }}
               >
-                Démarrer gratuitement →
+                {t('landing.nav.ctaMobile')} →
               </Link>
             </motion.div>
           </motion.div>
@@ -314,7 +315,7 @@ export function LandingNav() {
       >
         <div className="flex flex-col pl-1">
           <span className="font-heading text-xs font-extrabold tracking-tight" style={{ color: 'var(--organic-text)' }}>Raddlly</span>
-          <span className="text-[10.5px] font-medium" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>Essai gratuit · En ligne en 10m</span>
+          <span className="text-[10.5px] font-medium" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>{t('landing.nav.floatingBar')}</span>
         </div>
         <motion.div whileTap={{ scale: 0.94 }} whileHover={{ scale: 1.04 }}>
           <Link
@@ -322,7 +323,7 @@ export function LandingNav() {
             className="btn btn-primary h-9 px-4 text-xs font-bold"
             style={{ borderRadius: 10 }}
           >
-            Essai gratuit →
+            {t('landing.nav.ctaFloating')} →
           </Link>
         </motion.div>
       </motion.div>
@@ -331,6 +332,8 @@ export function LandingNav() {
 }
 
 export function LandingFooter() {
+  const t = useT()
+  
   return (
     <footer
       className="pt-16 pb-12"
@@ -347,7 +350,7 @@ export function LandingFooter() {
             Raddlly<span style={{ color: 'var(--organic-terracotta)' }}>.</span>
           </Link>
           <p className="text-[13.5px] leading-[1.65] max-w-[28ch]" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
-            L&apos;IA conversationnelle multi-canal qui vend dans vos DM Instagram, WhatsApp et Messenger 24/7.
+            {t('landing.footer.tagline')}
           </p>
 
           {/* Operational Status Pill */}
@@ -363,35 +366,35 @@ export function LandingFooter() {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex size-2 rounded-full bg-emerald-600" />
             </span>
-            <span>Systèmes 100% opérationnels</span>
+            <span>{t('landing.footer.systemStatus')}</span>
           </div>
         </div>
 
         {/* Column 1: Produit */}
         <div className="flex flex-col gap-3">
-          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Produit</span>
-          <a href="#product" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Démo interactive</a>
-          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Fonctionnalités</a>
-          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Tarifs &amp; Plans</a>
-          <Link href="/register" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Créer un compte</Link>
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>{t('landing.footer.product')}</span>
+          <a href="#product" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.demo')}</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.features')}</a>
+          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.pricing')}</a>
+          <Link href="/register" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.register')}</Link>
         </div>
 
         {/* Column 2: Canaux */}
         <div className="flex flex-col gap-3">
-          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Canaux</span>
-          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Instagram DM</a>
-          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>WhatsApp Business</a>
-          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Messenger</a>
-          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Tarifs & Plans</a>
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>{t('landing.footer.channels')}</span>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.instagram')}</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.whatsapp')}</a>
+          <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.messenger')}</a>
+          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.pricing')}</a>
         </div>
 
         {/* Column 3: Légal & Support */}
         <div className="flex flex-col gap-2.5">
-          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Légal & Support</span>
-          <Link href="/politique-de-confidentialite" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Confidentialité</Link>
-          <Link href="/conditions-utilisation" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Conditions (CGU)</Link>
-          <Link href="/suppression-donnees" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Suppression de données</Link>
-          <a href="#faq" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Centre d&apos;aide (FAQ)</a>
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>{t('landing.footer.legal')}</span>
+          <Link href="/politique-de-confidentialite" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.privacy')}</Link>
+          <Link href="/conditions-utilisation" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.terms')}</Link>
+          <Link href="/suppression-donnees" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.dataDelete')}</Link>
+          <a href="#faq" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>{t('landing.footer.links.faq')}</a>
         </div>
       </div>
 
@@ -411,14 +414,14 @@ export function LandingFooter() {
         style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)' }}
       >
         <span className="text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
-          © 2026 Raddlly Inc. Tous droits réservés.
+          {t('landing.footer.copyright')}
         </span>
 
         <div className="flex items-center gap-4 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}>
           <LanguageSwitcher />
           <span>·</span>
           <Link href="/register" className="font-semibold no-underline hover:underline" style={{ color: 'var(--organic-terracotta)' }}>
-            Commencer l&apos;essai gratuit →
+            {t('landing.footer.ctaLink')} →
           </Link>
         </div>
       </div>

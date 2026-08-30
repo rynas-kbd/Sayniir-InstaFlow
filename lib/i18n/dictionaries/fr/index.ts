@@ -26,6 +26,7 @@ import { plans } from './plans'
 import { rdv } from './rdv'
 import { leads } from './leads'
 import { copilot } from './copilot'
+import { landing } from './landing'
 
 /**
  * French is the source of truth for the dictionary shape. `en` and `ar`
@@ -62,6 +63,7 @@ export const fr = {
   rdv,
   leads,
   copilot,
+  landing,
 }
 
 export type Dictionary = typeof fr

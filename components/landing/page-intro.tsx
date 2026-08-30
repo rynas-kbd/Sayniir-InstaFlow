@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RaddllyIcon } from '@/components/raddlly-logo'
+import { useT } from '@/components/i18n-provider'
 
 export function PageIntro() {
   const [visible, setVisible] = useState(true)
+  const t = useT()
 
   useEffect(() => {
     // Simple fade out après 1.5s
@@ -89,7 +91,7 @@ export function PageIntro() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-sm font-medium tracking-wide text-zinc-400 max-w-[34ch]"
             >
-              Vos DM vendent pendant que vous dormez
+              {t('landing.pageIntro.tagline')}
             </motion.p>
           </motion.div>
         </motion.div>

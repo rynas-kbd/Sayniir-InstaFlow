@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { CHANNELS } from '@/lib/landing-content'
+import { useT } from '@/components/i18n-provider'
 
 const ROTATE_INTERVAL_MS = 2800
 
@@ -28,6 +29,7 @@ function RotatingChannel({ text }: { text: string }) {
 export function Hero() {
   const [channelIndex, setChannelIndex] = useState(0)
   const heroRef = useRef<HTMLElement>(null)
+  const t = useT()
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -36,12 +38,19 @@ export function Hero() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, -32])
 
+  // Get translated channels
+  const channels = [
+    t('landing.channels.instagram'),
+    t('landing.channels.whatsapp'),
+    t('landing.channels.messenger'),
+  ]
+
   useEffect(() => {
     const id = setInterval(() => {
-      setChannelIndex((i) => (i + 1) % CHANNELS.length)
+      setChannelIndex((i) => (i + 1) % channels.length)
     }, ROTATE_INTERVAL_MS)
     return () => clearInterval(id)
-  }, [])
+  }, [channels.length])
 
   return (
     <motion.section
@@ -58,12 +67,12 @@ export function Hero() {
         className="font-heading text-[clamp(38px,3.6vw,58px)] font-extrabold leading-[1.12] tracking-[-0.025em] max-w-[90ch]"
         style={{ color: 'var(--organic-text)' }}
       >
-        Automatisez vos ventes sur{' '}
+        {t('landing.hero.heading')}{' '}
         <span className="relative inline-block overflow-hidden align-bottom h-[1.12em]">
-          <RotatingChannel text={CHANNELS[channelIndex]} />
+          <RotatingChannel text={channels[channelIndex]} />
         </span>{' '}
         <span style={{ color: '#e7b33d', fontStyle: 'italic' }}>
-          sans toucher à votre téléphone.
+          {t('landing.hero.headingSuffix')}
         </span>
       </motion.h1>
 
@@ -75,7 +84,7 @@ export function Hero() {
         className="mt-8 max-w-[52ch] text-[16px] leading-[1.7]"
         style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}
       >
-        Un agent IA qui répond à vos messages privés, qualifie vos prospects et conclut les ventes — 24h/24, à votre place.
+        {t('landing.hero.subline')}
       </motion.p>
 
       {/* CTAs */}
@@ -89,13 +98,13 @@ export function Hero() {
           href="/register"
           className="btn btn-primary h-[52px] px-9 text-[15px]"
         >
-          Démarrer gratuitement
+          {t('landing.hero.ctaPrimary')}
         </Link>
         <a
           href="#product"
           className="btn btn-secondary h-[52px] px-9 text-[15px]"
         >
-          Voir la démo
+          {t('landing.hero.ctaSecondary')}
         </a>
       </motion.div>
 
@@ -107,7 +116,7 @@ export function Hero() {
         className="mt-7 text-[12.5px]"
         style={{ color: 'color-mix(in srgb, var(--organic-text) 38%, transparent)' }}
       >
-        Sans carte de crédit · +38% de conversions DM en moyenne
+        {t('landing.hero.trustLine')}
       </motion.p>
 
       {/* Animated Scroll Indicator */}
@@ -124,7 +133,7 @@ export function Hero() {
           className="text-[11.5px] font-semibold tracking-wide transition-colors group-hover:text-[var(--organic-terracotta)]"
           style={{ color: 'color-mix(in srgb, var(--organic-text) 52%, transparent)' }}
         >
-          Défilez pour découvrir la démo
+          {t('landing.hero.scrollIndicator')}
         </span>
         <div
           className="w-5 h-8 rounded-full border-[1.5px] flex justify-center pt-1.5 transition-colors group-hover:border-[var(--organic-terracotta)]"
