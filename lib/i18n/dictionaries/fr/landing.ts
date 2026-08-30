@@ -155,11 +155,6 @@ export const landing = {
       aiResponse: 'Avec plaisir ! Nos forfaits commencent à partir de 199€/mois. Pour vous proposer l\'offre la plus adaptée, puis-je vous demander combien de membres compte votre équipe ?',
     },
   },
-  commandCenter: {
-    tag: 'CENTRE DE COMMANDE',
-    title: 'Pilotez tous vos canaux depuis un seul endroit',
-    subtitle: 'Instagram, WhatsApp, Messenger : gérez toutes vos conversations et automatisations depuis une interface unifiée.',
-  },
   features: {
     tag: 'FONCTIONNALITÉS',
     title: 'Tout ce dont vous avez besoin',
