@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Streamdown } from 'streamdown'
-import { Send, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
+import { Send, Loader2, ShieldAlert } from 'lucide-react'
+import { CopilotAvatar } from './copilot-avatar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ProgressIndicator, ThinkingIndicator } from './progress-indicator'
@@ -348,13 +349,12 @@ export function CopilotPanel({
             <SheetTitle className="sr-only">{t('copilot.panel.title')}</SheetTitle>
             <div className="flex items-center justify-between gap-2.5">
               <div className="flex items-center gap-2.5">
-                {/* Mini orb — same layered treatment as the FAB, scaled down */}
-                <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                {/* Procedural avatar — animates based on copilot state */}
+                <span className="relative flex size-8 shrink-0 items-center justify-center">
+                  <CopilotAvatar
+                    size={32}
+                    animation={isThinking ? 'thinking' : sending || confirming ? 'talking' : 'idle'}
                   />
-                  <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
                   <span
                     className={cn(
                       'absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',
@@ -510,12 +510,11 @@ export function CopilotPanel({
               <SheetTitle className="sr-only">Copilote</SheetTitle>
               <div className="flex items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2.5">
-                  <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full">
-                    <span
-                      className="absolute inset-0 rounded-full"
-                      style={{ background: 'linear-gradient(145deg, var(--organic-terracotta-400) 0%, var(--organic-terracotta-600) 100%)' }}
+                  <span className="relative flex size-8 shrink-0 items-center justify-center">
+                    <CopilotAvatar
+                      size={32}
+                      animation={isThinking ? 'thinking' : sending || confirming ? 'talking' : 'idle'}
                     />
-                    <Sparkles className="relative size-3.5 text-primary-foreground" strokeWidth={2.25} />
                     <span
                       className={cn(
                         'absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-card',

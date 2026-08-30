@@ -1,0 +1,118 @@
+{
+  "schema": "bible-strong/avatar-definition",
+  "schemaVersion": 1,
+  "name": "Strobi Copilot Avatar",
+  "colors": {
+    "body": "#e05d38",
+    "eyes": "#ffffff"
+  },
+  "body": {
+    "primary": {
+      "type": "sphere",
+      "width": 100,
+      "height": 100,
+      "depth": 100,
+      "roundness": 1
+    },
+    "nodes": []
+  },
+  "expressions": {
+    "neutral": {
+      "head": { "x": 0, "y": 0, "z": 0 },
+      "eyes": {
+        "left": { "width": 14, "height": 22, "x": -22, "y": 5, "angle": 0 },
+        "right": { "width": 14, "height": 22, "x": 22, "y": 5, "angle": 0 },
+        "spacing": 44
+      },
+      "perspective": 1,
+      "motion": {
+        "eyes": "microSaccades",
+        "body": "slowDrift"
+      }
+    },
+    "thinking": {
+      "head": { "x": -5, "y": 8, "z": 4 },
+      "eyes": {
+        "left": { "width": 14, "height": 16, "x": -20, "y": 12, "angle": 10 },
+        "right": { "width": 14, "height": 16, "x": 24, "y": 12, "angle": 10 },
+        "spacing": 44
+      },
+      "perspective": 1.1,
+      "motion": {
+        "eyes": "microSaccades",
+        "body": "slowDrift"
+      }
+    },
+    "talking": {
+      "head": { "x": 0, "y": -4, "z": 0 },
+      "eyes": {
+        "left": { "width": 16, "height": 24, "x": -22, "y": 2, "angle": 0 },
+        "right": { "width": 16, "height": 24, "x": 22, "y": 2, "angle": 0 },
+        "spacing": 44
+      },
+      "perspective": 1,
+      "motion": {
+        "eyes": "microSaccades",
+        "body": "slowDrift"
+      }
+    },
+    "happy": {
+      "head": { "x": 0, "y": 6, "z": -2 },
+      "eyes": {
+        "left": { "width": 16, "height": 16, "x": -22, "y": 8, "angle": -15 },
+        "right": { "width": 16, "height": 16, "x": 22, "y": 8, "angle": 15 },
+        "spacing": 44
+      },
+      "perspective": 1,
+      "motion": {
+        "eyes": "microSaccades",
+        "body": "slowDrift"
+      }
+    }
+  },
+  "expressionOrder": ["neutral", "thinking", "talking", "happy"],
+  "animations": {
+    "idle": {
+      "playbackMode": "loop",
+      "steps": [
+        { "expression": "neutral", "holdMs": 3000, "transitionMs": 800, "transition": "smooth" },
+        { "expression": "happy", "holdMs": 1500, "transitionMs": 600, "transition": "spring" }
+      ],
+      "blink": {
+        "enabled": true,
+        "initialDelayMs": 1000,
+        "minIntervalMs": 2500,
+        "maxIntervalMs": 6000,
+        "durationMs": 150
+      }
+    },
+    "thinking": {
+      "playbackMode": "loop",
+      "steps": [
+        { "expression": "thinking", "holdMs": 2000, "transitionMs": 500, "transition": "smooth" }
+      ],
+      "blink": {
+        "enabled": true,
+        "initialDelayMs": 500,
+        "minIntervalMs": 2000,
+        "maxIntervalMs": 5000,
+        "durationMs": 150
+      }
+    },
+    "talking": {
+      "playbackMode": "loop",
+      "steps": [
+        { "expression": "talking", "holdMs": 300, "transitionMs": 200, "transition": "snappy" },
+        { "expression": "neutral", "holdMs": 200, "transitionMs": 200, "transition": "snappy" }
+      ],
+      "blink": {
+        "enabled": true,
+        "initialDelayMs": 1000,
+        "minIntervalMs": 3000,
+        "maxIntervalMs": 7000,
+        "durationMs": 150
+      }
+    }
+  },
+  "animationOrder": ["idle", "thinking", "talking"]
+}

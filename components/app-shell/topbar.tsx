@@ -1,6 +1,6 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
+import { CopilotAvatar } from '@/components/ai/copilot-avatar'
 import { useCopilot } from '@/components/ai/copilot-provider'
 import { useT } from '@/components/i18n-provider'
 import { MobileNav } from './mobile-nav'
@@ -24,7 +24,7 @@ function CopilotHeaderButton() {
       aria-label={t('nav.copilotButton.ariaLabel')}
     >
       <span className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-[var(--organic-terracotta)]/25 via-transparent to-[var(--organic-sage)]/25 blur-xs opacity-70 animate-pulse" />
-      <Sparkles className="relative size-3.5 text-[var(--organic-terracotta)]" />
+      <CopilotAvatar size={18} className="relative shrink-0" />
       <span className="relative font-black text-[11px] uppercase tracking-wider text-[var(--organic-terracotta-700)] dark:text-[var(--organic-terracotta-300)]">
         {t('nav.copilotButton.label')}
       </span>
@@ -48,7 +48,7 @@ export function Topbar({
   accountScope?: 'all' | 'single'
 }) {
   return (
-    <header className="relative z-[60] shrink-0 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)]">
+    <header className="relative z-30 shrink-0 bg-[color-mix(in_srgb,var(--organic-bg)_62%,transparent)] backdrop-blur-md dark:bg-[color-mix(in_srgb,var(--organic-surface)_52%,transparent)]">
       {/* iOS safe-area spacer — pushes the visible header bar down by the notch
           height without inflating the flex row itself, so items-center works. */}
       <div className="pt-safe" />
