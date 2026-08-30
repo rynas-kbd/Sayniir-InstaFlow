@@ -46,7 +46,7 @@ export function Hero() {
   return (
     <motion.section
       ref={heroRef}
-      style={{ opacity: heroOpacity, y: heroY }}
+      style={{ opacity: heroOpacity, y: heroY, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       className="relative flex flex-col items-center justify-center text-center min-h-[calc(100vh-80px)] px-6 overflow-hidden my-4"
     >
 
@@ -62,7 +62,7 @@ export function Hero() {
         <span className="relative inline-block overflow-hidden align-bottom h-[1.12em]">
           <RotatingChannel text={CHANNELS[channelIndex]} />
         </span>{' '}
-        <span style={{ color: 'color-mix(in srgb, var(--organic-text) 45%, transparent)' }}>
+        <span style={{ color: '#e7b33d', fontStyle: 'italic' }}>
           sans toucher à votre téléphone.
         </span>
       </motion.h1>

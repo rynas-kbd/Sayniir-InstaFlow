@@ -38,9 +38,14 @@ body[style*='overflow:hidden'] {
   margin-inline-end: 0 !important;
 }
 
-/* Ensure pointer-events and base background for blend modes */
+/* Ensure pointer-events and base background for blend modes (#ffffff in light, #100e0b in dark) */
 body {
   pointer-events: auto !important;
+  background-color: #ffffff;
+}
+
+html.dark body,
+body.dark {
   background-color: #100e0b;
 }
 

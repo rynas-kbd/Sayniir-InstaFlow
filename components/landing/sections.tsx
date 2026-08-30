@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useInView, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/lib/landing-content'
 import { SectionHeader } from './chrome'
 import { SpatialCard } from './spatial-card'
+import { Phone3DCanvas } from './phone-3d-canvas'
 
 const TONE_ICON_BG: Record<'a' | 's', string> = {
   a: 'var(--organic-terracotta-100)',
@@ -261,524 +262,584 @@ function AnimatedMetric({
 
 export function FeaturesGrid() {
   const sectionRef = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start start', 'end end'],
-  })
-
-  // Progress index for HUD indicator
   const [activeIdx, setActiveIdx] = useState(0)
+  const [direction, setDirection] = useState(1)
 
-  useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    const idx = Math.min(FEATURES.length - 1, Math.floor(v * FEATURES.length))
-    setActiveIdx(idx)
-  })
+  const isActive = useRef(false)
+  const cooldown = useRef(false)
+  const activeIdxRef = useRef(0)
+  activeIdxRef.current = activeIdx
 
-  // Cinematic gradient palette per feature
+  // IntersectionObserver: section active while any part is intersecting
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        isActive.current = entry.isIntersecting
+        // Reset to first feature when section exits viewport downward
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          setActiveIdx(FEATURES.length - 1)
+        }
+        if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
+          setActiveIdx(0)
+        }
+      },
+      { threshold: 0.05 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const goTo = useCallback((nextIdx: number) => {
+    if (nextIdx < 0 || nextIdx >= FEATURES.length) return
+    setDirection(nextIdx > activeIdxRef.current ? 1 : -1)
+    setActiveIdx(nextIdx)
+
+    // Synchronize window scroll position to match the feature index within section height
+    if (sectionRef.current) {
+      const secTop = sectionRef.current.offsetTop
+      const secHeight = sectionRef.current.offsetHeight
+      const stepHeight = (secHeight - window.innerHeight) / (FEATURES.length - 1)
+      const targetY = secTop + nextIdx * stepHeight
+      window.scrollTo({ top: targetY, behavior: 'smooth' })
+    }
+
+    cooldown.current = true
+    setTimeout(() => { cooldown.current = false }, 450)
+  }, [])
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    let touchStartY = 0
+
+    const onWheel = (e: WheelEvent) => {
+      if (!isActive.current) return
+      const idx = activeIdxRef.current
+
+      // At true boundaries: release scroll (let sticky section scroll away)
+      if (e.deltaY > 0 && idx >= FEATURES.length - 1) return
+      if (e.deltaY < 0 && idx <= 0) return
+
+      // Block page scroll for ALL other cases (including during cooldown)
+      e.preventDefault()
+      if (cooldown.current) return
+
+      if (e.deltaY > 0) goTo(idx + 1)
+      else goTo(idx - 1)
+    }
+
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isActive.current) return
+      const dy = touchStartY - e.touches[0].clientY
+      if (Math.abs(dy) < 40) return
+      const idx = activeIdxRef.current
+      if (dy > 0 && idx >= FEATURES.length - 1) return
+      if (dy < 0 && idx <= 0) return
+      e.preventDefault()
+      if (cooldown.current) return
+      if (dy > 0) goTo(idx + 1)
+      else goTo(idx - 1)
+      touchStartY = e.touches[0].clientY
+    }
+
+    window.addEventListener('wheel', onWheel, { passive: false })
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => {
+      window.removeEventListener('wheel', onWheel)
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+    }
+  }, [goTo])
+
+  // Midnight Sapphire Aura — 2-layer atmospheric gradient, color per feature
   const PALETTES = [
-    { from: 'color-mix(in srgb, var(--organic-terracotta-200) 25%, transparent)', via: 'color-mix(in srgb, var(--organic-bg) 96%, transparent)', accent: 'var(--organic-terracotta)' },
-    { from: 'color-mix(in srgb, var(--organic-sage-200) 22%, transparent)', via: 'color-mix(in srgb, var(--organic-bg) 96%, transparent)', accent: 'var(--organic-sage-600)' },
-    { from: 'color-mix(in srgb, var(--organic-terracotta-300) 22%, transparent)', via: 'color-mix(in srgb, var(--organic-bg) 96%, transparent)', accent: 'var(--organic-terracotta)' },
-    { from: 'color-mix(in srgb, var(--organic-sage-300) 20%, transparent)', via: 'color-mix(in srgb, var(--organic-bg) 96%, transparent)', accent: 'var(--organic-sage-600)' },
-    { from: 'color-mix(in srgb, var(--organic-terracotta-200) 25%, transparent)', via: 'color-mix(in srgb, var(--organic-bg) 96%, transparent)', accent: 'var(--organic-terracotta)' },
-    { from: 'color-mix(in srgb, var(--organic-sage-200) 25%, transparent)', via: 'color-mix(in srgb, var(--organic-sage-600) 10%, transparent)', accent: 'var(--organic-sage-600)' },
+    // 01 — DM IA : terracotta warm
+    { c1: 'rgba(200,90,60,0.18)', c2: 'rgba(160,55,35,0.28)', accent: '#c8573c' },
+    // 02 — Catalogue : sage green
+    { c1: 'rgba(74,124,89,0.18)', c2: 'rgba(50,95,65,0.28)', accent: '#4a7c59' },
+    // 03 — Relance panier : amber
+    { c1: 'rgba(200,140,40,0.18)', c2: 'rgba(160,100,20,0.28)', accent: '#c88c28' },
+    // 04 — CRM : indigo
+    { c1: 'rgba(80,100,210,0.18)', c2: 'rgba(50,70,170,0.28)', accent: '#5064d2' },
+    // 05 — Campagnes : rose
+    { c1: 'rgba(190,60,110,0.18)', c2: 'rgba(150,35,80,0.28)', accent: '#be3c6e' },
+    // 06 — Analytics : teal
+    { c1: 'rgba(30,160,160,0.18)', c2: 'rgba(15,120,120,0.28)', accent: '#1ea0a0' },
   ]
+
+  const feature = FEATURES[activeIdx]
+  const palette = PALETTES[activeIdx]
+  const numStr = `0${activeIdx + 1}`
+
+  const selectIdx = (targetIdx: number) => {
+    setDirection(targetIdx > activeIdx ? 1 : -1)
+    setActiveIdx(targetIdx)
+  }
 
   return (
     <section
       ref={sectionRef}
       id="features"
-      className="relative w-screen left-1/2 -translate-x-1/2"
+      className="relative w-screen left-1/2 -translate-x-1/2 border-y border-[var(--organic-divider)]"
       style={{ height: `${FEATURES.length * 100}vh` }}
     >
-      {/* Sticky viewport right below Navbar */}
-      <div className="sticky top-[54px] h-[calc(100vh-54px)] w-full overflow-hidden">
+      {/* Viewport Docked Directly to Navbar */}
+      <div className="sticky top-[54px] h-[calc(100vh-54px)] w-full overflow-hidden flex flex-col justify-between py-6 px-4 md:px-10 relative">
         
-        {/* Right-hand Feature HUD indicator - strictly visible inside features viewport */}
-        <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-end gap-3 bg-[color-mix(in_srgb,var(--organic-bg)_80%,transparent)] p-3 rounded-2xl backdrop-blur-xl border border-[color-mix(in_srgb,var(--organic-text)_12%,transparent)] shadow-2xl">
-          {FEATURES.map((f, i) => {
-            const active = i === activeIdx
-            return (
-              <div
-                key={i}
-                className="group flex items-center gap-2.5 cursor-pointer"
-              >
-                <span
-                  className="hidden md:inline-block text-[11px] font-mono font-bold transition-all duration-200"
-                  style={{
-                    color: active ? 'var(--organic-terracotta)' : 'color-mix(in srgb, var(--organic-text) 45%, transparent)',
-                    opacity: active ? 1 : 0.6,
-                  }}
-                >
-                  0{i + 1}
-                </span>
-                <motion.div
-                  animate={{
-                    height: active ? 22 : 6,
-                    width: active ? 6 : 6,
-                    backgroundColor: active ? 'var(--organic-terracotta)' : 'color-mix(in srgb, var(--organic-text) 30%, transparent)',
-                  }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                  className="rounded-full shadow-sm"
-                />
-              </div>
-            )
-          })}
+        {/* Midnight Sapphire Aura — 2-layer atmospheric gradient system */}
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050507]">
+          {/* Aura Layer 1 — broad atmospheric diffusion */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 transition-all duration-1000"
+            style={{
+              background: `linear-gradient(170deg, rgba(0,0,0,0) 0%, ${palette.c1} 28%, rgba(5,5,7,0.6) 60%, ${palette.c2} 82%, rgba(3,3,5,0.95) 100%)`,
+              filter: 'blur(130px)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+            }}
+          />
+          {/* Aura Layer 2 — concentrated inner bloom */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 transition-all duration-1000"
+            style={{
+              background: `linear-gradient(185deg, rgba(0,0,0,0) 0%, ${palette.c2} 34%, rgba(5,5,7,0.4) 55%, ${palette.c1} 78%, rgba(3,3,5,0.9) 100%)`,
+              filter: 'blur(90px)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+            }}
+          />
         </div>
 
-        {FEATURES.map((f, idx) => (
-          <FeaturePanel
-            key={f.title}
-            feature={f}
-            index={idx}
-            total={FEATURES.length}
-            scrollYProgress={scrollYProgress}
-            palette={PALETTES[idx]}
-          />
-        ))}
+        {/* Subtle Minimal Progress Indicator */}
+        <div className="flex items-center justify-between z-20 max-w-[1400px] mx-auto w-full text-[12px] font-mono font-bold text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">
+          <span className="text-[var(--organic-terracotta)] font-extrabold uppercase tracking-wider">
+            Module {numStr} / 06
+          </span>
+          <span>Défilez pour explorer ↓</span>
+        </div>
+
+        {/* Fullscreen Horizontal Slide Stage with Dezoom & 3D Perspective Motion */}
+        <div className="flex-1 flex items-center justify-center my-auto w-full max-w-[1400px] mx-auto z-10 relative min-h-[460px] sm:min-h-[520px]">
+          <AnimatePresence custom={direction} initial={false}>
+            <motion.div
+              key={activeIdx}
+              custom={direction}
+              initial={{
+                x: direction > 0 ? '75vw' : '-75vw',
+                scale: 0.65,
+                opacity: 0,
+                rotateY: direction > 0 ? 30 : -30,
+              }}
+              animate={{
+                x: '0vw',
+                scale: 1,
+                opacity: 1,
+                rotateY: 0,
+              }}
+              exit={{
+                x: direction > 0 ? '-75vw' : '75vw',
+                scale: 0.65,
+                opacity: 0,
+                rotateY: direction > 0 ? -30 : 30,
+              }}
+              transition={{
+                duration: 0.6,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              style={{ transformStyle: 'preserve-3d' }}
+              className="absolute inset-0 grid grid-cols-1 lg:grid-cols-12 items-center gap-6 lg:gap-10 w-full h-full"
+            >
+              {/* Left Column: Character Lore & Bio (3 cols) */}
+              <div className="lg:col-span-3 flex flex-col justify-center order-2 lg:order-1 space-y-2.5 z-20">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-[10px] font-mono font-extrabold uppercase tracking-widest px-3 py-0.5 rounded-full border shadow-sm"
+                    style={{
+                      background: `color-mix(in srgb, ${palette.accent} 18%, transparent)`,
+                      color: palette.accent,
+                      borderColor: `color-mix(in srgb, ${palette.accent} 40%, transparent)`,
+                    }}
+                  >
+                    MODULE 0{activeIdx + 1}
+                  </span>
+                  <span className="text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] font-bold">
+                    [ 0{activeIdx + 1} / 06 ]
+                  </span>
+                </div>
+
+                <h3 className="font-heading font-extrabold text-[clamp(22px,2.2vw,34px)] leading-[1.08] text-[var(--organic-text)] tracking-tight">
+                  {feature.title}
+                </h3>
+
+                <div
+                  className="h-[2px] w-12 rounded-full my-1"
+                  style={{ background: palette.accent }}
+                />
+
+                <p className="text-[13px] leading-relaxed text-[color-mix(in_srgb,var(--organic-text)_78%,transparent)] font-medium">
+                  {feature.body}
+                </p>
+              </div>
+
+              {/* Center Column: MASSIVE HERO 3D PHONE CHARACTER (6 cols) */}
+              <div className="lg:col-span-6 flex items-center justify-center order-1 lg:order-2 z-30">
+                <div className="w-full max-w-[540px] sm:max-w-[640px] h-[540px] sm:h-[680px] relative rounded-3xl p-2 flex items-center justify-center">
+                  <Phone3DCanvas activeIdx={activeIdx} accentColor={palette.accent} />
+                </div>
+              </div>
+
+              {/* Right Column: Character Stats & Attributes HUD (3 cols) */}
+              <div className="lg:col-span-3 flex flex-col justify-center order-3 space-y-3 z-20">
+                {/* Directive de Ton Card for Feature 1 */}
+                {activeIdx === 0 ? (
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-2xl shadow-lg relative overflow-hidden">
+                    <div className="flex items-center gap-2 mb-1.5 text-emerald-400 font-bold text-xs">
+                      <span className="text-lg">🌿</span>
+                      <span className="font-mono tracking-wider uppercase text-[10px]">TON // BOTANIQUE</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-emerald-200/90 font-medium">
+                      "Répond toujours de manière chaleureuse avec émoticônes botaniques 🌿, propose les promotions et tutoie poliment."
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-zinc-950/70 border border-zinc-800/60 backdrop-blur-2xl shadow-lg">
+                    <div className="flex items-center justify-between mb-2 text-[10px] font-mono text-zinc-400 border-b border-zinc-800/80 pb-1.5">
+                      <span className="font-bold uppercase tracking-wider text-zinc-200">STATISTIQUES</span>
+                      <span className="text-emerald-400 font-bold">● ACTIF</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+                        <span className="block font-heading font-extrabold text-lg text-white">+42.8K€</span>
+                        <span className="text-[9px] text-zinc-400 font-mono uppercase">IMPACT CA</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+                        <span className="block font-heading font-extrabold text-lg text-emerald-400">&lt; 0.8s</span>
+                        <span className="text-[9px] text-zinc-400 font-mono uppercase">VITESSE</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Call to Action Button */}
+                <div className="pt-1">
+                  <Link
+                    href="/register"
+                    className="w-full py-3 px-5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 text-white font-mono"
+                    style={{ backgroundColor: palette.accent }}
+                  >
+                    Activer Module #{numStr} →
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom Arena Dots Navigation */}
+        <div className="flex items-center justify-center gap-2.5 z-20 max-w-[1400px] mx-auto w-full">
+          {FEATURES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => selectIdx(i)}
+              className="h-2.5 rounded-full transition-all duration-300"
+              style={{
+                width: activeIdx === i ? '36px' : '10px',
+                backgroundColor: activeIdx === i ? palette.accent : 'color-mix(in srgb, var(--organic-text) 25%, transparent)',
+              }}
+              aria-label={`Module ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )
 }
 
-function FeaturePanel({
-  feature,
-  index,
-  total,
-  scrollYProgress,
-  palette,
-}: {
-  feature: { title: string; body: string; tone: 'a' | 's' }
-  index: number
-  total: number
-  scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress']
-  palette: { from: string; via: string; accent: string }
-}) {
-  const enter = index / total
-  const exit = (index + 1) / total
-  const isFirst = index === 0
-
-  // 1. Container Y, Opacity, and 3D Rotation (Dynamic high movement per feature)
-  const y = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.03, exit]
-      : [enter - 0.03, enter + 0.05, exit - 0.03, exit],
-    isFirst
-      ? ['0%', '0%', '-40%']
-      : index === 1
-      ? ['50%', '0%', '0%', '-45%']
-      : index === 3
-      ? ['70%', '0%', '0%', '-35%']
-      : index === 5
-      ? ['90%', '0%', '0%', '-60%']
-      : ['60%', '0%', '0%', '-40%'],
-  )
-
-  const opacity = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.04, exit]
-      : [enter - 0.02, enter + 0.04, exit - 0.04, exit],
-    isFirst
-      ? [1, 1, 0]
-      : [0, 1, 1, 0],
-  )
-
-  const scale = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.04, exit]
-      : [enter - 0.01, enter + 0.05, exit - 0.04, exit],
-    isFirst
-      ? [1, 1, 0.85]
-      : index === 0
-      ? [0.82, 1, 1, 0.85]
-      : index === 4
-      ? [0.85, 1, 1, 0.88]
-      : [0.9, 1, 1, 0.85],
-  )
-
-  // 2. High-Movement Specific Transforms per Feature Index:
-  // Index 0: 3D Pitch tilt (rotateX)
-  // Index 1: Horizontal Split Sweep (Text X -120px, Card X +120px)
-  // Index 2: 3D Door Flip (rotateY -45deg -> 0deg)
-  // Index 3: Diagonal Slant (rotateZ -4deg -> 0deg)
-  // Index 4: Vortex Twist (rotateZ 8deg -> 0deg)
-  // Index 5: Elevator Rocket Launch (y +120px)
-
-  const textX = useTransform(
-    scrollYProgress,
-    index === 1
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : index === 3
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [0, 1],
-    index === 1
-      ? [-120, 0, 0, -60]
-      : index === 3
-      ? [-80, 0, 0, -40]
-      : [0, 0],
-  )
-
-  const cardX = useTransform(
-    scrollYProgress,
-    index === 1
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : index === 3
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [0, 1],
-    index === 1
-      ? [120, 0, 0, 60]
-      : index === 3
-      ? [80, 0, 0, 40]
-      : [0, 0],
-  )
-
-  const cardRotateY = useTransform(
-    scrollYProgress,
-    index === 2
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : index === 1
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [0, 1],
-    index === 2
-      ? [-45, 0, 0, 20]
-      : index === 1
-      ? [-15, 0, 0, 15]
-      : [0, 0],
-  )
-
-  const cardRotateZ = useTransform(
-    scrollYProgress,
-    index === 3
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : index === 4
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [0, 1],
-    index === 3
-      ? [-6, 0, 0, 6]
-      : index === 4
-      ? [8, 0, 0, -8]
-      : [0, 0],
-  )
-
-  const rotateX = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.04, exit]
-      : index === 0
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : index === 5
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [0, 1],
-    isFirst
-      ? [0, 0, -10]
-      : index === 0
-      ? [18, 0, 0, -10]
-      : index === 5
-      ? [-15, 0, 0, -10]
-      : [0, 0],
-  )
-
-  const cardY = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.04, exit]
-      : index === 5
-      ? [enter - 0.02, enter + 0.05, exit - 0.04, exit]
-      : [enter - 0.02, enter + 0.06, exit - 0.04, exit],
-    isFirst
-      ? [0, 0, -40]
-      : index === 5
-      ? [120, 0, 0, -40]
-      : [70, 0, 0, -30],
-  )
-
-  const numY = useTransform(scrollYProgress, [enter, exit], [60, -120])
-  const numOpacity = useTransform(
-    scrollYProgress,
-    isFirst
-      ? [0, exit - 0.04, exit]
-      : [enter, enter + 0.05, exit - 0.04, exit],
-    isFirst
-      ? [0.08, 0.08, 0]
-      : [0, 0.08, 0.08, 0],
-  )
-
-  const numStr = `0${index + 1}`
-
-  return (
-    <motion.div
-      style={{ y, opacity, scale, rotateX, perspective: 1200 }}
-      className="absolute inset-0 flex items-center justify-center px-[clamp(24px,6vw,100px)] py-8"
-    >
-      {/* Background radial glow */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-0"
-        style={{
-          background: `radial-gradient(ellipse 75% 65% at 50% 50%, ${palette.from}, ${palette.via})`,
-        }}
-      />
-
-      {/* Enormous Parallax Ghost Number */}
-      <motion.span
-        className="pointer-events-none absolute right-[6vw] top-1/2 font-heading font-extrabold select-none leading-none z-0"
-        style={{
-          fontSize: 'clamp(200px, 32vw, 420px)',
-          color: 'var(--organic-text)',
-          opacity: numOpacity,
-          y: numY,
-        }}
-      >
-        {numStr}
-      </motion.span>
-
-      {/* 2-Column Responsive Layout: Text Left + Interactive Graphic Card Right */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] items-center gap-[clamp(32px,5vw,72px)] w-full max-w-[1240px] mx-auto">
-        {/* Left Column: Typography */}
-        <motion.div style={{ x: textX }}>
-          <div
-            className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold tracking-[.12em] uppercase shadow-sm"
-            style={{
-              background: `color-mix(in srgb, ${palette.accent} 12%, transparent)`,
-              color: palette.accent,
-              border: `1.5px solid color-mix(in srgb, ${palette.accent} 28%, transparent)`,
-            }}
-          >
-            <span
-              className="size-2 rounded-full animate-pulse"
-              style={{ background: palette.accent }}
-            />
-            Pillier {numStr} / 06
-          </div>
-
-          <h2
-            className="font-heading font-extrabold leading-[1.08] tracking-[-0.03em]"
-            style={{
-              fontSize: 'clamp(32px, 4.2vw, 56px)',
-              color: 'var(--organic-text)',
-            }}
-          >
-            {feature.title}
-          </h2>
-
-          <div
-            className="my-6 h-[3px] w-20 rounded-full bg-gradient-to-r"
-            style={{
-              backgroundImage: `linear-gradient(to right, ${palette.accent}, transparent)`,
-            }}
-          />
-
-          <p
-            className="max-w-[50ch] leading-[1.75]"
-            style={{
-              fontSize: 'clamp(15px, 1.4vw, 17.5px)',
-              color: 'color-mix(in srgb, var(--organic-text) 76%, transparent)',
-            }}
-          >
-            {feature.body}
-          </p>
-        </motion.div>
-
-        {/* Right Column: Custom Interactive High-Tech Visual Card */}
-        <motion.div
-          className="relative rounded-3xl border-[1.5px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl overflow-hidden"
-          style={{
-            background: 'color-mix(in srgb, var(--organic-bg) 85%, transparent)',
-            borderColor: `color-mix(in srgb, ${palette.accent} 35%, transparent)`,
-            boxShadow: `0 20px 50px color-mix(in srgb, ${palette.accent} 15%, transparent)`,
-            y: cardY,
-            x: cardX,
-            rotateY: cardRotateY,
-            rotateZ: cardRotateZ,
-          }}
-        >
-          {/* Top shimmer accent */}
-          <div
-            className="absolute top-0 left-0 right-0 h-[2px]"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${palette.accent}, transparent)`,
-            }}
-          />
-
-          <FeatureGraphic index={index} accent={palette.accent} />
-        </motion.div>
-      </div>
-    </motion.div>
-  )
-}
-
-/** Render custom interactive visual mockups per feature */
+/** Render custom interactive visual mockups inside the spacious App Window simulator */
 function FeatureGraphic({ index, accent }: { index: number; accent: string }) {
   switch (index) {
     case 0:
-      // Feature 1: AI Prompt Training & Persona Sync
+      // Pillar 1: IA Entraînée & Active — Brand Tone & DM Simulator
       return (
-        <div className="space-y-4 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-3 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)] flex items-center gap-2">
-              <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
-              IA Entraînée &amp; Active
-            </span>
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-              Synchro Web + FAQ
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-xl flex items-center justify-center font-bold text-[14px] text-white shadow-sm" style={{ background: accent }}>
+                🌿
+              </div>
+              <div>
+                <div className="font-heading font-bold text-[14px] leading-tight text-[var(--organic-text)]">
+                  Agent IA · Synchro Directe
+                </div>
+                <div className="text-[11px] text-emerald-500 font-medium flex items-center gap-1.5 mt-0.5">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" /> 100% Fidèle à la Marque
+                </div>
+              </div>
+            </div>
+            <span className="text-[10.5px] font-mono font-bold uppercase px-3 py-1 rounded-lg border" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, background: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
+              Réponse &lt; 0.8s
             </span>
           </div>
-          <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--organic-sand-100)_60%,transparent)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)]">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] mb-1">
-              Directive de Ton
-            </div>
-            <p className="text-[13px] font-medium leading-relaxed text-[var(--organic-text)]">
-              &quot;Réponds toujours de manière chaleureuse avec émoticônes botaniques, propose les promotions en cours et tutoie poliment.&quot;
+
+          {/* Tone Directive Hero Box */}
+          <div className="rounded-xl p-3.5 border space-y-1 backdrop-blur-sm" style={{ background: `color-mix(in srgb, ${accent} 7%, var(--organic-surface))`, borderColor: `color-mix(in srgb, ${accent} 25%, transparent)` }}>
+            <span className="font-heading font-extrabold text-[10px] uppercase tracking-wider block" style={{ color: accent }}>
+              Directive de Ton de Marque
+            </span>
+            <p className="text-[13px] text-[var(--organic-text)] italic leading-relaxed">
+              "Réponds toujours de manière chaleureuse avec émoticônes botaniques, propose les promotions en cours et tutoie poliment."
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2.5 rounded-lg bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)] text-center">
-              <div className="text-emerald-500 font-bold text-sm">100%</div>
-              <div className="text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Respect de marque</div>
+
+          {/* Real DM Conversation Bubbles */}
+          <div className="space-y-3 my-auto">
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-xs px-4 py-3 bg-[color-mix(in_srgb,var(--organic-text)_6%,transparent)] border border-[var(--organic-divider)] text-[12.5px] leading-relaxed text-[var(--organic-text)]">
+                Bonjour ! Vos vases en céramique artisanale conviennent pour des fleurs fraîches ?
+              </div>
             </div>
-            <div className="p-2.5 rounded-lg bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)] text-center">
-              <div className="text-[var(--organic-terracotta)] font-bold text-sm">0 hallucination</div>
-              <div className="text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Garantie prix</div>
+
+            <div className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl rounded-tr-xs px-4 py-3 text-[12.5px] leading-relaxed text-[var(--organic-text)] border" style={{ background: `color-mix(in srgb, ${accent} 12%, var(--organic-surface))`, borderColor: `color-mix(in srgb, ${accent} 30%, transparent)` }}>
+                Coucou Amélie ! 👋 Oui tout à fait, ils sont 100% étanches. Profite de nos -15% printaniers avec le code <strong>BOTANIK15</strong> 🌸
+              </div>
+            </div>
+          </div>
+
+          {/* Metric Pill Grid */}
+          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--organic-divider)]">
+            <div className="p-3 rounded-xl bg-[var(--organic-surface)] border border-[var(--organic-divider)] flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Respect de marque</div>
+                <div className="font-heading font-extrabold text-[18px] text-[var(--organic-text)]">100%</div>
+              </div>
+              <span className="text-[11px] font-mono text-emerald-500 font-bold">Vérifié ✓</span>
+            </div>
+            <div className="p-3 rounded-xl bg-[var(--organic-surface)] border border-[var(--organic-divider)] flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] font-mono">Hallucinations</div>
+                <div className="font-heading font-extrabold text-[18px] text-[var(--organic-text)]">0</div>
+              </div>
+              <span className="text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Base FAQ</span>
             </div>
           </div>
         </div>
       )
+
     case 1:
-      // Feature 2: Visual Drag-Drop Flow Engine
+      // Pillar 2: Studio No-Code — Visual Flow Canvas
       return (
-        <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-2.5 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)] flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-blue-500" />
-              Studio No-Code Studio
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
+              Éditeur de Scénarios No-Code
+            </div>
+            <span className="text-[10.5px] font-mono px-3 py-1 rounded-lg border border-[var(--organic-divider)] text-[color-mix(in_srgb,var(--organic-text)_65%,transparent)]">
+              5 Nœuds Actifs
             </span>
-            <span className="text-[11px] font-mono text-blue-500 font-bold">5 Nœuds · Actif</span>
           </div>
-          <div className="relative h-44 rounded-xl bg-[color-mix(in_srgb,var(--organic-bg)_95%,transparent)] border border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)] p-3 overflow-hidden flex items-center justify-around">
-            <div className="p-2.5 rounded-lg bg-[var(--organic-bg)] border border-amber-500/40 shadow-sm text-center">
-              <div className="font-bold text-[11px] text-[var(--organic-text)]">Mot-clé DM</div>
-              <div className="text-[10px] text-amber-500">Trigger</div>
-            </div>
-            <div className="w-8 h-0.5 bg-gradient-to-r from-amber-500 to-blue-500 animate-pulse" />
-            <div className="p-2.5 rounded-lg bg-[var(--organic-bg)] border border-blue-500/40 shadow-sm text-center">
-              <div className="font-bold text-[11px] text-[var(--organic-text)]">IA Agent</div>
-              <div className="text-[10px] text-blue-500">Qualification</div>
-            </div>
-            <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-emerald-500 animate-pulse" />
-            <div className="p-2.5 rounded-lg bg-[var(--organic-bg)] border border-emerald-500/40 shadow-sm text-center">
-              <div className="font-bold text-[11px] text-[var(--organic-text)]">Lien Panier</div>
-              <div className="text-[10px] text-emerald-500">Conversion</div>
-            </div>
+
+          {/* Flow Steps Canvas */}
+          <div className="space-y-3 my-auto">
+            {[
+              { step: 'TRIGGER', title: 'Mot-clé DM "PROMO"', desc: 'Entrée Instagram & Story reply', color: '#e7b33d' },
+              { step: 'IA AGENT', title: 'Qualification & Analyse', desc: 'Détection du produit & profil client', color: accent },
+              { step: 'ACTION', title: 'Lien Panier Direct', desc: 'Envoi du panier -10% en 1-clic', color: '#38bdf8' },
+            ].map(({ step, title, desc, color }, i, arr) => (
+              <React.Fragment key={step}>
+                <div className="p-3.5 rounded-xl border bg-[var(--organic-surface)] flex items-center justify-between shadow-sm transition-all hover:translate-x-1" style={{ borderColor: `color-mix(in srgb, ${color} 30%, var(--organic-divider))` }}>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 rounded font-mono font-extrabold text-[9.5px] uppercase" style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}>
+                      {step}
+                    </span>
+                    <div>
+                      <div className="font-heading font-bold text-[13px] text-[var(--organic-text)]">{title}</div>
+                      <div className="text-[11px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">{desc}</div>
+                    </div>
+                  </div>
+                  <span className="text-[13px] font-bold" style={{ color }}>✓</span>
+                </div>
+                {i < arr.length - 1 && (
+                  <div className="w-[1.5px] h-3 ml-6 bg-[var(--organic-divider)]" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="p-3 rounded-xl border text-center font-mono text-[11px] bg-[var(--organic-surface)] border-[var(--organic-divider)] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">
+            Glissez, déposez, publiez — Aucun code nécessaire
           </div>
         </div>
       )
+
     case 2:
-      // Feature 3: Auto Lead Qualification & CRM Sync
+      // Pillar 3: Capture CRM — Rich Contact Dashboard
       return (
-        <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-2.5 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)]">Capture CRM Temps Réel</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600">Lead Chaud 🔥</span>
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
+              Fiche Client CRM Enrichie
+            </div>
+            <span className="text-[10.5px] font-mono px-3 py-1 rounded-lg border border-amber-500/30 text-amber-500 bg-amber-500/10 font-bold">
+              Lead Chaud 🔥
+            </span>
           </div>
-          <div className="p-3.5 rounded-xl bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)] space-y-2">
-            <div className="flex justify-between items-center text-[12px]">
-              <span className="font-bold text-[var(--organic-text)]">Maya Lin</span>
-              <span className="font-mono text-[11px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">@homefolk</span>
+
+          <div className="p-4 rounded-xl border bg-[var(--organic-surface)] space-y-3 shadow-sm" style={{ borderColor: 'var(--organic-divider)' }}>
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-xl font-heading font-extrabold flex items-center justify-center text-[16px] border" style={{ background: `color-mix(in srgb, ${accent} 15%, transparent)`, color: accent, borderColor: `color-mix(in srgb, ${accent} 30%, transparent)` }}>
+                  M
+                </div>
+                <div>
+                  <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">Maya Lin</div>
+                  <div className="text-[11px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">@homefolk · Lyon, France</div>
+                </div>
+              </div>
+              <span className="text-[10.5px] font-mono px-2.5 py-1 rounded-md border border-[var(--organic-divider)] text-[var(--organic-text)]">
+                Shopify Synchro ✓
+              </span>
             </div>
-            <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1.5">
-              <span>📧 maya@homefolk.co</span>
-              <span className="text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded">Vérifié</span>
-            </div>
-            <div className="text-[11px] text-[color-mix(in_srgb,var(--organic-text)_65%,transparent)]">
-              Intention : <strong className="text-[var(--organic-text)]">Panier Céramique 44€</strong>
+
+            <div className="grid grid-cols-2 gap-3 text-[12px]">
+              <div>
+                <div className="text-[10.5px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Intention d'achat :</div>
+                <div className="font-heading font-bold text-[var(--organic-text)] mt-0.5">Vase Terre Cuite 68€</div>
+              </div>
+              <div>
+                <div className="text-[10.5px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Tag CRM :</div>
+                <div className="font-mono text-[11px] font-bold text-emerald-500 mt-0.5">Opt-in Klaviyo Verified ✓</div>
+              </div>
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)] pt-1">
-            <span>Synchro Shopify ✓</span>
-            <span>Synchro Klaviyo ✓</span>
+
+          <div className="p-3 rounded-xl border text-center font-mono text-[11px] bg-[var(--organic-surface)] border-[var(--organic-divider)] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">
+            Mise à jour en temps réel lors de chaque échange
           </div>
         </div>
       )
+
     case 3:
-      // Feature 4: High-Yield Re-engagement Campaigns
+      // Pillar 4: Relance Panier — Automated Campaign Simulator
       return (
-        <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-2.5 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)]">Relance Panier Abandonné</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600">Meta Conforme</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--organic-sand-100)_70%,transparent)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)]">
-            <p className="text-[12.5px] leading-relaxed text-[var(--organic-text)]">
-              &quot;Coucou Maya ! Vos mugs Terre Brute vous attendent toujours. Voici les -10% promis : CODE: DM10 🌿&quot;
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center font-mono">
-            <div className="p-2 rounded-lg bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)]">
-              <div className="font-bold text-emerald-500 text-sm">88%</div>
-              <div className="text-[9px] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Ouverture</div>
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
+              Relance Panier Abandonné
             </div>
-            <div className="p-2 rounded-lg bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)]">
-              <div className="font-bold text-[var(--organic-terracotta)] text-sm">34%</div>
-              <div className="text-[9px] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Clics</div>
+            <span className="text-[10.5px] font-mono px-3 py-1 rounded-lg border border-emerald-500/30 text-emerald-500 bg-emerald-500/10 font-bold">
+              Conforme Meta
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl border bg-[var(--organic-surface)] space-y-3 shadow-sm" style={{ borderColor: 'var(--organic-divider)' }}>
+            <div className="flex items-center justify-between text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_55%,transparent)]">
+              <span>Déclenchement : 2h après abandon</span>
+              <span className="text-emerald-500 font-bold">Envoyé ✓</span>
             </div>
-            <div className="p-2 rounded-lg bg-[var(--organic-bg)] border border-[color-mix(in_srgb,var(--organic-text)_8%,transparent)]">
-              <div className="font-bold text-amber-500 text-sm">24h</div>
-              <div className="text-[9px] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Fenêtre</div>
+            <div className="p-3.5 rounded-lg text-[13px] leading-relaxed border bg-[var(--organic-bg)] border-[var(--organic-divider)] text-[var(--organic-text)]">
+              "Coucou Lucas ! Tes articles t'attendent sagement dans ton panier 🧺 CODE: <strong>DM10</strong> pour bénéficier de tes -10% !"
             </div>
           </div>
-        </div>
-      )
-    case 4:
-      // Feature 5: Unified Team Inbox
-      return (
-        <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-2.5 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)]">Inbox Partagée Unique</span>
-            <span className="text-[11px] font-mono text-[var(--organic-terracotta)] font-bold">Relais Humain</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[color-mix(in_srgb,var(--organic-sand-100)_80%,transparent)] border border-amber-500/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="size-2 rounded-full bg-amber-500" />
-              <strong className="text-[11.5px] text-[var(--organic-text)]">Résumé IA avant transfert :</strong>
-            </div>
-            <p className="text-[11.5px] leading-relaxed text-[color-mix(in_srgb,var(--organic-text)_75%,transparent)]">
-              Prospect intéressé par commande sur mesure (&gt;500€). Demande validation de délai par un responsable.
-            </p>
-          </div>
-          <div className="flex items-center justify-between text-[11px] text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">
-            <span>Agent IA → Sarah (Manager)</span>
-            <span className="font-bold text-emerald-600">Zero perte d&apos;info</span>
-          </div>
-        </div>
-      )
-    case 5:
-    default:
-      // Feature 6: Revenue Analytics
-      return (
-        <div className="space-y-3 font-sans text-xs">
-          <div className="flex items-center justify-between border-b pb-2.5 border-[color-mix(in_srgb,var(--organic-text)_10%,transparent)]">
-            <span className="font-bold text-[var(--organic-text)]">Impact sur le Chiffre d&apos;Affaires</span>
-            <span className="text-[11px] font-mono font-bold text-emerald-600">+42 800€ ce mois</span>
-          </div>
-          <div className="h-28 flex items-end justify-between gap-2 pt-4 px-2">
-            {[35, 45, 60, 52, 78, 90, 100].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                <div
-                  className="w-full rounded-t-md transition-all duration-500"
-                  style={{
-                    height: `${h}%`,
-                    background: i === 6 ? 'var(--organic-terracotta)' : 'color-mix(in srgb, var(--organic-terracotta) 35%, transparent)',
-                  }}
-                />
-                <span className="text-[9px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">J{i + 1}</span>
+
+          <div className="grid grid-cols-3 gap-2.5 text-center">
+            {[
+              { val: '84%', label: 'Ouverture' },
+              { val: '31%', label: 'Conversion' },
+              { val: '+18%', label: 'Revenu DM' },
+            ].map(({ val, label }) => (
+              <div key={label} className="p-2.5 rounded-xl bg-[var(--organic-surface)] border border-[var(--organic-divider)]">
+                <div className="font-heading font-extrabold text-[16px] text-[var(--organic-text)]">{val}</div>
+                <div className="text-[10px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] mt-0.5">{label}</div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_65%,transparent)] pt-1">
-            <span>Conversion DM : <strong className="text-[var(--organic-text)]">38.4%</strong></span>
-            <span>ROI IA : <strong className="text-emerald-600">14.2x</strong></span>
+        </div>
+      )
+
+    case 4:
+      // Pillar 5: Relay Humain — Shared Team Inbox
+      return (
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
+              Passage de Relais Équipe
+            </div>
+            <span className="text-[10.5px] font-mono px-3 py-1 rounded-lg border border-amber-500/30 text-amber-500 bg-amber-500/10 font-bold">
+              Relais Humain
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl border bg-[var(--organic-surface)] space-y-3 shadow-sm" style={{ borderColor: 'var(--organic-divider)' }}>
+            <div className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-amber-500">
+              Note de Synthèse IA Automatique
+            </div>
+            <p className="text-[13px] leading-relaxed text-[var(--organic-text)]">
+              "Client demande un devis spécifique pour commande de mariage (&gt;20 articles). Transmis à l'équipe commerciale."
+            </p>
+            <div className="pt-3 border-t border-[var(--organic-divider)] flex items-center justify-between text-[11.5px]">
+              <span className="text-[color-mix(in_srgb,var(--organic-text)_60%,transparent)]">Attribuer à la conversation :</span>
+              <span className="font-heading font-bold text-[var(--organic-text)]">Sarah (Manager)</span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl border text-center font-mono text-[11px] bg-[var(--organic-surface)] border-[var(--organic-divider)] text-emerald-500 font-bold">
+            Zéro perte d'information lors du transfert
+          </div>
+        </div>
+      )
+
+    case 5:
+    default:
+      // Pillar 6: Analytics & CA Impact Screen
+      return (
+        <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
+            <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
+              Impact CA &amp; Croissance
+            </div>
+            <span className="text-[12px] font-mono font-extrabold text-emerald-500">
+              +42 800 € / mois
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl border bg-[var(--organic-surface)]" style={{ borderColor: 'var(--organic-divider)' }}>
+            <div className="h-28 flex items-end gap-2">
+              {[40, 52, 65, 58, 80, 92, 100].map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <motion.div
+                    className="w-full rounded-sm"
+                    initial={{ height: 0 }}
+                    whileInView={{ height: `${h}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      background: i === 6 ? accent : `color-mix(in srgb, ${accent} 30%, transparent)`,
+                    }}
+                  />
+                  <span className="text-[9.5px] font-mono text-[color-mix(in_srgb,var(--organic-text)_40%,transparent)]">J{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="p-3 rounded-xl bg-[var(--organic-surface)] border border-[var(--organic-divider)]">
+              <div className="text-[10px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Réponse IA moyenne</div>
+              <div className="font-heading font-extrabold text-[15px] text-[var(--organic-text)] mt-0.5">&lt; 3 secondes</div>
+            </div>
+            <div className="p-3 rounded-xl bg-[var(--organic-surface)] border border-[var(--organic-divider)]">
+              <div className="text-[10px] text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)]">Satisfaction Client</div>
+              <div className="font-heading font-extrabold text-[15px] text-[var(--organic-text)] mt-0.5">99.4% Note 🔥</div>
+            </div>
           </div>
         </div>
       )

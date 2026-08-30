@@ -43,16 +43,22 @@ export function LandingNav() {
         animate={{
           paddingTop: scrolled ? '10px' : '15px',
           paddingBottom: scrolled ? '10px' : '15px',
+          backdropFilter: scrolled ? 'blur(16px) saturate(1.4)' : 'blur(0px)',
+          background: scrolled
+            ? 'color-mix(in srgb, var(--organic-bg) 72%, transparent)'
+            : 'transparent',
+          boxShadow: scrolled
+            ? '0 1px 0 color-mix(in srgb, var(--organic-text) 8%, transparent)'
+            : '0 0 0 transparent',
         }}
         transition={{ duration: 0.28, ease: 'easeOut' }}
         style={{
-          background: 'transparent',
+          WebkitBackdropFilter: scrolled ? 'blur(16px) saturate(1.4)' : 'blur(0px)',
           paddingLeft: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
           paddingRight: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
         }}
       >
-        {/* Short centered thin line at the bottom */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 lg:w-72 h-[1px] bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--organic-text)_25%,transparent)] to-transparent pointer-events-none" />
+
         {/* Clickable logo */}
         <motion.div
           whileHover={{ scale: 1.03 }}

@@ -18,6 +18,7 @@ export function RaddllyIcon({ size = 32, className }: { size?: number; className
       alt="Raddlly"
       width={size}
       height={size}
+      style={{ width: 'auto', height: 'auto' }}
       className={cn('object-contain', className)}
       priority
     />

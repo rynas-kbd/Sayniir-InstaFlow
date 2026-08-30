@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { useTheme } from 'next-themes'
 import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from 'framer-motion'
 import { FLOW_NODES, FLOW_STEPS, type FlowStep } from '@/lib/landing-content'
 
@@ -45,6 +46,12 @@ export function FlowDemo() {
   const chatRef = useRef<HTMLDivElement>(null)
   const [visibleIndex, setVisibleIndex] = useState(0)
   const [selectedNodeId, setSelectedNodeId] = useState<string>('ai')
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  const isDark = !mounted || resolvedTheme === 'dark'
+  const screenBlend: React.CSSProperties['mixBlendMode'] = isDark ? 'screen' : 'multiply'
+  const lightenBlend: React.CSSProperties['mixBlendMode'] = isDark ? 'lighten' : 'multiply'
 
   // Longer scroll distance for extended, unhurried demonstration
   const { scrollYProgress } = useScroll({
@@ -109,7 +116,7 @@ export function FlowDemo() {
               inset: 0,
               background:
                 'radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 60%, rgb(12,24,210) 78%, rgba(0,0,0,0) 85%)',
-              mixBlendMode: 'screen',
+              mixBlendMode: screenBlend,
               filter: 'blur(72px)',
               pointerEvents: 'none',
               transform: 'translateZ(0)',
@@ -122,7 +129,7 @@ export function FlowDemo() {
               inset: 0,
               background:
                 'radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 55%, rgba(12,24,210,0.4) 80%, rgba(0,0,0,0) 100%)',
-              mixBlendMode: 'screen',
+              mixBlendMode: screenBlend,
               filter: 'blur(252px)',
               opacity: 0.9,
               pointerEvents: 'none',
@@ -136,7 +143,7 @@ export function FlowDemo() {
               inset: 0,
               background:
                 'radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 83.5%, #c8a8a6 84.5%, rgba(0,0,0,0) 85.5%)',
-              mixBlendMode: 'lighten',
+              mixBlendMode: lightenBlend,
               filter: 'blur(72px)',
               opacity: 0.8,
               pointerEvents: 'none',
