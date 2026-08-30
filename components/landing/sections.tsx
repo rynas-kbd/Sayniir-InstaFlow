@@ -647,6 +647,8 @@ export function FeaturesGrid() {
 
 /** Render custom interactive visual mockups inside the spacious App Window simulator */
 function FeatureGraphic({ index, accent }: { index: number; accent: string }) {
+  const t = useT()
+
   switch (index) {
     case 0:
       // Pillar 1: IA Entraînée & Active — Brand Tone & DM Simulator
