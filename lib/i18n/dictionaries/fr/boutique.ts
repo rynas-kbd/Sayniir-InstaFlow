@@ -7,7 +7,7 @@ export const boutique = {
 
   client: {
     heroBadge: 'Commerce IA Multi-canal',
-    heroTitle: 'Boutique &amp; Catalogue',
+    heroTitle: 'Boutique & Catalogue',
     heroDescription: "Gérez votre catalogue de produits, vos commandes en temps réel et configurez l'agent IA closer.",
     heroProductsLabel: 'produits',
     heroOrdersLabel: 'commandes',
@@ -536,18 +536,18 @@ export const boutique = {
 
   agentSettings: {
     subTabs: {
-      agents: { label: 'Agents automatiques', desc: 'Réponses &amp; Prise de commandes', statusActive: 'actif', statusInactive: 'inactif' },
-      persona: { label: 'Persona &amp; Consignes', desc: 'Ton, style et règles métier', statusEmpty: 'vide', statusCount: { one: '{count} consigne', other: '{count} consignes' } },
-      knowledge: { label: 'Base de connaissances', desc: 'FAQ &amp; Questions fréquentes', statusEmpty: 'vide', statusCount: { one: '{count} connaissance', other: '{count} connaissances' } },
+      agents: { label: 'Agents automatiques', desc: 'Réponses & Prise de commandes', statusActive: 'actif', statusInactive: 'inactif' },
+      persona: { label: 'Persona & Consignes', desc: 'Ton, style et règles métier', statusEmpty: 'vide', statusCount: { one: '{count} consigne', other: '{count} consignes' } },
+      knowledge: { label: 'Base de connaissances', desc: 'FAQ & Questions fréquentes', statusEmpty: 'vide', statusCount: { one: '{count} connaissance', other: '{count} connaissances' } },
       infos: { label: 'Champs à collecter', desc: 'Données à demander au client', statusDefault: 'par défaut', statusCount: { one: '{count} champ', other: '{count} champs' } },
-      llm: { label: 'Modèle &amp; Clé API', desc: 'Moteur IA et authentification' },
+      llm: { label: 'Modèle & Clé API', desc: 'Moteur IA et authentification' },
     },
     header: {
       agents: { title: 'Gestion des Agents automatiques', description: 'Sélectionnez quels modules d’intelligence artificielle sont autorisés à répondre.' },
-      persona: { title: 'Identité, Persona &amp; Comportement', description: 'Personnalisez le caractère du bot, le ton à adopter, et donnez des instructions strictes.' },
-      knowledge: { title: 'Base de connaissances &amp; FAQ', description: 'Insérez les réponses standard de votre boutique pour guider l’IA.' },
+      persona: { title: 'Identité, Persona & Comportement', description: 'Personnalisez le caractère du bot, le ton à adopter, et donnez des instructions strictes.' },
+      knowledge: { title: 'Base de connaissances & FAQ', description: 'Insérez les réponses standard de votre boutique pour guider l’IA.' },
       infos: { title: 'Informations client à collecter', description: 'Configurez les champs supplémentaires que l’agent doit collecter durant les commandes.' },
-      llm: { title: 'Modèle de Langage &amp; Authentification', description: 'Choisissez votre fournisseur de modèle d’intelligence artificielle.' },
+      llm: { title: 'Modèle de Langage & Authentification', description: 'Choisissez votre fournisseur de modèle d’intelligence artificielle.' },
     },
     cards: {
       statusActive: 'Actif', statusInactive: 'Désactivé',

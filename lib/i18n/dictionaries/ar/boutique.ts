@@ -7,7 +7,7 @@ export const boutique = {
 
   client: {
     heroBadge: 'تجارة بالذكاء الاصطناعي متعددة القنوات',
-    heroTitle: 'المتجر &amp; الكتالوج',
+    heroTitle: 'المتجر & الكتالوج',
     heroDescription: 'أدر كتالوج منتجاتك وطلباتك في الوقت الفعلي، واضبط وكيل الذكاء الاصطناعي المتخصص في إتمام البيع.',
     heroProductsLabel: 'منتجات',
     heroOrdersLabel: 'طلبات',

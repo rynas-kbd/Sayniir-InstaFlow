@@ -198,7 +198,7 @@ export function CommandCenterTrust() {
         className="mb-6 text-xs font-bold tracking-[.1em] uppercase text-center"
         style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
       >
-        Fait confiance par 12 000+ marques, agences &amp; e-commerçants
+        Fait confiance par 12 000+ marques, agences & e-commerçants
       </motion.p>
 
       {/* Logo marquee */}
@@ -883,7 +883,7 @@ function FeatureGraphic({ index, accent }: { index: number; accent: string }) {
         <div className="space-y-4 font-sans text-xs flex-1 flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--organic-divider)]">
             <div className="font-heading font-bold text-[14px] text-[var(--organic-text)]">
-              Impact CA &amp; Croissance
+              Impact CA & Croissance
             </div>
             <span className="text-[12px] font-mono font-extrabold text-emerald-500">
               +42 800 € / mois
@@ -1392,7 +1392,7 @@ export function InboxShowcase() {
                 14. Je vous réserve un mot cadeau ?
               </p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn btn-primary">Valider &amp; envoyer</button>
+                <button type="button" className="btn btn-primary">Valider & envoyer</button>
                 <button type="button" className="btn btn-ghost">Modifier</button>
               </div>
             </motion.div>

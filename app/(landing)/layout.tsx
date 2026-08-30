@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import '@/components/landing/landing.css'
 import { RevealScope } from '@/components/landing/reveal-scope'
+import { I18nProvider } from '@/components/i18n-provider'
+import { getLocale } from '@/lib/i18n/server'
 
 export const metadata: Metadata = {
   title: 'Raddlly — Vendez dans vos DM pendant que vous dormez',
@@ -8,17 +10,14 @@ export const metadata: Metadata = {
     'Une IA formée sur votre marque répond à chaque message avec votre voix, qualifie l\'acheteur et classe le lead dans votre CRM — sur Instagram, WhatsApp et Messenger.',
 }
 
-export default function LandingLayout({ children }: { children: React.ReactNode }) {
+export default async function LandingLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+
   return (
-    // Was `lang="en"`, overriding the root layout's `lang="fr"` for this entire
-    // subtree — every screen reader and browser translate prompt treated the
-    // (now fully French) landing page as English. `dir="ltr"` for the same
-    // reason: this page is French-only and untranslated, but the root
-    // layout's inline script still flips `<html dir>` to "rtl" for any
-    // visitor whose locale cookie is "ar" — without this override the French
-    // copy here would render mirrored.
-    <div lang="fr" dir="ltr" style={{ overflowX: 'clip' }}>
-      <RevealScope>{children}</RevealScope>
-    </div>
+    <I18nProvider initialLocale={locale}>
+      <div style={{ overflowX: 'clip' }}>
+        <RevealScope>{children}</RevealScope>
+      </div>
+    </I18nProvider>
   )
 }

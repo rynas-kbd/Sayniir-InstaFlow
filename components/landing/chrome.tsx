@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
+import { useLocale, useSetLocale } from '@/components/i18n-provider'
+import type { Locale } from '@/lib/i18n/config'
 import { RaddllyLogo } from '@/components/raddlly-logo'
 
 const NAV_LINKS = [
@@ -11,6 +13,46 @@ const NAV_LINKS = [
   { href: '#pricing', label: 'Tarifs' },
   { href: '#faq', label: 'FAQ' },
 ]
+
+export function LanguageSwitcher() {
+  const locale = useLocale()
+  const setLocale = useSetLocale()
+
+  const languages: { code: Locale; label: string; flag: string }[] = [
+    { code: 'fr', label: 'FR', flag: '🇫🇷' },
+    { code: 'en', label: 'EN', flag: '🇬🇧' },
+    { code: 'ar', label: 'AR', flag: '🇩🇿' },
+  ]
+
+  return (
+    <div
+      className="inline-flex items-center p-0.5 rounded-full border text-[11px] font-extrabold"
+      style={{
+        borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+        background: 'color-mix(in srgb, var(--organic-text) 6%, transparent)',
+      }}
+    >
+      {languages.map((lang) => {
+        const active = locale === lang.code
+        return (
+          <button
+            key={lang.code}
+            type="button"
+            onClick={() => setLocale(lang.code)}
+            className="px-2 py-0.5 rounded-full transition-all cursor-pointer select-none flex items-center gap-1"
+            style={{
+              background: active ? 'var(--organic-terracotta)' : 'transparent',
+              color: active ? '#fff' : 'color-mix(in srgb, var(--organic-text) 65%, transparent)',
+            }}
+          >
+            <span>{lang.flag}</span>
+            <span>{lang.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -134,8 +176,11 @@ export function LandingNav() {
               ))}
             </nav>
 
-            {/* Minimalist CTA & Mobile Toggle */}
-            <div className="flex items-center gap-3">
+            {/* Minimalist CTA, Language Selector & Mobile Toggle */}
+            <div className="flex items-center gap-2.5">
+              <div className="hidden sm:block">
+                <LanguageSwitcher />
+              </div>
               <motion.div
                 whileHover="hover"
                 whileTap={{ scale: 0.96 }}
@@ -337,12 +382,12 @@ export function LandingFooter() {
           <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Instagram DM</a>
           <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>WhatsApp Business</a>
           <a href="#features" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Messenger</a>
-          <a href="#faq" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Conformité Meta API</a>
+          <a href="#pricing" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Tarifs & Plans</a>
         </div>
 
         {/* Column 3: Légal & Support */}
-        <div className="flex flex-col gap-3">
-          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Légal &amp; Support</span>
+        <div className="flex flex-col gap-2.5">
+          <span className="text-[11.5px] font-extrabold tracking-[.1em] uppercase" style={{ color: 'var(--organic-text)' }}>Légal & Support</span>
           <Link href="/politique-de-confidentialite" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Confidentialité</Link>
           <Link href="/conditions-utilisation" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Conditions (CGU)</Link>
           <Link href="/suppression-donnees" className="text-[13.5px] no-underline hover:text-[var(--organic-terracotta)] transition-colors" style={{ color: 'color-mix(in srgb, var(--organic-text) 68%, transparent)' }}>Suppression de données</Link>
@@ -370,10 +415,7 @@ export function LandingFooter() {
         </span>
 
         <div className="flex items-center gap-4 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}>
-          <span className="inline-flex items-center gap-1.5">
-            <span>🇫🇷</span>
-            <span>Français</span>
-          </span>
+          <LanguageSwitcher />
           <span>·</span>
           <Link href="/register" className="font-semibold no-underline hover:underline" style={{ color: 'var(--organic-terracotta)' }}>
             Commencer l&apos;essai gratuit →

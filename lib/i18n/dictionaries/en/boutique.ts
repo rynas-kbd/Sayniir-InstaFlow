@@ -7,7 +7,7 @@ export const boutique = {
 
   client: {
     heroBadge: 'Multi-channel AI Commerce',
-    heroTitle: 'Store &amp; Catalog',
+    heroTitle: 'Store & Catalog',
     heroDescription: 'Manage your product catalog, real-time orders, and configure the AI closer agent.',
     heroProductsLabel: 'products',
     heroOrdersLabel: 'orders',
