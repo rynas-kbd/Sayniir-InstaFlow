@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Layers, Check } from 'lucide-react'
+import { Layers, Check, Eye, Edit2, Trash2, Sparkles, Boxes } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -22,13 +22,27 @@ export interface ProductCardProps {
   placeholder?: boolean
   className?: string
   onToggleActive?: (nextActive: boolean) => void
-  /** Bulk-selection — see product-table.tsx. Rendered inline (mobile) / as a corner pill (desktop) instead of an external overlay, so it never collides with the cover image, kind badge, or active switch. */
   selectable?: boolean
   selected?: boolean
   onToggleSelected?: () => void
+  onInspect?: () => void
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
-export function ProductCard({ view, actions, placeholder, className, onToggleActive, selectable, selected, onToggleSelected }: ProductCardProps) {
+export function ProductCard({
+  view,
+  actions,
+  placeholder,
+  className,
+  onToggleActive,
+  selectable,
+  selected,
+  onToggleSelected,
+  onInspect,
+  onEdit,
+  onDelete,
+}: ProductCardProps) {
   const t = useT()
   const locale = useLocale()
   const intlLocale = toIntlLocale(locale)
@@ -49,18 +63,16 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
           : t('boutique.productCard.selectAria', { name: view.name })
       }
       className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all duration-150',
-        // Always visible on mobile (no hover state to reveal it on touch) —
-        // fades in on hover only from sm: up, where the desktop cover image
-        // has room to keep the grid uncluttered when nothing is selected.
+        'flex size-7 shrink-0 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all duration-150 cursor-pointer',
         selected
           ? 'border-primary bg-primary text-primary-foreground opacity-100'
-          : 'border-border/60 bg-background/80 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-primary/50',
+          : 'border-border/60 bg-background/80 text-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-primary/50'
       )}
     >
       <Check className="size-3.5" strokeWidth={2.5} />
     </button>
   ) : null
+
   const isPhysical = view.kind === 'physical'
   const hasStock = view.stockQuantity > 0
   const meta = PRODUCT_KIND_META[view.kind]
@@ -88,11 +100,13 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
 
   return (
     <div
+      onClick={onInspect}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 ease-out',
-        !placeholder && 'hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1',
+        'group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer select-none',
+        !placeholder && 'hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1',
         !view.isActive && 'opacity-65 grayscale-[0.1]',
-        className,
+        selected && 'border-primary/80 ring-2 ring-primary/20',
+        className
       )}
     >
       {/* Top accent line */}
@@ -100,34 +114,34 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
         <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-gradient-to-r from-[var(--organic-terracotta)] via-[var(--organic-sage)] to-[var(--organic-terracotta)] opacity-80" />
       )}
 
-      {/* ── Mobile Layout (2-Row Spacious Card) ── */}
+      {/* ── Mobile Layout ── */}
       <div className="flex sm:hidden flex-col p-3.5 gap-2.5">
-        {/* Top Row: Selection + Image + Title & Price + Active Switch */}
         <div className="flex items-start gap-3">
           {SelectionPill}
           <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-inner">
             {renderCover()}
           </div>
-          
+
           <div className="min-w-0 flex-1 space-y-1">
-            {/* Product Name — Full width, 2 lines max */}
             <h3 className="line-clamp-2 text-sm font-bold tracking-tight text-foreground leading-snug group-hover:text-primary transition-colors">
               {view.name || (placeholder && <span className="italic text-muted-foreground/40">{t('boutique.productCard.namePlaceholder')}</span>)}
             </h3>
 
-            {/* Price & Stock badges */}
             <div className="flex items-center gap-2 flex-wrap pt-0.5">
               <span className="text-sm font-black text-[var(--organic-terracotta)] tabular-nums">
-                {view.price !== null ? view.price.toLocaleString(intlLocale) : '—'} <span className="text-[9px] font-extrabold text-muted-foreground uppercase">{view.currency}</span>
+                {view.price !== null ? view.price.toLocaleString(intlLocale) : '—'}{' '}
+                <span className="text-[9px] font-extrabold text-muted-foreground uppercase">{view.currency}</span>
               </span>
 
               {isPhysical && (
-                <span className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide',
-                  hasStock
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                    : 'bg-destructive/10 text-destructive border border-destructive/20'
-                )}>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide',
+                    hasStock
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      : 'bg-destructive/10 text-destructive border border-destructive/20'
+                  )}
+                >
                   <span className={cn('size-1.5 rounded-full', hasStock ? 'bg-emerald-500 animate-pulse' : 'bg-destructive')} />
                   {hasStock ? `${view.stockQuantity}` : t('boutique.productCard.outOfStock')}
                 </span>
@@ -135,33 +149,74 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
             </div>
           </div>
 
-          {/* Active Switch at top right */}
           {onToggleActive && (
-            <div className="shrink-0 pt-0.5">
-              <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? t('boutique.productCard.deactivateAria') : t('boutique.productCard.activateAria')} />
+            <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
+              <Switch
+                size="sm"
+                checked={view.isActive}
+                onCheckedChange={onToggleActive}
+                aria-label={view.isActive ? t('boutique.productCard.deactivateAria') : t('boutique.productCard.activateAria')}
+              />
             </div>
           )}
         </div>
 
-        {/* Bottom Row: Actions (Modifier / Supprimer) — clean bottom row with zero title squeeze */}
         {actions && (
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40" onClick={(e) => e.stopPropagation()}>
             {actions}
           </div>
         )}
       </div>
 
-      {/* ── Desktop Layout (Vertical card) ── */}
+      {/* ── Desktop Layout ── */}
       <div className="hidden sm:flex flex-col h-full">
-        {/* Card Cover Image Header */}
+        {/* Cover Image */}
         <div className="relative w-full aspect-[16/10] overflow-hidden rounded-t-2xl bg-muted/20 border-b border-border/40">
           {renderCover()}
 
-          {/* Selection pill overlay — top-left, mirrors the active-switch pill's top-right position */}
-          {selectable && <div className="absolute start-3 top-3 z-20">{SelectionPill}</div>}
+          {/* Quick Hover Action Bar */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-end justify-between p-3">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onInspect?.()
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground px-3 py-1.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+            >
+              <Eye className="size-3.5" />
+              Inspection IA
+            </button>
 
-          {/* Badge kind overlay */}
-          <div className="absolute start-3 bottom-3 z-15">
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="p-1.5 rounded-full bg-background/90 hover:bg-background text-foreground border border-border/60 shadow-md backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
+                  title="Modifier"
+                >
+                  <Edit2 className="size-3.5" />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="p-1.5 rounded-full bg-background/90 hover:bg-destructive text-foreground hover:text-destructive-foreground border border-border/60 shadow-md backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
+                  title="Supprimer"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Selection pill */}
+          {selectable && <div className="absolute start-3 top-3 z-25">{SelectionPill}</div>}
+
+          {/* Kind badge */}
+          <div className="absolute start-3 bottom-3 z-15 group-hover:opacity-0 transition-opacity duration-200">
             <Badge className="rounded-full bg-background/90 text-foreground border border-border/50 px-2.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
               {t(meta.label)}
             </Badge>
@@ -169,12 +224,17 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
 
           {/* Active/Inactive Switch overlay */}
           {onToggleActive && (
-            <div className="absolute end-3 top-3 z-15">
+            <div className="absolute end-3 top-3 z-25" onClick={(e) => e.stopPropagation()}>
               <label className="flex items-center gap-2 rounded-full bg-background/80 hover:bg-background/95 transition-colors duration-200 border border-border/60 shadow-md backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-foreground select-none cursor-pointer">
                 <span className={cn('transition-colors tracking-tight uppercase text-[9px]', view.isActive ? 'text-primary' : 'text-muted-foreground')}>
                   {view.isActive ? t('boutique.productCard.statusActive') : t('boutique.productCard.statusHidden')}
                 </span>
-                <Switch size="sm" checked={view.isActive} onCheckedChange={onToggleActive} aria-label={view.isActive ? t('boutique.productCard.deactivateAria') : t('boutique.productCard.activateAria')} />
+                <Switch
+                  size="sm"
+                  checked={view.isActive}
+                  onCheckedChange={onToggleActive}
+                  aria-label={view.isActive ? t('boutique.productCard.deactivateAria') : t('boutique.productCard.activateAria')}
+                />
               </label>
             </div>
           )}
@@ -187,7 +247,6 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
               {view.name || (placeholder && <span className="italic text-muted-foreground/40">{t('boutique.productCard.namePlaceholder')}</span>)}
             </h3>
 
-            {/* Availability Badges */}
             {isPhysical && (
               <Badge
                 variant={hasStock ? 'secondary' : 'destructive'}
@@ -249,9 +308,8 @@ export function ProductCard({ view, actions, placeholder, className, onToggleAct
             </div>
           </div>
 
-          {/* Action Footer */}
           {actions && (
-            <div className="mt-2 border-t border-border/40 pt-3 flex items-center justify-end gap-2">
+            <div className="mt-2 border-t border-border/40 pt-3 flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
               {actions}
             </div>
           )}
