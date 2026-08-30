@@ -51,6 +51,7 @@ import {
   Focus,
   Settings,
   AlertTriangle,
+  ArrowLeft,
 } from 'lucide-react'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { PostPickerDialog } from '@/components/shared/post-picker-dialog'
@@ -246,15 +247,31 @@ function FlowCanvasInner({
     fitView({ nodes: [{ id: selectedId }], padding: 0.6, duration: 400 })
   }, [selectedId, fitView])
 
-  // Détecter les changements non sauvegardés (après le montage initial)
-  const isInitializedRef = useRef(false)
+  // Détecter les changements non sauvegardés via comparaison de snapshot JSON
+  const initialSnapshotRef = useRef<string | null>(null)
+
+  const updateSavedSnapshot = useCallback(() => {
+    const snap = JSON.stringify({
+      nodes: nodes.map((n) => ({ id: n.id, type: n.type, position: n.position, data: (n.data as unknown as FlowNodeData).config })),
+      edges: edges.map((e) => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle })),
+    })
+    initialSnapshotRef.current = snap
+    setHasUnsavedChanges(false)
+  }, [nodes, edges])
+
   useEffect(() => {
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true
+    const snap = JSON.stringify({
+      nodes: nodes.map((n) => ({ id: n.id, type: n.type, position: n.position, data: (n.data as unknown as FlowNodeData).config })),
+      edges: edges.map((e) => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle })),
+    })
+
+    if (initialSnapshotRef.current === null) {
+      initialSnapshotRef.current = snap
       setHasUnsavedChanges(false)
       return
     }
-    setHasUnsavedChanges(true)
+
+    setHasUnsavedChanges(snap !== initialSnapshotRef.current)
   }, [nodes, edges])
 
   // 1. Interception de la fermeture de fenêtre / rechargement
@@ -295,15 +312,12 @@ function FlowCanvasInner({
     return () => document.removeEventListener('click', handleClick, true)
   }, [hasUnsavedChanges])
 
-  // 3. Interception du bouton Retour du navigateur (popstate)
+  // 3. Interception de la navigation arrière
   useEffect(() => {
     if (!hasUnsavedChanges) return
 
-    window.history.pushState({ unsavedGuard: true }, '', window.location.href)
-
     function handlePopState() {
       if (hasUnsavedChanges) {
-        window.history.pushState({ unsavedGuard: true }, '', window.location.href)
         setPendingNavTarget('/flows')
         setShowUnsavedDialog(true)
       }
@@ -583,7 +597,7 @@ function FlowCanvasInner({
 
       toast.success(t('flows.builder.flowCanvas.flowSaved'))
       setLastSavedAt(new Date())
-      setHasUnsavedChanges(false)
+      updateSavedSnapshot()
     } catch (err) {
       console.error('Save error:', err)
       toast.error(err instanceof Error ? err.message : t('flows.builder.flowCanvas.saveError'))
@@ -667,6 +681,23 @@ function FlowCanvasInner({
       {/* Top toolbar avec bouton Save & Recenter */}
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-sidebar px-4 py-2.5">
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              if (hasUnsavedChanges) {
+                setPendingNavTarget('/flows')
+                setShowUnsavedDialog(true)
+              } else {
+                router.push('/flows')
+              }
+            }}
+            className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+            title="Retour aux flux"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span className="hidden sm:inline">Retour</span>
+          </Button>
           <Workflow className="size-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold text-foreground truncate max-w-[140px] sm:max-w-none">{flow.name}</h2>
           {hasUnsavedChanges && (
@@ -1042,37 +1073,36 @@ function FlowCanvasInner({
             </div>
           </AlertDialogHeader>
 
-          <AlertDialogFooter className="mt-4 flex-col gap-2 sm:flex-row sm:justify-end">
+          <AlertDialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel onClick={() => setShowUnsavedDialog(false)}>
               Annuler
             </AlertDialogCancel>
             <Button
               variant="outline"
               onClick={() => {
+                const target = pendingNavTarget || '/flows'
                 setShowUnsavedDialog(false)
                 setHasUnsavedChanges(false)
-                if (pendingNavTarget) {
-                  router.push(pendingNavTarget)
-                } else {
-                  router.push('/flows')
-                }
+                setTimeout(() => {
+                  router.push(target)
+                }, 50)
               }}
-              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
             >
               Quitter sans sauvegarder
             </Button>
             <Button
               onClick={async () => {
                 await handleSave()
+                const target = pendingNavTarget || '/flows'
                 setShowUnsavedDialog(false)
-                if (pendingNavTarget) {
-                  router.push(pendingNavTarget)
-                } else {
-                  router.push('/flows')
-                }
+                setHasUnsavedChanges(false)
+                setTimeout(() => {
+                  router.push(target)
+                }, 50)
               }}
               disabled={saving}
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer"
             >
               <Save className="size-3.5" />
               {saving ? 'Enregistrement…' : 'Sauvegarder et quitter'}
