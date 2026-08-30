@@ -46,6 +46,7 @@ export function FlowDemo() {
   const chatRef = useRef<HTMLDivElement>(null)
   const [visibleIndex, setVisibleIndex] = useState(0)
   const [selectedNodeId, setSelectedNodeId] = useState<string>('ai')
+  const [mobileView, setMobileView] = useState<'canvas' | 'chat'>('canvas')
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
@@ -106,7 +107,7 @@ export function FlowDemo() {
             borderRadius: demoBorderRadius,
             scale: demoScale,
           }}
-          className="relative border-[1.5px] pt-16 pb-6 px-[clamp(16px,2.8vw,32px)] backdrop-blur-3xl shadow-2xl overflow-hidden flex flex-col justify-between"
+          className="relative border-[1.5px] pt-14 pb-5 px-[clamp(12px,2.5vw,32px)] backdrop-blur-3xl shadow-2xl overflow-hidden flex flex-col justify-between"
           aria-label="Studio Flow Plein Écran"
         >
           {/* Phantom Arc - Aura Gradient Background Layers */}
@@ -155,61 +156,108 @@ export function FlowDemo() {
           {/* Top light shimmer bar */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--organic-terracotta)] to-transparent opacity-80" />
 
+          {/* Mobile Native View Switcher Bar (< 1024px) */}
+          <div className="lg:hidden flex items-center justify-center mb-3 shrink-0">
+            <div
+              className="flex items-center gap-1 p-1 rounded-full border shadow-sm backdrop-blur-md"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+                background: 'color-mix(in srgb, var(--organic-surface) 85%, transparent)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setMobileView('canvas')}
+                className="relative px-3.5 py-1.5 text-xs font-bold rounded-full transition-colors active:scale-95"
+                style={{
+                  color: mobileView === 'canvas' ? '#fff' : 'var(--organic-text)',
+                  background: mobileView === 'canvas' ? 'var(--organic-terracotta)' : 'transparent',
+                }}
+              >
+                ⚡ Studio Flow
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileView('chat')}
+                className="relative px-3.5 py-1.5 text-xs font-bold rounded-full transition-colors active:scale-95 flex items-center gap-1.5"
+                style={{
+                  color: mobileView === 'chat' ? '#fff' : 'var(--organic-text)',
+                  background: mobileView === 'chat' ? 'var(--organic-terracotta)' : 'transparent',
+                }}
+              >
+                <span>💬 Simulation DM</span>
+                {visibleIndex > 0 && (
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* Main Studio Grid: Flow Canvas + DM Conversation Box */}
-          <div className="lp-flow-grid grid grid-cols-[minmax(0,1fr)_340px] items-center gap-[clamp(20px,3vw,36px)] h-full w-full overflow-hidden">
+          <div className="lp-flow-grid grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] items-center gap-[clamp(16px,3vw,36px)] h-full w-full overflow-hidden">
             {/* Left: Interactive Canvas */}
-            <div className="flex flex-col h-full justify-between overflow-x-auto">
-              <div className="relative h-[calc(100%-54px)] min-h-[360px] w-full max-w-[760px] mx-auto rounded-2xl border border-[var(--organic-sand-200)] bg-[color-mix(in_srgb,var(--organic-bg)_92%,transparent)] shadow-inner flex items-center justify-center">
-                {/* SVG Cables & Connections */}
-                <svg width={640} height={370} viewBox="0 0 640 370" fill="none" className="absolute inset-0 m-auto">
-                  {/* Path 1: Trigger -> AI */}
-                  <path d="M180 96 C212 96 208 56 240 56" stroke="var(--organic-sand-300)" strokeWidth={2.5} />
-                  <motion.path
-                    d="M180 96 C212 96 208 56 240 56"
-                    stroke="var(--organic-terracotta)"
-                    strokeWidth={3.5}
-                    animate={{ pathLength: path1Length }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                  />
+            <div className={`flex-col h-full justify-between ${mobileView === 'canvas' ? 'flex' : 'hidden lg:flex'}`}>
+              <div
+                className="relative h-[calc(100%-54px)] min-h-[300px] sm:min-h-[360px] w-full max-w-[760px] mx-auto rounded-2xl border shadow-2xl overflow-hidden flex items-center justify-center"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--organic-text) 16%, transparent)',
+                  background: 'radial-gradient(circle, color-mix(in srgb, var(--organic-text) 8%, transparent) 1px, transparent 1px) 0 0 / 18px 18px, var(--organic-surface)',
+                }}
+              >
+                {/* Auto-scaling container so all nodes fit on 320px-1200px screens */}
+                <div className="relative w-[640px] h-[370px] shrink-0 origin-center scale-[0.50] min-[370px]:scale-[0.58] min-[430px]:scale-[0.68] sm:scale-[0.82] md:scale-95 lg:scale-100 transition-transform duration-300">
+                  {/* SVG Cables & Connections */}
+                  <svg width={640} height={370} viewBox="0 0 640 370" fill="none" className="absolute inset-0 m-auto">
+                    {/* Path 1: Trigger -> AI */}
+                    <path d="M180 96 C212 96 208 56 240 56" stroke="color-mix(in srgb, var(--organic-text) 22%, transparent)" strokeWidth={3} />
+                    <motion.path
+                      d="M180 96 C212 96 208 56 240 56"
+                      stroke="var(--organic-terracotta)"
+                      strokeWidth={4.5}
+                      style={{ filter: 'drop-shadow(0 0 6px var(--organic-terracotta))' }}
+                      animate={{ pathLength: path1Length }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    />
 
-                  {/* Path 2: AI -> Qualify */}
-                  <path d="M320 92 C320 136 320 156 320 200" stroke="var(--organic-sand-300)" strokeWidth={2.5} />
-                  <motion.path
-                    d="M320 92 C320 136 320 156 320 200"
-                    stroke="var(--organic-terracotta)"
-                    strokeWidth={3.5}
-                    animate={{ pathLength: path2Length }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                  />
+                    {/* Path 2: AI -> Qualify */}
+                    <path d="M320 92 C320 136 320 156 320 200" stroke="color-mix(in srgb, var(--organic-text) 22%, transparent)" strokeWidth={3} />
+                    <motion.path
+                      d="M320 92 C320 136 320 156 320 200"
+                      stroke="var(--organic-terracotta)"
+                      strokeWidth={4.5}
+                      style={{ filter: 'drop-shadow(0 0 6px var(--organic-terracotta))' }}
+                      animate={{ pathLength: path2Length }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    />
 
-                  {/* Path 3: Qualify -> Capture (OUI) */}
-                  <path d="M400 236 C432 236 428 176 460 176" stroke="var(--organic-sand-300)" strokeWidth={2.5} />
-                  <motion.path
-                    d="M400 236 C432 236 428 176 460 176"
-                    stroke="var(--organic-sage-500)"
-                    strokeWidth={3.5}
-                    animate={{ pathLength: path3Length }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                  />
+                    {/* Path 3: Qualify -> Capture (OUI) */}
+                    <path d="M400 236 C432 236 428 176 460 176" stroke="color-mix(in srgb, var(--organic-text) 22%, transparent)" strokeWidth={3} />
+                    <motion.path
+                      d="M400 236 C432 236 428 176 460 176"
+                      stroke="#10b981"
+                      strokeWidth={4.5}
+                      style={{ filter: 'drop-shadow(0 0 6px #10b981)' }}
+                      animate={{ pathLength: path3Length }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    />
 
-                  {/* Path 4: Qualify -> Handoff (NON) */}
-                  <path
-                    d="M400 236 C432 236 428 296 460 296"
-                    stroke="var(--organic-sand-300)"
-                    strokeWidth={2.5}
-                    strokeDasharray="5 5"
-                  />
+                    {/* Path 4: Qualify -> Handoff (NON) */}
+                    <path
+                      d="M400 236 C432 236 428 296 460 296"
+                      stroke="color-mix(in srgb, var(--organic-text) 25%, transparent)"
+                      strokeWidth={3}
+                      strokeDasharray="6 6"
+                    />
 
-                  <text x={422} y={194} fill="var(--organic-sage-800)" fontSize={11} fontWeight={800} letterSpacing={1}>
-                    OUI
-                  </text>
-                  <text x={422} y={288} fill="var(--organic-sage-800)" fontSize={11} fontWeight={800} letterSpacing={1}>
-                    NON
-                  </text>
-                </svg>
+                    <text x={422} y={192} fill="#10b981" fontSize={12} fontWeight={900} letterSpacing={1}>
+                      OUI
+                    </text>
+                    <text x={422} y={288} fill="#ef4444" fontSize={12} fontWeight={900} letterSpacing={1}>
+                      NON
+                    </text>
+                  </svg>
 
-                {/* Node Buttons */}
-                <div className="relative w-[640px] h-[370px] shrink-0">
+                  {/* Node Buttons */}
                   {FLOW_NODES.map((n) => {
                     const isSelected = selectedNodeId === n.id
                     const isActive = activeNodeId === n.id
@@ -218,7 +266,7 @@ export function FlowDemo() {
                         key={n.id}
                         type="button"
                         onClick={() => setSelectedNodeId(n.id)}
-                        className="lp-node-btn absolute w-40 rounded-[var(--radius-lg)] border-[1.5px] p-[12px_14px] text-left font-sans cursor-pointer shadow-md"
+                        className="lp-node-btn absolute w-40 rounded-xl border-2 p-3 text-left font-sans cursor-pointer shadow-lg active:scale-95"
                         style={{
                           left: n.x,
                           top: n.y,
@@ -230,14 +278,13 @@ export function FlowDemo() {
                             isActive
                               ? 'var(--organic-terracotta)'
                               : isSelected
-                              ? 'var(--organic-terracotta-500)'
-                              : 'var(--organic-sand-300)',
-                          borderWidth: isActive || isSelected ? 2 : 1.5,
+                              ? '#10b981'
+                              : 'color-mix(in srgb, var(--organic-text) 20%, transparent)',
                           boxShadow: isActive
-                            ? '0 0 0 6px color-mix(in srgb, var(--organic-terracotta) 26%, transparent), var(--organic-shadow-md)'
+                            ? '0 0 0 6px color-mix(in srgb, var(--organic-terracotta) 26%, transparent), 0 8px 24px rgba(0,0,0,0.15)'
                             : isSelected
-                            ? '0 4px 18px color-mix(in srgb, var(--organic-terracotta) 18%, transparent)'
-                            : 'var(--organic-shadow-sm)',
+                            ? '0 0 0 4px rgba(16, 185, 129, 0.25)'
+                            : '0 4px 12px rgba(0,0,0,0.06)',
                         }}
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.98 }}
@@ -245,17 +292,17 @@ export function FlowDemo() {
                       >
                         <span className="flex items-center gap-2">
                           <span
-                            className="size-[10px] shrink-0 rounded-full"
+                            className="size-2.5 shrink-0 rounded-full"
                             style={{
                               background:
-                                n.tone === 'a' ? 'var(--organic-terracotta)' : 'var(--organic-sage-500)',
+                                n.tone === 'a' ? 'var(--organic-terracotta)' : '#10b981',
                             }}
                           />
-                          <span className="text-sm font-bold text-[var(--organic-text)]">{n.label}</span>
+                          <strong className="text-xs font-extrabold text-[var(--organic-text)]">{n.label}</strong>
                         </span>
                         <span
-                          className="mt-[3px] block text-left text-xs"
-                          style={{ color: 'color-mix(in srgb, var(--organic-text) 62%, transparent)' }}
+                          className="block text-[10.5px] font-medium mt-1 leading-tight"
+                          style={{ color: 'color-mix(in srgb, var(--organic-text) 72%, transparent)' }}
                         >
                           {n.sub}
                         </span>
@@ -265,8 +312,14 @@ export function FlowDemo() {
                 </div>
               </div>
 
-              {/* Node Information Bar */}
-              <div className="mt-3 min-h-[44px] w-full max-w-[760px] mx-auto rounded-xl border border-[var(--organic-terracotta-300)] p-3 text-xs md:text-sm leading-[1.5] bg-[color-mix(in_srgb,var(--organic-sand-100)_60%,transparent)] flex items-start gap-3 shrink-0">
+              {/* Node Inspector Footer */}
+              <div
+                className="mt-2.5 flex items-center gap-3 rounded-xl border p-[10px_14px] text-xs font-mono shrink-0 shadow-sm"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+                  background: 'var(--organic-bg)',
+                }}
+              >
                 <span className="text-base">ℹ️</span>
                 <div>
                   <strong className="font-bold text-[var(--organic-text)]">
@@ -282,7 +335,7 @@ export function FlowDemo() {
 
             {/* Right: Clean DM Conversation Window */}
             <div
-              className="overflow-hidden rounded-[26px] border-[1.5px] shadow-xl h-full flex flex-col justify-between"
+              className={`overflow-hidden rounded-[26px] border-[1.5px] shadow-xl h-full flex-col justify-between ${mobileView === 'chat' ? 'flex' : 'hidden lg:flex'}`}
               style={{
                 borderColor: 'var(--organic-sand-300)',
                 background: 'var(--organic-bg)',

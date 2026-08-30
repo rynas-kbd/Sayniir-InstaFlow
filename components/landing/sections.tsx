@@ -501,7 +501,7 @@ export function FeaturesGrid() {
         </div>
 
         {/* Fullscreen Horizontal Slide Stage with Dezoom & 3D Perspective Motion */}
-        <div className="flex-1 flex items-center justify-center my-auto w-full max-w-[1400px] mx-auto z-10 relative min-h-[460px] sm:min-h-[520px]">
+        <div className="flex-1 flex items-center justify-center my-auto w-full max-w-[1400px] mx-auto z-10 relative min-h-0 lg:min-h-[520px]">
           <AnimatePresence custom={direction} initial={false}>
             <motion.div
               key={activeIdx}
@@ -529,13 +529,13 @@ export function FeaturesGrid() {
                 ease: [0.22, 1, 0.36, 1],
               }}
               style={{ transformStyle: 'preserve-3d' }}
-              className="absolute inset-0 grid grid-cols-1 lg:grid-cols-12 items-center gap-6 lg:gap-10 w-full h-full"
+              className="relative w-full h-full flex flex-col justify-between items-center gap-2 lg:absolute lg:inset-0 lg:grid lg:grid-cols-12 lg:gap-6"
             >
-              {/* Left Column: Character Lore & Bio (3 cols) */}
-              <div className="lg:col-span-3 flex flex-col justify-center order-2 lg:order-1 space-y-2.5 z-20">
-                <div className="flex items-center gap-2">
+              {/* Left Column: Character Lore & Bio */}
+              <div className="lg:col-span-3 flex flex-col justify-center order-2 lg:order-1 space-y-1 sm:space-y-2 z-20 max-w-full text-center lg:text-left shrink-0">
+                <div className="flex items-center justify-center lg:justify-start gap-2">
                   <span
-                    className="text-[10px] font-mono font-extrabold uppercase tracking-widest px-3 py-0.5 rounded-full border shadow-sm"
+                    className="text-[9.5px] sm:text-[10px] font-mono font-extrabold uppercase tracking-widest px-2.5 sm:px-3 py-0.5 rounded-full border shadow-sm"
                     style={{
                       background: `color-mix(in srgb, ${palette.accent} 18%, transparent)`,
                       color: palette.accent,
@@ -544,34 +544,34 @@ export function FeaturesGrid() {
                   >
                     MODULE 0{activeIdx + 1}
                   </span>
-                  <span className="text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] font-bold">
+                  <span className="text-[10.5px] sm:text-[11px] font-mono text-[color-mix(in_srgb,var(--organic-text)_50%,transparent)] font-bold">
                     [ 0{activeIdx + 1} / 06 ]
                   </span>
                 </div>
 
-                <h3 className="font-heading font-extrabold text-[clamp(22px,2.2vw,34px)] leading-[1.08] text-[var(--organic-text)] tracking-tight">
+                <h3 className="font-heading font-extrabold text-[clamp(16px,3.8vw,34px)] leading-[1.1] text-[var(--organic-text)] tracking-tight">
                   {feature.title}
                 </h3>
 
                 <div
-                  className="h-[2px] w-12 rounded-full my-1"
+                  className="h-[2px] w-10 sm:w-12 rounded-full my-0.5 mx-auto lg:mx-0"
                   style={{ background: palette.accent }}
                 />
 
-                <p className="text-[13px] leading-relaxed text-[color-mix(in_srgb,var(--organic-text)_78%,transparent)] font-medium">
+                <p className="text-[11.5px] sm:text-[13px] leading-relaxed text-[color-mix(in_srgb,var(--organic-text)_78%,transparent)] font-medium max-w-prose">
                   {feature.body}
                 </p>
               </div>
 
-              {/* Center Column: MASSIVE HERO 3D PHONE CHARACTER (6 cols) */}
-              <div className="lg:col-span-6 flex items-center justify-center order-1 lg:order-2 z-30">
-                <div className="w-full max-w-[540px] sm:max-w-[640px] h-[540px] sm:h-[680px] relative rounded-3xl p-2 flex items-center justify-center">
+              {/* Center Column: MASSIVE HERO 3D PHONE CHARACTER */}
+              <div className="flex-1 lg:col-span-6 flex items-center justify-center order-1 lg:order-2 z-30 w-full min-h-0">
+                <div className="w-full max-w-[340px] sm:max-w-[640px] h-[260px] min-[390px]:h-[300px] sm:h-[460px] lg:h-[640px] relative rounded-3xl p-1 sm:p-2 flex items-center justify-center">
                   <Phone3DCanvas activeIdx={activeIdx} accentColor={palette.accent} />
                 </div>
               </div>
 
-              {/* Right Column: Character Stats & Attributes HUD (3 cols) */}
-              <div className="lg:col-span-3 flex flex-col justify-center order-3 space-y-3 z-20">
+              {/* Right Column: Character Stats & Attributes HUD (Hidden on mobile for maximum space) */}
+              <div className="hidden lg:flex lg:col-span-3 flex-col justify-center order-3 space-y-3 z-20">
                 {/* Directive de Ton Card for Feature 1 */}
                 {activeIdx === 0 ? (
                   <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-2xl shadow-lg relative overflow-hidden">
@@ -580,7 +580,7 @@ export function FeaturesGrid() {
                       <span className="font-mono tracking-wider uppercase text-[10px]">TON // BOTANIQUE</span>
                     </div>
                     <p className="text-[11px] leading-relaxed text-emerald-200/90 font-medium">
-                      "Répond toujours de manière chaleureuse avec émoticônes botaniques 🌿, propose les promotions et tutoie poliment."
+                      &ldquo;Répond toujours de manière chaleureuse avec émoticônes botaniques 🌿, propose les promotions et tutoie poliment.&rdquo;
                     </p>
                   </div>
                 ) : (
@@ -601,7 +601,6 @@ export function FeaturesGrid() {
                     </div>
                   </div>
                 )}
-
                 {/* Call to Action Button */}
                 <div className="pt-1">
                   <Link
@@ -618,18 +617,23 @@ export function FeaturesGrid() {
         </div>
 
         {/* Bottom Arena Dots Navigation */}
-        <div className="flex items-center justify-center gap-2.5 z-20 max-w-[1400px] mx-auto w-full">
+        <div className="flex items-center justify-center gap-1 sm:gap-2.5 z-20 max-w-[1400px] mx-auto w-full py-1">
           {FEATURES.map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => selectIdx(i)}
-              className="h-2.5 rounded-full transition-all duration-300"
-              style={{
-                width: activeIdx === i ? '36px' : '10px',
-                backgroundColor: activeIdx === i ? palette.accent : 'color-mix(in srgb, var(--organic-text) 25%, transparent)',
-              }}
+              className="h-11 px-2 flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer"
               aria-label={`Module ${i + 1}`}
-            />
+            >
+              <span
+                className="h-2.5 rounded-full transition-all duration-300 block"
+                style={{
+                  width: activeIdx === i ? '36px' : '10px',
+                  backgroundColor: activeIdx === i ? palette.accent : 'color-mix(in srgb, var(--organic-text) 25%, transparent)',
+                }}
+              />
+            </button>
           ))}
         </div>
       </div>
@@ -1517,143 +1521,145 @@ export function ComparisonTable() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-8%' }}
-        className="overflow-hidden rounded-3xl border-[1.5px]"
-        style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+        className="overflow-x-auto rounded-3xl border-[1.5px] -mx-2 sm:mx-0"
+        style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)', WebkitOverflowScrolling: 'touch' }}
       >
-        {/* Header Row */}
-        <div
-          className="grid border-b-[1.5px]"
-          style={{
-            gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
-            borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
-            background: 'var(--organic-surface)',
-          }}
-        >
-          <div className="px-6 py-4" />
+        <div className="min-w-[580px]">
+          {/* Header Row */}
           <div
-            className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
-            style={{
-              borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
-              background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
-            }}
-          >
-            <span
-              className="px-3 py-0.5 rounded-full text-[10px] font-extrabold tracking-[.12em] uppercase"
-              style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
-            >
-              ✦ Raddlly
-            </span>
-            <span className="text-[11px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
-              IA-native · 2025
-            </span>
-          </div>
-          <div
-            className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
-            style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
-          >
-            <span className="text-[13px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
-              Outils historiques
-            </span>
-            <span className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 38%, transparent)' }}>
-              ManyChat · Manychat Pro
-            </span>
-          </div>
-        </div>
-
-        {/* Data Rows */}
-        {COMPARISON_ROWS.map(([label, us, them], rowIdx) => (
-          <motion.div
-            key={label}
-            variants={cardVariants}
-            className="grid border-b-[1px]"
+            className="grid border-b-[1.5px]"
             style={{
               gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
-              borderColor: 'color-mix(in srgb, var(--organic-text) 7%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+              background: 'var(--organic-surface)',
             }}
           >
-            {/* Label */}
+            <div className="px-6 py-4" />
             <div
-              className="px-6 py-5 flex items-center"
-              style={{ background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)' }}
-            >
-              <span className="text-[13.5px] font-semibold" style={{ color: 'var(--organic-text)' }}>{label}</span>
-            </div>
-
-            {/* Raddlly column */}
-            <div
-              className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+              className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
               style={{
                 borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
-                background: rowIdx % 2 === 0
-                  ? 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-bg))'
-                  : 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-surface))',
+                background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
               }}
             >
               <span
-                className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
+                className="px-3 py-0.5 rounded-full text-[10px] font-extrabold tracking-[.12em] uppercase"
                 style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                ✦ Raddlly
               </span>
-              <span className="text-[12.5px] leading-relaxed" style={{ color: 'var(--organic-text)' }}>{us}</span>
+              <span className="text-[11px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+                IA-native · 2025
+              </span>
             </div>
-
-            {/* Competitors column */}
             <div
-              className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+              className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
+              style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+            >
+              <span className="text-[13px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
+                Outils historiques
+              </span>
+              <span className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 38%, transparent)' }}>
+                ManyChat · Manychat Pro
+              </span>
+            </div>
+          </div>
+
+          {/* Data Rows */}
+          {COMPARISON_ROWS.map(([label, us, them], rowIdx) => (
+            <motion.div
+              key={label}
+              variants={cardVariants}
+              className="grid border-b-[1px]"
               style={{
-                borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
-                background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)',
+                gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
+                borderColor: 'color-mix(in srgb, var(--organic-text) 7%, transparent)',
               }}
             >
-              <span
-                className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
-                style={{ background: 'color-mix(in srgb, var(--organic-text) 12%, transparent)' }}
+              {/* Label */}
+              <div
+                className="px-6 py-5 flex items-center"
+                style={{ background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)' }}
               >
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </span>
-              <span className="text-[12.5px] leading-relaxed" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>{them}</span>
-            </div>
-          </motion.div>
-        ))}
+                <span className="text-[13.5px] font-semibold" style={{ color: 'var(--organic-text)' }}>{label}</span>
+              </div>
 
-        {/* Footer CTA Row */}
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
-            background: 'var(--organic-surface)',
-          }}
-        >
-          <div className="px-6 py-5 flex items-center">
-            <span className="text-[12px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
-              Migration incluse en 2 jours ouvrés
-            </span>
-          </div>
+              {/* Raddlly column */}
+              <div
+                className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                  background: rowIdx % 2 === 0
+                    ? 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-bg))'
+                    : 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-surface))',
+                }}
+              >
+                <span
+                  className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                <span className="text-[12.5px] leading-relaxed" style={{ color: 'var(--organic-text)' }}>{us}</span>
+              </div>
+
+              {/* Competitors column */}
+              <div
+                className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                  background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)',
+                }}
+              >
+                <span
+                  className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
+                  style={{ background: 'color-mix(in srgb, var(--organic-text) 12%, transparent)' }}
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </span>
+                <span className="text-[12.5px] leading-relaxed" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>{them}</span>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Footer CTA Row */}
           <div
-            className="px-4 py-5 flex items-center justify-center border-l-[1.5px]"
+            className="grid"
             style={{
-              borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
-              background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
+              gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
+              background: 'var(--organic-surface)',
             }}
           >
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-1.5 text-[12px] font-extrabold tracking-wide rounded-full px-4 py-2 shadow-md transition-all hover:scale-105 active:scale-95"
-              style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+            <div className="px-6 py-5 flex items-center">
+              <span className="text-[12px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
+                Migration incluse en 2 jours ouvrés
+              </span>
+            </div>
+            <div
+              className="px-4 py-5 flex items-center justify-center border-l-[1.5px]"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
+              }}
             >
-              Démarrer gratuitement →
-            </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 text-[12px] font-extrabold tracking-wide rounded-full px-4 py-2 shadow-md transition-all hover:scale-105 active:scale-95"
+                style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+              >
+                Démarrer gratuitement →
+              </Link>
+            </div>
+            <div
+              className="px-4 py-5 border-l-[1.5px]"
+              style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+            />
           </div>
-          <div
-            className="px-4 py-5 border-l-[1.5px]"
-            style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
-          />
         </div>
       </motion.div>
     </section>

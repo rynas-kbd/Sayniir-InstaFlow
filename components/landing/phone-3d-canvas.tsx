@@ -1143,7 +1143,7 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
 
     // 3. Camera — pulled back to z=7.8 for a proportionate hero phone
     const camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 1000)
-    camera.position.set(0.3, 0.1, 7.8)
+    camera.position.set(0, 0.1, 7.8)
     camera.lookAt(0, 0, 0)
     cameraRef.current = camera
 
@@ -1353,8 +1353,12 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
     }
 
     // 8. Initialize Volumetric 3D Phone (Permanently Stable & Beautiful 3D Chassis)
+    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 768
     const proceduralPhone = createProcedural3DPhone()
-    proceduralPhone.position.y = 0.2
+    const initialScale = isMobileViewport ? 0.74 : 1
+    const initialBaseY = isMobileViewport ? -0.28 : 0.2
+    proceduralPhone.scale.set(initialScale, initialScale, initialScale)
+    proceduralPhone.position.y = initialBaseY
     scene.add(proceduralPhone)
     phoneGroupRef.current = proceduralPhone
 
@@ -1384,7 +1388,9 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
 
       if (phoneGroupRef.current) {
         // Floating motion + Interactive 3D Mouse Parallax Tilt
-        phoneGroupRef.current.position.y = 0.2 + Math.sin(elapsedTime * 1.8) * 0.12
+        const isMob = window.innerWidth < 768
+        const baseY = isMob ? -0.28 : 0.2
+        phoneGroupRef.current.position.y = baseY + Math.sin(elapsedTime * 1.8) * 0.08
 
         const targetRotY = Math.sin(elapsedTime * 0.7) * 0.45 + mousePos.currentX * 0.45
         const targetRotX = 0.12 + Math.sin(elapsedTime * 1.2) * 0.05 - mousePos.currentY * 0.3
@@ -1409,6 +1415,12 @@ export function Phone3DCanvas({ activeIdx, accentColor }: Phone3DProps) {
       const w = containerRef.current.clientWidth
       const h = containerRef.current.clientHeight
       cameraRef.current.aspect = w / h
+      const isMobile = window.innerWidth < 768
+      if (phoneGroupRef.current) {
+        const s = isMobile ? 0.74 : 1
+        phoneGroupRef.current.scale.set(s, s, s)
+      }
+      cameraRef.current.position.z = isMobile ? 7.8 : 7.8
       cameraRef.current.updateProjectionMatrix()
       rendererRef.current.setSize(w, h)
     }

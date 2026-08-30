@@ -20,6 +20,25 @@
   }
 }
 
+/* ─────────────────────────────────────────────
+   Native Mobile Touch & App-like Feel Utilities
+   ───────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select, [role="button"] {
+  touch-action: manipulation;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Also apply smooth scroll for touch/mobile devices */
 @media (prefers-reduced-motion: no-preference) {
   html {
