@@ -1074,29 +1074,28 @@ function FlowCanvasInner({
       {/* ── Unsaved Changes Safety Dialog ── */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent 
-          className="sm:max-w-md !border-amber-500/30"
+          className="sm:max-w-md !border-amber-500/30 !grid-rows-[1fr_auto] !gap-6"
           style={{
             background: 'color-mix(in srgb, var(--card) 95%, transparent)',
             backdropFilter: 'blur(24px) saturate(1.5)',
           }}
         >
-          <AlertDialogHeader className="!text-start">
-            <div className="flex items-start gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <AlertTriangle className="size-5" />
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <AlertDialogTitle className="text-base font-semibold text-foreground">
-                  Modifications non enregistrées
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-                  Vous avez des modifications non sauvegardées dans ce flux. Si vous quittez sans enregistrer, vos changements seront perdus.
-                </AlertDialogDescription>
-              </div>
+          {/* Custom header sans AlertDialogHeader pour éviter le grid system */}
+          <div className="flex items-start gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="size-5" />
             </div>
-          </AlertDialogHeader>
+            <div className="flex-1 space-y-1.5">
+              <AlertDialogTitle className="text-base font-semibold text-foreground">
+                Modifications non enregistrées
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                Vous avez des modifications non sauvegardées dans ce flux. Si vous quittez sans enregistrer, vos changements seront perdus.
+              </AlertDialogDescription>
+            </div>
+          </div>
 
-          <AlertDialogFooter className="!-mx-0 !-mb-0 !mt-6 !border-t-0 !bg-transparent !p-0 flex-col gap-2 sm:flex-row sm:justify-end">
+          <AlertDialogFooter className="!-mx-4 !-mb-4 !border-t-0 !bg-transparent !p-0 flex-col gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel 
               onClick={() => setShowUnsavedDialog(false)}
               className="sm:order-1"
