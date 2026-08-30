@@ -38,9 +38,10 @@ body[style*='overflow:hidden'] {
   margin-inline-end: 0 !important;
 }
 
-/* Ensure pointer-events are never removed from body */
+/* Ensure pointer-events and base background for blend modes */
 body {
   pointer-events: auto !important;
+  background-color: #100e0b;
 }
 
 /* Prevent body/html scroll when the app shell is mounted to fix extra space/nothingness scroll at the bottom */
@@ -52,7 +53,7 @@ body:has(.app-shell-root) {
 
 
 /* ─────────────────────────────────────────────
-   Instaflow design tokens — "Organic"
+   Raddlly design tokens — "Organic"
    Warm, rounded, a little playful: a cream-and-sand ground with a
    terracotta accent and a sage second accent, Caprasimo display
    headings over Figtree body text, 16px radii that grow into pills
@@ -396,6 +397,7 @@ html[data-color-theme="ocean"] {
   --primary: #2563eb;
   --ring: #2563eb;
 }
+
 html[data-color-theme="ocean"].dark,
 html[data-color-theme="ocean"] .dark {
   --organic-terracotta: #3b82f6;
@@ -427,6 +429,7 @@ html[data-color-theme="emerald"] {
   --primary: #059669;
   --ring: #059669;
 }
+
 html[data-color-theme="emerald"].dark,
 html[data-color-theme="emerald"] .dark {
   --organic-terracotta: #10b981;
@@ -458,6 +461,7 @@ html[data-color-theme="sunset"] {
   --primary: #c026d3;
   --ring: #c026d3;
 }
+
 html[data-color-theme="sunset"].dark,
 html[data-color-theme="sunset"] .dark {
   --organic-terracotta: #e879f9;
@@ -489,6 +493,7 @@ html[data-color-theme="midnight"] {
   --primary: #d97706;
   --ring: #d97706;
 }
+
 html[data-color-theme="midnight"].dark,
 html[data-color-theme="midnight"] .dark {
   --organic-terracotta: #fbbf24;
@@ -531,6 +536,7 @@ html[data-color-theme="custom"] {
   --organic-sage-800: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 55%, #000000);
   --organic-sage-900: color-mix(in srgb, var(--custom-secondary-color, #8fa073) 40%, #000000);
 }
+
 html[data-color-theme="custom"].dark,
 html[data-color-theme="custom"] .dark {
   --primary: var(--custom-primary-color, #c67139);
@@ -656,6 +662,7 @@ html[data-color-theme="custom"] .dark {
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     @apply font-sans bg-background;
     /* Explicit fallback: ensures font-family is set even before the
@@ -663,6 +670,7 @@ html[data-color-theme="custom"] .dark {
        --font-outfit is injected by Next.js. */
     font-family: var(--font-outfit), var(--font-sans), system-ui, sans-serif;
   }
+
   body {
     @apply bg-background text-foreground text-sm antialiased;
     font-size: 15px;
@@ -675,25 +683,62 @@ html[data-color-theme="custom"] .dark {
     overscroll-behavior-y: none;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--organic-heading-family);
     font-weight: var(--organic-heading-weight);
   }
+
   /* Tracking and leading are size-specific, not a single fixed value: large
      display text needs negative tracking (letters read too far apart as
      they grow) and tight leading, while small text needs looser leading
      to stay legible and tracking closer to 0. */
-  h1 { font-size: 42px; line-height: 1.05; letter-spacing: -0.025em; }
-  h2 { font-size: 32px; line-height: 1.08; letter-spacing: -0.02em; }
-  h3 { font-size: 25px; line-height: 1.15; letter-spacing: -0.015em; }
-  h4 { font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; }
-  h5 { font-size: 16px; line-height: 1.3; letter-spacing: 0; }
-  h6 { font-size: 13px; line-height: 1.35; letter-spacing: 0.08em; text-transform: uppercase; }
+  h1 {
+    font-size: 42px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+
+  h2 {
+    font-size: 32px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: 25px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  h4 {
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  h5 {
+    font-size: 16px;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  h6 {
+    font-size: 13px;
+    line-height: 1.35;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
   :focus-visible {
     outline: 2px solid var(--organic-terracotta);
     outline-offset: 2px;
   }
+
   ::selection {
     background: color-mix(in srgb, var(--organic-terracotta) 30%, transparent);
   }
@@ -774,7 +819,12 @@ html[data-color-theme="custom"] .dark {
    @layer base regardless of specificity) would fake-bold it in the
    browser — this unlayered rule outranks utility classes too, so it
    wins back the single real weight on every heading. */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--organic-heading-weight);
 }
 
@@ -788,27 +838,21 @@ h1, h2, h3, h4, h5, h6 {
    Marketing page gradient utilities
    ───────────────────────────────────────────── */
 .gradient-hero {
-  background: radial-gradient(
-    ellipse 80% 60% at 50% -10%,
-    color-mix(in srgb, var(--organic-terracotta) 16%, transparent) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(ellipse 80% 60% at 50% -10%,
+      color-mix(in srgb, var(--organic-terracotta) 16%, transparent) 0%,
+      transparent 70%);
 }
 
 .dark .gradient-hero {
-  background: radial-gradient(
-    ellipse 80% 60% at 50% -10%,
-    color-mix(in srgb, var(--organic-terracotta) 22%, transparent) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(ellipse 80% 60% at 50% -10%,
+      color-mix(in srgb, var(--organic-terracotta) 22%, transparent) 0%,
+      transparent 70%);
 }
 
 .gradient-border {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--organic-terracotta) 30%, transparent),
-    color-mix(in srgb, var(--organic-sage) 20%, transparent)
-  );
+  background: linear-gradient(135deg,
+      color-mix(in srgb, var(--organic-terracotta) 30%, transparent),
+      color-mix(in srgb, var(--organic-sage) 20%, transparent));
 }
 
 /* ─────────────────────────────────────────────
@@ -816,9 +860,10 @@ h1, h2, h3, h4, h5, h6 {
    ───────────────────────────────────────────── */
 .feature-card {
   transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .feature-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 32px color-mix(in srgb, var(--organic-terracotta) 10%, transparent);
@@ -849,6 +894,7 @@ h1, h2, h3, h4, h5, h6 {
     0 1px 0 0 color-mix(in srgb, white 40%, transparent) inset,
     0 4px 24px color-mix(in srgb, var(--organic-terracotta) 6%, transparent);
 }
+
 .dark .glass-card {
   background: color-mix(in srgb, var(--organic-surface) 48%, transparent);
   border-color: color-mix(in srgb, var(--organic-sand-300) 30%, transparent);
@@ -866,6 +912,7 @@ h1, h2, h3, h4, h5, h6 {
     0 1px 0 0 color-mix(in srgb, white 50%, transparent) inset,
     0 2px 12px color-mix(in srgb, var(--organic-terracotta) 5%, transparent);
 }
+
 .dark .glass-stat {
   background: color-mix(in srgb, var(--organic-surface) 42%, transparent);
   border-color: color-mix(in srgb, var(--organic-sand-300) 25%, transparent);
@@ -883,6 +930,7 @@ h1, h2, h3, h4, h5, h6 {
     0 1px 0 0 color-mix(in srgb, white 55%, transparent) inset,
     0 8px 32px color-mix(in srgb, var(--organic-terracotta) 10%, transparent);
 }
+
 .dark .glass-banner {
   background: color-mix(in srgb, var(--organic-surface) 58%, transparent);
   border-color: color-mix(in srgb, var(--organic-terracotta) 18%, transparent);
@@ -905,10 +953,18 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 13px;
   line-height: 1.6;
 }
-.copilot-markdown > *:first-child { margin-top: 0; }
-.copilot-markdown > *:last-child { margin-bottom: 0; }
 
-.copilot-markdown p { margin: 0.5em 0; }
+.copilot-markdown>*:first-child {
+  margin-top: 0;
+}
+
+.copilot-markdown>*:last-child {
+  margin-bottom: 0;
+}
+
+.copilot-markdown p {
+  margin: 0.5em 0;
+}
 
 .copilot-markdown h1,
 .copilot-markdown h2,
@@ -920,19 +976,35 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0.9em 0 0.35em;
   line-height: 1.25;
 }
-.copilot-markdown h1 { font-size: 1.15em; }
-.copilot-markdown h2 { font-size: 1.08em; }
+
+.copilot-markdown h1 {
+  font-size: 1.15em;
+}
+
+.copilot-markdown h2 {
+  font-size: 1.08em;
+}
+
 .copilot-markdown h3,
-.copilot-markdown h4 { font-size: 1em; }
+.copilot-markdown h4 {
+  font-size: 1em;
+}
 
 .copilot-markdown ul,
 .copilot-markdown ol {
   margin: 0.4em 0;
   padding-inline-start: 1.25em;
 }
-.copilot-markdown ul { list-style: none; }
-.copilot-markdown ul > li { position: relative; }
-.copilot-markdown ul > li::before {
+
+.copilot-markdown ul {
+  list-style: none;
+}
+
+.copilot-markdown ul>li {
+  position: relative;
+}
+
+.copilot-markdown ul>li::before {
   content: '';
   position: absolute;
   inset-inline-start: -1.1em;
@@ -942,21 +1014,43 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 999px;
   background: color-mix(in srgb, var(--organic-terracotta) 70%, transparent);
 }
-.copilot-markdown ol { list-style: decimal; }
-.copilot-markdown ol > li::marker { color: color-mix(in srgb, var(--organic-terracotta) 70%, transparent); font-weight: 600; }
-.copilot-markdown li { margin: 0.2em 0; }
-.copilot-markdown li > ul,
-.copilot-markdown li > ol { margin: 0.2em 0; }
 
-.copilot-markdown strong { font-weight: 600; color: var(--foreground); }
-.copilot-markdown em { font-style: italic; }
+.copilot-markdown ol {
+  list-style: decimal;
+}
+
+.copilot-markdown ol>li::marker {
+  color: color-mix(in srgb, var(--organic-terracotta) 70%, transparent);
+  font-weight: 600;
+}
+
+.copilot-markdown li {
+  margin: 0.2em 0;
+}
+
+.copilot-markdown li>ul,
+.copilot-markdown li>ol {
+  margin: 0.2em 0;
+}
+
+.copilot-markdown strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.copilot-markdown em {
+  font-style: italic;
+}
 
 .copilot-markdown a {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.copilot-markdown a:hover { text-decoration-thickness: 2px; }
+
+.copilot-markdown a:hover {
+  text-decoration-thickness: 2px;
+}
 
 .copilot-markdown blockquote {
   margin: 0.5em 0;
@@ -969,11 +1063,13 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
-.copilot-markdown :not(pre) > code {
+
+.copilot-markdown :not(pre)>code {
   background: color-mix(in srgb, var(--organic-sand-500) 18%, transparent);
   border-radius: 5px;
   padding: 0.15em 0.4em;
 }
+
 .copilot-markdown pre {
   margin: 0.6em 0;
   border-radius: 12px;
@@ -986,12 +1082,14 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.92em;
   border-collapse: collapse;
 }
+
 .copilot-markdown th,
 .copilot-markdown td {
   border: 1px solid color-mix(in srgb, var(--organic-sand-500) 35%, transparent);
   padding: 0.35em 0.6em;
   text-align: start;
 }
+
 .copilot-markdown th {
   background: color-mix(in srgb, var(--organic-sand-500) 12%, transparent);
   font-weight: 600;
@@ -1018,6 +1116,7 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--organic-sand-500) 55%, transparent) transparent;
 }
+
 .dark * {
   scrollbar-color: color-mix(in srgb, var(--organic-sand-600) 50%, transparent) transparent;
 }
@@ -1032,7 +1131,8 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track {
   border-radius: 999px;
   background: color-mix(in srgb, var(--organic-sand-300) 28%, transparent);
-  margin-block: 4px; /* small breathing gap at both ends */
+  margin-block: 4px;
+  /* small breathing gap at both ends */
 }
 
 /* WebKit — thumb: floating pill via border trick */
@@ -1045,9 +1145,11 @@ h1, h2, h3, h4, h5, h6 {
   background-color: color-mix(in srgb, var(--organic-sand-500) 60%, transparent);
   transition: background-color 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--organic-terracotta-500) 70%, transparent);
 }
+
 ::-webkit-scrollbar-thumb:active {
   background-color: color-mix(in srgb, var(--organic-terracotta-600) 80%, transparent);
 }
@@ -1056,12 +1158,15 @@ h1, h2, h3, h4, h5, h6 {
 .dark ::-webkit-scrollbar-track {
   background: color-mix(in srgb, var(--organic-sand-300) 20%, transparent);
 }
+
 .dark ::-webkit-scrollbar-thumb {
   background-color: color-mix(in srgb, var(--organic-sand-600) 55%, transparent);
 }
+
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--organic-terracotta-600) 65%, transparent);
 }
+
 .dark ::-webkit-scrollbar-thumb:active {
   background-color: color-mix(in srgb, var(--organic-terracotta-700) 75%, transparent);
 }
@@ -1079,12 +1184,14 @@ h1, h2, h3, h4, h5, h6 {
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
 .pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Better tap targets on mobile */
 @media (max-width: 767px) {
+
   /* Prevent text size adjustment on orientation change */
   html {
     -webkit-text-size-adjust: 100%;
@@ -1097,7 +1204,9 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* Slightly larger tap targets for important interactive elements */
-  button, [role="button"], a {
+  button,
+  [role="button"],
+  a {
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -1134,13 +1243,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Fallback transitions for browsers without startViewTransition */
@@ -1158,12 +1277,16 @@ h1, h2, h3, h4, h5, h6 {
    transitions and transforms that framer-motion doesn't touch.
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.01ms !important;
@@ -1173,6 +1296,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Frostier, more opaque materials instead of a heavy blur when the
    user has asked the OS to reduce transparency. */
 @media (prefers-reduced-transparency: reduce) {
+
   .backdrop-blur-xs,
   .backdrop-blur-sm,
   .backdrop-blur-md,
@@ -1190,9 +1314,11 @@ h1, h2, h3, h4, h5, h6 {
   :root {
     --organic-divider: color-mix(in srgb, #18181b 45%, transparent);
   }
+
   .dark {
     --organic-divider: color-mix(in srgb, #fafafa 45%, transparent);
   }
+
   * {
     --tw-ring-color: currentColor;
   }
@@ -1294,6 +1420,3 @@ h1, h2, h3, h4, h5, h6 {
     height: 110px !important;
   }
 }
-
-
-

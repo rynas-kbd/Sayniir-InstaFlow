@@ -1,7 +1,7 @@
 export const plans = {
   free: {
     label: 'Free',
-    description: 'To discover Instaflow before getting started.',
+    description: 'To discover Raddlly before getting started.',
     features: ['1,000 contacts', 'Visual flow builder', 'Basic AI replies (100/month)', 'Lead capture'],
   },
   starter: {

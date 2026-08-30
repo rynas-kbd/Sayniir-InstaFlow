@@ -105,7 +105,7 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
   const [bgOpacity, setBgOpacityState] = useState<number>(40)
   const [customImageUrl, setCustomImageUrlState] = useState<string>('')
   const [customPrimaryColor, setCustomPrimaryColorState] = useState<string>('#3b82f6')
-    const [customSecondaryColor, setCustomSecondaryColorState] = useState<string>('#1d4ed8')
+  const [customSecondaryColor, setCustomSecondaryColorState] = useState<string>('#1d4ed8')
   const [mounted, setMounted] = useState(false)
 
   const applyColorThemeToDOM = (themeName: ColorTheme) => {
@@ -124,12 +124,12 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
 
     async function loadTheme() {
       // Check cookie fallback first for rapid SSR feel
-      const cookieTheme = getCookie('instaflow_color_theme') as ColorTheme | null
-      const cookieWallpaper = getCookie('instaflow_wallpaper') as WallpaperId | null
-      const cookieOpacity = getCookie('instaflow_bg_opacity')
-      const cookieImg = getCookie('instaflow_custom_bg_url')
-      const cookiePrimary = getCookie('instaflow_custom_primary')
-      const cookieSecondary = getCookie('instaflow_custom_secondary')
+      const cookieTheme = getCookie('Raddlly_color_theme') as ColorTheme | null
+      const cookieWallpaper = getCookie('Raddlly_wallpaper') as WallpaperId | null
+      const cookieOpacity = getCookie('Raddlly_bg_opacity')
+      const cookieImg = getCookie('Raddlly_custom_bg_url')
+      const cookiePrimary = getCookie('Raddlly_custom_primary')
+      const cookieSecondary = getCookie('Raddlly_custom_secondary')
 
       let activePrimary = '#3b82f6'
       let activeSecondary = '#1d4ed8'
@@ -159,29 +159,29 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
         if (pref.colorTheme) {
           setColorThemeState(pref.colorTheme)
           applyColorThemeToDOM(pref.colorTheme)
-          setCookie('instaflow_color_theme', pref.colorTheme)
+          setCookie('Raddlly_color_theme', pref.colorTheme)
         }
         if (pref.wallpaper) {
           setWallpaperState(pref.wallpaper)
-          setCookie('instaflow_wallpaper', pref.wallpaper)
+          setCookie('Raddlly_wallpaper', pref.wallpaper)
         }
         if (typeof pref.bgOpacity === 'number') {
           setBgOpacityState(pref.bgOpacity)
-          setCookie('instaflow_bg_opacity', String(pref.bgOpacity))
+          setCookie('Raddlly_bg_opacity', String(pref.bgOpacity))
         }
         if (pref.customImageUrl !== undefined) {
           setCustomImageUrlState(pref.customImageUrl)
-          setCookie('instaflow_custom_bg_url', pref.customImageUrl)
+          setCookie('Raddlly_custom_bg_url', pref.customImageUrl)
         }
         if (pref.customPrimaryColor) {
           setCustomPrimaryColorState(pref.customPrimaryColor)
           activePrimary = pref.customPrimaryColor
-          setCookie('instaflow_custom_primary', pref.customPrimaryColor)
+          setCookie('Raddlly_custom_primary', pref.customPrimaryColor)
         }
         if (pref.customSecondaryColor) {
           setCustomSecondaryColorState(pref.customSecondaryColor)
           activeSecondary = pref.customSecondaryColor
-          setCookie('instaflow_custom_secondary', pref.customSecondaryColor)
+          setCookie('Raddlly_custom_secondary', pref.customSecondaryColor)
         }
         applyCustomColors(activePrimary, activeSecondary)
       }
@@ -217,12 +217,12 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
     applyCustomColors(nextCustomPrimary, nextCustomSecondary)
 
     // Save to Cookies
-    setCookie('instaflow_color_theme', nextColorTheme)
-    setCookie('instaflow_wallpaper', nextWallpaper)
-    setCookie('instaflow_bg_opacity', String(nextBgOpacity))
-    setCookie('instaflow_custom_bg_url', nextCustomImageUrl)
-    setCookie('instaflow_custom_primary', nextCustomPrimary)
-    setCookie('instaflow_custom_secondary', nextCustomSecondary)
+    setCookie('Raddlly_color_theme', nextColorTheme)
+    setCookie('Raddlly_wallpaper', nextWallpaper)
+    setCookie('Raddlly_bg_opacity', String(nextBgOpacity))
+    setCookie('Raddlly_custom_bg_url', nextCustomImageUrl)
+    setCookie('Raddlly_custom_primary', nextCustomPrimary)
+    setCookie('Raddlly_custom_secondary', nextCustomSecondary)
 
     // Save to Supabase User Metadata (persisted across devices & sessions without localStorage)
     const supabase = createClient()

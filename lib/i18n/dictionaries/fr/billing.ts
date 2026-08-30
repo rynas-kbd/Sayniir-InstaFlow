@@ -1,6 +1,6 @@
 export const billing = {
   cardTitle: 'Abonnement',
-  cardDescription: 'Gérez votre abonnement Instaflow.',
+  cardDescription: 'Gérez votre abonnement Raddlly.',
   statusLabel: 'Statut',
   statusActive: 'Actif',
   statusExpired: 'Expiré',

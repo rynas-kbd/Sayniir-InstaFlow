@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   let csvText: string
   try {
     const res = await fetch(csvUrl, {
-      headers: { 'User-Agent': 'InstaFlow-Preview/1.0' },
+      headers: { 'User-Agent': 'Raddlly-Preview/1.0' },
     })
     if (!res.ok) {
       throw new Error(

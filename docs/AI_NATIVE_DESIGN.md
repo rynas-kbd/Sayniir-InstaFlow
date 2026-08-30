@@ -1,18 +1,18 @@
 # IA native — Spec de conception produit
 
 **Statut :** proposition de conception, aucun code livré par ce document.
-**Portée :** repenser Instaflow (repo `Manychats`, package `sayniir`) pour que l'intelligence soit une propriété du logiciel entier, pas une fonctionnalité.
+**Portée :** repenser Raddlly (repo `Manychats`, package `sayniir`) pour que l'intelligence soit une propriété du logiciel entier, pas une fonctionnalité.
 **Auteurs de la démarche :** analyse du code existant (`lib/agent/*`, `lib/flows/*`, `lib/plans/*`, schéma Supabase, design system) + décisions produit validées avec le fondateur.
 
 ---
 
 ## 0. Où on part réellement
 
-Instaflow a déjà un moteur LLM multi-provider **fonctionnel et en production** : `lib/agent/engine.ts` (`callAgentLLM<T>`) supporte Gemini, Groq, OpenAI, Anthropic, OpenRouter en fetch brut, JSON strict, avec retry sur 429/503. Il est appelé par le routeur métier (`lib/agent/router.ts`) selon la verticale (coaching, agency, ecommerce) et par le nœud de flow `ai_reply` (`lib/flows/nodes.ts`).
+Raddlly a déjà un moteur LLM multi-provider **fonctionnel et en production** : `lib/agent/engine.ts` (`callAgentLLM<T>`) supporte Gemini, Groq, OpenAI, Anthropic, OpenRouter en fetch brut, JSON strict, avec retry sur 429/503. Il est appelé par le routeur métier (`lib/agent/router.ts`) selon la verticale (coaching, agency, ecommerce) et par le nœud de flow `ai_reply` (`lib/flows/nodes.ts`).
 
 Mais ce moteur sert **le bot du client final** — il répond aux DM des prospects du tenant, avec la clé API du tenant (`agent_settings.ai_api_key`, chiffrée AES-GCM via `lib/crypto.ts`). Sa seule interface de configuration, `components/boutique/agent-settings-card.tsx`, est enfouie sous `/boutique → Config IA`, invisible pour les verticales `coaching` et `agency` qui utilisent pourtant la même table `agent_settings`.
 
-**Ce qui n'existe pas :** aucune IA tournée vers l'utilisateur d'Instaflow lui-même. Pas de suggestion dans l'inbox, pas de diagnostic de flow, pas de rédaction assistée, pas de copilote, pas de mémoire produit, pas de digest. `grep` sur "suggest" dans le repo ne retourne rien.
+**Ce qui n'existe pas :** aucune IA tournée vers l'utilisateur d'Raddlly lui-même. Pas de suggestion dans l'inbox, pas de diagnostic de flow, pas de rédaction assistée, pas de copilote, pas de mémoire produit, pas de digest. `grep` sur "suggest" dans le repo ne retourne rien.
 
 **Deux bugs réels trouvés pendant l'audit**, à corriger avant toute IA orientée produit — sinon un copilote les amplifie :
 
@@ -450,7 +450,7 @@ Le périmètre MVP demandé (déterministe + copilote + inbox) correspond aux ph
 
 ## 10. Différenciation vs ManyChat
 
-| Capacité | ManyChat | Instaflow (cette conception) |
+| Capacité | ManyChat | Raddlly (cette conception) |
 |---|---|---|
 | Génération de texte IA | Oui (réponses, contenu) | Oui, mais secondaire |
 | Diagnostic structurel des automatisations (branches mortes, boucles, délais aberrants) | Non | Oui — coût nul, §5.1 |
@@ -460,7 +460,7 @@ Le périmètre MVP demandé (déterministe + copilote + inbox) correspond aux ph
 | Digest proactif quotidien | Non | Oui, §8.6 |
 | Explication causale d'une métrique qui bouge | Non | Oui, §2 `/analytics` |
 
-La différenciation n'est pas « plus d'IA » — ManyChat a de la génération de texte. C'est que l'IA d'Instaflow **agit sur la structure du produit** (flows, campagnes, conformité) plutôt que sur la seule couche de contenu, et qu'elle se manifeste sans jamais demander à l'utilisateur d'aller la chercher.
+La différenciation n'est pas « plus d'IA » — ManyChat a de la génération de texte. C'est que l'IA d'Raddlly **agit sur la structure du produit** (flows, campagnes, conformité) plutôt que sur la seule couche de contenu, et qu'elle se manifeste sans jamais demander à l'utilisateur d'aller la chercher.
 
 ---
 

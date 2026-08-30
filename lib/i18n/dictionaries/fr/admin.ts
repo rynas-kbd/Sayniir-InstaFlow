@@ -32,9 +32,9 @@ export const admin = {
   },
   dashboard: {
     title: 'Vue d’ensemble',
-    description: 'Gestion globale des clients Instaflow.',
+    description: 'Gestion globale des clients Raddlly.',
     badge: 'Espace administrateur',
-    panelTitle: 'Panel de gestion Instaflow',
+    panelTitle: 'Panel de gestion Raddlly',
     panelDescription: "Suivez les abonnements clients et gérez les accès en un coup d'œil.",
     subscriptionsSectionTitle: 'Abonnements',
     statTotalClients: 'Total clients',

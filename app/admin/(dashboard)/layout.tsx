@@ -34,7 +34,7 @@ export default async function AdminLayout({
             drawer/sheet component. */}
         <div className="flex items-center justify-between gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 md:hidden">
           <Link href="/admin" className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground">
-            Instaflow
+            Raddlly
             <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{t('admin.layout.badge')}</span>
           </Link>
           <nav className="flex items-center gap-1">
@@ -50,7 +50,7 @@ export default async function AdminLayout({
             href="/admin"
             className="mb-5 flex h-8 items-center gap-2 rounded-md px-2 text-[13px] font-semibold tracking-tight text-sidebar-foreground hover:bg-sidebar-accent/60"
           >
-            Instaflow
+            Raddlly
             <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{t('admin.layout.badge')}</span>
           </Link>
 

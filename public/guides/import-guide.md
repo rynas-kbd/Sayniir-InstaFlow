@@ -122,4 +122,4 @@ R: Non, vous devez cliquer sur "Synchroniser" pour mettre à jour le catalogue d
 
 ## Support
 
-Besoin d'aide ? Contactez-nous sur support@instaflow.com ou consultez notre [documentation complète](https://docs.instaflow.com).
+Besoin d'aide ? Contactez-nous sur support@Raddlly.com ou consultez notre [documentation complète](https://docs.Raddlly.com).

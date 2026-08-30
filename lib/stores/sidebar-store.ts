@@ -12,6 +12,6 @@ export const useSidebarStore = create<SidebarState>()(
       collapsed: false,
       toggle: () => set((state) => ({ collapsed: !state.collapsed })),
     }),
-    { name: 'instaflow-sidebar' }
+    { name: 'Raddlly-sidebar' }
   )
 )

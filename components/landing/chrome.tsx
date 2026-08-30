@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
+import { RaddllyLogo } from '@/components/raddlly-logo'
 
 const NAV_LINKS = [
   { href: '#product', label: 'Produit' },
@@ -38,21 +39,20 @@ export function LandingNav() {
       />
 
       <motion.nav
-        className="sticky top-0 z-30 flex items-center justify-between gap-6"
+        className="sticky top-0 z-30 flex items-center justify-between gap-6 relative"
         animate={{
           paddingTop: scrolled ? '10px' : '15px',
           paddingBottom: scrolled ? '10px' : '15px',
-          boxShadow: scrolled ? '0 8px 30px rgba(0,0,0,.04)' : '0 0 0 rgba(0,0,0,0)',
         }}
         transition={{ duration: 0.28, ease: 'easeOut' }}
         style={{
-          backdropFilter: 'blur(18px) saturate(1.6)',
-          background: 'color-mix(in srgb, var(--organic-bg) 88%, transparent)',
-          borderBottom: '1.5px solid color-mix(in srgb, var(--organic-text) 7%, transparent)',
+          background: 'transparent',
           paddingLeft: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
           paddingRight: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
         }}
       >
+        {/* Short centered thin line at the bottom */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 lg:w-72 h-[1px] bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--organic-text)_25%,transparent)] to-transparent pointer-events-none" />
         {/* Clickable logo */}
         <motion.div
           whileHover={{ scale: 1.03 }}
@@ -60,10 +60,7 @@ export function LandingNav() {
         >
           <Link
             href="/"
-            className="lp-brand font-heading text-xl font-bold tracking-tight no-underline block"
-            style={{
-              color: 'var(--organic-text)',
-            }}
+            className="no-underline block"
             onClick={(e) => {
               // If already on the landing page, smooth scroll to top instead of hard nav
               if (window.location.pathname === '/') {
@@ -72,7 +69,11 @@ export function LandingNav() {
               }
             }}
           >
-            Instaflow
+            <RaddllyLogo
+              iconSize={30}
+              showWordmark
+              wordmarkClassName="text-[var(--organic-text)]"
+            />
           </Link>
         </motion.div>
 
@@ -222,7 +223,7 @@ export function LandingNav() {
         }}
       >
         <div className="flex flex-col pl-1">
-          <span className="font-heading text-xs font-extrabold tracking-tight" style={{ color: 'var(--organic-text)' }}>Instaflow</span>
+          <span className="font-heading text-xs font-extrabold tracking-tight" style={{ color: 'var(--organic-text)' }}>Raddlly</span>
           <span className="text-[10.5px] font-medium" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>Essai gratuit · En ligne en 10m</span>
         </div>
         <motion.div whileTap={{ scale: 0.94 }} whileHover={{ scale: 1.04 }}>
@@ -253,7 +254,7 @@ export function LandingFooter() {
             className="font-heading text-2xl font-extrabold tracking-tight no-underline"
             style={{ color: 'var(--organic-text)' }}
           >
-            Instaflow<span style={{ color: 'var(--organic-terracotta)' }}>.</span>
+            Raddlly<span style={{ color: 'var(--organic-terracotta)' }}>.</span>
           </Link>
           <p className="text-[13.5px] leading-[1.65] max-w-[28ch]" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
             L&apos;IA conversationnelle multi-canal qui vend dans vos DM Instagram, WhatsApp et Messenger 24/7.
@@ -310,7 +311,7 @@ export function LandingFooter() {
           className="font-heading font-black text-[clamp(64px,14vw,160px)] leading-none tracking-tighter uppercase opacity-[0.04]"
           style={{ color: 'var(--organic-text)' }}
         >
-          Instaflow
+          Raddlly
         </span>
       </div>
 
@@ -320,7 +321,7 @@ export function LandingFooter() {
         style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 8%, transparent)' }}
       >
         <span className="text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
-          © 2026 Instaflow Inc. Tous droits réservés.
+          © 2026 Raddlly Inc. Tous droits réservés.
         </span>
 
         <div className="flex items-center gap-4 text-[12.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}>

@@ -26,7 +26,7 @@ export function Navbar() {
           <div className="flex size-6 items-center justify-center rounded-md bg-primary">
             <MessageCircle className="size-3.5 text-primary-foreground" strokeWidth={2.5} />
           </div>
-          <span className="text-sm font-semibold tracking-tight">Instaflow</span>
+          <span className="text-sm font-semibold tracking-tight">Raddlly</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -73,7 +73,7 @@ export function Navbar() {
                 <div className="flex size-6 items-center justify-center rounded-md bg-primary">
                   <MessageCircle className="size-3.5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
-                <span className="text-sm font-semibold tracking-tight">Instaflow</span>
+                <span className="text-sm font-semibold tracking-tight">Raddlly</span>
               </SheetTitle>
             </SheetHeader>
 

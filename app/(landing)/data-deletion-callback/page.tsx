@@ -1,7 +1,7 @@
 import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 
 export const metadata = {
-  title: 'Suppression de données Facebook | InstaFlow',
+  title: 'Suppression de données Facebook | Raddlly',
   description: 'Demande de suppression des données liées à votre connexion Facebook/Messenger.',
 }
 
@@ -17,7 +17,7 @@ export default function DataDeletionCallbackPage() {
       <div className="mx-auto max-w-2xl px-6 py-16">
         <h1 className="mb-4 text-3xl font-bold">Suppression de données Facebook</h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          Si vous avez utilisé InstaFlow via Facebook Messenger et souhaitez que nous supprimions les données liées à cette
+          Si vous avez utilisé Raddlly via Facebook Messenger et souhaitez que nous supprimions les données liées à cette
           intégration (compte Messenger connecté, jetons d&apos;accès, historique de conversations), envoyez-nous votre demande
           directement.
         </p>

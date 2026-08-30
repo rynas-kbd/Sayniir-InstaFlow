@@ -29,7 +29,7 @@ export function Footer() {
               <div className="flex size-6 items-center justify-center rounded-md bg-primary">
                 <MessageCircle className="size-3.5 text-primary-foreground" strokeWidth={2.5} />
               </div>
-              <span className="text-sm font-semibold tracking-tight">Instaflow</span>
+              <span className="text-sm font-semibold tracking-tight">Raddlly</span>
             </Link>
             <p className="mt-3 max-w-xs text-sm text-muted-foreground">
               Automatisation conversationnelle pour Instagram, Messenger et WhatsApp.
@@ -53,7 +53,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} Instaflow</span>
+          <span>© {new Date().getFullYear()} Raddlly</span>
           <span>Instagram · Messenger · WhatsApp</span>
         </div>
       </div>

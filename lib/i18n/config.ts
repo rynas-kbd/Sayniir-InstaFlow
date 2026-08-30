@@ -14,7 +14,7 @@ export const DEFAULT_LOCALE: Locale = 'fr'
 
 export const RTL_LOCALES: readonly Locale[] = ['ar']
 
-export const LOCALE_COOKIE = 'instaflow_locale'
+export const LOCALE_COOKIE = 'Raddlly_locale'
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   fr: 'Français',
@@ -33,7 +33,7 @@ export function getDir(locale: Locale): 'rtl' | 'ltr' {
 /**
  * Parse an `Accept-Language` header and return the best-matching supported
  * locale, falling back to `DEFAULT_LOCALE`. Used by `proxy.ts` on first
- * visit, before any `instaflow_locale` cookie exists.
+ * visit, before any `Raddlly_locale` cookie exists.
  */
 export function matchLocaleFromAcceptLanguage(header: string | null): Locale {
   if (!header) return DEFAULT_LOCALE

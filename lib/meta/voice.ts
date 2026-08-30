@@ -131,7 +131,7 @@ export async function processVoiceWithGemini(
   }
 
   const prompt = `
-Tu es l'assistant d'automatisation vocale pour l'application Instaflow (solution SaaS d'automatisation Instagram).
+Tu es l'assistant d'automatisation vocale pour l'application Raddlly (solution SaaS d'automatisation Instagram).
 Un utilisateur Instagram a envoyé un message vocal. Cet utilisateur parle probablement en arabe algérien (Darija), en Kabyle (Berber), en français ou dans un mélange de ces langues.
 
 Tâche :
@@ -160,7 +160,7 @@ Renvoie UNIQUEMENT un objet JSON respectant précisément le schéma suivant :
   if (groqApiKey) {
     try {
       console.log('[Voice] Using Groq (Whisper-large-v3 + Llama-3.3-70b)...')
-      
+
       // A. Transcribe with Whisper
       const WHISPER_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
       const formData = new FormData()
@@ -187,7 +187,7 @@ Renvoie UNIQUEMENT un objet JSON respectant précisément le schéma suivant :
 
       // B. Process transcription semantic rules using Llama
       const groqPrompt = `
-Tu es l'assistant d'automatisation vocale pour l'application Instaflow (solution SaaS d'automatisation Instagram).
+Tu es l'assistant d'automatisation vocale pour l'application Raddlly (solution SaaS d'automatisation Instagram).
 Un utilisateur Instagram a envoyé un message vocal qui a été transcrit automatiquement.
 La transcription obtenue est : "${textTranscription}"
 

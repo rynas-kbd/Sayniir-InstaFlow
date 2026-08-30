@@ -24,7 +24,7 @@ export function AuthCard({
             <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/30">
               <MessageCircle className="size-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
-            <p className="text-[15px] font-semibold tracking-tight text-foreground">Instaflow</p>
+            <p className="text-[15px] font-semibold tracking-tight text-foreground">Raddlly</p>
             <p className="mt-1 text-[13px] text-muted-foreground">{tagline}</p>
           </div>
           {children}

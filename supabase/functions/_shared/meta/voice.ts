@@ -80,7 +80,7 @@ const WHISPER_PROMPT =
 // Local sanitizer for Deno runtime (same rules as Node util) 
 function sanitizeForByteStringLocal(input: string): string {
   if (!input) return input
-  try { input = input.normalize('NFC') } catch (e) {}
+  try { input = input.normalize('NFC') } catch (e) { }
   input = input.replace(/[\u2022\u2023\u25E6\u2043]/g, '-')
   input = input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
   input = input.split('\n').map(line => line.trimEnd()).join('\n')
@@ -89,7 +89,7 @@ function sanitizeForByteStringLocal(input: string): string {
 
 function buildLlmPrompt(transcription: string, rules: unknown[]): string {
   return `
-Tu es l'assistant d'automatisation pour Instaflow (SaaS d'automatisation Instagram).
+Tu es l'assistant d'automatisation pour Raddlly (SaaS d'automatisation Instagram).
 Un utilisateur a envoyé un message vocal depuis Instagram. La transcription automatique est :
 "${transcription}"
 
@@ -122,7 +122,7 @@ Retourne UNIQUEMENT ce JSON valide :
 
 function buildGeminiPrompt(rules: unknown[]): string {
   return `
-Tu es l'assistant d'automatisation pour Instaflow (SaaS d'automatisation Instagram).
+Tu es l'assistant d'automatisation pour Raddlly (SaaS d'automatisation Instagram).
 Un utilisateur Instagram a envoyé un message vocal. Il parle probablement en darija algérienne, kabyle, français, ou un mélange.
 
 La darija utilise des mots comme : wesh, zebi, sahbi, bezzaf, labas, mzyan, khoya, ndir, rani, wlah, makanch, daba, kifah, chkoun, etc.

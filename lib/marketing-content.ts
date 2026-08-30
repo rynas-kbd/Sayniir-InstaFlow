@@ -45,9 +45,9 @@ export const SOCIAL_PROOF = [
 ]
 
 export const SCREENSHOTS = [
-  { src: '/screenshots/dashboard.png', alt: 'Tableau de bord Instaflow' },
-  { src: '/screenshots/flow-builder.png', alt: 'Constructeur de flows Instaflow' },
-  { src: '/screenshots/inbox.png', alt: 'Inbox unifié Instaflow' },
+  { src: '/screenshots/dashboard.png', alt: 'Tableau de bord Raddlly' },
+  { src: '/screenshots/flow-builder.png', alt: 'Constructeur de flows Raddlly' },
+  { src: '/screenshots/inbox.png', alt: 'Inbox unifié Raddlly' },
 ]
 
 // Dérivé de lib/plans.ts::PLAN_CONFIG — celui-ci est la seule source de
@@ -79,7 +79,7 @@ export const FAQ_ITEMS = [
     theme: 'Sécurité',
     question: 'Est-ce autorisé par Instagram et Meta ? Je risque un ban ?',
     answer:
-      "Instaflow utilise exclusivement les API officielles de Meta (Instagram Messaging API, Messenger Platform, WhatsApp Business API). Aucun scraping ni automatisation non-officielle : votre compte reste conforme aux règles de la plateforme.",
+      "Raddlly utilise exclusivement les API officielles de Meta (Instagram Messaging API, Messenger Platform, WhatsApp Business API). Aucun scraping ni automatisation non-officielle : votre compte reste conforme aux règles de la plateforme.",
   },
   {
     theme: 'Fonctionnement',
@@ -95,9 +95,9 @@ export const FAQ_ITEMS = [
   },
   {
     theme: 'Sécurité',
-    question: "Qu'est-ce que la fenêtre de messagerie de 24h et comment Instaflow la gère ?",
+    question: "Qu'est-ce que la fenêtre de messagerie de 24h et comment Raddlly la gère ?",
     answer:
-      "Meta limite l'envoi de messages hors conversation à une fenêtre de 24h après le dernier message du contact. Instaflow respecte automatiquement cette règle pour vos flows et campagnes, sans action de votre part.",
+      "Meta limite l'envoi de messages hors conversation à une fenêtre de 24h après le dernier message du contact. Raddlly respecte automatiquement cette règle pour vos flows et campagnes, sans action de votre part.",
   },
   {
     theme: 'Facturation',

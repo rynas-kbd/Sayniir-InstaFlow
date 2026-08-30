@@ -47,16 +47,8 @@ export function Hero() {
     <motion.section
       ref={heroRef}
       style={{ opacity: heroOpacity, y: heroY }}
-      className="relative flex flex-col items-center justify-center text-center min-h-[calc(100vh-80px)] px-6"
+      className="relative flex flex-col items-center justify-center text-center min-h-[calc(100vh-80px)] px-6 overflow-hidden my-4"
     >
-      {/* Subtle radial glow */}
-      <div
-        className="pointer-events-none absolute inset-0 z-[-1]"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 40% at 50% 55%, color-mix(in srgb, var(--organic-sage-300) 14%, transparent), transparent)',
-        }}
-      />
 
       {/* Heading */}
       <motion.h1
@@ -117,6 +109,35 @@ export function Hero() {
       >
         Sans carte de crédit · +38% de conversions DM en moyenne
       </motion.p>
+
+      {/* Animated Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="absolute bottom-4 flex flex-col items-center gap-2 cursor-pointer group"
+        onClick={() => {
+          document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })
+        }}
+      >
+        <span
+          className="text-[11.5px] font-semibold tracking-wide transition-colors group-hover:text-[var(--organic-terracotta)]"
+          style={{ color: 'color-mix(in srgb, var(--organic-text) 52%, transparent)' }}
+        >
+          Défilez pour découvrir la démo
+        </span>
+        <div
+          className="w-5 h-8 rounded-full border-[1.5px] flex justify-center pt-1.5 transition-colors group-hover:border-[var(--organic-terracotta)]"
+          style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 25%, transparent)' }}
+        >
+          <motion.div
+            className="w-1 h-2 rounded-full"
+            style={{ background: 'var(--organic-terracotta)' }}
+            animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+      </motion.div>
     </motion.section>
   )
 }

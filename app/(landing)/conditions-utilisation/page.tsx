@@ -1,8 +1,8 @@
 import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 
 export const metadata = {
-  title: "Conditions d'utilisation | InstaFlow",
-  description: "Conditions générales d'utilisation de InstaFlow - Les règles et conditions pour utiliser notre plateforme.",
+  title: "Conditions d'utilisation | Raddlly",
+  description: "Conditions générales d'utilisation de Raddlly - Les règles et conditions pour utiliser notre plateforme.",
 }
 
 export default function ConditionsUtilisationPage() {
@@ -17,12 +17,12 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">1. Acceptation des conditions</h2>
             <p className="mb-4">
-              En accédant et en utilisant InstaFlow (&quot;la Plateforme&quot;, &quot;le Service&quot;), vous acceptez d'être lié par ces 
-              conditions générales d'utilisation (&quot;CGU&quot;). Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser 
+              En accédant et en utilisant Raddlly (&quot;la Plateforme&quot;, &quot;le Service&quot;), vous acceptez d'être lié par ces
+              conditions générales d'utilisation (&quot;CGU&quot;). Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser
               notre service.
             </p>
             <p className="mb-4">
-              Ces CGU constituent un accord juridiquement contraignant entre vous (&quot;Utilisateur&quot;, &quot;vous&quot;) et InstaFlow 
+              Ces CGU constituent un accord juridiquement contraignant entre vous (&quot;Utilisateur&quot;, &quot;vous&quot;) et Raddlly
               (&quot;nous&quot;, &quot;notre&quot;, &quot;la Société&quot;).
             </p>
           </section>
@@ -30,7 +30,7 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">2. Description du service</h2>
             <p className="mb-4">
-              InstaFlow est une plateforme SaaS de marketing conversationnel et d'automatisation qui permet aux entreprises de :
+              Raddlly est une plateforme SaaS de marketing conversationnel et d'automatisation qui permet aux entreprises de :
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>Créer et gérer des conversations automatisées sur plusieurs canaux (Messenger, Instagram, WhatsApp, SMS)</li>
@@ -72,7 +72,7 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">4. Abonnements et paiements</h2>
             <h3 className="text-xl font-medium mb-3">4.1 Plans tarifaires</h3>
             <p className="mb-4">
-              InstaFlow propose différents plans tarifaires avec des fonctionnalités et limites variées. 
+              Raddlly propose différents plans tarifaires avec des fonctionnalités et limites variées.
               Les prix et fonctionnalités sont disponibles sur notre page de tarification et peuvent être modifiés avec un préavis de 30 jours.
             </p>
 
@@ -86,7 +86,7 @@ export default function ConditionsUtilisationPage() {
 
             <h3 className="text-xl font-medium mb-3">4.3 Renouvellement automatique</h3>
             <p className="mb-4">
-              Votre abonnement se renouvelle automatiquement à la fin de chaque période de facturation, 
+              Votre abonnement se renouvelle automatiquement à la fin de chaque période de facturation,
               sauf si vous annulez avant la date de renouvellement. Vous pouvez annuler à tout moment depuis votre compte.
             </p>
 
@@ -103,7 +103,7 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">5. Utilisation acceptable</h2>
             <h3 className="text-xl font-medium mb-3">5.1 Usages autorisés</h3>
             <p className="mb-4">
-              Vous pouvez utiliser InstaFlow pour des activités commerciales légitimes de marketing, ventes et support client.
+              Vous pouvez utiliser Raddlly pour des activités commerciales légitimes de marketing, ventes et support client.
             </p>
 
             <h3 className="text-xl font-medium mb-3">5.2 Usages interdits</h3>
@@ -126,19 +126,19 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">6. Contenu utilisateur</h2>
             <h3 className="text-xl font-medium mb-3">6.1 Propriété</h3>
             <p className="mb-4">
-              Vous conservez tous les droits sur le contenu que vous créez et partagez via InstaFlow 
+              Vous conservez tous les droits sur le contenu que vous créez et partagez via Raddlly
               (messages, flux, campagnes, médias, etc.).
             </p>
 
             <h3 className="text-xl font-medium mb-3">6.2 Licence accordée</h3>
             <p className="mb-4">
-              En utilisant le Service, vous nous accordez une licence mondiale, non exclusive, libre de redevances 
+              En utilisant le Service, vous nous accordez une licence mondiale, non exclusive, libre de redevances
               pour héberger, stocker, traiter et afficher votre contenu uniquement dans le but de fournir le Service.
             </p>
 
             <h3 className="text-xl font-medium mb-3">6.3 Responsabilité</h3>
             <p className="mb-4">
-              Vous êtes seul responsable de votre contenu et devez vous assurer qu'il respecte toutes les lois applicables, 
+              Vous êtes seul responsable de votre contenu et devez vous assurer qu'il respecte toutes les lois applicables,
               ces CGU et les politiques des plateformes tierces (Facebook, Instagram, WhatsApp).
             </p>
           </section>
@@ -146,7 +146,7 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">7. Propriété intellectuelle</h2>
             <p className="mb-4">
-              InstaFlow et tous ses éléments (code, design, logos, marques, documentation) sont notre propriété exclusive 
+              Raddlly et tous ses éléments (code, design, logos, marques, documentation) sont notre propriété exclusive
               ou celle de nos concédants de licence. Vous ne pouvez pas :
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
@@ -159,7 +159,7 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">8. Intégrations tierces</h2>
             <p className="mb-4">
-              InstaFlow s'intègre avec des services tiers (Facebook, Instagram, WhatsApp, Shopify, etc.). 
+              Raddlly s'intègre avec des services tiers (Facebook, Instagram, WhatsApp, Shopify, etc.).
               Votre utilisation de ces intégrations est également soumise aux conditions d'utilisation de ces plateformes.
             </p>
             <p className="mb-4">
@@ -171,8 +171,8 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">9. Garanties et responsabilité</h2>
             <h3 className="text-xl font-medium mb-3">9.1 Disponibilité du service</h3>
             <p className="mb-4">
-              Nous nous efforçons de maintenir une disponibilité élevée du Service, mais nous ne garantissons pas 
-              un fonctionnement ininterrompu ou sans erreur. Nous pouvons suspendre le Service pour maintenance 
+              Nous nous efforçons de maintenir une disponibilité élevée du Service, mais nous ne garantissons pas
+              un fonctionnement ininterrompu ou sans erreur. Nous pouvons suspendre le Service pour maintenance
               avec ou sans préavis.
             </p>
 
@@ -189,7 +189,7 @@ export default function ConditionsUtilisationPage() {
 
             <h3 className="text-xl font-medium mb-3">9.3 Indemnisation</h3>
             <p className="mb-4">
-              Vous acceptez de nous indemniser contre toute réclamation, perte ou dommage résultant de 
+              Vous acceptez de nous indemniser contre toute réclamation, perte ou dommage résultant de
               votre utilisation du Service, de votre violation de ces CGU ou de votre violation des droits de tiers.
             </p>
           </section>
@@ -198,7 +198,7 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">10. Suspension et résiliation</h2>
             <h3 className="text-xl font-medium mb-3">10.1 Par vous</h3>
             <p className="mb-4">
-              Vous pouvez résilier votre compte à tout moment depuis les paramètres. 
+              Vous pouvez résilier votre compte à tout moment depuis les paramètres.
               La résiliation prend effet à la fin de votre période de facturation en cours.
             </p>
 
@@ -228,8 +228,8 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">11. Modifications des CGU</h2>
             <p className="mb-4">
-              Nous pouvons modifier ces CGU à tout moment. Les modifications significatives vous seront notifiées 
-              par email ou via une notification sur la Plateforme au moins 30 jours à l'avance. 
+              Nous pouvons modifier ces CGU à tout moment. Les modifications significatives vous seront notifiées
+              par email ou via une notification sur la Plateforme au moins 30 jours à l'avance.
               Votre utilisation continue du Service après l'entrée en vigueur des modifications constitue votre acceptation.
             </p>
           </section>
@@ -237,7 +237,7 @@ export default function ConditionsUtilisationPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">12. Loi applicable et juridiction</h2>
             <p className="mb-4">
-              Ces CGU sont régies par le droit français. Tout litige sera soumis à la juridiction exclusive 
+              Ces CGU sont régies par le droit français. Tout litige sera soumis à la juridiction exclusive
               des tribunaux de Paris, France, sauf disposition légale contraire.
             </p>
           </section>
@@ -246,7 +246,7 @@ export default function ConditionsUtilisationPage() {
             <h2 className="text-2xl font-semibold mb-4">13. Dispositions générales</h2>
             <h3 className="text-xl font-medium mb-3">13.1 Intégralité de l'accord</h3>
             <p className="mb-4">
-              Ces CGU, avec notre Politique de confidentialité, constituent l'intégralité de l'accord entre vous et InstaFlow.
+              Ces CGU, avec notre Politique de confidentialité, constituent l'intégralité de l'accord entre vous et Raddlly.
             </p>
 
             <h3 className="text-xl font-medium mb-3">13.2 Divisibilité</h3>
@@ -261,7 +261,7 @@ export default function ConditionsUtilisationPage() {
 
             <h3 className="text-xl font-medium mb-3">13.4 Cession</h3>
             <p className="mb-4">
-              Vous ne pouvez pas céder ces CGU sans notre consentement écrit. 
+              Vous ne pouvez pas céder ces CGU sans notre consentement écrit.
               Nous pouvons céder ces CGU sans restriction.
             </p>
           </section>
@@ -274,7 +274,7 @@ export default function ConditionsUtilisationPage() {
             <ul className="list-none pl-0 mb-4 space-y-2">
               <li><strong>Email :</strong> <a href="mailto:rynaskebdi.pro@gmail.com" className="text-primary hover:underline">rynaskebdi.pro@gmail.com</a></li>
               <li><strong>Support :</strong> <a href="mailto:rynaskebdi.pro@gmail.com" className="text-primary hover:underline">rynaskebdi.pro@gmail.com</a></li>
-              <li><strong>Adresse :</strong> InstaFlow, [Adresse complète]</li>
+              <li><strong>Adresse :</strong> Raddlly, [Adresse complète]</li>
             </ul>
           </section>
         </div>

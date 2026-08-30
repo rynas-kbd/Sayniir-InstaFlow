@@ -178,8 +178,8 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://instaflow.io',
-        'X-Title': 'Instaflow',
+        'HTTP-Referer': 'https://Raddlly.io',
+        'X-Title': 'Raddlly',
       },
       body: JSON.stringify({
         model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
@@ -242,19 +242,19 @@ async function dispatchLLM<T>(prompt: string, aiProvider?: string | null, aiApiK
     (provider === 'gemini'
       ? process.env.GEMINI_API_KEY
       : provider === 'groq'
-      ? process.env.GROQ_API_KEY
-      : provider === 'openrouter'
-      ? process.env.OPENROUTER_API_KEY
-      : null)
+        ? process.env.GROQ_API_KEY
+        : provider === 'openrouter'
+          ? process.env.OPENROUTER_API_KEY
+          : null)
   const model =
     aiModel ||
     (provider === 'gemini'
       ? 'gemini-2.0-flash'
       : provider === 'groq'
-      ? 'llama-3.3-70b-versatile'
-      : provider === 'openrouter'
-      ? 'nvidia/nemotron-3-ultra-550b-a55b:free'
-      : '')
+        ? 'llama-3.3-70b-versatile'
+        : provider === 'openrouter'
+          ? 'nvidia/nemotron-3-ultra-550b-a55b:free'
+          : '')
 
   if (!apiKey) {
     // Fallback order mirrors the new default: gemini → groq → openrouter.

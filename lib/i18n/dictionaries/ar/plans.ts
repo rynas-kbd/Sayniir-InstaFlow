@@ -1,7 +1,7 @@
 export const plans = {
   free: {
     label: 'مجاني',
-    description: 'لاكتشاف Instaflow قبل الانطلاق.',
+    description: 'لاكتشاف Raddlly قبل الانطلاق.',
     features: ['1000 جهة اتصال', 'أداة بناء سير العمل المرئية', 'ردود ذكاء اصطناعي أساسية (100/شهريًا)', 'جمع العملاء المحتملين'],
   },
   starter: {

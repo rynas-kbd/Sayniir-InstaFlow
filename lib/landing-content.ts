@@ -11,11 +11,11 @@ export interface FlowNode {
 }
 
 export const FLOW_NODES: FlowNode[] = [
-  { id: 'trigger', label: 'Déclencheur', sub: 'Le DM montre une intention d\'achat', x: 20, y: 60, tone: 'a', desc: 'Se déclenche quand un nouveau DM Instagram correspond à l\'intention visée — pas de liste de mots-clés, l\'IA comprend le sens.' },
-  { id: 'ai', label: 'Réponse IA', sub: 'Formée sur votre marque', x: 240, y: 20, tone: 'a', desc: 'Répond avec votre voix et les données produit en temps réel. Vous validez le ton une fois ; il le garde.' },
-  { id: 'qualify', label: 'Qualifier', sub: 'Prêt à acheter ?', x: 240, y: 200, tone: 's', desc: 'Note la conversation. Une forte intention passe à la capture ; tout ce qui sort de l\'ordinaire part vers un humain.' },
-  { id: 'capture', label: 'Capturer le lead', sub: 'Email → CRM', x: 460, y: 140, tone: 'a', desc: 'Demande l\'email naturellement et le synchronise vers votre CRM avec la transcription complète.' },
-  { id: 'handoff', label: 'Relais humain', sub: 'Vers la boîte partagée', x: 460, y: 296, tone: 's', desc: 'Un clic transfère la conversation vers l\'inbox de votre équipe avec un contexte déjà rédigé par l\'IA.' },
+  { id: 'trigger', label: 'Déclencheur', sub: 'DM avec intention d\'achat', x: 20, y: 60, tone: 'a', desc: 'Se déclenche lorsqu\'un DM Instagram montre une intention d\'achat sans dépendre de mots-clés rigides.' },
+  { id: 'ai', label: 'Réponse IA', sub: 'Formée sur vos produits', x: 240, y: 20, tone: 'a', desc: 'Répond avec le ton de votre marque et vos stocks en temps réel. Vous validez le ton une fois pour toutes.' },
+  { id: 'qualify', label: 'Qualifier', sub: 'Acheteur chaud ?', x: 240, y: 200, tone: 's', desc: 'Analyse le comportement du prospect. L\'intention élevée passe à la capture email ; le reste va à un humain.' },
+  { id: 'capture', label: 'Capturer le lead', sub: 'Email → CRM', x: 460, y: 140, tone: 'a', desc: 'Demande l\'email naturellement et l\'envoie directement vers votre CRM avec l\'historique du dialogue.' },
+  { id: 'handoff', label: 'Relais humain', sub: 'Inbox d\'équipe', x: 460, y: 296, tone: 's', desc: 'Transfère la conversation dans votre boîte de réception partagée avec un résumé généré par l\'IA.' },
 ]
 
 export interface FlowStep {
@@ -25,12 +25,79 @@ export interface FlowStep {
 }
 
 export const FLOW_STEPS: FlowStep[] = [
-  { node: 'trigger', kind: 'in', text: 'Salut ! C\'est combien le set de mugs en céramique ?' },
-  { node: 'ai', kind: 'out', text: 'Coucou Maya — le lot de quatre est à 44€, livraison offerte cette semaine. Je vous envoie le lien ?' },
-  { node: 'qualify', kind: 'in', text: 'Oui avec plaisir !' },
-  { node: 'capture', kind: 'out', text: 'Envoyé ! Vous voulez un code -10% pour votre prochaine commande ? Donnez-moi juste votre email.' },
+  { node: 'trigger', kind: 'in', text: 'Salut ! Je cherche des mugs en céramique pour un cadeau, vous avez du stock ?' },
+  { node: 'ai', kind: 'out', text: 'Coucou Maya ! 🌿 Oui, le lot de 4 mugs faits main "Terre Brute" est en stock à 44€, livraison offerte cette semaine.' },
+  { node: 'qualify', kind: 'in', text: 'Super ! Et il faut compter combien de temps pour la livraison à Lyon ?' },
+  { node: 'ai', kind: 'out', text: 'Expédié sous 24h, livré mardi chez vous ! Je vous prépare le panier direct ?' },
+  { node: 'qualify', kind: 'in', text: 'Oui carrément, avec plaisir !' },
+  { node: 'capture', kind: 'out', text: 'C\'est parti ! Je vous envoie le lien. Voulez-vous aussi débloquer -10% immédiats sur votre commande ?' },
+  { node: 'capture', kind: 'in', text: 'Ah oui je veux bien merci !' },
+  { node: 'capture', kind: 'out', text: 'Donnez-moi simplement votre email pour activer le code promo :' },
   { node: 'capture', kind: 'in', text: 'maya@homefolk.co' },
-  { node: 'capture', kind: 'sys', text: 'Lead capturé · synchronisé au CRM' },
+  { node: 'capture', kind: 'sys', text: '✅ Lead qualifié & capturé · Code -10% appliqué · Synchro CRM & Shopify' },
+]
+
+export interface Scenario {
+  id: string
+  title: string
+  icon: string
+  subtitle: string
+  userProfile: { name: string; handle: string; channel: string }
+  nodes: FlowNode[]
+  steps: FlowStep[]
+}
+
+export const DEMO_SCENARIOS: Scenario[] = [
+  {
+    id: 'ecommerce',
+    title: 'E-Commerce & Vente Directe',
+    icon: '🛍️',
+    subtitle: 'Recommandation produit & conversion instantanée',
+    userProfile: { name: 'Maya', handle: '@homefolk', channel: 'DM Instagram' },
+    nodes: FLOW_NODES,
+    steps: FLOW_STEPS,
+  },
+  {
+    id: 'booking',
+    title: 'Prise de RDV & Coaching',
+    icon: '📅',
+    subtitle: 'Qualification de prospect & envoi de lien Calendly',
+    userProfile: { name: 'Lucas B.', handle: '@lucas_fit', channel: 'WhatsApp' },
+    nodes: [
+      { id: 'trigger', label: 'Déclencheur', sub: 'Demande de coaching', x: 20, y: 60, tone: 'a', desc: 'Détecte une demande d\'accompagnement sur DM ou story.' },
+      { id: 'ai', label: 'Analyse Besoins', sub: 'IA pose 2 questions', x: 240, y: 20, tone: 'a', desc: 'Identifie le profil et les objectifs du prospect.' },
+      { id: 'qualify', label: 'Filtrer Profil', sub: 'Budget & Disponibilité', x: 240, y: 200, tone: 's', desc: 'Vérifie si le prospect correspond à vos critères d\'accompagnement.' },
+      { id: 'capture', label: 'Lien Réservation', sub: 'Cal.com / Calendly', x: 460, y: 140, tone: 'a', desc: 'Envoie un lien personnalisé avec créneau pré-sélectionné.' },
+      { id: 'handoff', label: 'Relais Prioritaire', sub: 'Avis sur mesure', x: 460, y: 296, tone: 's', desc: 'Notifie le coach sur mobile pour les demandes haut de gamme.' },
+    ],
+    steps: [
+      { node: 'trigger', kind: 'in', text: 'Bonjour ! Avez-vous des créneaux pour un suivi personnalisé ce mois-ci ?' },
+      { node: 'ai', kind: 'out', text: 'Hello Lucas ! Oui absolument. Quel est votre objectif principal (perte de poids, prise de masse ou prépa) ?' },
+      { node: 'qualify', kind: 'in', text: 'Plutôt prépa marathon pour le printemps.' },
+      { node: 'capture', kind: 'out', text: 'Parfait, c\'est notre spécialité ! Voici mon calendrier direct pour réserver votre bilan offert de 15min :' },
+      { node: 'capture', kind: 'sys', text: 'Rendez-vous pré-réservé · Notification envoyée' },
+    ],
+  },
+  {
+    id: 'support',
+    title: 'SAV & FAQ Instantanée',
+    icon: '⚡',
+    subtitle: 'Résolution automatique des questions récurrentes 24/7',
+    userProfile: { name: 'Camille R.', handle: '@cam_r', channel: 'Messenger' },
+    nodes: [
+      { id: 'trigger', label: 'Déclencheur', sub: 'Question suivi / produit', x: 20, y: 60, tone: 'a', desc: 'Reconnaît les questions sur les commandes ou le stock.' },
+      { id: 'ai', label: 'Lookup API', sub: 'Vérification transporteur', x: 240, y: 20, tone: 'a', desc: 'Interroge l\'API Logistique sans temps d\'attente.' },
+      { id: 'qualify', label: 'Statut Colis', sub: 'En transit / Livré', x: 240, y: 200, tone: 's', desc: 'Détermine si le colis requiert une action spécifique.' },
+      { id: 'capture', label: 'Réponse & Lien', sub: 'Numéro de suivi', x: 460, y: 140, tone: 'a', desc: 'Transmet directement le lien Colissimo/DHL actualisé.' },
+      { id: 'handoff', label: 'Litige SAV', sub: 'Transfert agent humain', x: 460, y: 296, tone: 's', desc: 'Ouvre un ticket et alerte l\'équipe SAV en cas de problème de livraison.' },
+    ],
+    steps: [
+      { node: 'trigger', kind: 'in', text: 'Bonjour, où en est ma commande #CMD-8921 ?' },
+      { node: 'ai', kind: 'out', text: 'Bonjour Camille ! Je regarde ça tout de suite avec le service logistique…' },
+      { node: 'capture', kind: 'out', text: 'Votre colis est en cours de livraison Colissimo, arrivée prévue demain avant 13h ! Voici votre lien de suivi :' },
+      { node: 'capture', kind: 'sys', text: 'Ticket résolu à 100% · Satisfaction ⭐⭐⭐⭐⭐' },
+    ],
+  },
 ]
 
 export const LOGO_STRIP = ['Homefolk', 'Sundial', 'Kettle&Co', 'RELAY SOCIAL', 'Moonrise', 'Fable', 'Petal & Stem']
@@ -98,9 +165,9 @@ export const COMPARISON_ROWS: [string, string, string][] = [
 // lib/marketing-content.ts, the single source of truth for pricing.
 
 export const FAQ_ITEMS = [
-{
+  {
     q: 'En quoi est-ce différent des outils type ManyChat ?',
-    a: 'Les outils historiques vous obligent à scripter chaque branche avec des mots-clés. Instaflow part d\'une IA qui comprend déjà votre activité — les flows la guident, ils ne la remplacent pas. Vous construisez en quelques minutes et elle gère les questions que vous n\'avez jamais scriptées.',
+    a: 'Les outils historiques vous obligent à scripter chaque branche avec des mots-clés. Raddlly part d\'une IA qui comprend déjà votre activité — les flows la guident, ils ne la remplacent pas. Vous construisez en quelques minutes et elle gère les questions que vous n\'avez jamais scriptées.',
   },
   {
     q: 'L\'IA va-t-elle vraiment parler comme ma marque ?',

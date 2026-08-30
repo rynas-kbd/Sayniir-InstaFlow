@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@instaflow.app"
+                placeholder="admin@Raddlly.app"
                 required
               />
             </div>

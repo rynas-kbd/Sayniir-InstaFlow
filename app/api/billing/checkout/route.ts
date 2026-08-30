@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     webhookEndpoint: `${process.env.NEXT_PUBLIC_APP_URL ?? origin}/api/webhooks/chargily`,
     customerId: chargilyCustomerId ?? undefined,
     locale: 'fr',
-    description: `Abonnement Instaflow — ${getPlanDisplayFr(plan).label} (${period === 'annual' ? 'annuel' : 'mensuel'})`,
+    description: `Abonnement Raddlly — ${getPlanDisplayFr(plan).label} (${period === 'annual' ? 'annuel' : 'mensuel'})`,
     metadata: { user_id: user.id, plan, period },
   })
 

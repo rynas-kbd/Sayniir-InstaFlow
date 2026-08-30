@@ -26,7 +26,7 @@ export const nav = {
     accounts: 'Accounts',
   },
   sidebar: {
-    logoTitle: 'Instaflow',
+    logoTitle: 'Raddlly',
     collapse: 'Collapse',
     collapseTitle: 'Collapse sidebar',
     expandTitle: 'Expand sidebar',

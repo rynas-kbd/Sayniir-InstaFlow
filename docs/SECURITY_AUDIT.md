@@ -88,10 +88,10 @@ The action IDs are not secret — they're compiled into the client bundle becaus
 
 ```js
 const APP_SECRET = '30e95006ee11b183d4b08890154e90e6'; // META_APP_SECRET
-const VERIFY_TOKEN = 'instaflow_super_secret_token_123'; // META_WEBHOOK_VERIFY_TOKEN
+const VERIFY_TOKEN = 'Raddlly_super_secret_token_123'; // META_WEBHOOK_VERIFY_TOKEN
 ```
 
-Cross-checked against the untracked `.env.local` without printing its contents: **`instaflow_super_secret_token_123` is byte-identical to the current live `META_WEBHOOK_VERIFY_TOKEN`.** The 32-hex-character `APP_SECRET` has exactly the shape of a Meta app secret; whether or not it matches the *current* app, it must be treated as compromised since it's been sitting in a public/shared git history.
+Cross-checked against the untracked `.env.local` without printing its contents: **`Raddlly_super_secret_token_123` is byte-identical to the current live `META_WEBHOOK_VERIFY_TOKEN`.** The 32-hex-character `APP_SECRET` has exactly the shape of a Meta app secret; whether or not it matches the *current* app, it must be treated as compromised since it's been sitting in a public/shared git history.
 
 For contrast, `.gitignore` itself is correctly configured (`.env*` with a `!.env.example` carve-out) and `git log --all -- .env.local .env` returns nothing — no environment file was ever committed. This script is the one leak.
 
@@ -108,12 +108,12 @@ For contrast, `.gitignore` itself is correctly configured (`.env*` with a `!.env
 4. **Rewrite git history** to purge both values from every commit that contains them:
    ```bash
    # find every commit touching the string first, for the record
-   git log --all -S'instaflow_super_secret_token_123' --oneline
+   git log --all -S'Raddlly_super_secret_token_123' --oneline
    git log --all -S'30e95006ee11b183d4b08890154e90e6' --oneline
 
    # then, using git-filter-repo (not filter-branch — it's faster and the
    # maintained tool):
-   git filter-repo --replace-text <(printf '30e95006ee11b183d4b08890154e90e6==>REDACTED\ninstaflow_super_secret_token_123==>REDACTED\n')
+   git filter-repo --replace-text <(printf '30e95006ee11b183d4b08890154e90e6==>REDACTED\nRaddlly_super_secret_token_123==>REDACTED\n')
    ```
    **This rewrites every commit hash from the first affected commit forward.** Every existing local clone (including CI checkouts and any collaborator's machine) must be discarded and re-cloned after the force-push — there is no way to rebase around it. Coordinate the timing before running this if anyone else has a clone.
 
@@ -233,7 +233,7 @@ Today, every route that should check auth does (confirmed by reading all 62). Bu
 ## Suggested verification before/after remediation
 
 1. **P0-1** — with a non-admin test account, inspect the client bundle for the `Next-Action` ID bound to `changeRole`, then POST it directly to `/dashboard` with a body granting the test account's own uid the `admin` role; confirm the `profiles.role` row changes. This is the one finding worth proving end-to-end before considering it fixed, since the exploit path is easy to get subtly wrong when reasoning about it statically.
-2. **P0-2** — `git log --all -S'instaflow_super_secret_token_123' --oneline` and the equivalent for the app secret, to get the exact commit list before running the history rewrite.
+2. **P0-2** — `git log --all -S'Raddlly_super_secret_token_123' --oneline` and the equivalent for the app secret, to get the exact commit list before running the history rewrite.
 3. **P1-4** — cross-check `campaign_sends` rows stuck at `status: 'failed'` and `channel_accounts` rows with `is_active: false` against accounts whose OAuth completed after the token-encryption migration shipped; the correlation should confirm the outage this bug is causing.
 4. **P1-2** — POST to `/api/shopify/connect` with `shopDomain: "example.com"` on a test account and confirm the server issues the outbound request (observable via the reflected status code) before the fix, and is rejected after.
 5. Several referenced files (`lib/campaigns/service.ts`, `lib/meta/messaging.ts`, `supabase/schema.sql`, and others) had uncommitted local modifications at the time of this review — re-confirm line numbers against the current working tree before treating them as exact.

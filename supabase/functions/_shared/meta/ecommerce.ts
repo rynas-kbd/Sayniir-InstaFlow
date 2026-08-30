@@ -332,8 +332,8 @@ async function callLLMWithOpenRouter<T>(prompt: string, apiKey: string, model: s
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://instaflow.io",
-      "X-Title": "Instaflow"
+      "HTTP-Referer": "https://Raddlly.io",
+      "X-Title": "Raddlly"
     },
     body: JSON.stringify({
       model: model || "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -448,14 +448,14 @@ function getNextQuestion(
 
     case "taille":
       const sizeOptions = product?.sizes?.map((s: string) => ({ title: s, payload: s })) || [];
-      return { 
+      return {
         text: t.askSize(product?.sizes?.join(", ") ?? ""),
         quickReplies: sizeOptions.length > 0 ? sizeOptions : undefined
       };
 
     case "couleur":
       const colorOptions = product?.colors?.map((c: string) => ({ title: c, payload: c })) || [];
-      return { 
+      return {
         text: t.askColor(product?.colors?.join(", ") ?? ""),
         quickReplies: colorOptions.length > 0 ? colorOptions : undefined
       };
@@ -463,8 +463,8 @@ function getNextQuestion(
     case "nom complet": return { text: t.askName };
     case "téléphone": return { text: t.askPhone };
     case "wilaya": return { text: t.askWilaya };
-    case "mode de livraison": 
-      return { 
+    case "mode de livraison":
+      return {
         text: t.askDelivery,
         quickReplies: [
           { title: t.deliveryHome, payload: "domicile" },
@@ -840,7 +840,7 @@ JSON uniquement (sans backticks) :
       "", t.recapConfirm,
     ].filter((l) => l !== null).join("\n");
     newStatus = "gathering_info";
-    
+
     // Quick Replies for final confirmation
     quickReplies = [
       { title: lang === "fr" ? "Oui" : lang === "en" ? "Yes" : lang === "darija" ? "واه" : "نعم", payload: "oui" },

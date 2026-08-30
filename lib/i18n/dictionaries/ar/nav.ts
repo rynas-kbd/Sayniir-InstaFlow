@@ -26,7 +26,7 @@ export const nav = {
     accounts: 'الحسابات',
   },
   sidebar: {
-    logoTitle: 'Instaflow',
+    logoTitle: 'Raddlly',
     collapse: 'طي',
     collapseTitle: 'طي الشريط الجانبي',
     expandTitle: 'توسيع الشريط الجانبي',

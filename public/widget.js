@@ -1,5 +1,5 @@
 /**
- * Instaflow chat widget — embeddable floating button that deep-links a
+ * Raddlly chat widget — embeddable floating button that deep-links a
  * website visitor into an Instagram/Messenger/WhatsApp DM.
  * Usage: <script src="https://YOUR_DOMAIN/widget.js" data-platform="instagram" data-target="username" async></script>
  */

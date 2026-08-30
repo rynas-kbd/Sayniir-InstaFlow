@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   let csvText: string
   try {
-    const res = await fetch(csvUrl, { headers: { 'User-Agent': 'InstaFlow-Sync/1.0' } })
+    const res = await fetch(csvUrl, { headers: { 'User-Agent': 'Raddlly-Sync/1.0' } })
     if (!res.ok) {
       throw new Error(`Google Sheets returned ${res.status}. Vérifiez que le Sheet est bien partagé en public (lecture seule).`)
     }

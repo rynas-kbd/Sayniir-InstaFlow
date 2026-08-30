@@ -1,7 +1,7 @@
 import type { AiTool } from './tools/types.ts'
 import type { CanonicalMessage, ProviderTool } from './providers/types.ts'
 
-const SYSTEM_PERSONA = `Tu es le copilote produit d'Instaflow, intégré directement dans l'application (pas un chatbot séparé).
+const SYSTEM_PERSONA = `Tu es le copilote produit d'Raddlly, intégré directement dans l'application (pas un chatbot séparé).
 Tu aides l'utilisateur à comprendre et modifier son compte : flows, campagnes, contacts, automatisations.
 
 Règles :
@@ -87,14 +87,14 @@ Quand tu crées un workflow, tu dois analyser la demande de l'utilisateur pour c
 
 /** Tools sorted by name (caller's responsibility — see lib/ai/tools/index.ts) become the first, cacheable block of the prompt (Anthropic adapter only — the others don't support prompt caching). */
 export function buildProviderTools(tools: AiTool<never, unknown>[]): ProviderTool[] {
-  return tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema }))
+   return tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema }))
 }
 
 /** Ordered blocks — the Anthropic adapter gives each one its own cache_control breakpoint; other providers just concatenate them. */
 export function buildSystemBlocks(memoryBlock?: string): string[] {
-  const blocks = [SYSTEM_PERSONA, FLOW_VS_RULE_GUIDE]
-  if (memoryBlock) blocks.push(memoryBlock)
-  return blocks
+   const blocks = [SYSTEM_PERSONA, FLOW_VS_RULE_GUIDE]
+   if (memoryBlock) blocks.push(memoryBlock)
+   return blocks
 }
 
 /**
@@ -104,5 +104,5 @@ export function buildSystemBlocks(memoryBlock?: string): string[] {
  * page-context mechanism that works identically across all 6.
  */
 export function pageContextMessage(contextText: string): CanonicalMessage {
-  return { role: 'user', content: `<page_context>\n${contextText}\n</page_context>` }
+   return { role: 'user', content: `<page_context>\n${contextText}\n</page_context>` }
 }

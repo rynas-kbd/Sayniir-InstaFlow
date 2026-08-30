@@ -1,8 +1,8 @@
 import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 
 export const metadata = {
-  title: 'Suppression de données | InstaFlow',
-  description: 'Instructions pour supprimer vos données personnelles de InstaFlow.',
+  title: 'Suppression de données | Raddlly',
+  description: 'Instructions pour supprimer vos données personnelles de Raddlly.',
 }
 
 export default function SuppressionDonneesPage() {
@@ -17,11 +17,11 @@ export default function SuppressionDonneesPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">1. Votre droit à la suppression</h2>
             <p className="mb-4">
-              Conformément au Règlement Général sur la Protection des Données (RGPD) et aux autres lois applicables sur la protection des données, 
-              vous avez le droit de demander la suppression de vos données personnelles détenues par InstaFlow.
+              Conformément au Règlement Général sur la Protection des Données (RGPD) et aux autres lois applicables sur la protection des données,
+              vous avez le droit de demander la suppression de vos données personnelles détenues par Raddlly.
             </p>
             <p className="mb-4">
-              Ce droit, également appelé &quot;droit à l'oubli&quot;, vous permet de demander l'effacement de vos données personnelles 
+              Ce droit, également appelé &quot;droit à l'oubli&quot;, vous permet de demander l'effacement de vos données personnelles
               dans certaines circonstances.
             </p>
           </section>
@@ -40,11 +40,11 @@ export default function SuppressionDonneesPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">3. Méthodes de suppression</h2>
-            
+
             <h3 className="text-xl font-medium mb-3">3.1 Suppression depuis votre compte</h3>
             <p className="mb-4">Pour supprimer votre compte et vos données directement :</p>
             <ol className="list-decimal pl-6 mb-4 space-y-2">
-              <li>Connectez-vous à votre compte InstaFlow</li>
+              <li>Connectez-vous à votre compte Raddlly</li>
               <li>Accédez à <strong>Paramètres → Compte</strong></li>
               <li>Faites défiler jusqu'à <strong>Zone de danger</strong></li>
               <li>Cliquez sur <strong>&quot;Supprimer mon compte&quot;</strong></li>
@@ -67,11 +67,11 @@ export default function SuppressionDonneesPage() {
 
             <h3 className="text-xl font-medium mb-3">3.3 Suppression via Facebook</h3>
             <p className="mb-4">
-              Si vous avez utilisé InstaFlow via Facebook Messenger et souhaitez supprimer vos données liées à cette intégration :
+              Si vous avez utilisé Raddlly via Facebook Messenger et souhaitez supprimer vos données liées à cette intégration :
             </p>
             <ol className="list-decimal pl-6 mb-4 space-y-2">
               <li>Accédez à vos <strong>Paramètres Facebook → Applications et sites web</strong></li>
-              <li>Recherchez <strong>InstaFlow</strong> dans la liste</li>
+              <li>Recherchez <strong>Raddlly</strong> dans la liste</li>
               <li>Cliquez sur <strong>&quot;Supprimer&quot;</strong></li>
               <li>Cochez <strong>&quot;Supprimer les données de cette application&quot;</strong></li>
             </ol>
@@ -125,7 +125,7 @@ export default function SuppressionDonneesPage() {
               Nous vous recommandons fortement d'exporter vos données avant de demander leur suppression :
             </p>
             <ol className="list-decimal pl-6 mb-4 space-y-2">
-              <li>Connectez-vous à votre compte InstaFlow</li>
+              <li>Connectez-vous à votre compte Raddlly</li>
               <li>Accédez à <strong>Paramètres → Données et confidentialité</strong></li>
               <li>Cliquez sur <strong>&quot;Télécharger mes données&quot;</strong></li>
               <li>Sélectionnez les données que vous souhaitez exporter</li>
@@ -172,7 +172,7 @@ export default function SuppressionDonneesPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">10. Vérification d'identité</h2>
             <p className="mb-4">
-              Pour protéger votre compte contre les accès non autorisés, nous pouvons vous demander de vérifier votre identité 
+              Pour protéger votre compte contre les accès non autorisés, nous pouvons vous demander de vérifier votre identité
               avant de traiter votre demande de suppression. Cela peut inclure :
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
@@ -185,7 +185,7 @@ export default function SuppressionDonneesPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">11. Réclamations</h2>
             <p className="mb-4">
-              Si vous n'êtes pas satisfait de la manière dont nous traitons votre demande de suppression, vous avez le droit de déposer 
+              Si vous n'êtes pas satisfait de la manière dont nous traitons votre demande de suppression, vous avez le droit de déposer
               une réclamation auprès de l'autorité de protection des données compétente :
             </p>
             <p className="mb-4">
@@ -197,28 +197,28 @@ export default function SuppressionDonneesPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">12. Questions fréquentes</h2>
-            
+
             <h3 className="text-xl font-medium mb-3">Q : Puis-je récupérer mon compte après suppression ?</h3>
             <p className="mb-4">
-              Non, la suppression est définitive. Cependant, vous disposez d'un délai de grâce de 30 jours pendant lequel 
+              Non, la suppression est définitive. Cependant, vous disposez d'un délai de grâce de 30 jours pendant lequel
               vous pouvez nous contacter pour annuler la suppression.
             </p>
 
             <h3 className="text-xl font-medium mb-3">Q : Que deviennent mes contacts après la suppression ?</h3>
             <p className="mb-4">
-              Tous vos contacts et leurs données associées sont supprimés de notre système. Les messages déjà envoyés 
+              Tous vos contacts et leurs données associées sont supprimés de notre système. Les messages déjà envoyés
               via Messenger, Instagram ou WhatsApp restent visibles pour vos contacts sur ces plateformes.
             </p>
 
             <h3 className="text-xl font-medium mb-3">Q : Mes données de facturation sont-elles supprimées ?</h3>
             <p className="mb-4">
-              Les données de facturation sont conservées pendant 10 ans pour conformité fiscale, mais ne sont plus associées 
+              Les données de facturation sont conservées pendant 10 ans pour conformité fiscale, mais ne sont plus associées
               à votre profil personnel et sont stockées de manière anonymisée.
             </p>
 
             <h3 className="text-xl font-medium mb-3">Q : Combien de temps prend le traitement de ma demande ?</h3>
             <p className="mb-4">
-              Nous traitons les demandes de suppression dans un délai maximum de 30 jours. Vous recevrez une confirmation 
+              Nous traitons les demandes de suppression dans un délai maximum de 30 jours. Vous recevrez une confirmation
               par email une fois la suppression effectuée.
             </p>
           </section>

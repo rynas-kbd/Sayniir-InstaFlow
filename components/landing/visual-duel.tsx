@@ -14,7 +14,7 @@ interface Scenario {
     time: string
     badge: string
   }
-  instaflow: {
+  Raddlly: {
     reply: string
     status: string
     time: string
@@ -33,7 +33,7 @@ const SCENARIOS: Scenario[] = [
       time: 'Instant (Robot)',
       badge: 'Bouton pré-enregistré',
     },
-    instaflow: {
+    Raddlly: {
       reply: 'Je comprends parfaitement ! Qu’est-ce qui vous fait le plus hésiter ? Si la tréso est serrée, on a une option de paiement en 3x sans frais. Je vous explique ?',
       status: 'Vente Conclue (Paiement 3x)',
       time: '1.2 seconde (IA)',
@@ -50,8 +50,8 @@ const SCENARIOS: Scenario[] = [
       time: '8 heures de retard',
       badge: 'Message d’absence',
     },
-    instaflow: {
-      reply: 'Oui ! Il en reste exactement 3 en stock en Noir M ⚡️ Voici le lien direct avec livraison offerte expédiée demain matin : instaflow.shop/checkout?sku=BLK-M',
+    Raddlly: {
+      reply: 'Oui ! Il en reste exactement 3 en stock en Noir M ⚡️ Voici le lien direct avec livraison offerte expédiée demain matin : Raddlly.shop/checkout?sku=BLK-M',
       status: 'Paiement Effectué à 02h04',
       time: '1.4 seconde (IA)',
       badge: 'Conversion Instantanée',
@@ -67,7 +67,7 @@ const SCENARIOS: Scenario[] = [
       time: 'Lien sortant',
       badge: 'Redirection Web',
     },
-    instaflow: {
+    Raddlly: {
       reply: 'Projet canon ! Quel est votre budget estimé et votre délai idéal ? Je peux vous fixer un rdv de 15min directement avec notre architecte ce jeudi.',
       status: 'RDV Qualifié sur Calendly',
       time: '1.1 seconde (IA)',
@@ -80,17 +80,17 @@ const FEATURES_CHECKLIST = [
   {
     feature: 'Compréhension du contexte',
     oldBot: 'Mot-clé exact uniquement',
-    instaflow: 'Compréhension du langage naturel humain',
+    Raddlly: 'Compréhension du langage naturel humain',
   },
   {
     feature: 'Objectif de la conversation',
     oldBot: 'Rediriger vers un lien web',
-    instaflow: 'Qualifier et conclure des ventes en DM',
+    Raddlly: 'Qualifier et conclure des ventes en DM',
   },
   {
     feature: 'Mémoire & Personnalisation',
     oldBot: 'Zéro mémoire entre 2 messages',
-    instaflow: 'Se souvient de chaque client & produit',
+    Raddlly: 'Se souvient de chaque client & produit',
   },
 ]
 
@@ -103,7 +103,7 @@ export function VisualDuel() {
     <section id="features" className="py-20 relative">
       <div className="mx-auto max-w-[1240px]">
         {/* Section Header */}
-        <SectionHeader kicker="COMPARATIF · RUPTURE TECHNIQUE" note="BOT 2019 VS INSTAFLOW 2026" />
+        <SectionHeader kicker="COMPARATIF · RUPTURE TECHNIQUE" note="BOT 2019 VS Raddlly 2026" />
 
         <div className="mb-10 max-w-[64ch]">
           <h2
@@ -111,7 +111,7 @@ export function VisualDuel() {
             style={{ color: 'var(--organic-text)' }}
           >
             Les chatbots de 2019 font fuir vos clients. <br />
-            <span className="text-metallic">Instaflow les transforme en acheteurs.</span>
+            <span className="text-metallic">Raddlly les transforme en acheteurs.</span>
           </h2>
           <p
             className="mt-4 text-base leading-relaxed"
@@ -226,7 +226,7 @@ export function VisualDuel() {
               </div>
             </div>
 
-            {/* Right: Instaflow AI Closer 2026 (Metallic Premium Experience) */}
+            {/* Right: Raddlly AI Closer 2026 (Metallic Premium Experience) */}
             <div
               className="rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden"
               style={{
@@ -242,7 +242,7 @@ export function VisualDuel() {
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="font-mono text-xs font-bold text-metallic uppercase tracking-wider">
-                      INSTAFLOW CLOSER IA (2026)
+                      Raddlly CLOSER IA (2026)
                     </span>
                   </div>
                   <span
@@ -253,7 +253,7 @@ export function VisualDuel() {
                       border: '1px solid color-mix(in srgb, var(--organic-text) 14%, transparent)',
                     }}
                   >
-                    ✦ {activeScenario.instaflow.badge}
+                    ✦ {activeScenario.Raddlly.badge}
                   </span>
                 </div>
 
@@ -271,7 +271,7 @@ export function VisualDuel() {
                       {activeScenario.userMessage}
                     </div>
                   </div>
-                  {/* Instaflow Bubble */}
+                  {/* Raddlly Bubble */}
                   <div className="flex justify-start">
                     <div
                       className="px-4 py-2.5 rounded-2xl rounded-tl-xs max-w-[85%] leading-relaxed"
@@ -281,7 +281,7 @@ export function VisualDuel() {
                         color: 'var(--organic-text)',
                       }}
                     >
-                      {activeScenario.instaflow.reply}
+                      {activeScenario.Raddlly.reply}
                     </div>
                   </div>
                 </div>
@@ -291,8 +291,8 @@ export function VisualDuel() {
                 className="mt-8 pt-4 flex items-center justify-between font-mono text-[11px]"
                 style={{ borderTop: '1px solid color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
               >
-                <span className="text-emerald-400 font-bold">✓ {activeScenario.instaflow.status}</span>
-                <span className="font-bold" style={{ color: 'var(--organic-text)' }}>{activeScenario.instaflow.time}</span>
+                <span className="text-emerald-400 font-bold">✓ {activeScenario.Raddlly.status}</span>
+                <span className="font-bold" style={{ color: 'var(--organic-text)' }}>{activeScenario.Raddlly.time}</span>
               </div>
             </div>
           </motion.div>
@@ -324,7 +324,7 @@ export function VisualDuel() {
                 </div>
                 <div className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--organic-text)' }}>
                   <span className="text-emerald-400">✓</span>
-                  <span>{item.instaflow}</span>
+                  <span>{item.Raddlly}</span>
                 </div>
               </div>
             ))}

@@ -49,7 +49,7 @@ const SCENARIOS: StudioScenario[] = [
       },
     ],
     aiResponse:
-      'Hello ! Pour 1m75, la taille M sera parfaite pour une coupe élégante ajustée. Si tu aimes l’effet oversize tendance, prends du L ! Il n’en reste plus que 3 en stock Camel M. Je te mets le code VIP10 (-10%) direct ici : instaflow.shop/pay?item=camel-m&code=VIP10 ⚡️',
+      'Hello ! Pour 1m75, la taille M sera parfaite pour une coupe élégante ajustée. Si tu aimes l’effet oversize tendance, prends du L ! Il n’en reste plus que 3 en stock Camel M. Je te mets le code VIP10 (-10%) direct ici : Raddlly.shop/pay?item=camel-m&code=VIP10 ⚡️',
     extractedData: [
       { key: 'Produit', value: 'Manteau Laine Camel' },
       { key: 'Taille Recommandée', value: 'M (1m75)' },
@@ -182,7 +182,7 @@ export function InteractiveStudio() {
             className="mt-4 text-[17px] max-w-[55ch] mx-auto"
             style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
           >
-            Cliquez sur un scénario ci-dessous pour observer comment Instaflow qualifie, répond et conclut la vente en quelques secondes.
+            Cliquez sur un scénario ci-dessous pour observer comment Raddlly qualifie, répond et conclut la vente en quelques secondes.
           </p>
 
           {/* Scenario Tabs Switcher */}
@@ -348,7 +348,7 @@ export function InteractiveStudio() {
                       <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold" style={{ color: 'var(--organic-text)' }}>Instaflow AI Agent</div>
+                      <div className="text-xs font-bold" style={{ color: 'var(--organic-text)' }}>Raddlly AI Agent</div>
                       <div className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>Temps de réponse moyen : 1.4s</div>
                     </div>
                   </div>
@@ -416,7 +416,7 @@ export function InteractiveStudio() {
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-[10px] font-mono font-bold text-amber-200 uppercase">
-                            Instaflow Closer IA · 1.4s
+                            Raddlly Closer IA · 1.4s
                           </span>
                           <span className="text-[9px] bg-black/30 px-1.5 py-0.5 rounded font-mono text-amber-100">
                             Lien sécurisé prêt

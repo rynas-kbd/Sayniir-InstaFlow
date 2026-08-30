@@ -1,8 +1,8 @@
 import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 
 export const metadata = {
-  title: 'Politique de confidentialité | InstaFlow',
-  description: 'Politique de confidentialité de InstaFlow - Comment nous collectons, utilisons et protégeons vos données personnelles.',
+  title: 'Politique de confidentialité | Raddlly',
+  description: 'Politique de confidentialité de Raddlly - Comment nous collectons, utilisons et protégeons vos données personnelles.',
 }
 
 export default function PolitiqueConfidentialitePage() {
@@ -17,8 +17,8 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
             <p className="mb-4">
-              Bienvenue sur InstaFlow. Nous respectons votre vie privée et nous nous engageons à protéger vos données personnelles. 
-              Cette politique de confidentialité vous informe sur la manière dont nous traitons vos données personnelles lorsque vous 
+              Bienvenue sur Raddlly. Nous respectons votre vie privée et nous nous engageons à protéger vos données personnelles.
+              Cette politique de confidentialité vous informe sur la manière dont nous traitons vos données personnelles lorsque vous
               utilisez notre plateforme de marketing conversationnel et d'automatisation.
             </p>
           </section>
@@ -110,8 +110,8 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">6. Transferts internationaux de données</h2>
             <p className="mb-4">
-              Vos données peuvent être transférées et stockées dans des pays en dehors de l'Union Européenne. 
-              Dans ce cas, nous nous assurons que des garanties appropriées sont en place conformément au RGPD, 
+              Vos données peuvent être transférées et stockées dans des pays en dehors de l'Union Européenne.
+              Dans ce cas, nous nous assurons que des garanties appropriées sont en place conformément au RGPD,
               notamment par l'utilisation de clauses contractuelles types de l'UE ou d'autres mécanismes approuvés.
             </p>
           </section>
@@ -132,7 +132,7 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">8. Conservation des données</h2>
             <p className="mb-4">
-              Nous conservons vos données personnelles aussi longtemps que nécessaire pour fournir nos services 
+              Nous conservons vos données personnelles aussi longtemps que nécessaire pour fournir nos services
               et respecter nos obligations légales :
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
@@ -164,8 +164,8 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">10. Cookies et technologies similaires</h2>
             <p className="mb-4">
-              Nous utilisons des cookies et technologies similaires pour améliorer votre expérience. 
-              Consultez notre politique de cookies pour plus d'informations sur les types de cookies utilisés 
+              Nous utilisons des cookies et technologies similaires pour améliorer votre expérience.
+              Consultez notre politique de cookies pour plus d'informations sur les types de cookies utilisés
               et comment les gérer.
             </p>
           </section>
@@ -173,8 +173,8 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">11. Modifications de cette politique</h2>
             <p className="mb-4">
-              Nous pouvons mettre à jour cette politique de confidentialité occasionnellement. 
-              Nous vous informerons de tout changement significatif par email ou via une notification sur la plateforme. 
+              Nous pouvons mettre à jour cette politique de confidentialité occasionnellement.
+              Nous vous informerons de tout changement significatif par email ou via une notification sur la plateforme.
               La date de "dernière mise à jour" en haut de cette page indique quand cette politique a été révisée pour la dernière fois.
             </p>
           </section>
@@ -182,13 +182,13 @@ export default function PolitiqueConfidentialitePage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">12. Contact</h2>
             <p className="mb-4">
-              Pour toute question concernant cette politique de confidentialité ou nos pratiques en matière de données, 
+              Pour toute question concernant cette politique de confidentialité ou nos pratiques en matière de données,
               vous pouvez nous contacter :
             </p>
             <ul className="list-none pl-0 mb-4 space-y-2">
               <li><strong>Email :</strong> <a href="mailto:rynaskebdi.pro@gmail.com" className="text-primary hover:underline">rynaskebdi.pro@gmail.com</a></li>
               <li><strong>Délégué à la Protection des Données :</strong> <a href="mailto:rynaskebdi.pro@gmail.com" className="text-primary hover:underline">rynaskebdi.pro@gmail.com</a></li>
-              <li><strong>Adresse postale :</strong> InstaFlow, [Adresse complète]</li>
+              <li><strong>Adresse postale :</strong> Raddlly, [Adresse complète]</li>
             </ul>
           </section>
         </div>

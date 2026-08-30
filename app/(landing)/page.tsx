@@ -2,12 +2,9 @@ import { LandingNav, LandingFooter } from '@/components/landing/chrome'
 import { Hero } from '@/components/landing/hero'
 import { FlowDemo } from '@/components/landing/flow-demo'
 import { Pricing } from '@/components/landing/pricing'
-import { CursorGlow } from '@/components/landing/cursor-glow'
 import { SmoothScroll } from '@/components/landing/smooth-scroll'
 import { ScrollReveal } from '@/components/landing/scroll-reveal'
 import {
-  LogoMarquee,
-  MetricsBand,
   CommandCenterTrust,
   FeaturesGrid,
   Channels,
@@ -18,18 +15,17 @@ import {
   ClosingCta,
 } from '@/components/landing/sections'
 
-import { WebGLShaderBg } from '@/components/landing/webgl-shader-bg'
+import { AuraBackground } from '@/components/landing/aura-background'
 import { InteractiveStudio } from '@/components/landing/interactive-studio'
-import { VisualDuel } from '@/components/landing/visual-duel'
 
 export default function LandingPage() {
   return (
     <>
-      <WebGLShaderBg />
+      <AuraBackground />
       <SmoothScroll />
-      <CursorGlow />
-      <LandingNav />
-      <div className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,64px)]">
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <LandingNav />
+        <div className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,64px)]">
         <Hero />
         <ScrollReveal delay={0}>
           <FlowDemo />
@@ -37,9 +33,7 @@ export default function LandingPage() {
         <ScrollReveal delay={0.05}>
           <CommandCenterTrust />
         </ScrollReveal>
-        <ScrollReveal delay={0}>
-          <VisualDuel />
-        </ScrollReveal>
+
         <ScrollReveal delay={0}>
           <FeaturesGrid />
         </ScrollReveal>
@@ -62,6 +56,7 @@ export default function LandingPage() {
           <ClosingCta />
         </ScrollReveal>
         <LandingFooter />
+      </div>
       </div>
     </>
   )
