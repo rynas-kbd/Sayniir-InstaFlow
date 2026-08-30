@@ -53,13 +53,13 @@ export function MobileNav({ businessType }: { businessType: BusinessType }) {
                       className={cn(
                         'flex h-8 items-center gap-2 rounded-md px-2 text-[13px] transition-colors',
                         isActive
-                          ? 'bg-sidebar-accent font-medium text-sidebar-foreground'
+                          ? 'bg-primary/20 border border-primary/35 font-bold text-primary shadow-sm'
                           : 'text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                       )}
                     >
                       <Icon
-                        className={cn('size-3.5 shrink-0', isActive ? 'text-sidebar-foreground' : 'text-sidebar-foreground/45')}
-                        strokeWidth={1.75}
+                        className={cn('size-3.5 shrink-0', isActive ? 'text-primary' : 'text-sidebar-foreground/45')}
+                        strokeWidth={isActive ? 2.25 : 1.75}
                       />
                       {label}
                     </Link>

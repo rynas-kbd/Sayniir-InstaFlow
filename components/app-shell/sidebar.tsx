@@ -83,14 +83,14 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                       'relative flex h-10 cursor-pointer items-center gap-3 rounded-lg transition-colors duration-150',
                       collapsed ? 'justify-center px-0' : 'px-3',
                       isActive
-                        ? 'font-medium text-sidebar-foreground'
+                        ? 'font-bold text-primary'
                         : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                     )}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="active-sidebar-pill"
-                        className="absolute inset-0 rounded-lg bg-sidebar-accent z-0"
+                        className="absolute inset-0 rounded-xl bg-primary/20 border border-primary/35 shadow-sm z-0"
                         transition={springs.smooth}
                       />
                     )}
@@ -98,17 +98,17 @@ export function AppSidebar({ businessType }: { businessType: BusinessType }) {
                     {isActive && (
                       <motion.span
                         layoutId="active-sidebar-indicator"
-                        className="absolute -start-3 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary z-10"
+                        className="absolute -start-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary shadow-sm shadow-primary/50 z-10"
                         transition={springs.smooth}
                       />
                     )}
 
                     <Icon
                       className={cn(
-                        'size-[17px] shrink-0 transition-colors z-10',
-                        isActive ? 'text-primary' : 'text-sidebar-foreground/40'
+                        'size-[18px] shrink-0 transition-colors z-10',
+                        isActive ? 'text-primary' : 'text-sidebar-foreground/45'
                       )}
-                      strokeWidth={isActive ? 2 : 1.75}
+                      strokeWidth={isActive ? 2.25 : 1.75}
                     />
 
                     <AnimatePresence mode="wait">
