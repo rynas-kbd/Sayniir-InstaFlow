@@ -1425,3 +1425,12 @@ h6 {
     height: 110px !important;
   }
 }
+
+@keyframes float-levitate {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}

@@ -79,28 +79,42 @@ function useCountUp(target: number, duration = 1.4, decimals = 0) {
 }
 
 export function LogoMarquee() {
-  const loop = [...LOGO_STRIP, ...LOGO_STRIP]
+  const loop = [...LOGO_STRIP, ...LOGO_STRIP, ...LOGO_STRIP, ...LOGO_STRIP]
   return (
     <section className="pb-16 pt-8">
       <p
-        className="mb-5 text-xs font-bold tracking-[.1em] uppercase text-center"
-        style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}
+        className="mb-5 text-xs font-bold tracking-[.1em] uppercase text-center flex items-center justify-center gap-2"
+        style={{ color: 'color-mix(in srgb, var(--organic-text) 60%, transparent)' }}
       >
-        Adopté par plus de 12 000 équipes qui vivent dans leurs DM
+        <span>INTÉGRATIONS NATIVES — APIS OFFICIELLES META</span>
+        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span>ADOPTÉ PAR +12 000 ÉQUIPES</span>
       </p>
-      <div className="lp-marquee opacity-85 hover:opacity-100 transition-opacity">
+      <div className="lp-marquee opacity-90 hover:opacity-100 transition-opacity">
         <div
-          className="flex w-max items-center gap-[clamp(24px,4vw,56px)]"
-          style={{ animation: 'marquee 36s linear infinite' }}
+          className="flex w-max items-center gap-10 sm:gap-16"
+          style={{ animation: 'marquee 28s linear infinite' }}
         >
-          {loop.map((name, i) => (
+          {loop.map((item, i) => (
             <span
               key={i}
               aria-hidden={i >= LOGO_STRIP.length}
-              className="font-heading text-xl font-bold tracking-tight"
-              style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
+              className="inline-flex items-center gap-3 px-4 py-2 rounded-full border backdrop-blur-md shadow-sm transition-all hover:scale-105 hover:shadow-md"
+              style={{
+                borderColor: `${item.accentColor}45`,
+                backgroundColor: `${item.accentColor}14`,
+              }}
             >
-              {name}
+              <svg
+                width="22" height="22" viewBox="0 0 24 24"
+                dangerouslySetInnerHTML={{ __html: item.svgContent }}
+              />
+              <span
+                className="font-heading text-sm font-bold tracking-tight"
+                style={{ color: 'var(--organic-text)' }}
+              >
+                {item.name}
+              </span>
             </span>
           ))}
         </div>
@@ -193,14 +207,26 @@ export function CommandCenterTrust() {
           className="flex w-max items-center gap-[clamp(24px,4vw,56px)]"
           style={{ animation: 'marquee 36s linear infinite' }}
         >
-          {loop.map((name, i) => (
+          {loop.map((item, i) => (
             <span
               key={i}
               aria-hidden={i >= LOGO_STRIP.length}
-              className="font-heading text-xl font-bold tracking-tight"
-              style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}
+              className="inline-flex items-center gap-3 px-4 py-2 rounded-full border backdrop-blur-md shadow-sm transition-all hover:scale-105"
+              style={{
+                borderColor: `${item.accentColor}45`,
+                backgroundColor: `${item.accentColor}14`,
+              }}
             >
-              {name}
+              <svg
+                width="22" height="22" viewBox="0 0 24 24"
+                dangerouslySetInnerHTML={{ __html: item.svgContent }}
+              />
+              <span
+                className="font-heading text-sm font-bold tracking-tight"
+                style={{ color: 'var(--organic-text)' }}
+              >
+                {item.name}
+              </span>
             </span>
           ))}
         </div>
@@ -318,11 +344,35 @@ export function FeaturesGrid() {
       if (!isActive.current) return
       const idx = activeIdxRef.current
 
-      // At true boundaries: release scroll (let sticky section scroll away)
-      if (e.deltaY > 0 && idx >= FEATURES.length - 1) return
-      if (e.deltaY < 0 && idx <= 0) return
+      // At last module (Module 06): 1 single scroll down smoothly exits section
+      if (e.deltaY > 0 && idx >= FEATURES.length - 1) {
+        e.preventDefault()
+        if (cooldown.current) return
+        cooldown.current = true
+        setTimeout(() => { cooldown.current = false }, 500)
 
-      // Block page scroll for ALL other cases (including during cooldown)
+        if (sectionRef.current) {
+          const secBottom = sectionRef.current.offsetTop + sectionRef.current.offsetHeight
+          window.scrollTo({ top: secBottom + 20, behavior: 'smooth' })
+        }
+        return
+      }
+
+      // At first module (Module 01): 1 single scroll up exits section upward
+      if (e.deltaY < 0 && idx <= 0) {
+        e.preventDefault()
+        if (cooldown.current) return
+        cooldown.current = true
+        setTimeout(() => { cooldown.current = false }, 500)
+
+        if (sectionRef.current) {
+          const secTop = sectionRef.current.offsetTop
+          window.scrollTo({ top: secTop - window.innerHeight, behavior: 'smooth' })
+        }
+        return
+      }
+
+      // Block page scroll for ALL intermediate modules
       e.preventDefault()
       if (cooldown.current) return
 
@@ -335,10 +385,35 @@ export function FeaturesGrid() {
     const onTouchMove = (e: TouchEvent) => {
       if (!isActive.current) return
       const dy = touchStartY - e.touches[0].clientY
-      if (Math.abs(dy) < 40) return
+      if (Math.abs(dy) < 30) return
       const idx = activeIdxRef.current
-      if (dy > 0 && idx >= FEATURES.length - 1) return
-      if (dy < 0 && idx <= 0) return
+
+      if (dy > 0 && idx >= FEATURES.length - 1) {
+        e.preventDefault()
+        if (cooldown.current) return
+        cooldown.current = true
+        setTimeout(() => { cooldown.current = false }, 500)
+
+        if (sectionRef.current) {
+          const secBottom = sectionRef.current.offsetTop + sectionRef.current.offsetHeight
+          window.scrollTo({ top: secBottom + 20, behavior: 'smooth' })
+        }
+        return
+      }
+
+      if (dy < 0 && idx <= 0) {
+        e.preventDefault()
+        if (cooldown.current) return
+        cooldown.current = true
+        setTimeout(() => { cooldown.current = false }, 500)
+
+        if (sectionRef.current) {
+          const secTop = sectionRef.current.offsetTop
+          window.scrollTo({ top: secTop - window.innerHeight, behavior: 'smooth' })
+        }
+        return
+      }
+
       e.preventDefault()
       if (cooldown.current) return
       if (dy > 0) goTo(idx + 1)
@@ -388,8 +463,8 @@ export function FeaturesGrid() {
       className="relative w-screen left-1/2 -translate-x-1/2 border-y border-[var(--organic-divider)]"
       style={{ height: `${FEATURES.length * 100}vh` }}
     >
-      {/* Viewport Docked Directly to Navbar */}
-      <div className="sticky top-[54px] h-[calc(100vh-54px)] w-full overflow-hidden flex flex-col justify-between py-6 px-4 md:px-10 relative">
+      {/* Viewport Docked to Top Edge Under Floating Navbar */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pt-16 pb-6 px-4 md:px-10 relative">
         
         {/* Midnight Sapphire Aura — 2-layer atmospheric gradient system */}
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050507]">
@@ -849,59 +924,335 @@ function FeatureGraphic({ index, accent }: { index: number; accent: string }) {
 
 
 export function Channels() {
-  const CHANNEL_ICONS: Record<string, React.ReactNode> = {
-    'DM Instagram': <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>,
-    WhatsApp: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>,
-    Messenger: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const channelsData = [
+    {
+      id: 'instagram',
+      title: 'DM Instagram',
+      subtitle: 'Meta Graph API v19.0 Officielle',
+      badge: '● Meta API Graph',
+      gradient: 'from-[#f77737] via-[#e1306c] to-[#833ab4]',
+      accentColor: '#e1306c',
+      glowColor: 'rgba(225, 48, 108, 0.25)',
+      description: 'Automatisez vos réponses aux stories, commentaires et DM sans risque de suspension. Transformez vos abonnés en acheteurs.',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+      ),
+      tags: ['Stories Auto-Reply', 'Commentaires → DM', 'Achat 1-Clic'],
+      metrics: [
+        { val: '+138%', label: 'Conversions DM' },
+        { val: '0.4s', label: 'Délai moyen' },
+      ],
+      demo: {
+        header: 'botanik_paris ✓',
+        status: '● IA En direct · Ton Botanique 🌿',
+        userMsg: 'Bonjour ! Avez-vous un code promo pour le sérum bio ? 🌿',
+        aiMsg: 'Coucou ! 🌿 Oui ! Profite de -15% aujourd\'hui avec le code BOTANIK15 🛍️',
+        actionPill: '🛒 Commande 1-Clic : Sérum Bio (29,90 €)',
+      },
+    },
+    {
+      id: 'whatsapp',
+      title: 'WhatsApp Business API',
+      subtitle: 'Meta Cloud API Officielle',
+      badge: '● 98% Open Rate',
+      gradient: 'from-[#25d366] to-[#128c7e]',
+      accentColor: '#25d366',
+      glowColor: 'rgba(37, 211, 102, 0.25)',
+      description: 'Engagez vos clients sur leur application préférée. Envoyez des relances de panier abandonné et des catalogues interactifs.',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+      ),
+      tags: ['Relance Panier Expiré', 'Catalogues WhatsApp', 'Paiement In-App'],
+      metrics: [
+        { val: '98,4%', label: 'Taux d\'ouverture' },
+        { val: '2.4k', label: 'DMs / minute' },
+      ],
+      demo: {
+        header: 'WhatsApp Business · Botanik',
+        status: '⚡ Panier Expiré Récupéré',
+        userMsg: '⚠️ Votre panier expire dans 14:59 min !',
+        aiMsg: 'Vos articles vous attendent. Souhaitez-vous finaliser avec -10% offerts ? 🎁',
+        actionPill: 'Pay · Payer 3 500 DA (64,71 €)',
+      },
+    },
+    {
+      id: 'messenger',
+      title: 'Facebook Messenger',
+      subtitle: 'Meta Business Suite',
+      badge: '● Réponse < 1s',
+      gradient: 'from-[#0084ff] to-[#00c6ff]',
+      accentColor: '#0084ff',
+      glowColor: 'rgba(0, 132, 255, 0.25)',
+      description: 'Convertissez le trafic de vos publicités Click-to-Messenger et résolvez 80%+ des demandes de support sans agent humain.',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+      tags: ['Click-to-Messenger Ads', 'FAQ 24/7 Auto', 'Capture Lead CRM'],
+      metrics: [
+        { val: '< 1s', label: 'Temps de réponse' },
+        { val: '100%', label: 'Résolution IA' },
+      ],
+      demo: {
+        header: 'Messenger · Support Client',
+        status: '● Statut Commande Résolu',
+        userMsg: 'Bonjour, où en est ma commande #CMD-10492 ?',
+        aiMsg: 'Votre colis Colissimo est en route ! Arrivée prévue demain à 13h 📦',
+        actionPill: '✅ Ticket résolu en 0.4s · Note ⭐⭐⭐⭐⭐',
+      },
+    },
+    {
+      id: 'shopify',
+      title: 'Shopify & E-Commerce',
+      subtitle: 'Synchro Directe Produits & Stocks',
+      badge: '● Synchro Directe',
+      gradient: 'from-[#10b981] to-[#059669]',
+      accentColor: '#10b981',
+      glowColor: 'rgba(16, 185, 129, 0.25)',
+      description: 'Synchronisez votre catalogue produit, vos stocks et vos commandes. Détectez les paniers abandonnés et relancez-les automatiquement.',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
+      ),
+      tags: ['Stock Synchro In-App', 'Paniers Abandonnés', 'Commandes DA'],
+      metrics: [
+        { val: '+42.8k DA', label: 'Générés ce mois' },
+        { val: '3/3', label: 'Paniers sauvés' },
+      ],
+      demo: {
+        header: 'Boutique Shopify Connectée',
+        status: '🛒 3 Paniers Récupérés Aujourd\'hui',
+        userMsg: 'Sérum Aloe Vera Bio 50ml · 3 500 DA',
+        aiMsg: '✅ Panier réactivé automatiquement via DM (-10% appliqué)',
+        actionPill: '🎉 Commande Confirmée & Synchro CRM',
+      },
+    },
+  ]
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return
+    const scrollAmount = direction === 'left' ? -440 : 440
+    scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+  }
+
+  const updateActiveIndex = () => {
+    if (!scrollRef.current) return
+    const scrollPos = scrollRef.current.scrollLeft
+    const cardWidth = 440
+    const newIdx = Math.round(scrollPos / cardWidth)
+    setActiveIndex(Math.min(Math.max(newIdx, 0), channelsData.length - 1))
   }
 
   return (
-    <section className="pb-[88px]">
-      <SectionHeader kicker="Canaux" note="API natives · pas de bricolage" />
-      <motion.h2
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-10 max-w-[22ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
-      >
-        Là où vos clients sont déjà.
-      </motion.h2>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-8%" }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
-        {CHANNEL_INFO.map((c) => (
-          <motion.div
-            key={c.title}
-            variants={cardVariants}
-            whileHover={{ y: -5, scale: 1.015 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="lp-card card flex-row items-start gap-4 p-6 cursor-pointer"
+    <section className="relative pb-[110px] pt-12 overflow-hidden">
+      {/* Background Lighting Halos */}
+      <div className="pointer-events-none absolute left-1/4 top-1/3 size-[500px] rounded-full blur-[140px] opacity-15" style={{ background: 'var(--organic-terracotta)' }} />
+      <div className="pointer-events-none absolute right-1/4 bottom-1/3 size-[500px] rounded-full blur-[140px] opacity-15" style={{ background: '#25d366' }} />
+
+      <SectionHeader kicker="Écosystème Multi-Canal" note="API Meta Officielle · Synchro 1-Clic" />
+
+      {/* Header Row with Title & Scroll Controls */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-[22ch] font-heading text-[clamp(28px,3.5vw,46px)] leading-[1.12]"
           >
-            <span
-              className="grid size-12 shrink-0 place-content-center rounded-xl"
-              style={{ background: TONE_ICON_BG[c.tone], color: TONE_ICON_FG[c.tone] }}
-            >
-              {CHANNEL_ICONS[c.title] ?? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /></svg>
-              )}
-            </span>
+            Connecté à tout ce que vous utilisez.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-3 max-w-[56ch] text-base leading-[1.65]"
+            style={{ color: 'color-mix(in srgb, var(--organic-text) 74%, transparent)' }}
+          >
+            Glissez à travers les cartes en lévitation pour découvrir la puissance de chaque canal connecté.
+          </motion.p>
+        </div>
+
+        {/* Arrow Navigation Controls */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleScroll('left')}
+            className="grid size-12 place-content-center rounded-2xl border border-border/50 bg-card/80 text-foreground shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-muted active:scale-95 cursor-pointer"
+            aria-label="Canal précédent"
+          >
+            ‹
+          </button>
+          <button
+            onClick={() => handleScroll('right')}
+            className="grid size-12 place-content-center rounded-2xl border border-border/50 bg-card/80 text-foreground shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-muted active:scale-95 cursor-pointer"
+            aria-label="Canal suivant"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+
+      {/* Floating 3D Carousel Stage */}
+      <div
+        ref={scrollRef}
+        onScroll={updateActiveIndex}
+        className="flex gap-6 overflow-x-auto snap-x snap-mandatory py-8 px-2 no-scrollbar"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {channelsData.map((c, i) => (
+          <motion.div
+            key={c.id}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
+            animate={{
+              y: [0, -6, 0],
+            }}
+            style={{
+              animation: `float-levitate 4s ease-in-out infinite ${i * 0.8}s`,
+              borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+              boxShadow: `0 20px 50px -12px ${c.glowColor}`,
+            }}
+            className="group relative w-[340px] sm:w-[440px] shrink-0 snap-center overflow-hidden rounded-3xl border border-border/40 bg-card/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl transition-all duration-500 hover:border-border hover:shadow-3xl flex flex-col justify-between"
+          >
+            {/* Top Ambient Glow Halo */}
+            <div
+              className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full blur-3xl opacity-25 transition-all duration-500 group-hover:opacity-50 group-hover:scale-110"
+              style={{ background: c.accentColor }}
+            />
+
             <div>
-              <h3 className="mb-1.5 font-heading text-[17px]">{c.title}</h3>
-              <p className="m-0 text-[13.5px] leading-[1.6]" style={{ color: 'color-mix(in srgb, var(--organic-text) 70%, transparent)' }}>
-                {c.body}
+              {/* Channel Header Row */}
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3.5">
+                  <div
+                    className={`flex size-14 items-center justify-center rounded-2xl text-white bg-gradient-to-br ${c.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110`}
+                  >
+                    {c.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-xl font-bold tracking-tight text-foreground">{c.title}</h3>
+                    <p className="text-xs text-muted-foreground font-medium">{c.subtitle}</p>
+                  </div>
+                </div>
+
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold border backdrop-blur-md shrink-0"
+                  style={{
+                    borderColor: `${c.accentColor}40`,
+                    color: c.accentColor,
+                    backgroundColor: `${c.accentColor}14`,
+                  }}
+                >
+                  {c.badge}
+                </span>
+              </div>
+
+              {/* Channel Description */}
+              <p className="text-sm leading-relaxed text-muted-foreground mb-6">
+                {c.description}
               </p>
+
+              {/* Live Interactive Simulation Widget */}
+              <div className="rounded-2xl border border-border/40 bg-muted/40 p-4 mb-6 space-y-3 shadow-inner">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground pb-2 border-b border-border/30">
+                  <span className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full animate-ping" style={{ background: c.accentColor }} />
+                    {c.demo.header}
+                  </span>
+                  <span className="text-emerald-500 font-mono text-[10px]">{c.demo.status}</span>
+                </div>
+
+                {/* User Inbound Bubble */}
+                <div className="max-w-[88%] self-start rounded-2xl rounded-bl-xs bg-card p-3 text-xs font-medium text-foreground shadow-sm border border-border/30">
+                  {c.demo.userMsg}
+                </div>
+
+                {/* AI Outbound Bubble */}
+                <div
+                  className="max-w-[88%] ml-auto rounded-2xl rounded-br-xs p-3 text-xs font-medium text-white shadow-md"
+                  style={{ background: c.accentColor }}
+                >
+                  {c.demo.aiMsg}
+                </div>
+
+                {/* Live Action Tag */}
+                <div className="pt-1 flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-foreground bg-card border border-border/40 rounded-full px-3 py-1 shadow-xs">
+                    {c.demo.actionPill}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Metrics & Capabilities Footer */}
+            <div>
+              {/* 2 KPI Metrics Cards */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {c.metrics.map((m) => (
+                  <div key={m.label} className="rounded-xl border border-border/30 bg-muted/20 p-2.5 text-center">
+                    <div className="font-heading font-extrabold text-base text-foreground">{m.val}</div>
+                    <div className="text-[10px] text-muted-foreground font-medium">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feature Tags */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/30">
+                {c.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-lg bg-muted/50 px-2 py-0.5 text-[10.5px] font-semibold text-muted-foreground border border-border/30"
+                  >
+                    ✓ {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </motion.div>
         ))}
-      </motion.div>
+      </div>
+
+      {/* Dots Indicator Below Carousel */}
+      <div className="flex items-center justify-center gap-2 mt-6">
+        {channelsData.map((c, i) => (
+          <button
+            key={c.id}
+            onClick={() => {
+              if (scrollRef.current) {
+                scrollRef.current.scrollTo({ left: i * 440, behavior: 'smooth' })
+              }
+            }}
+            className={`size-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+              activeIndex === i ? 'w-8 bg-foreground' : 'bg-muted-foreground/30 hover:bg-muted-foreground/60'
+            }`}
+            style={{
+              background: activeIndex === i ? c.accentColor : undefined,
+            }}
+            aria-label={`Aller au canal ${c.title}`}
+          />
+        ))}
+      </div>
     </section>
   )
 }
+
 
 export function InboxShowcase() {
   return (
@@ -940,7 +1291,7 @@ export function InboxShowcase() {
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-terracotta-300)' }} />
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sage-300)' }} />
           <span className="size-2.5 rounded-full" style={{ background: 'var(--organic-sand-300)' }} />
-          <span className="ml-3 text-[13px] font-bold tracking-[.04em]">Instaflow · Inbox</span>
+          <span className="ml-3 text-[13px] font-bold tracking-[.04em]">Raddlly · Inbox</span>
           <span className="tag ml-auto" style={{ background: 'var(--organic-sage-100)', color: 'var(--organic-sage-800)' }}>3 à traiter</span>
         </div>
 
@@ -1056,28 +1407,41 @@ export function Testimonials() {
     <section className="pb-[88px]">
       <SectionHeader kicker="Preuves & Avis" note="Agences · e-commerce · créateurs" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-8%' }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
+      >
         {/* Left Column: Featured Highlight Quote */}
         {featured && (
-          <div
-            className="lg:col-span-7 rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
+          <motion.div
+            variants={cardVariants}
+            className="lg:col-span-7 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden"
             style={{
               background: 'var(--organic-surface)',
               border: '1.5px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
+              boxShadow: '0 8px 48px rgba(0,0,0,.07)',
             }}
           >
+            {/* Top accent border */}
+            <div
+              className="absolute inset-x-0 top-0 h-[3px] rounded-t-3xl"
+              style={{ background: 'linear-gradient(90deg, var(--organic-terracotta), var(--organic-sage))' }}
+            />
             <div
               className="absolute top-4 right-6 font-mono text-7xl font-bold pointer-events-none select-none"
               style={{ color: 'color-mix(in srgb, var(--organic-text) 6%, transparent)' }}
             >
-              “
+              &ldquo;
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-4 text-amber-500">
+              <div className="flex items-center gap-2 mb-4 text-amber-400">
                 ★★★★★ <span className="font-mono text-xs font-bold ml-2" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>5.0 SCORE CLIENT</span>
               </div>
-              <blockquote className="text-[clamp(18px,2.2vw,24px)] font-heading leading-relaxed font-medium" style={{ color: 'var(--organic-text)' }}>
-                "{featured.quote}"
+              <blockquote className="text-[clamp(17px,2vw,22px)] font-heading leading-relaxed font-medium" style={{ color: 'var(--organic-text)' }}>
+                &ldquo;{featured.quote}&rdquo;
               </blockquote>
             </div>
 
@@ -1093,23 +1457,26 @@ export function Testimonials() {
                 <span className="text-xs" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{featured.role}</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Right Column: Vertical Stream of Reviews */}
         <div className="lg:col-span-5 flex flex-col gap-4">
           {rest.map((t) => (
-            <div
+            <motion.div
               key={t.name}
-              className="rounded-2xl p-6 flex flex-col justify-between"
+              variants={cardVariants}
+              whileHover={{ y: -3, boxShadow: '0 12px 32px rgba(0,0,0,.1)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="rounded-2xl p-6 flex flex-col justify-between cursor-default"
               style={{
                 background: 'var(--organic-surface)',
                 border: '1.5px solid color-mix(in srgb, var(--organic-text) 10%, transparent)',
               }}
             >
-              <div className="text-amber-500 text-xs mb-2">★★★★★</div>
-              <p className="text-xs leading-relaxed italic mb-4" style={{ color: 'color-mix(in srgb, var(--organic-text) 80%, transparent)' }}>
-                "{t.quote}"
+              <div className="text-amber-400 text-xs mb-2">★★★★★</div>
+              <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'color-mix(in srgb, var(--organic-text) 82%, transparent)' }}>
+                &ldquo;{t.quote}&rdquo;
               </p>
               <div className="flex items-center gap-3">
                 <span
@@ -1123,10 +1490,10 @@ export function Testimonials() {
                   <span className="text-[10px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{t.role}</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -1140,46 +1507,154 @@ export function ComparisonTable() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-9 max-w-[24ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
+        className="mb-10 max-w-[24ch] font-heading text-[clamp(28px,3.2vw,42px)] leading-[1.12]"
       >
         Les outils chatbot historiques datent de 2019.
       </motion.h2>
+
       <motion.div
-        initial={{ opacity: 0, y: 25 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-8%" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="overflow-x-auto rounded-2xl border-[1.5px]"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-8%' }}
+        className="overflow-hidden rounded-3xl border-[1.5px]"
         style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
       >
-        <table className="table" style={{ minWidth: 640 }}>
-          <thead>
-            <tr style={{ background: 'color-mix(in srgb, var(--organic-bg) 60%, transparent)' }}>
-              <th style={{ width: '30%' }} />
-              <th className="lp-col-us">Instaflow</th>
-              <th className="lp-col-them">Outils historiques</th>
-            </tr>
-          </thead>
-          <tbody>
-            {COMPARISON_ROWS.map(([label, us, them]) => (
-              <tr key={label}>
-                <td style={{ fontWeight: 600 }}>{label}</td>
-                <td>
-                  <span className="lp-check inline-flex items-center gap-1.5">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    <span className="text-[13.5px]" style={{ color: 'var(--organic-text)' }}>{us}</span>
-                  </span>
-                </td>
-                <td>
-                  <span className="lp-cross inline-flex items-center gap-1.5">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    <span className="text-[13.5px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>{them}</span>
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* Header Row */}
+        <div
+          className="grid border-b-[1.5px]"
+          style={{
+            gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
+            borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+            background: 'var(--organic-surface)',
+          }}
+        >
+          <div className="px-6 py-4" />
+          <div
+            className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+              background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
+            }}
+          >
+            <span
+              className="px-3 py-0.5 rounded-full text-[10px] font-extrabold tracking-[.12em] uppercase"
+              style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+            >
+              ✦ Raddlly
+            </span>
+            <span className="text-[11px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 55%, transparent)' }}>
+              IA-native · 2025
+            </span>
+          </div>
+          <div
+            className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 border-l-[1.5px]"
+            style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+          >
+            <span className="text-[13px] font-bold" style={{ color: 'color-mix(in srgb, var(--organic-text) 65%, transparent)' }}>
+              Outils historiques
+            </span>
+            <span className="text-[11px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 38%, transparent)' }}>
+              ManyChat · Manychat Pro
+            </span>
+          </div>
+        </div>
+
+        {/* Data Rows */}
+        {COMPARISON_ROWS.map(([label, us, them], rowIdx) => (
+          <motion.div
+            key={label}
+            variants={cardVariants}
+            className="grid border-b-[1px]"
+            style={{
+              gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
+              borderColor: 'color-mix(in srgb, var(--organic-text) 7%, transparent)',
+            }}
+          >
+            {/* Label */}
+            <div
+              className="px-6 py-5 flex items-center"
+              style={{ background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)' }}
+            >
+              <span className="text-[13.5px] font-semibold" style={{ color: 'var(--organic-text)' }}>{label}</span>
+            </div>
+
+            {/* Raddlly column */}
+            <div
+              className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                background: rowIdx % 2 === 0
+                  ? 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-bg))'
+                  : 'color-mix(in srgb, var(--organic-terracotta) 4%, var(--organic-surface))',
+              }}
+            >
+              <span
+                className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
+                style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              <span className="text-[12.5px] leading-relaxed" style={{ color: 'var(--organic-text)' }}>{us}</span>
+            </div>
+
+            {/* Competitors column */}
+            <div
+              className="px-4 py-5 flex items-start gap-2.5 border-l-[1.5px]"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+                background: rowIdx % 2 === 0 ? 'var(--organic-bg)' : 'var(--organic-surface)',
+              }}
+            >
+              <span
+                className="shrink-0 mt-[2px] size-[18px] rounded-full flex items-center justify-center"
+                style={{ background: 'color-mix(in srgb, var(--organic-text) 12%, transparent)' }}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
+              <span className="text-[12.5px] leading-relaxed" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>{them}</span>
+            </div>
+          </motion.div>
+        ))}
+
+        {/* Footer CTA Row */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: 'minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.5fr)',
+            background: 'var(--organic-surface)',
+          }}
+        >
+          <div className="px-6 py-5 flex items-center">
+            <span className="text-[12px]" style={{ color: 'color-mix(in srgb, var(--organic-text) 50%, transparent)' }}>
+              Migration incluse en 2 jours ouvrés
+            </span>
+          </div>
+          <div
+            className="px-4 py-5 flex items-center justify-center border-l-[1.5px]"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)',
+              background: 'color-mix(in srgb, var(--organic-terracotta) 7%, transparent)',
+            }}
+          >
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-1.5 text-[12px] font-extrabold tracking-wide rounded-full px-4 py-2 shadow-md transition-all hover:scale-105 active:scale-95"
+              style={{ background: 'var(--organic-terracotta)', color: '#fff' }}
+            >
+              Démarrer gratuitement →
+            </Link>
+          </div>
+          <div
+            className="px-4 py-5 border-l-[1.5px]"
+            style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 10%, transparent)' }}
+          />
+        </div>
       </motion.div>
     </section>
   )

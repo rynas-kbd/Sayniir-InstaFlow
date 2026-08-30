@@ -100,7 +100,36 @@ export const DEMO_SCENARIOS: Scenario[] = [
   },
 ]
 
-export const LOGO_STRIP = ['Homefolk', 'Sundial', 'Kettle&Co', 'RELAY SOCIAL', 'Moonrise', 'Fable', 'Petal & Stem']
+export interface LogoItem {
+  name: string
+  /** Official brand SVG inner markup — parent sets width/height to 24 */
+  svgContent: string
+  accentColor: string
+}
+
+export const LOGO_STRIP: LogoItem[] = [
+  {
+    name: 'Instagram',
+    accentColor: '#e1306c',
+    svgContent: `<defs><radialGradient id="ig-g" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig-g)"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="white" stroke-width="1.8"/><circle cx="17.2" cy="6.8" r="1.2" fill="white"/>`,
+  },
+  {
+    name: 'WhatsApp',
+    accentColor: '#25d366',
+    svgContent: `<rect width="24" height="24" rx="6" fill="#25d366"/><path d="M12 4.5C7.86 4.5 4.5 7.86 4.5 12c0 1.32.34 2.6.98 3.72L4.5 19.5l3.88-.95A7.48 7.48 0 0 0 12 19.5c4.14 0 7.5-3.36 7.5-7.5S16.14 4.5 12 4.5zm3.6 10.35c-.15.43-1.5.84-1.95.84s-.9-.06-2.07-.54c-1.73-.72-2.85-2.4-2.94-2.52-.09-.12-.75-1-.75-1.89s.48-1.35.66-1.53c.15-.16.33-.2.45-.2l.33.01c.12 0 .27-.03.42.33l.6 1.44c.06.12.09.27.03.42l-.24.3-.3.36c-.12.12-.24.24-.12.48.15.24.6.99 1.29 1.6.9.78 1.62 1.03 1.86 1.14.24.12.39.09.54-.06l.36-.42c.15-.18.3-.12.51-.03l1.41.66c.21.09.36.18.42.27.06.12-.09.81-.24 1.14z" fill="white"/>`,
+  },
+  {
+    name: 'Messenger',
+    accentColor: '#0084ff',
+    svgContent: `<defs><linearGradient id="ms-g" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0695ff"/><stop offset="100%" stop-color="#a334fa"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ms-g)"/><path d="M12 4C7.58 4 4 7.3 4 11.4c0 2.2 1.06 4.16 2.72 5.5V19.5l2.54-1.4c.68.19 1.4.3 2.74.3 4.42 0 8-3.3 8-7.4C20 7.3 16.42 4 12 4zm.8 9.96l-2.04-2.18-3.98 2.18 4.38-4.64 2.08 2.18 3.94-2.18-4.38 4.64z" fill="white"/>`,
+  },
+  {
+    name: 'Shopify',
+    accentColor: '#96bf48',
+    svgContent: `<rect width="24" height="24" rx="6" fill="#96BF48"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.3 6.09c-.1-.07-.24-.05-.33.02-.08.06-1.92 1.42-1.92 1.42s-1.11-.32-1.43-.41c-.3-.08-.63.01-.85.24-.2.21-.32.5-.32.8v.29l-1.1.32c-.48.14-.85.5-1 .98l-.9 3.03c-.14.46-.05.96.24 1.34.28.37.72.59 1.18.59h.28l-.3 2.23c-.04.3.08.6.31.8.19.17.44.26.7.26.05 0 .1 0 .15-.01l3.86-.52c.4-.05.76-.28.98-.62l2.38-3.73c.22-.35.27-.78.13-1.17l-2-5.51c-.11-.3-.36-.5-.67-.55zm-3.88 4.06v-.54c0-.12.05-.24.13-.33.05-.05.12-.08.18-.09.04 0 .07 0 .1.01l.6.17-.24.82-.77-.04zm1.83.52l.55-1.88.37.1-.55 1.88-.37-.1zm.98.27l.55-1.88.28.08-.55 1.88-.28-.08z" fill="white"/>`,
+  },
+]
+
 
 export const METRICS = [
   { value: '480M', label: 'Messages automatisés' },

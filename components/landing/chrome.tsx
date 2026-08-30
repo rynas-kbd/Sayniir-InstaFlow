@@ -15,11 +15,12 @@ const NAV_LINKS = [
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null)
   const { scrollYProgress } = useScroll()
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 24)
+      setScrolled(window.scrollY > 20)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
@@ -27,130 +28,178 @@ export function LandingNav() {
 
   return (
     <>
-      {/* Scroll Progress Bar at the top */}
+      {/* Top Scroll Progress Line */}
       <motion.div
-        className="fixed top-0 left-0 right-0 z-50 h-[3px]"
+        className="fixed top-0 left-0 right-0 z-50 h-[2px]"
         style={{
           scaleX: scrollYProgress,
           transformOrigin: '0%',
           background: 'var(--organic-terracotta)',
-          boxShadow: '0 1px 6px color-mix(in srgb, var(--organic-terracotta) 45%, transparent)',
         }}
       />
 
-      <motion.nav
-        className="sticky top-0 z-30 flex items-center justify-between gap-6 relative"
-        animate={{
-          paddingTop: scrolled ? '10px' : '15px',
-          paddingBottom: scrolled ? '10px' : '15px',
-          backdropFilter: scrolled ? 'blur(16px) saturate(1.4)' : 'blur(0px)',
-          background: scrolled
-            ? 'color-mix(in srgb, var(--organic-bg) 72%, transparent)'
-            : 'transparent',
-          boxShadow: scrolled
-            ? '0 1px 0 color-mix(in srgb, var(--organic-text) 8%, transparent)'
-            : '0 0 0 transparent',
-        }}
-        transition={{ duration: 0.28, ease: 'easeOut' }}
-        style={{
-          WebkitBackdropFilter: scrolled ? 'blur(16px) saturate(1.4)' : 'blur(0px)',
-          paddingLeft: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
-          paddingRight: 'max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px)))',
-        }}
-      >
-
-        {/* Clickable logo */}
+      {/* Sleek Scrolled Morphing Navbar Header */}
+      <header className="sticky top-0 z-50 w-full pointer-events-none pt-2.5 sm:pt-3.5 pb-2">
         <motion.div
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <Link
-            href="/"
-            className="no-underline block"
-            onClick={(e) => {
-              // If already on the landing page, smooth scroll to top instead of hard nav
-              if (window.location.pathname === '/') {
-                e.preventDefault()
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }
-            }}
-          >
-            <RaddllyLogo
-              iconSize={30}
-              showWordmark
-              wordmarkClassName="text-[var(--organic-text)]"
-            />
-          </Link>
-        </motion.div>
-
-        {/* Desktop nav links */}
-        <div className="lp-nav-links flex items-center gap-6 ml-auto mr-1">
-          {NAV_LINKS.map((link) => (
-            <motion.a
-              key={link.href}
-              href={link.href}
-              whileHover={{ y: -1 }}
-              className="lp-nav-link relative text-sm no-underline"
-              style={{ color: 'color-mix(in srgb, var(--organic-text) 80%, transparent)', transition: 'color .18s ease' }}
-            >
-              {link.label}
-            </motion.a>
-          ))}
-        </div>
-
-        <motion.div
-          whileHover={{ scale: 1.04, y: -0.5 }}
-          whileTap={{ scale: 0.96 }}
-          className="lp-nav-cta-wrapper"
-        >
-          <Link href="/register" className="btn btn-primary lp-nav-cta">
-            Essai gratuit
-          </Link>
-        </motion.div>
-
-        {/* Mobile hamburger — animated morphing button */}
-        <motion.button
-          type="button"
-          className="lp-hamburger"
-          aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((v) => !v)}
-          whileTap={{ scale: 0.9 }}
+          className="mx-auto pointer-events-auto transition-all duration-300 relative"
+          animate={{
+            maxWidth: scrolled ? '960px' : '1200px',
+            paddingLeft: scrolled ? '20px' : '28px',
+            paddingRight: scrolled ? '20px' : '28px',
+            paddingTop: scrolled ? '8px' : '14px',
+            paddingBottom: scrolled ? '8px' : '14px',
+            borderRadius: scrolled ? '9999px' : '24px',
+            backgroundColor: scrolled
+              ? 'color-mix(in srgb, var(--organic-surface) 90%, transparent)'
+              : 'color-mix(in srgb, var(--organic-surface) 35%, transparent)',
+            borderColor: scrolled
+              ? 'color-mix(in srgb, var(--organic-text) 14%, transparent)'
+              : 'color-mix(in srgb, var(--organic-text) 6%, transparent)',
+            boxShadow: scrolled
+              ? '0 20px 48px -12px rgba(0, 0, 0, 0.16), 0 4px 16px -2px rgba(0, 0, 0, 0.08)'
+              : '0 2px 12px rgba(0, 0, 0, 0.02)',
+          }}
+          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           style={{
-            display: 'none',
-            background: 'none',
-            border: '1.5px solid color-mix(in srgb, var(--organic-text) 12%, transparent)',
-            cursor: 'pointer',
-            padding: '7px',
-            borderRadius: 10,
-            color: 'var(--organic-text)',
-            width: 36,
-            height: 36,
-            alignItems: 'center',
-            justifyContent: 'center',
+            backdropFilter: 'blur(20px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-            <motion.line
-              x1="1" y1="4" x2="15" y2="4"
-              animate={menuOpen ? { y1: 8, y2: 8, rotate: 45, originX: '50%', originY: '50%' } : { y1: 4, y2: 4, rotate: 0 }}
-              transition={{ duration: 0.25 }}
+          {/* Glossy top edge highlight when scrolled */}
+          {scrolled && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-x-8 top-0 h-[1px] rounded-full pointer-events-none"
+              style={{
+                background: 'linear-gradient(90deg, transparent, color-mix(in srgb, var(--organic-text) 20%, transparent), transparent)',
+              }}
             />
-            <motion.line
-              x1="1" y1="8" x2="15" y2="8"
-              animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-              transition={{ duration: 0.2 }}
-            />
-            <motion.line
-              x1="1" y1="12" x2="15" y2="12"
-              animate={menuOpen ? { y1: 8, y2: 8, rotate: -45, originX: '50%', originY: '50%' } : { y1: 12, y2: 12, rotate: 0 }}
-              transition={{ duration: 0.25 }}
-            />
-          </svg>
-        </motion.button>
-      </motion.nav>
+          )}
 
-      {/* Mobile dropdown — animated fullscreen panel */}
+          <div className="flex items-center justify-between gap-6">
+            {/* Logo */}
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                href="/"
+                className="no-underline flex items-center gap-2.5"
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    e.preventDefault()
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                }}
+              >
+                <RaddllyLogo
+                  iconSize={scrolled ? 28 : 32}
+                  showWordmark
+                  text="Raddlly"
+                  wordmarkClassName="text-[var(--organic-text)] font-extrabold tracking-tight text-xl transition-all"
+                />
+              </Link>
+            </motion.div>
+
+            {/* Ultra-Fluid Desktop Nav Links with Magnetic Hover Pill */}
+            <nav
+              className="hidden md:flex items-center gap-1 p-1 rounded-full relative"
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onMouseEnter={() => setHoveredLink(link.href)}
+                  className="relative px-3.5 py-1 text-[13px] font-semibold no-underline transition-colors duration-200 z-10"
+                  style={{
+                    color: hoveredLink === link.href
+                      ? 'var(--organic-text)'
+                      : 'color-mix(in srgb, var(--organic-text) 65%, transparent)',
+                  }}
+                >
+                  {hoveredLink === link.href && (
+                    <motion.div
+                      layoutId="nav-hover-fluid-pill"
+                      className="absolute inset-0 rounded-full -z-10"
+                      style={{
+                        background: 'color-mix(in srgb, var(--organic-text) 8%, transparent)',
+                      }}
+                      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                    />
+                  )}
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+
+            {/* Minimalist CTA & Mobile Toggle */}
+            <div className="flex items-center gap-3">
+              <motion.div
+                whileHover="hover"
+                whileTap={{ scale: 0.96 }}
+                initial="initial"
+              >
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-1.5 text-xs font-extrabold tracking-wide px-4 py-1.5 rounded-full shadow-sm transition-all hover:shadow-md"
+                  style={{
+                    background: 'var(--organic-terracotta)',
+                    color: '#fff',
+                  }}
+                >
+                  <span>Essai gratuit</span>
+                  <motion.span
+                    variants={{
+                      initial: { x: 0 },
+                      hover: { x: 3 },
+                    }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  >
+                    →
+                  </motion.span>
+                </Link>
+              </motion.div>
+
+            {/* Mobile Hamburger Button */}
+            <motion.button
+              type="button"
+              className="md:hidden flex items-center justify-center size-8 rounded-full border cursor-pointer"
+              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+              whileTap={{ scale: 0.9 }}
+              style={{
+                borderColor: 'color-mix(in srgb, var(--organic-text) 14%, transparent)',
+                color: 'var(--organic-text)',
+                background: 'transparent',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+                <motion.line
+                  x1="1" y1="4" x2="15" y2="4"
+                  animate={menuOpen ? { y1: 8, y2: 8, rotate: 45, originX: '50%', originY: '50%' } : { y1: 4, y2: 4, rotate: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+                <motion.line
+                  x1="1" y1="8" x2="15" y2="8"
+                  animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+                  transition={{ duration: 0.15 }}
+                />
+                <motion.line
+                  x1="1" y1="12" x2="15" y2="12"
+                  animate={menuOpen ? { y1: 8, y2: 8, rotate: -45, originX: '50%', originY: '50%' } : { y1: 12, y2: 12, rotate: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </svg>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </header>
+
+      {/* Mobile Dropdown Panel */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -159,54 +208,44 @@ export function LandingNav() {
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-16 left-4 right-4 z-40 rounded-3xl p-5 border shadow-2xl overflow-hidden"
             style={{
-              position: 'fixed',
-              top: 56,
-              left: 0,
-              right: 0,
-              zIndex: 29,
               transformOrigin: 'top',
-              background: 'color-mix(in srgb, var(--organic-bg) 98%, transparent)',
+              background: 'color-mix(in srgb, var(--organic-surface) 96%, transparent)',
               backdropFilter: 'blur(24px)',
-              borderBottom: '1.5px solid color-mix(in srgb, var(--organic-text) 8%, transparent)',
-              padding: '8px max(clamp(20px,5vw,64px), calc((100% - 1160px) / 2 + clamp(20px,5vw,64px))) 20px',
+              borderColor: 'color-mix(in srgb, var(--organic-text) 12%, transparent)',
             }}
           >
-            {NAV_LINKS.map((link, i) => (
-              <motion.a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.2 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '14px 0',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: 'var(--organic-text)',
-                  textDecoration: 'none',
-                  borderBottom: '1px solid color-mix(in srgb, var(--organic-text) 7%, transparent)',
-                }}
-              >
-                {link.label}
-                <span style={{ opacity: 0.3, fontSize: 12 }}>→</span>
-              </motion.a>
-            ))}
+            <div className="flex flex-col gap-1">
+              {NAV_LINKS.map((link, i) => (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.2 }}
+                  className="flex items-center justify-between py-3 px-3 rounded-xl text-sm font-bold no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--organic-text)_6%,transparent)]"
+                  style={{ color: 'var(--organic-text)' }}
+                >
+                  {link.label}
+                  <span className="text-xs opacity-40">→</span>
+                </motion.a>
+              ))}
+            </div>
+
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: NAV_LINKS.length * 0.05 + 0.05 }}
-              className="mt-5"
+              transition={{ delay: NAV_LINKS.length * 0.04 + 0.05 }}
+              className="mt-4 pt-4 border-t"
+              style={{ borderColor: 'color-mix(in srgb, var(--organic-text) 8%, transparent)' }}
             >
               <Link
                 href="/register"
                 onClick={() => setMenuOpen(false)}
-                className="btn btn-primary w-full text-center"
-                style={{ display: 'block' }}
+                className="btn btn-primary w-full text-center py-3 text-xs font-bold rounded-full"
+                style={{ display: 'block', background: 'var(--organic-terracotta)', color: '#fff' }}
               >
                 Démarrer gratuitement →
               </Link>

@@ -7,9 +7,6 @@ import { ScrollReveal } from '@/components/landing/scroll-reveal'
 import {
   CommandCenterTrust,
   FeaturesGrid,
-  Channels,
-  InboxShowcase,
-  Testimonials,
   ComparisonTable,
   Faq,
   ClosingCta,
@@ -17,10 +14,12 @@ import {
 
 import { AuraBackground } from '@/components/landing/aura-background'
 import { InteractiveStudio } from '@/components/landing/interactive-studio'
+import { PageIntro } from '@/components/landing/page-intro'
 
 export default function LandingPage() {
   return (
     <>
+      <PageIntro />
       <AuraBackground />
       <SmoothScroll />
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -38,13 +37,7 @@ export default function LandingPage() {
           <FeaturesGrid />
         </ScrollReveal>
         <ScrollReveal delay={0}>
-          <Channels />
-        </ScrollReveal>
-        <ScrollReveal delay={0}>
-          <InboxShowcase />
-        </ScrollReveal>
-        <ScrollReveal delay={0}>
-          <Testimonials />
+          <ComparisonTable />
         </ScrollReveal>
         <ScrollReveal delay={0}>
           <Pricing />

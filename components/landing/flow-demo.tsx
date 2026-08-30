@@ -61,7 +61,7 @@ export function FlowDemo() {
 
   // Fullscreen Zoom Transforms (cleared of clutter)
   const demoWidth = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], ['86%', '100vw', '100vw', '86%'])
-  const demoHeight = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], ['82vh', 'calc(100vh - 54px)', 'calc(100vh - 54px)', '82vh'])
+  const demoHeight = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], ['82vh', '100vh', '100vh', '82vh'])
   const demoBorderRadius = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], ['32px', '0px', '0px', '32px'])
   const demoScale = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], [0.94, 1, 1, 0.94])
 
@@ -95,8 +95,8 @@ export function FlowDemo() {
 
   return (
     <section ref={sectionRef} id="product" className="relative h-[400vh] w-screen left-1/2 -translate-x-1/2">
-      {/* Sticky Viewport Container directly flush underneath Navbar */}
-      <div className="sticky top-[54px] flex flex-col justify-start items-center h-[calc(100vh-54px)] overflow-hidden">
+      {/* Sticky Viewport Container reaching top edge under Navbar */}
+      <div className="sticky top-0 flex flex-col justify-start items-center h-screen overflow-hidden">
         
         {/* FULLSCREEN EXPANDING GLASS STUDIO FRAME (Ultra Clean) */}
         <motion.div
@@ -106,7 +106,7 @@ export function FlowDemo() {
             borderRadius: demoBorderRadius,
             scale: demoScale,
           }}
-          className="relative border-[1.5px] p-[clamp(16px,2.8vw,32px)] backdrop-blur-3xl shadow-2xl overflow-hidden flex flex-col justify-between"
+          className="relative border-[1.5px] pt-16 pb-6 px-[clamp(16px,2.8vw,32px)] backdrop-blur-3xl shadow-2xl overflow-hidden flex flex-col justify-between"
           aria-label="Studio Flow Plein Écran"
         >
           {/* Phantom Arc - Aura Gradient Background Layers */}
