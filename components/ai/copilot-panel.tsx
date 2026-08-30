@@ -4,7 +4,8 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Streamdown } from 'streamdown'
 import { Send, Loader2, ShieldAlert } from 'lucide-react'
-import { CopilotAvatar } from './copilot-avatar'
+import { CopilotAvatar, getReactionForText } from './copilot-avatar'
+import { useMemo } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ProgressIndicator, ThinkingIndicator } from './progress-indicator'
@@ -86,6 +87,33 @@ export function CopilotPanel({
   const conversationIdRef = useRef<string | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
+
+  // Calculate avatar reaction based on current user input & conversation state
+  const textReaction = useMemo(() => {
+    if (input.trim().length > 0) {
+      return getReactionForText(input)
+    }
+    const lastMsg = messages[messages.length - 1]
+    if (lastMsg) {
+      if (lastMsg.role === 'user') {
+        return getReactionForText(lastMsg.text)
+      } else if (lastMsg.role === 'assistant' && lastMsg.parts.length > 0) {
+        const lastPart = lastMsg.parts.find((p) => p.type === 'text')
+        if (lastPart && lastPart.type === 'text') {
+          return getReactionForText(lastPart.text)
+        }
+      }
+    }
+    return { animation: 'idle' }
+  }, [input, messages])
+
+  const avatarAnimation = isThinking
+    ? 'thinking'
+    : sending || confirming
+    ? 'working'
+    : textReaction.animation || 'idle'
+
+  const avatarExpression = textReaction.expression
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -349,11 +377,13 @@ export function CopilotPanel({
             <SheetTitle className="sr-only">{t('copilot.panel.title')}</SheetTitle>
             <div className="flex items-center justify-between gap-2.5">
               <div className="flex items-center gap-2.5">
-                {/* Procedural avatar — animates based on copilot state */}
+                {/* Procedural avatar — animates & reacts dynamically to messages & input */}
                 <span className="relative flex size-8 shrink-0 items-center justify-center">
                   <CopilotAvatar
                     size={32}
-                    animation={isThinking ? 'thinking' : sending || confirming ? 'talking' : 'idle'}
+                    animation={avatarAnimation}
+                    expression={avatarExpression}
+                    faceLeft={true}
                   />
                   <span
                     className={cn(
@@ -513,7 +543,9 @@ export function CopilotPanel({
                   <span className="relative flex size-8 shrink-0 items-center justify-center">
                     <CopilotAvatar
                       size={32}
-                      animation={isThinking ? 'thinking' : sending || confirming ? 'talking' : 'idle'}
+                      animation={avatarAnimation}
+                      expression={avatarExpression}
+                      faceLeft={true}
                     />
                     <span
                       className={cn(

@@ -77,7 +77,7 @@ export function CopilotFAB({ onClick, hideOnMobile = false }: CopilotFABProps) {
               />
 
               {/* Strobi — the avatar IS the button, no background fill */}
-              <CopilotAvatar size={64} animation="idle" className="relative" />
+              <CopilotAvatar size={64} animation="idle" faceLeft={true} randomIdle={true} className="relative" />
             </motion.button>
           </motion.div>
         </TooltipTrigger>

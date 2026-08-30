@@ -14,10 +14,8 @@ function readThemeColor(): string {
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue('--organic-terracotta-500')
     .trim()
-  // getPropertyValue can return oklch/hsl strings — we only need the hex themes,
-  // but oklch values won't work as `colors.body`. We normalise only hex strings.
   if (raw.startsWith('#') && raw.length >= 4) return raw
-  // Fall back to the CSS `--primary` value, then brand terracotta.
+
   const primary = getComputedStyle(document.documentElement)
     .getPropertyValue('--primary')
     .trim()
@@ -30,8 +28,80 @@ function applyBodyColor(def: typeof strobi, color: string): AvatarDefinition {
   return {
     ...def,
     colors: { ...def.colors, body: color },
-    // Don't touch expression-level color overrides (e.g. angry-brows red)
   } as unknown as AvatarDefinition
+}
+
+// Organic idle expressions that make Strobi look alive and inquisitive
+const IDLE_EXPRESSIONS = [
+  'neutral',
+  'curious-left',
+  'attentive-left',
+  'upward-side-glance',
+  'playful-right',
+  'skeptical-left',
+  'gentle-downward-gaze',
+  'surprised-left',
+  'small-attentive',
+]
+
+// ─── sentiment & reaction helper ───────────────────────────────────────────
+
+/**
+ * Analyzes text (user prompt or bot reply) and returns a suitable Strobi reaction
+ * (either an expression or a Strobish animation).
+ */
+export function getReactionForText(text: string): { animation?: string; expression?: string } {
+  if (!text) return { animation: 'idle' }
+
+  const lower = text.toLowerCase().trim()
+
+  // 1. Greetings & Positive feedback
+  if (
+    /\b(salut|bonjour|hello|hi|coucou|merci|bravo|super|cool|top|génial|parfait|love|bien|thanks|superbe|excellente?)\b/.test(
+      lower
+    )
+  ) {
+    return { expression: 'joyful-wide' }
+  }
+
+  // 2. Questions & Curiosity
+  if (
+    /\?/.test(lower) ||
+    /\b(quoi|pourquoi|comment|où|qui|quand|est-ce|pourrais-tu|peux-tu|expliqu?e|aide|montre|search|cherche)\b/.test(
+      lower
+    )
+  ) {
+    return { animation: 'searching', expression: 'curious-left' }
+  }
+
+  // 3. Doubt, Errors, Bugs
+  if (
+    /\b(bizarre|erreur|bug|problème|non|faux|pas|impossible|échec|fail|cassé|invalide)\b/.test(
+      lower
+    )
+  ) {
+    return { expression: 'skeptical-left' }
+  }
+
+  // 4. Strong negative / Anger
+  if (
+    /\b(stop|merde|putain|chiant|grave|détruire|supprime|nul|mauvais|inutile)\b/.test(
+      lower
+    )
+  ) {
+    return { expression: 'angry-brows' }
+  }
+
+  // 5. Technical / Building / Thinking tasks
+  if (
+    /\b(analyser|créer|générer|code|développer|flow|automation|calculer|construire|script|pipeline)\b/.test(
+      lower
+    )
+  ) {
+    return { animation: 'thinking' }
+  }
+
+  return { animation: 'idle' }
 }
 
 // ─── component ──────────────────────────────────────────────────────────────
@@ -46,10 +116,14 @@ export type StrobishAnimation =
   | 'working'
   | 'talking'
 
-interface CopilotAvatarProps {
+export interface CopilotAvatarProps {
   size?: number | string
   animation?: StrobishAnimation | string
   expression?: string
+  /** Turn the avatar left (towards the screen/chat content) — default: true */
+  faceLeft?: boolean
+  /** Enable random expression shifting while in idle state — default: true */
+  randomIdle?: boolean
   className?: string
   ref?: React.Ref<AvatarController>
 }
@@ -58,12 +132,15 @@ export function CopilotAvatar({
   size = 56,
   animation = 'idle',
   expression,
+  faceLeft = true,
+  randomIdle = true,
   className,
   ref,
 }: CopilotAvatarProps) {
   const [bodyColor, setBodyColor] = useState<string>('#c67139')
+  const [currentIdleExpr, setCurrentIdleExpr] = useState<string | null>(null)
 
-  // Map 'talking' to 'working' if passed, since Strobi uses 'working' for active response state
+  // Map 'talking' to 'working' if passed
   const effectiveAnimation = animation === 'talking' ? 'working' : animation
 
   // Read initial theme color once mounted
@@ -83,22 +160,58 @@ export function CopilotAvatar({
     return () => observer.disconnect()
   }, [])
 
-  // Re-derive the definition whenever the color changes (cheap — just object spread)
+  // Periodically cycle through random expressions when idle
+  useEffect(() => {
+    if (!randomIdle || animation !== 'idle' || expression) {
+      setCurrentIdleExpr(null)
+      return
+    }
+
+    let timeoutId: NodeJS.Timeout
+
+    const scheduleNextShift = () => {
+      // Random delay between 4.5s and 8.5s
+      const delay = Math.floor(Math.random() * 4000) + 4500
+      timeoutId = setTimeout(() => {
+        const nextExpr =
+          IDLE_EXPRESSIONS[Math.floor(Math.random() * IDLE_EXPRESSIONS.length)]
+        setCurrentIdleExpr(nextExpr)
+        scheduleNextShift()
+      }, delay)
+    }
+
+    scheduleNextShift()
+
+    return () => clearTimeout(timeoutId)
+  }, [randomIdle, animation, expression])
+
+  // Re-derive the definition whenever the color changes
   const definition = useMemo(
     () => applyBodyColor(strobi, bodyColor),
     [bodyColor]
   )
 
+  const activeExpression = expression || currentIdleExpr || undefined
+
   return (
-    <div className={className} style={{ width: size, height: size }}>
+    <div
+      className={className}
+      style={{
+        width: size,
+        height: size,
+        transform: faceLeft ? 'scaleX(-1)' : 'none',
+        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+    >
       <Avatar
         ref={ref}
         definition={definition}
-        {...(expression ? { expression } : { animation: effectiveAnimation })}
+        {...(activeExpression
+          ? { expression: activeExpression }
+          : { animation: effectiveAnimation })}
         size={size}
         ariaLabel="Strobi — assistant IA"
       />
     </div>
   )
 }
-
